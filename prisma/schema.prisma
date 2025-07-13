@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Produtor {
+  id         Int       @id @default(autoincrement())
+  nome       String
+  cpf        String    @unique
+  telefone   String
+  propriedades Pastagem[]
+  gados      Gado[]
+  financeiro Financeiro[]
+  criado_em  DateTime  @default(now())
+}
+
+model Gado {
+  id         Int       @id @default(autoincrement())
+  nome       String
+  raca       String
+  idade      Int
+  peso       Float
+  produtorId Int
+  produtor   Produtor  @relation(fields: [produtorId], references: [id])
+  criado_em  DateTime  @default(now())
+}
+
+model Pastagem {
+  id         Int       @id @default(autoincrement())
+  localizacao String
+  tipo        String
+  tamanho     Float
+  produtorId  Int
+  produtor    Produtor @relation(fields: [produtorId], references: [id])
+  criado_em   DateTime @default(now())
+}
+
+model Financeiro {
+  id          Int       @id @default(autoincrement())
+  tipo        String
+  descricao   String
+  valor       Float
+  data        DateTime
+  produtorId  Int
+  produtor    Produtor  @relation(fields: [produtorId], references: [id])
+  criado_em   DateTime  @default(now())
+}

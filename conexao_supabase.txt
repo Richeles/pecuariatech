@@ -1,0 +1,6 @@
+?? Conexão Supabase para Power BI
+
+?? Servidor: db.kpzzekflqpoeccnqfkng.supabase.co:5432
+?? Banco:    postgres
+?? Usuário:  postgres
+?? Senha:    36@Artropodes
