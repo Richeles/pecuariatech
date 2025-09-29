@@ -1,0 +1,37 @@
+[dotenv@17.2.1] injecting env (7) from scripts\.env.local -- tip: ­ƒôí version env with Radar: https://dotenvx.com/radar
+[23:16:56.146] [32mINFO[39m (7500): [36m­ƒÜÇ Iniciando pipeline ultrabiol├│gica[39m
+[23:16:56.146] [32mINFO[39m (7500): [36mM├│dulo iniciado[39m
+    [35mmodule[39m: "Rebanho"
+[23:16:56.656] [32mINFO[39m (7500): [36mM├│dulo finalizado com sucesso[39m
+    [35mmodule[39m: "Rebanho"
+[23:16:56.656] [32mINFO[39m (7500): [36mM├│dulo iniciado[39m
+    [35mmodule[39m: "Pastagem"
+[23:16:57.156] [32mINFO[39m (7500): [36mM├│dulo finalizado com sucesso[39m
+    [35mmodule[39m: "Pastagem"
+[23:16:57.156] [32mINFO[39m (7500): [36mM├│dulo iniciado[39m
+    [35mmodule[39m: "Financeiro"
+[23:16:57.672] [32mINFO[39m (7500): [36mM├│dulo finalizado com sucesso[39m
+    [35mmodule[39m: "Financeiro"
+[23:16:57.672] [32mINFO[39m (7500): [36mM├│dulo iniciado[39m
+    [35mmodule[39m: "Alertas"
+[23:16:58.186] [32mINFO[39m (7500): [36mM├│dulo finalizado com sucesso[39m
+    [35mmodule[39m: "Alertas"
+[23:16:58.186] [32mINFO[39m (7500): [36m­ƒÅü Pipeline finalizado[39m
+    [35mresults[39m: [
+      {
+        "name": "Rebanho",
+        "ok": true
+      },
+      {
+        "name": "Pastagem",
+        "ok": true
+      },
+      {
+        "name": "Financeiro",
+        "ok": true
+      },
+      {
+        "name": "Alertas",
+        "ok": true
+      }
+    ]

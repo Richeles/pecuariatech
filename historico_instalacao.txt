@@ -1,0 +1,15 @@
+﻿===== HISTÓRICO PECUARIATECH =====
+Data: 08/26/2025 21:50:37
+Usuário: Administrador
+Máquina: RICHELE-PC
+
+✅ Criado projeto PecuariaTech em Next.js
+✅ Estrutura de páginas: /dashboard, /financeiro, /rebanho, /pastagem
+✅ Supabase configurado com tabelas: racas, dashboard, financeiro, pastagem, rebanho
+✅ API Next.js criada para cadastro/listagem de rebanho e pastagem
+✅ Mapa interativo com Leaflet.js integrado no módulo de pastagem
+✅ Validação planejada com Zod (backend em progresso)
+⚠️ Docker não funcionou – descartado
+⚠️ WSL/Ubuntu não funcionou – descartado
+➡️ Escalando para plano B (rodar 100% online via Vercel + Supabase Cloud)
+➡️ Plano C (VirtualBox/VM alternativa) preparado como backup

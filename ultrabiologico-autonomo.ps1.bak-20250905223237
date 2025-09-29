@@ -1,0 +1,57 @@
+param(
+    [string]$Url = "https://pecuariatech.com",
+    [string]$LogFile = "C:\Users\Administrador\pecuariatech\ultrabiologico-log.txt"
+)
+
+function Write-Log {
+    param([string]$Message)
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Add-Content -Path $LogFile -Value "$timestamp - $Message"
+}
+
+function Send-Telegram {
+    param([string]$Message)
+    # === Substitua abaixo pelos seus dados ===
+    $Token = "<SEU_TELEGRAM_BOT_TOKEN>"
+    $ChatID = "<SEU_CHAT_ID>"
+    # =========================================
+    if ([string]::IsNullOrWhiteSpace($Token) -or [string]::IsNullOrWhiteSpace($ChatID)) {
+        Write-Log "⚠️ Telegram não configurado (Token/ChatID faltando)."
+        return
+    }
+    $Uri = "https://api.telegram.org/bot$Token/sendMessage"
+    $Body = @{
+        chat_id = $ChatID
+        text    = $Message
+    }
+    try {
+        Invoke-RestMethod -Uri $Uri -Method Post -Body $Body -ErrorAction Stop | Out-Null
+        Write-Log "📨 Telegram enviado: $Message"
+    } catch {
+        Write-Log "❌ Erro ao enviar Telegram: $($_.Exception.Message)"
+    }
+}
+
+# ================= EXECUÇÃO ===================
+Write-Log "🚀 Iniciando monitoramento de $Url"
+
+try {
+    $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 15
+    if ($response.StatusCode -eq 200) {
+        $msg = "✅ Site online: $Url"
+        Write-Log $msg
+        Send-Telegram $msg
+    } else {
+        $msg = "⚠️ Site respondeu com status $($response.StatusCode)"
+        Write-Log $msg
+        Send-Telegram $msg
+    }
+}
+catch {
+    $err = $_.Exception.Message
+    $msg = "❌ Falha ao acessar $Url - Erro: $err"
+    Write-Log $msg
+    Send-Telegram $msg
+}
+
+Write-Log "✅ Script finalizado"
