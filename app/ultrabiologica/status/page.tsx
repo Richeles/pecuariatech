@@ -1,4 +1,1 @@
-import React from 'react';
-export default function UltraBiologicaStatus() {
-  return <h1>Página UltraBiológica Status - Placeholder</h1>;
-}
+﻿export default function ultrabiologicastatus() { return <h1>PÃ¡gina ultrabiologica/status - Placeholder</h1>; }

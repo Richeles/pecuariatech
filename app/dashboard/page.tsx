@@ -1,22 +1,42 @@
-import React from 'react';
+﻿'use client';
+import useSWR from 'swr';
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
 export default function Dashboard() {
+  const { data, error } = useSWR('/api/ultra/stats', fetcher);
+
+  if (error) return <div>Erro ao carregar dados.</div>;
+  if (!data) return <div>Carregando...</div>;
+
+  const k = data.kpis;
   return (
-    <div style={{ display: 'flex', fontFamily:'sans-serif', height:'100vh' }}>
-      <nav style={{ width:'200px', backgroundColor:'#2c3e50', color:'white', padding:'20px' }}>
-        <h2>PecuariaTech</h2>
-        <ul style={{ listStyle:'none', padding:0 }}>
-          <li><a href='/dashboard' style={{ color:'white' }}>Dashboard</a></li>
-          <li><a href='/rebanho' style={{ color:'white' }}>Rebanho</a></li>
-          <li><a href='/pastagem' style={{ color:'white' }}>Pastagem</a></li>
-          <li><a href='/ultrabiologica/status' style={{ color:'white' }}>UltraBiológica</a></li>
-        </ul>
-      </nav>
-      <main style={{ flexGrow:1, padding:'20px' }}>
-        <h1>Dashboard PecuariaTech</h1>
-        <section><h3>Indicadores</h3><p>Total de animais, média de ganho de peso, área de pastagem...</p></section>
-        <section><h3>Gráficos</h3><p>[Placeholder para gráficos de peso, pastagem e financeiro]</p></section>
-        <section><h3>Tabela do Rebanho</h3><p>[Placeholder para tabela de animais]</p></section>
-      </main>
+    <div>
+      <h1 className='text-2xl font-bold mb-4'>ðŸ“Š Dashboard PecuariaTech</h1>
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
+        <Kpi title='Ãrea total (ha)' value={k.area_total_ha} emoji='ðŸŒ¾' />
+        <Kpi title='CabeÃ§as de gado' value={k.total_heads} emoji='ðŸ„' />
+        <Kpi title='Saldo (R$)' value={k.finance_sum?.toFixed(2)} emoji='ðŸ’°' />
+        <Kpi title='RaÃ§as' value={k.racas_count} emoji='ðŸ§¬' />
+      </div>
+      <div className='bg-white shadow rounded p-4 mb-6'>
+        <h2 className='text-lg font-semibold mb-2'>GrÃ¡fico Financeiro</h2>
+        <div className='h-64 bg-gray-100 flex items-center justify-center'>ðŸ“ˆ em construÃ§Ã£o</div>
+      </div>
+      <div className='bg-white shadow rounded p-4'>
+        <h2 className='text-lg font-semibold mb-2'>Tabela de Rebanho</h2>
+        <div className='h-48 bg-gray-100 flex items-center justify-center'>ðŸ“‹ em construÃ§Ã£o</div>
+      </div>
+    </div>
+  );
+}
+
+function Kpi({ title, value, emoji }: { title: string, value: any, emoji: string }) {
+  return (
+    <div className='bg-white p-4 rounded shadow text-center'>
+      <div className='text-3xl mb-2'>{emoji}</div>
+      <div className='text-sm text-gray-500'>{title}</div>
+      <div className='text-xl font-bold text-emerald-600'>{value ?? '-'}</div>
     </div>
   );
 }

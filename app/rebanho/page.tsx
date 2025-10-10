@@ -1,4 +1,1 @@
-import React from 'react';
-export default function Rebanho() {
-  return <h1>Página Rebanho - Placeholder</h1>;
-}
+﻿export default function rebanho() { return <h1>PÃ¡gina rebanho - Placeholder</h1>; }

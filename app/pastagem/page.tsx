@@ -1,4 +1,1 @@
-import React from 'react';
-export default function Pastagem() {
-  return <h1>Página Pastagem - Placeholder</h1>;
-}
+﻿export default function pastagem() { return <h1>PÃ¡gina pastagem - Placeholder</h1>; }
