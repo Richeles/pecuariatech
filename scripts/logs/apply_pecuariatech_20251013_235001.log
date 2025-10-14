@@ -1,0 +1,70 @@
+[2025-10-13 23:50:01] [INFO] Iniciando apply_pecuariatech (ALL) - projeto: C:\Users\Administrador\pecuariatech
+[2025-10-13 23:50:02] [OK] .env.local carregado.
+[2025-10-13 23:50:02] [OK] SQL gerado em C:\Users\Administrador\pecuariatech\sql\apply_pecuariatech.sql
+Usage:
+  supabase db [command]
+
+Available Commands:
+  diff        Diffs the local database for schema changes
+  dump        Dumps data or schemas from the remote database
+  lint        Checks local database for typing error
+  pull        Pull schema from the remote database
+  push        Push new migrations to the remote database
+  reset       Resets the local database to current migrations
+  start       Starts local Postgres database
+
+Flags:
+  -h, --help   help for db
+
+Global Flags:
+      --create-ticket                                  create a support ticket for any CLI error
+      --debug                                          output debug logs to stderr
+      --dns-resolver [ native | https ]                lookup domain names using the specified resolver (default native)
+      --experimental                                   enable experimental features
+      --network-id string                              use the specified docker network instead of a generated one
+  -o, --output [ env | pretty | json | toml | yaml ]   output format of status variables (default pretty)
+      --profile string                                 use a specific profile for connecting to Supabase API (default "supabase")
+      --workdir string                                 path to a Supabase project directory
+      --yes                                            answer yes to all prompts
+
+Use "supabase db [command] --help" for more information about a command.
+
+unknown flag: --file
+Try rerunning the command with --debug to troubleshoot the error.
+[2025-10-13 23:50:10] [OK] SQL aplicado com sucesso
+Usage:
+  supabase db [command]
+
+Available Commands:
+  diff        Diffs the local database for schema changes
+  dump        Dumps data or schemas from the remote database
+  lint        Checks local database for typing error
+  pull        Pull schema from the remote database
+  push        Push new migrations to the remote database
+  reset       Resets the local database to current migrations
+  start       Starts local Postgres database
+
+Flags:
+  -h, --help   help for db
+
+Global Flags:
+      --create-ticket                                  create a support ticket for any CLI error
+      --debug                                          output debug logs to stderr
+      --dns-resolver [ native | https ]                lookup domain names using the specified resolver (default native)
+      --experimental                                   enable experimental features
+      --network-id string                              use the specified docker network instead of a generated one
+  -o, --output [ env | pretty | json | toml | yaml ]   output format of status variables (default pretty)
+      --profile string                                 use a specific profile for connecting to Supabase API (default "supabase")
+      --workdir string                                 path to a Supabase project directory
+      --yes                                            answer yes to all prompts
+
+Use "supabase db [command] --help" for more information about a command.
+
+unknown flag: --sql
+Try rerunning the command with --debug to troubleshoot the error.
+[2025-10-13 23:50:11] [OK] Owner criado: pecuariatech.br@gmail.com / UltraPecuaria123!
+[2025-10-13 23:50:12] [WARN] Falha ao criar/verificar plano 'Mensal': Response status code does not indicate success: 401 (Unauthorized).
+[2025-10-13 23:50:12] [WARN] Falha ao criar/verificar plano 'Trimestral': Response status code does not indicate success: 401 (Unauthorized).
+[2025-10-13 23:50:13] [WARN] Falha ao criar/verificar plano 'Anual': Response status code does not indicate success: 401 (Unauthorized).
+[2025-10-13 23:50:13] [OK] API /api/planos criada
+[2025-10-13 23:50:13] [OK] API /api/owner/unlock criada
