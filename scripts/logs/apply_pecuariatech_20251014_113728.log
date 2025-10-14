@@ -1,0 +1,23 @@
+[2025-10-14 11:37:28] [INFO] Iniciando apply_pecuariatech_all - projeto: C:\Users\Administrador\pecuariatech
+[2025-10-14 11:37:28] [INFO] Carregando variáveis de C:\Users\Administrador\pecuariatech\.env.local
+[2025-10-14 11:37:28] [OK] .env.local carregado.
+[2025-10-14 11:37:28] [INFO] NEXT_PUBLIC_SUPABASE_URL = https://kpzzekflqpoeccnqfkng.supabase.co
+[2025-10-14 11:37:28] [INFO] NEXT_PUBLIC_SUPABASE_ANON_KEY = eyJhbG...9...
+[2025-10-14 11:37:28] [INFO] SUPABASE_SERVICE_ROLE_KEY = eyJhbG...9...
+[2025-10-14 11:37:29] [INFO] NEXT_PUBLIC_VERCEL_URL = https://www.pecuariatech.com
+[2025-10-14 11:37:29] [OK] Ferramenta encontrada: supabase -> C:\SupabaseCLI\supabase.exe
+[2025-10-14 11:37:29] [OK] Ferramenta encontrada: git -> C:\Program Files\Git\cmd\git.exe
+[2025-10-14 11:37:29] [OK] Ferramenta encontrada: vercel -> C:\Users\Administrador\AppData\Roaming\npm\vercel.ps1
+[2025-10-14 11:37:29] [OK] Ferramenta encontrada: node -> C:\Program Files\nodejs\node.exe
+[2025-10-14 11:37:29] [OK] Ferramenta encontrada: npm -> C:\Program Files\nodejs\npm.ps1
+[2025-10-14 11:37:29] [INFO] Owner will be created: pecuariatech.br@gmail.com (senha mascarada: UltraP...123!)
+[2025-10-14 11:37:29] [OK] Migration gerada: C:\Users\Administrador\pecuariatech\supabase_migrations\0001_init.sql
+[2025-10-14 11:37:29] [INFO] Executando: supabase db push --yes
+Initialising login role...
+Connecting to remote database...
+Remote database is up to date.
+A new version of Supabase CLI is available: v2.51.0 (currently installed v2.40.7)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+[2025-10-14 11:37:39] [OK] supabase db push finalizado (migrations aplicadas ou já atualizadas).
+[2025-10-14 11:37:39] [OK] Criada API: app/api/planos/route.ts
+[2025-10-14 11:37:40] [OK] Criada API: app/api/owner/route.ts
