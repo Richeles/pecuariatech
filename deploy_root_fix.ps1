@@ -1,100 +1,32 @@
-# =========================================================
-# deploy_root_fix.ps1 - UltraBiológica Cloud / PecuariaTech
-# Automatiza backup, commit, deploy e verificação online
-# =========================================================
+# deploy_root_fix_final.ps1
+# 🚀 Deploy UltraBiológica Cloud + alias automático para www.pecuariatech.com
 
-Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$LogFile = Join-Path $PWD "vercel_deploy_log.txt"
 
-# ------------------------------
-# Configurações do projeto
-# ------------------------------
-$ProjectPath = "C:\Users\Administrador\pecuariatech"
-$BackupPath = Join-Path $ProjectPath "backup_app_$(Get-Date -Format yyyyMMdd_HHmmss)"
-$LogFile = Join-Path $ProjectPath "vercel_deploy_log.txt"
-$VercelDomain = "www.pecuariatech.com"
-
-# Caminho absoluto do Vercel CLI
-$VercelCmd = "$env:APPDATA\npm\vercel.cmd --prod --yes --alias $VercelDomain"
-
-# ------------------------------
-# Função de log
-# ------------------------------
-function Log-Info {
-    param([string]$Message)
-    Write-Host "[INFO] $Message"
-}
-
-# ------------------------------
-# Início do deploy
-# ------------------------------
-Log-Info "🚀 Iniciando correção da raiz e deploy UltraBiológica Cloud final..."
+Write-Host "[INFO] 🚀 Iniciando deploy UltraBiológica Cloud final..." -ForegroundColor Cyan
 
 # Backup da pasta app
-if (Test-Path "$ProjectPath\app") {
-    Copy-Item -Path "$ProjectPath\app" -Destination $BackupPath -Recurse -Force
-    Log-Info "✅ Backup da pasta app criado em: $BackupPath"
-}
+$BackupPath = Join-Path $PWD ("backup_app_" + (Get-Date -Format "yyyyMMdd_HHmmss"))
+Copy-Item -Recurse -Path ".\app" -Destination $BackupPath
+Write-Host "[INFO] ✅ Backup da pasta app criado em: $BackupPath" -ForegroundColor Green
 
-# Corrigir página raiz / redirecionamento para /dashboard
-$RootPage = Join-Path $ProjectPath "app\page.tsx"
-if (-Not (Test-Path $RootPage)) {
-    @"
-import { redirect } from 'next/navigation';
-
-export default function RootPage() {
-    redirect('/dashboard');
-}
-"@ | Set-Content -Path $RootPage -Encoding utf8 -Force
-    Log-Info "✅ Página raiz app/page.tsx criada com redirecionamento para /dashboard"
-}
-
-# ------------------------------
-# Commit automático
-# ------------------------------
-Set-Location $ProjectPath
+# Git commit automático
 git add .
-git commit -m "fix: adicionar página raiz / redirecionamento para /dashboard" -a
+git commit -m "fix: deploy root + redirecionamento /dashboard"
 git push origin main
-Log-Info "📦 Alterações enviadas ao GitHub"
+Write-Host "[INFO] 📦 Alterações enviadas ao GitHub" -ForegroundColor Green
 
-# ------------------------------
-# Deploy na Vercel
-# ------------------------------
-try {
-    Log-Info "🚀 Iniciando deploy de produção na Vercel ($VercelDomain)..."
-    & $VercelCmd 2>&1 | Tee-Object -FilePath $LogFile
-    Log-Info "✅ Deploy finalizado. Log salvo em: $LogFile"
-    Log-Info "🌐 Site disponível em: https://$VercelDomain"
-}
-catch {
-    Log-Info "⚠️ Erro durante o deploy: $_"
-}
+# Deploy no Vercel
+Write-Host "[INFO] 🚀 Iniciando deploy de produção no Vercel..." -ForegroundColor Cyan
+$VercelOutput = vercel --prod --yes 2>&1 | Tee-Object -FilePath $LogFile
+$DeployURL = ($VercelOutput | Select-String -Pattern "Production:" | ForEach-Object { $_.Line.Split()[-1] }).Trim()
+Write-Host "[INFO] ✅ Deploy finalizado em: $DeployURL" -ForegroundColor Green
 
-# ------------------------------
-# Verificação básica online
-# ------------------------------
-$PagesToCheck = @(
-    "/dashboard",
-    "/financeiro",
-    "/rebanho",
-    "/pastagem",
-    "/ultrachat",
-    "/ultrabiologica/status"
-)
+# Configurar alias para o domínio customizado
+Write-Host "[INFO] 🌐 Configurando alias do domínio www.pecuariatech.com..." -ForegroundColor Cyan
+vercel alias set $DeployURL www.pecuariatech.com | Tee-Object -FilePath $LogFile
+Write-Host "[INFO] ✅ Alias configurado: https://www.pecuariatech.com → $DeployURL" -ForegroundColor Green
 
-foreach ($page in $PagesToCheck) {
-    $url = "https://$VercelDomain$page"
-    try {
-        $resp = Invoke-WebRequest -Uri $url -UseBasicParsing -Method GET
-        if ($resp.StatusCode -eq 200) {
-            Write-Host "✅ $url OK"
-        } else {
-            Write-Host "❌ $url - StatusCode: $($resp.StatusCode)"
-        }
-    } catch {
-        Write-Host "❌ $url - $_"
-    }
-}
-
-Log-Info "✅ Script finalizado."
+# Fim do script
+Write-Host "[INFO] ✅ Script finalizado. Log completo em: $LogFile" -ForegroundColor Cyan
