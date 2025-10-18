@@ -1,4 +1,4 @@
-import SWRegister from '@/components/SWRegister'
+import SWRegister from '../components/SWRegister'
 import './globals.css';
 export const metadata = { title: 'PecuariaTech', description: 'UltraBiológico & UltraChat' };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -10,4 +10,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
 
