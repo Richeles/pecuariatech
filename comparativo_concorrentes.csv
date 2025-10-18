@@ -1,0 +1,11 @@
+Nome,Pais,Foco,Funcionalidades,Diferencial,Limitações,Link
+JetBov,Brasil,Pecuária de corte,"registro rebanho,finanças,IA básica","Marketing local, IA inicial","Integrações IoT limitadas",https://jetbov.com
+iRancho,Brasil,Controle de rebanho,"registro,estoque,finanças","Simples e barato","Menos predição",https://www.irancho.com.br
+AgriWebb,Australia,Gestão rebanho,"planejamento pastagem,forecast","Foragecaster, planning","Custo para pequenos",https://www.agriwebb.com
+CattleMax,USA,Registro rebanho,"genealogia,saúde,relatórios","Maturidade no mercado","Foco registro, não prescrição",https://www.cattlemax.com
+FarmWizard,UK,Gestão bovina,"registro,mobile","UX para Europa","Integrações limitadas",https://www.farmwizard.com
+Agworld,Global,Agronegócio,"planejamento agronômico,integrações","Integração com consultores","Menos foco pecuária pura",https://www.agworld.com
+Esteio,Brasil,Pecuária de corte,"rebanho,finanças","Fácil uso local","Escopo limitado",https://esteiogestao.com.br
+Bego,Brasil,Caprinos/Ovinos,"controle rebanho mobile","Foco nicho","Escala limitada",https://www.begoapp.com
+Pastu,Brasil,Pastagem/Monitoramento,"satélite,gestão pasto","NDVI e monitoramento","Pouca prova de campo",https://pastu.agr.br
+Procreare,Brasil,Gestão completa,"financeiro,estoque,registro","Offline disponível","Complexidade técnica",https://www.procreare.com.br
