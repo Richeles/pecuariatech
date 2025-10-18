@@ -1,0 +1,14 @@
+[2025-10-18 13:13:13][INFO] Iniciando verificação online do PecuariaTech
+[2025-10-18 13:13:13][INFO] Testando páginas principais...
+[2025-10-18 13:13:15][ERROR] ❌ Falha ao acessar https://www.pecuariatech.com/ - Response status code does not indicate success: 404 (Not Found).
+[2025-10-18 13:13:16][OK] ✅ https://www.pecuariatech.com/dashboard OK
+[2025-10-18 13:13:16][OK] ✅ https://www.pecuariatech.com/financeiro OK
+[2025-10-18 13:13:17][OK] ✅ https://www.pecuariatech.com/rebanho OK
+[2025-10-18 13:13:18][OK] ✅ https://www.pecuariatech.com/pastagem OK
+[2025-10-18 13:13:18][OK] ✅ https://www.pecuariatech.com/ultrachat OK
+[2025-10-18 13:13:18][OK] ✅ https://www.pecuariatech.com/ultrabiologica/status OK
+[2025-10-18 13:13:19][INFO] Testando APIs...
+[2025-10-18 13:13:20][OK] ✅ https://www.pecuariatech.com/api/forecast_clima OK
+[2025-10-18 13:13:20][ERROR] ❌ Falha ao acessar https://www.pecuariatech.com/api/predict_weight - Response status code does not indicate success: 405 (Method Not Allowed).
+[2025-10-18 13:13:21][ERROR] ❌ Falha ao acessar https://www.pecuariatech.com/api/ultrachat - Response status code does not indicate success: 405 (Method Not Allowed).
+[2025-10-18 13:13:21][INFO] Verificação online finalizada. Log completo em: C:\Users\Administrador\pecuariatech\logs\ultra_check_20251018_131313.log

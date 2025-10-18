@@ -6,3 +6,5 @@ https://pecuariatech-8mkytx2a3-richeles-alves-dos-santos-projects.vercel.app
 [2025-10-18 10:22:16] ✅ .env.local carregado
 [2025-10-18 10:22:30] 💾 Backup da pasta app criado em: C:\Users\Administrador\pecuariatech\backup_app_20251018_102216
 [2025-10-18 10:22:30] ✅ Import SWRegister corrigido
+[2025-10-18 10:22:39] 📦 Alterações enviadas ao GitHub
+[2025-10-18 10:22:40] 🚀 Iniciando deploy de produção para www.pecuariatech.com...
