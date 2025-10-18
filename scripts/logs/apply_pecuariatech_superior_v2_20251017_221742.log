@@ -59,3 +59,48 @@ unexpected deploy status 404: {"message":"Cannot retrieve service for project gi
 Try rerunning the command with --debug to troubleshoot the error.
 [?2004l[?25h[?1002l[?1003l[?1006l
 [2025-10-17 22:20:34] [INFO] Deploy da function (se aplicável) solicitado.
+[main 72a7f13] feat: pecuariatech superior v2.1 - SW auto-register, predict_weight endpoint, comparativo CSV
+ 22 files changed, 523 insertions(+), 283 deletions(-)
+ create mode 100644 app/api/forecast_clima/route.ts
+ create mode 100644 app/api/predict_weight/route.ts
+ create mode 100644 app/api/ultrachat/route.ts
+ create mode 100644 app/layout.tsx.bak
+ create mode 100644 build_log.txt
+ create mode 100644 comparativo_concorrentes.csv
+ create mode 100644 components/SWRegister.tsx
+ create mode 100644 components/UltraBiologico2.tsx
+ create mode 100644 components/UltraChat.tsx
+ create mode 100644 components/UltraChatAgro.tsx
+ create mode 100644 public/manifest.json
+ create mode 100644 public/service-worker.js
+ create mode 100644 scripts/logs/apply_pecuariatech_superior_v2_20251017_221742.log
+ create mode 100644 supabase/functions/forecast_clima/package.json
+ create mode 100644 supabase/functions/forecast_clima/src/index.ts
+ create mode 100644 supabase_migrations/0002_ultrachat_messages.sql
+ create mode 100644 vercel_deploy_log.txt
+
+To https://github.com/Richeles/pecuariatech.git
+   6e1aefc..72a7f13  main -> main
+[2025-10-17 22:21:23] [OK] Commit/push realizados.
+[2025-10-17 22:21:24] [INFO] Iniciando vercel --prod
+C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:34780
+                throw new ArgError(`option requires argument: ${originalArgName}${extended}`, "ARG_MISSING_REQUIRED_LONGARG");
+                ^
+
+_ArgError: option requires argument: --token
+    at arg2 (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:34780:23)
+    at getArgs (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:34806:33)
+    at getGlobalPathConfig (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:61079:20)
+    at src/util/config/files.ts (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:61189:18)
+    at __init (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:10:60)
+    at src/util/client.ts (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:61304:5)
+    at __init (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:10:60)
+    at Object.<anonymous> (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:184282:1)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10) {
+  code: 'ARG_MISSING_REQUIRED_LONGARG'
+}
+
+Node.js v22.16.0
+[2025-10-17 22:21:25] [OK] Deploy Vercel solicitado.
+[2025-10-17 22:21:25] [INFO] apply_pecuariatech_superior_v2.1: Execução finalizada. Verifique o log em: 
