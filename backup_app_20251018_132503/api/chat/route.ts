@@ -32,3 +32,4 @@ Sempre recomende consultar veterinário quando houver sinais de gravidade.`;
     return NextResponse.json({ ok: false, error: err });
   }
 }
+

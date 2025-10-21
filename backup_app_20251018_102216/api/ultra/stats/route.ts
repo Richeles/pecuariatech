@@ -1,4 +1,4 @@
-﻿import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,3 +24,5 @@ export async function GET() {
     return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
   }
 }
+
+

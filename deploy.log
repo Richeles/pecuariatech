@@ -1,0 +1,85 @@
+2025-10-19 16:03:30 - Iniciando deploy PecuariaTech...
+2025-10-19 16:03:30 - Arquivo .env.local encontrado.
+2025-10-19 16:03:31 - Iniciando build Next.js...
+2025-10-19 16:04:38 - Build concluído com sucesso.
+2025-10-19 16:04:38 - Iniciando deploy na Vercel...
+2025-10-19 16:05:25 - Deploy Vercel concluído.
+Vercel CLI 48.4.0
+Retrieving projectÔÇª
+Deploying richeles-alves-dos-santos-projects/pecuariatech
+Uploading [--------------------] (0.0B/7.1KB)
+Uploading [===========---------] (4.1KB/7.1KB)
+Uploading [===================-] (6.8KB/7.1KB)
+Uploading [====================] (7.1KB/7.1KB)
+Inspect: https://vercel.com/richeles-alves-dos-santos-projects/pecuariatech/3uJ2Vc39gDNn4QpptniXkgsAWD6S [4s]
+Production: https://pecuariatech-eflleirjb-richeles-alves-dos-santos-projects.vercel.app [4s]
+Queued
+Building
+Completing
+https://pecuariatech-eflleirjb-richeles-alves-dos-santos-projects.vercel.app
+2025-10-19 16:05:25 - Extraindo URL pública...
+2025-10-19 16:05:26 - URL pública: 
+2025-10-19 16:05:30 - Deploy PecuariaTech finalizado com sucesso!
+2025-10-19 16:17:51 - Iniciando deploy PecuariaTech...
+2025-10-19 16:17:51 - Arquivo .env.local encontrado.
+2025-10-19 16:17:51 - Iniciando build Next.js...
+2025-10-19 16:19:08 - Build concluído com sucesso.
+2025-10-19 16:19:08 - Iniciando deploy na Vercel...
+2025-10-19 16:19:52 - Deploy Vercel concluído.
+Vercel CLI 48.4.0
+Retrieving projectÔÇª
+Deploying richeles-alves-dos-santos-projects/pecuariatech
+Uploading [--------------------] (0.0B/4.6KB)
+Uploading [==============------] (3.2KB/4.6KB)
+Uploading [====================] (4.6KB/4.6KB)
+Inspect: https://vercel.com/richeles-alves-dos-santos-projects/pecuariatech/6YmPHAQ5F3ebB6djw8Ks4fbh7tDK [6s]
+Production: https://pecuariatech-95ykih3ri-richeles-alves-dos-santos-projects.vercel.app [6s]
+Queued
+Building
+Completing
+https://pecuariatech-95ykih3ri-richeles-alves-dos-santos-projects.vercel.app
+2025-10-19 16:19:52 - Extraindo URL pública...
+2025-10-19 16:19:53 - URL pública: https://pecuariatech-95ykih3ri-richeles-alves-dos-santos-projects.vercel.app
+2025-10-19 16:19:53 - Erro ao enviar WhatsApp: Invalid URI: The hostname could not be parsed.
+2025-10-19 16:19:54 - Erro ao enviar Telegram: 
+{
+  "ok": false,
+  "error_code": 404,
+  "description": "Not Found"
+}
+2025-10-19 16:19:54 - Deploy PecuariaTech finalizado com sucesso!
+2025-10-19 16:38:41 - Iniciando deploy PecuariaTech...
+2025-10-19 16:38:42 - Supabase configurado corretamente.
+2025-10-19 16:38:42 - Arquivo .env.local encontrado.
+2025-10-19 16:38:42 - Iniciando build Next.js...
+2025-10-19 16:39:44 - Build concluído com sucesso.
+2025-10-19 16:39:44 - Iniciando deploy na Vercel...
+2025-10-19 16:40:26 - Deploy Vercel concluído.
+2025-10-19 16:40:26 - Extraindo URL pública...
+2025-10-19 16:40:27 - URL pública: 
+2025-10-19 16:40:27 - Abrindo link do WhatsApp...
+2025-10-19 16:40:33 - Deploy PecuariaTech finalizado com sucesso!
+2025-10-19 16:45:36 - Iniciando deploy PecuariaTech...
+2025-10-19 16:45:36 - Supabase configurado corretamente.
+2025-10-19 16:45:36 - Arquivo .env.local encontrado.
+2025-10-19 16:45:36 - Iniciando build Next.js...
+2025-10-19 16:46:24 - Build concluído com sucesso.
+2025-10-19 16:46:24 - Iniciando deploy na Vercel...
+2025-10-19 16:47:06 - Deploy Vercel concluído.
+2025-10-19 16:47:06 - Extraindo URL pública...
+2025-10-19 16:47:07 - ⚠️ URL pública não encontrada no output.
+2025-10-19 16:47:07 - URL pública detectada: https://www.pecuariatech.com
+2025-10-19 16:47:07 - Abrindo link do WhatsApp...
+2025-10-19 16:47:07 - Deploy PecuariaTech finalizado com sucesso!
+2025-10-19 16:49:41 - Iniciando deploy PecuariaTech...
+2025-10-19 16:49:41 - Supabase configurado corretamente.
+2025-10-19 16:49:41 - Arquivo .env.local encontrado.
+2025-10-19 16:49:41 - Iniciando build Next.js...
+2025-10-19 16:50:36 - Build concluído com sucesso.
+2025-10-19 16:50:36 - Iniciando deploy na Vercel...
+2025-10-19 16:51:22 - Deploy Vercel concluído.
+2025-10-19 16:51:22 - Extraindo URL pública...
+2025-10-19 16:51:22 - ⚠️ URL pública não encontrada no output.
+2025-10-19 16:51:22 - URL pública detectada: https://www.pecuariatech.com
+2025-10-19 16:51:22 - Abrindo link do WhatsApp...
+2025-10-19 16:51:23 - Deploy PecuariaTech finalizado com sucesso!

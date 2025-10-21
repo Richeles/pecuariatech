@@ -6,3 +6,5 @@ export default function UltraBiologico2() {
     </div>
   );
 }
+
+

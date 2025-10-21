@@ -75,3 +75,4 @@ async function runPipeline() {
 // Permite execução direta
 if (require.main === module)
     runPipeline();
+

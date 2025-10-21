@@ -3,3 +3,4 @@ import UltraBiologico2 from "../components/UltraBiologico2";
 export default function Page() {
   return <UltraBiologico2 />;
 }
+

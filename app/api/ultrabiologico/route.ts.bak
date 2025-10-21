@@ -1,0 +1,31 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+export async function GET() {
+  try {
+    const { data: rebanho } = await supabase.from('rebanho').select('*').limit(200);
+    const { data: pastagem } = await supabase.from('pastagem').select('*').limit(200);
+    const { data: nutricao } = await supabase.from('nutricao').select('*').limit(200);
+
+    const suggestedActions: string[] = [];
+    try {
+      if(rebanho && rebanho.length>0){
+        const avg = rebanho.reduce((s:any,r:any)=>s+(r.peso_kg||0),0)/(rebanho.length||1);
+        if(avg && avg < 300) suggestedActions.push('Considerar suplemento proteico para aumento de ganho médio de peso.');
+      }
+      if(pastagem && pastagem.length>0){
+        const small = pastagem.filter((p:any)=>p.area_ha && p.area_ha < 1);
+        if(small.length>0) suggestedActions.push('Consolidar pequenos lotes para eficiência.');
+      }
+    } catch(e){}
+
+    return NextResponse.json({ rebanho, pastagem, nutricao, suggestedActions });
+  } catch(e:any){
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
+}
+

@@ -88,3 +88,4 @@ export async function runPipeline() {
 
 // Executa pipeline direto
 if (require.main === module) runPipeline();
+
