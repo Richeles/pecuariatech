@@ -28,3 +28,4 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ message: 'Registro salvo com sucesso', data: novoRegistro })
 }
 
+

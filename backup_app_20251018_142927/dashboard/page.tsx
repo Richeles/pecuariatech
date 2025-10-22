@@ -1,3 +1,4 @@
+<meta charSet='UTF-8' />
 'use client';
 import useSWR from 'swr';
 
@@ -40,6 +41,8 @@ function Kpi({ title, value, emoji }: { title: string, value: any, emoji: string
     </div>
   );
 }
+
+
 
 
 

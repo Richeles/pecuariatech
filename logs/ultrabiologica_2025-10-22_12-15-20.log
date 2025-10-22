@@ -1,0 +1,262 @@
+**********************
+PowerShell transcript start
+Start time: 20251022121520
+Username: RICHELE-PC\Administrador
+RunAs User: RICHELE-PC\Administrador
+Configuration Name: 
+Machine: RICHELE-PC (Microsoft Windows NT 10.0.19045.0)
+Host Application: C:\Program Files\PowerShell\7\pwsh.dll
+Process ID: 8468
+PSVersion: 7.5.3
+PSEdition: Core
+GitCommitId: 7.5.3
+OS: Microsoft Windows 10.0.19045
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+[INFO] Projeto: C:\Users\Administrador\pecuariatech
+[INFO] Gerenciador detectado: npm
+[INFO] .env.local encontrado.
+v22.16.0
+git version 2.50.1.windows.1
+[INFO] Dependências ok.
+[INFO] Iniciando deploy...
+
+M       README.md
+M       app/api/autonomo/route.ts
+M       app/api/chat/route.ts
+M       app/api/clima/route.ts
+M       app/api/forecast_clima/route.ts
+M       app/api/owner/route.ts
+M       app/api/planos/route.ts
+M       app/api/predict_weight/route.ts
+M       app/api/sensor/route.ts
+M       app/api/ultra/stats/route.ts
+M       app/api/ultrabiologico/route.ts
+M       app/api/ultrachat/route.ts
+M       app/components/UltraBiologico2.tsx
+M       app/components/UltraChat.tsx
+M       app/dashboard/page.tsx
+M       app/financeiro/page.tsx
+M       app/globals.css
+M       app/layout.tsx
+M       app/page.tsx
+M       app/pastagem/page.tsx
+M       app/rebanho/page.tsx
+M       app/status/page.tsx
+M       app/ultrabiologica/status/page.tsx
+M       app/ultrabiologico2/page.tsx
+M       app/ultrachat/page.tsx
+M       app/ultrahub/page.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_.env
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_.next_static_css_bbbb58b0eab522b0.css
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_app_dashboard_page.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_app_globals.css
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_app_layout.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_app_pastagem_page.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_app_rebanho_page.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_app_ultrabiologica_status_page.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_src_app_financeiro_page.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_src_app_globals.css
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_src_app_layout.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_src_app_page.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_src_app_pastagem_page.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_src_components_Sidebar.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_src_dashboard_page.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_src_pastagem_page.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_src_rebanho_page.tsx
+M       backup_20251009_235929/C__Users_Administrador_pecuariatech_styles_globals.css
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_.env
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_.next_static_css_bbbb58b0eab522b0.css
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_app_dashboard_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_app_globals.css
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_app_layout.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_app_pastagem_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_app_rebanho_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_app_ultrabiologica_status_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_.env
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_.next_static_css_bbbb58b0eab522b0.css
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_app_dashboard_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_app_globals.css
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_app_layout.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_app_pastagem_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_app_rebanho_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_app_ultrabiologica_status_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_src_app_financeiro_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_src_app_globals.css
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_src_app_layout.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_src_app_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_src_app_pastagem_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_src_components_Sidebar.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_src_dashboard_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_src_pastagem_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_src_rebanho_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuari
+atech_styles_globals.css
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_src_app_financeiro_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_src_app_globals.css
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_src_app_layout.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_src_app_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_src_app_pastagem_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_src_components_Sidebar.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_src_dashboard_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_src_pastagem_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_src_rebanho_page.tsx
+M       backup_20251010_000431/C__Users_Administrador_pecuariatech_styles_globals.css
+M       backup_app_20251018_102216/api/autonomo/route.ts
+M       backup_app_20251018_102216/api/chat/route.ts
+M       backup_app_20251018_102216/api/clima/route.ts
+M       backup_app_20251018_102216/api/forecast_clima/route.ts
+M       backup_app_20251018_102216/api/owner/route.ts
+M       backup_app_20251018_102216/api/planos/route.ts
+M       backup_app_20251018_102216/api/predict_weight/route.ts
+M       backup_app_20251018_102216/api/sensor/route.ts
+M       backup_app_20251018_102216/api/ultra/stats/route.ts
+M       backup_app_20251018_102216/api/ultrabiologico/route.ts
+M       backup_app_20251018_102216/api/ultrachat/route.ts
+M       backup_app_20251018_102216/components/UltraBiologico2.tsx
+M       backup_app_20251018_102216/components/UltraChat.tsx
+M       backup_app_20251018_102216/dashboard/page.tsx
+M       backup_app_20251018_102216/financeiro/page.tsx
+M       backup_app_20251018_102216/globals.css
+M       backup_app_20251018_102216/layout.tsx
+M       backup_app_20251018_102216/pastagem/page.tsx
+M       backup_app_20251018_102216/rebanho/page.tsx
+M       backup_app_20251018_102216/status/page.tsx
+M       backup_app_20251018_102216/ultrabiologica/status/page.tsx
+M       backup_app_20251018_102216/ultrabiologico2/page.tsx
+M       backup_app_20251018_102216/ultrachat/page.tsx
+M       backup_app_20251018_102216/ultrahub/page.tsx
+M       backup_app_20251018_132503/api/autonomo/route.ts
+M       backup_app_20251018_132503/api/chat/route.ts
+M       backup_app_20251018_132503/api/clima/route.ts
+M       backup_app_20251018_132503/api/forecast_clima/route.ts
+M       backup_app_20251018_132503/api/owner/route.ts
+M       backup_app_20251018_132503/api/planos/route.ts
+M       backup_app_20251018_132503/api/predict_weight/route.ts
+M       backup_app_20251018_132503/api/sensor/route.ts
+M       backup_app_20251018_132503/api/ultra/stats/route.ts
+M       backup_app_20251018_132503/api/ultrabiologico/route.ts
+M       backup_app_20251018_132503/api/ultrachat/route.ts
+M       backup_app_20251018_132503/components/UltraBiologico2.tsx
+M       backup_app_20251018_132503/components/UltraChat.tsx
+M       backup_app_20251018_132503/dashboard/page.tsx
+M       backup_app_20251018_132503/financeiro/page.tsx
+M       backup_app_20251018_132503/globals.css
+M       backup_app_20251018_132503/layout.tsx
+M       backup_app_20251018_132503/page.tsx
+M       backup_app_20251018_132503/pastagem/page.tsx
+M       backup_app_20251018_132503/rebanho/page.tsx
+M       backup_app_20251018_132503/status/page.tsx
+M       backup_app_20251018_132503/ultrabiologica/status/page.tsx
+M       backup_app_20251018_132503/ultrabiologico2/page.tsx
+M       backup_app_20251018_132503/ultrachat/page.tsx
+M       backup_app_20251018_132503/ultrahub/page.tsx
+M       backup_app_20251018_142927/api/autonomo/route.ts
+M       backup_app_20251018_142927/api/chat/route.ts
+M       backup_app_20251018_142927/api/clima/route.ts
+M       backup_app_20251018_142927/api/forecast_clima/route.ts
+M       backup_app_20251018_142927/api/owner/route.ts
+M       backup_app_20251018_142927/api/planos/route.ts
+M       backup_app_20251018_142927/api/predict_weight/route.ts
+M       backup_app_20251018_142927/api/sensor/route.ts
+M       backup_app_20251018_142927/api/ultra/stats/route.ts
+M       backup_app_20251018_142927/api/ultrabiologico/route.ts
+M       backup_app_20251018_142927/api/ultrachat/route.ts
+M       backup_app_20251018_142927/components/UltraBiologico2.tsx
+M       backup_app_20251018_142927/components/UltraChat.tsx
+M       backup_app_20251018_142927/dashboard/page.tsx
+M       backup_app_20251018_142927/financeiro/page.tsx
+M       backup_app_20251018_142927/globals.css
+M       backup_app_20251018_142927/layout.tsx
+M       backup_app_20251018_142927/page.tsx
+M       backup_app_20251018_142927/pastagem/page.tsx
+M       backup_app_20251018_142927/rebanho/page.tsx
+M       backup_app_20251018_142927/status/page.tsx
+M       backup_app_20251018_142927/ultrabiologica/status/page.tsx
+M       backup_app_20251018_142927/ultrabiologico2/page.tsx
+M       backup_app_20251018_142927/ultrachat/page.tsx
+M       backup_app_20251018_142927/ultrahub/page.tsx
+M       components/SWRegister.tsx
+M       components/UltraBiologico2.tsx
+M       components/UltraChat.tsx
+M       components/UltraChatAgro.tsx
+M       lib/prisma.ts
+M       lib/supabase.ts
+M       lib/supabaseClient.ts
+D       logs/deploy-20251019-190742.log
+D       logs/deploy-20251019-201732.log
+D       logs/deploy-20251019-214537.log
+D       logs/deploy-20251019-215349.log
+D       logs/deploy-20251019-222027.log
+D       logs/deploy-20251019-223111.log
+D       logs/fly-visual-v6.log
+D       logs/pecuariatech.log
+D       logs/pipeline-20250829-083456.log
+D       logs/pipeline.log
+D       logs/restore-pecuariatech_20251019_150422.log
+D       logs/restore-pecuariatech_20251019_154443.log
+D       logs/status-20251020-004005.txt
+D       logs/status-20251020-004006.html
+D       logs/status-20251020-233901.html
+D       logs/ultra_check_20251018_131313.log
+D       logs/ultra_check_20251018_131609.log
+D       logs/utf8-fix-20251021-000052.html
+D       logs/vercel-20251021-000052.txt
+M       next.config.js
+M       next.config.ts
+M       package-lock.json
+M       package.json
+M       postcss.config.js
+M       public/manifest.json
+M       public/service-worker.js
+M       public/sw.js
+M       scripts/app/components/UltraBiologico2.tsx
+M       scripts/dist/hello.js
+M       scripts/dist/ultrabiologico.js
+M       scripts/ts/hello.ts
+M       scripts/ts/ultrabiologico.ts
+M       scripts/tsconfig.json
+M       scripts/tsconfig.scripts.json
+M       scripts/ultrabiologico.ts
+M       seed.js
+M       src/app/api/financeiro/route.ts
+M       src/app/financeiro/page.tsx
+M       src/app/globals.css
+M       src/app/layout.tsx
+M       src/app/page.tsx
+M       src/app/pastagem/page.tsx
+M       src/components/Sidebar.tsx
+M       src/dashboard/page.tsx
+M       src/lib/supabase.ts
+M       src/pastagem/page.tsx
+M       src/rebanho/page.tsx
+M       styles/globals.css
+M       supabase/functions/forecast_clima/package.json
+M       supabase/functions/forecast_clima/src/index.ts
+M       tailwind.config.js
+M       ts/hello.ts
+M       tsconfig.json
+M       ultrabiologica.ps1
+Already on 'main'
+Your branch is up to date with 'origin/main'.

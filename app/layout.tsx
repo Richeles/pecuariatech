@@ -1,20 +1,20 @@
-import SWRegister from '../components/SWRegister'
-import './globals.css';
-export const metadata = { title: 'PecuariaTech', description: 'UltraBiológico & UltraChat' };
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang='pt-BR'>
-      <head>
-  <meta charSet="UTF-8" />
-    <meta charSet='UTF-8' />
-<meta charSet='utf-8' /><meta name='viewport' content='width=device-width,initial-scale=1' /></head>
-      <body className='bg-gray-50 text-gray-800 min-h-screen'>
-  <SWRegister/>{children}</body>
-    </html>
-  );
+<meta charSet='UTF-8' />
+import './globals.css'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata = {
+  title: 'PecuariaTech',
+  description: 'Gestão inteligente do campo — Rebanho, Pastagem e Finanças',
 }
 
-
-
+export default function RootLayout({ children }) {
+  return (
+    <html lang='pt-BR'>
+      <body className={inter.className}>{children}</body>
+    </html>
+  )
+}
 
 

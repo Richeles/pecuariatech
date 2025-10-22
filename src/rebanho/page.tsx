@@ -1,3 +1,4 @@
+<meta charSet='UTF-8' />
 "use client";
 
 import { useState } from "react";
@@ -79,6 +80,8 @@ export default function RebanhoPage() {
     </div>
   );
 }
+
+
 
 
 

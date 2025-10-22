@@ -1,3 +1,4 @@
+<meta charSet='UTF-8' />
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -111,6 +112,8 @@ export default function FinanceiroPage() {
     </div>
   )
 }
+
+
 
 
 

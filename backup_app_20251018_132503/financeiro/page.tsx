@@ -1,3 +1,4 @@
+<meta charSet='UTF-8' />
 import React from 'react';
 
 export default function Page() {
@@ -8,5 +9,7 @@ export default function Page() {
         </div>
     );
 }
+
+
 
 

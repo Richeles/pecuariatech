@@ -1,3 +1,4 @@
+<meta charSet='UTF-8' />
 export default function Dashboard() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-blue-100">
@@ -8,6 +9,8 @@ export default function Dashboard() {
     </main>
   );
 }
+
+
 
 
 

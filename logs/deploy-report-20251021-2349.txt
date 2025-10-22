@@ -1,0 +1,4 @@
+Deploy realizado em: 2025-10-21 23:49:20
+Vercel CLI: 48.5.0
+Arquivos UTF-8 convertidos: 206
+Domínio: https://www.pecuariatech.com
