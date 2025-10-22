@@ -1,13 +1,13 @@
-/** @type {import('next').NextConfig} */
+/** UTF-8 fix */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-}
-
-module.exports = nextConfig
-
-
+  reactStrictMode: true,
+  headers: async () => [
+    {
+      source: '/(.*)',
+      headers: [
+        { key: 'Content-Type', value: 'text/html; charset=utf-8' },
+      ],
+    },
+  ],
+};
+module.exports = nextConfig;

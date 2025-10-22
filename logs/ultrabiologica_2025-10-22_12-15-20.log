@@ -260,3 +260,114 @@ M       tsconfig.json
 M       ultrabiologica.ps1
 Already on 'main'
 Your branch is up to date with 'origin/main'.
+From https://github.com/Richeles/pecuariatech
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+warning: in the working copy of 'app/dashboard/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/financeiro/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/pastagem/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/rebanho/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/status/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/ultrabiologica/status/page.tsx', LF will be replaced by CRLF the next time Git touc
+hes it
+warning: in the working copy of 'app/ultrabiologico2/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/ultrachat/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/ultrahub/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backup_app_20251018_102216/dashboard/page.tsx', LF will be replaced by CRLF the next ti
+me Git touches it
+warning: in the working copy of 'backup_app_20251018_102216/financeiro/page.tsx', LF will be replaced by CRLF the next t
+ime Git touches it
+warning: in the working copy of 'backup_app_20251018_102216/pastagem/page.tsx', LF will be replaced by CRLF the next tim
+e Git touches it
+warning: in the working copy of 'backup_app_20251018_102216/rebanho/page.tsx', LF will be replaced by CRLF the next time
+ Git touches it
+warning: in the working copy of 'backup_app_20251018_102216/status/page.tsx', LF will be replaced by CRLF the next time
+Git touches it
+warning: in the working copy of 'backup_app_20251018_102216/ultrabiologica/status/page.tsx', LF will be replaced by CRLF
+ the next time Git touches it
+warning: in the working copy of 'backup_app_20251018_102216/ultrabiologico2/page.tsx', LF will be replaced by CRLF the n
+ext time Git touches it
+warning: in the working copy of 'backup_app_20251018_102216/ultrachat/page.tsx', LF will be replaced by CRLF the next ti
+me Git touches it
+warning: in the working copy of 'backup_app_20251018_102216/ultrahub/page.tsx', LF will be replaced by CRLF the next tim
+e Git touches it
+warning: in the working copy of 'backup_app_20251018_132503/dashboard/page.tsx', LF will be replaced by CRLF the next ti
+me Git touches it
+warning: in the working copy of 'backup_app_20251018_132503/financeiro/page.tsx', LF will be replaced by CRLF the next t
+ime Git touches it
+warning: in the working copy of 'backup_app_20251018_132503/page.tsx', LF will be replaced by CRLF the next time Git tou
+ches it
+warning: in the working copy of 'backup_app_20251018_132503/pastagem/page.tsx', LF will be replaced by CRLF the next tim
+e Git touches it
+warning: in the working copy of 'backup_app_20251018_132503/rebanho/page.tsx', LF will be replaced by CRLF the next time
+ Git touches it
+warning: in the working copy of 'backup_app_20251018_132503/status/page.tsx', LF will be replaced by CRLF the next time
+Git touches it
+warning: in the working copy of 'backup_app_20251018_132503/ultrabiologica/status/page.tsx', LF will be replaced by CRLF
+ the next time Git touches it
+warning: in the working copy of 'backup_app_20251018_132503/ultrabiologico2/page.tsx', LF will be replaced by CRLF the n
+ext time Git touches it
+warning: in the working copy of 'backup_app_20251018_132503/ultrachat/page.tsx', LF will be replaced by CRLF the next ti
+me Git touches it
+warning: in the working copy of 'backup_app_20251018_132503/ultrahub/page.tsx', LF will be replaced by CRLF the next tim
+e Git touches it
+warning: in the working copy of 'backup_app_20251018_142927/dashboard/page.tsx', LF will be replaced by CRLF the next ti
+me Git touches it
+warning: in the working copy of 'backup_app_20251018_142927/financeiro/page.tsx', LF will be replaced by CRLF the next t
+ime Git touches it
+warning: in the working copy of 'backup_app_20251018_142927/page.tsx', LF will be replaced by CRLF the next time Git tou
+ches it
+warning: in the working copy of 'backup_app_20251018_142927/pastagem/page.tsx', LF will be replaced by CRLF the next tim
+e Git touches it
+warning: in the working copy of 'backup_app_20251018_142927/rebanho/page.tsx', LF will be replaced by CRLF the next time
+ Git touches it
+warning: in the working copy of 'backup_app_20251018_142927/status/page.tsx', LF will be replaced by CRLF the next time
+Git touches it
+warning: in the working copy of 'backup_app_20251018_142927/ultrabiologica/status/page.tsx', LF will be replaced by CRLF
+ the next time Git touches it
+warning: in the working copy of 'backup_app_20251018_142927/ultrabiologico2/page.tsx', LF will be replaced by CRLF the n
+ext time Git touches it
+warning: in the working copy of 'backup_app_20251018_142927/ultrachat/page.tsx', LF will be replaced by CRLF the next ti
+me Git touches it
+warning: in the working copy of 'backup_app_20251018_142927/ultrahub/page.tsx', LF will be replaced by CRLF the next tim
+e Git touches it
+warning: in the working copy of 'public/manifest.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'public/service-worker.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'public/sw.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/dist/hello.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/dist/ultrabiologico.js', LF will be replaced by CRLF the next time Git touches
+it
+warning: in the working copy of 'src/app/financeiro/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/pastagem/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/dashboard/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pastagem/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/rebanho/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'supabase/functions/forecast_clima/package.json', LF will be replaced by CRLF the next t
+ime Git touches it
+warning: in the working copy of 'tailwind.config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tsconfig.json', LF will be replaced by CRLF the next time Git touches it
+Enumerating objects: 265, done.
+Counting objects: 100% (263/263), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (140/140), done.
+Writing objects: 100% (144/144), 27.65 KiB | 159.00 KiB/s, done.
+Total 144 (delta 73), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (73/73), completed with 67 local objects.
+To https://github.com/Richeles/pecuariatech.git
+   0e52327..e572c87  main -> main
+PS>TerminatingError(Invoke-RestMethod): "
+{
+  "ok": false,
+  "error_code": 404,
+  "description": "Not Found"
+}"
+[WARN] Falha Telegram: Response status code does not indicate success: 404 (Not Found).
+[INFO] Log: C:\Users\Administrador\pecuariatech\logs\ultrabiologica_2025-10-22_12-15-20.log
+**********************
+PowerShell transcript end
+End time: 20251022121631
+**********************
