@@ -1,0 +1,11 @@
+Relatório de Diagnóstico UTF-8 — PecuariaTech
+Data/Hora: 10/22/2025 17:22:55
+URL: https://www.pecuariatech.com/dashboard
+------------------------------------------------
+Content-Type recebido: text/html; charset=utf-8
+Charset detectado: utf-8
+Status: ✅ UTF-8 correto
+------------------------------------------------
+Trecho do conteúdo HTML:
+<!DOCTYPE html><html lang="pt-BR"><head><meta charSet="utf-8"/><meta charSet="UTF-8"/><meta charSet="UTF-8"/><meta charSet="utf-8"/><meta charSet="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/_next/static/css/71a5e513ebc80d2c.css" data-precedence="next"/><link rel="preload" as="script" fetchPriority="low" href="/_next/static/chunks/webpack-db0a529a99835594.js"/><scrip
+------------------------------------------------

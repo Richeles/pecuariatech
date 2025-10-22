@@ -1,4 +1,4 @@
-<meta charSet='UTF-8' />
+﻿ï»¿<meta charSet='UTF-8' />
 import './globals.css'
 import { Inter } from 'next/font/google'
 
@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'PecuariaTech',
-  description: 'Gestão inteligente do campo — Rebanho, Pastagem e Finanças',
+  description: 'GestÃƒÂ£o inteligente do campo Ã¢â‚¬â€ Rebanho, Pastagem e FinanÃƒÂ§as',
 }
 
 export default function RootLayout({ children }) {

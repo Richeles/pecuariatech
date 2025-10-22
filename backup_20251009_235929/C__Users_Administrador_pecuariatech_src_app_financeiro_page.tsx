@@ -1,4 +1,4 @@
-'use client'
+﻿ï»¿'use client'
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
@@ -38,7 +38,7 @@ export default function FinanceiroPage() {
 
   return (
     <div className="max-w-md mx-auto p-6 font-sans">
-      <h1 className="text-2xl font-bold text-center mb-6">Gestão Financeira</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">GestÃƒÂ£o Financeira</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -49,12 +49,12 @@ export default function FinanceiroPage() {
             className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="entrada">Entrada</option>
-            <option value="saida">Saída</option>
+            <option value="saida">SaÃƒÂ­da</option>
           </select>
         </div>
 
         <div>
-          <label className="block mb-1 font-semibold">Descrição:</label>
+          <label className="block mb-1 font-semibold">DescriÃƒÂ§ÃƒÂ£o:</label>
           <input
             type="text"
             value={descricao}

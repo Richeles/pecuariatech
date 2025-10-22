@@ -1,11 +1,11 @@
-export default function Home() {
+﻿ï»¿export default function Home() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-green-100">
       <h1 className="text-4xl font-bold text-green-800">
-        🐄 Bem-vindo ao PecuariaTech
+        Ã°Å¸Ââ€ž Bem-vindo ao PecuariaTech
       </h1>
       <p className="mt-4 text-lg text-green-700">
-        Gestão inteligente para sua fazenda!
+        GestÃƒÂ£o inteligente para sua fazenda!
       </p>
 
       <div className="flex flex-col gap-4 mt-8">

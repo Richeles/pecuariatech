@@ -1,0 +1,335 @@
+**********************
+PowerShell transcript start
+Start time: 20251022163727
+Username: RICHELE-PC\Administrador
+RunAs User: RICHELE-PC\Administrador
+Configuration Name: 
+Machine: RICHELE-PC (Microsoft Windows NT 10.0.19045.0)
+Host Application: C:\Program Files\PowerShell\7\pwsh.dll
+Process ID: 8468
+PSVersion: 7.5.3
+PSEdition: Core
+GitCommitId: 7.5.3
+OS: Microsoft Windows 10.0.19045
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+[INFO] ⚙️ Iniciando restauração UTF-8 e cache analítico...
+[WARN] Corrigindo codificação em: route.ts
+[WARN] Corrigindo codificação em: route.ts
+[WARN] Corrigindo codificação em: UltraChat.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: layout.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_app_dashboard_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_app_layout.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_app_pastagem_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_app_rebanho_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_app_ultrabiologica_status_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_src_app_financeiro_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_src_app_layout.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_src_app_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_src_dashboard_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_src_pastagem_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_app_dashboard_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_app_layout.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_app_pastagem_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_app_rebanho_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_app_ultrabiologica_status_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_dashboard_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_layout.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_pastagem_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_rebanho_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_ultrabiologica_status_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_app_financeiro_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_app_layout.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_app_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_dashboard_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_pastagem_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_src_app_financeiro_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_src_app_layout.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_src_app_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_src_dashboard_page.tsx
+[WARN] Corrigindo codificação em: C__Users_Administrador_pecuariatech_src_pastagem_page.tsx
+[WARN] Corrigindo codificação em: route.ts
+[WARN] Corrigindo codificação em: route.ts
+[WARN] Corrigindo codificação em: UltraChat.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: route.ts
+[WARN] Corrigindo codificação em: route.ts
+[WARN] Corrigindo codificação em: UltraChat.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: route.ts
+[WARN] Corrigindo codificação em: route.ts
+[WARN] Corrigindo codificação em: UltraChat.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: buffer.buffer.d.ts
+[WARN] Corrigindo codificação em: buffer.buffer.d.ts
+[WARN] Corrigindo codificação em: package.json
+[WARN] Corrigindo codificação em: pt_BR.json
+[WARN] Corrigindo codificação em: caseFolding.json
+[WARN] Corrigindo codificação em: registry.json
+[WARN] Corrigindo codificação em: index.js
+[WARN] Corrigindo codificação em: index.js
+[WARN] Corrigindo codificação em: bundle.js
+[WARN] Corrigindo codificação em: packages-bundle.js
+[WARN] Corrigindo codificação em: index.js
+[WARN] Corrigindo codificação em: index.js
+[WARN] Corrigindo codificação em: index.js
+[WARN] Corrigindo codificação em: index.js
+[WARN] Corrigindo codificação em: vendor.js
+[WARN] Corrigindo codificação em: diagnosticMessages.generated.json
+[WARN] Corrigindo codificação em: ultrabiologico.js
+[WARN] Corrigindo codificação em: ultrabiologico.ts
+[WARN] Corrigindo codificação em: ultrabiologico.ts
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: layout.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: page.tsx
+[WARN] Corrigindo codificação em: seed.js
+[INFO] 🧠 Gerando cache analítico...
+PS>TerminatingError(Get-Counter): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: O objeto especificado não foi encontrado no computador."
+>> TerminatingError(Get-Counter): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: O objeto especificado não foi encontrado no computador."
+>> TerminatingError(Get-Counter): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: O objeto especificado não foi encontrado no computador."
+The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: O objeto especificado não foi encontrado no computador.
+Get-Counter: C:\Users\Administrador\pecuariatech\utf8-restore-analytics.ps1:38
+Line |
+  38 |  … cpu_load = (Get-Counter '\Processor(_Total)\% Processor Time').Counte …
+     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | O objeto especificado não foi encontrado no computador.
+
+PS C:\Users\Administrador\pecuariatech> cd "C:\Users\Administrador\pecuariatech"
+$ErrorActionPreference='Stop'
+Write-Host "🔧 Corrigindo codificação de texto (UTF-8) e forçando charset..." -ForegroundColor Cyan
+
+# Corrige textos com codificação errada
+Get-ChildItem -Recurse -Include *.tsx,*.ts,*.js,*.jsx,*.css,*.json,*.html | ForEach-Object {
+    $t = Get-Content $_.FullName -Raw -ErrorAction SilentlyContinue
+    if ($t -match "Ã" -or $t -match "Â" -or $t -match "ðŸ") {
+        $b = [System.IO.File]::ReadAllBytes($_.FullName)
+        $s = [System.Text.Encoding]::GetEncoding(1252).GetString($b)
+        [System.IO.File]::WriteAllText($_.FullName,$s,[System.Text.Encoding]::UTF8)
+        Write-Host "✔ Corrigido: $($_.Name)" -ForegroundColor Green
+    }
+}
+
+# Regrava next.config.js com headers corretos
+@"
+const nextConfig = {
+  reactStrictMode: true,
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'Content-Type', value: 'text/html; charset=utf-8' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+        ],
+      },
+    ];
+  },
+};
+module.exports = nextConfig;
+"@ | Out-File -Encoding utf8 "next.config.js"
+Write-Host "✅ next.config.js atualizado com charset UTF-8" -ForegroundColor Yellow
+
+# Garante meta UTF-8 no layout
+$layout="app\layout.tsx"
+if(Test-Path $layout){
+ $c=Get-Content $layout -Raw
+ if($c -notmatch "charSet"){
+   $c=$c -replace "(<head>)","`$1`n        <meta charSet=`"UTF-8`" />`n        <meta httpEquiv=`"Content-Type`" content=`"text/html; charset=UTF-8`" />"
+   $c|Out-File -Encoding utf8 $layout
+   Write-Host "✅ layout.tsx atualizado com meta UTF-8" -ForegroundColor Yellow
+ }
+}
+
+# Remove build anterior e recompila
+if(Test-Path ".next"){Remove-Item ".next" -Recurse -Force}
+npm run build
+
+# Envia commit e push
+git add -A
+git commit -m "fix: charset UTF-8 global" 2>$null | Out-Null
+git push origin main
+
+# Abre o navegador e toca som de confirmação
+Add-Type -AssemblyName PresentationCore,PresentationFramework
+[System.Media.SystemSounds]::Asterisk.Play()
+Start-Sleep -Seconds 3
+Start-Process "https://pecuariatech.com/dashboard"
+
+Write-Host "🎯 Correção concluída e deploy enviado. Verifique o site em https://pecuariatech.com/dashboard" -ForegroundColor Green
+
+🔧 Corrigindo codificação de texto (UTF-8) e forçando charset...
+✔ Corrigido: route.ts
+✔ Corrigido: route.ts
+✔ Corrigido: UltraChat.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_dashboard_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_pastagem_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_rebanho_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_ultrabiologica_status_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_app_financeiro_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_app_layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_app_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_dashboard_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_pastagem_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_dashboard_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_pastagem_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_rebanho_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_ultrabiologica_status_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_dashboard_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_pastagem_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_rebanho_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_ultrabiologica_status_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_app_financeiro_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_app_layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_app_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_dashboard_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_pastagem_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_app_financeiro_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_app_layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_app_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_dashboard_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_pastagem_page.tsx
+✔ Corrigido: route.ts
+✔ Corrigido: route.ts
+✔ Corrigido: UltraChat.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: route.ts
+✔ Corrigido: route.ts
+✔ Corrigido: UltraChat.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: route.ts
+✔ Corrigido: route.ts
+✔ Corrigido: UltraChat.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: route.ts
+✔ Corrigido: route.ts
+✔ Corrigido: UltraChat.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_dashboard_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_pastagem_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_rebanho_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_ultrabiologica_status_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_app_financeiro_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_app_layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_app_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_dashboard_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_pastagem_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_dashboard_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_pastagem_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_rebanho_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_app_ultrabiologica_status_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_dashboard_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_pastagem_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_rebanho_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_app_ultrabiologica_status_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_app_financeiro_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_app_layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_app_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_dashboard_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_backup_20251009_235929_C__Users_Administrador_pecuariatech_src_pastagem_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_app_financeiro_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_app_layout.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_app_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_dashboard_page.tsx
+✔ Corrigido: C__Users_Administrador_pecuariatech_src_pastagem_page.tsx
+✔ Corrigido: route.ts
+✔ Corrigido: route.ts
+✔ Corrigido: UltraChat.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: route.ts
+✔ Corrigido: route.ts
+✔ Corrigido: UltraChat.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: route.ts
+✔ Corrigido: route.ts
+✔ Corrigido: UltraChat.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: buffer.buffer.d.ts
+✔ Corrigido: buffer.buffer.d.ts
+✔ Corrigido: package.json
+✔ Corrigido: pt_BR.json
+✔ Corrigido: caseFolding.json
+✔ Corrigido: registry.json
+✔ Corrigido: index.js
+✔ Corrigido: index.js
+✔ Corrigido: bundle.js
+✔ Corrigido: packages-bundle.js
+✔ Corrigido: index.js
+✔ Corrigido: index.js
+✔ Corrigido: index.js
+✔ Corrigido: index.js
+✔ Corrigido: vendor.js
+✔ Corrigido: diagnosticMessages.generated.json
+✔ Corrigido: ultrabiologico.js
+✔ Corrigido: ultrabiologico.ts
+✔ Corrigido: ultrabiologico.ts
+✔ Corrigido: page.tsx
+✔ Corrigido: layout.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: page.tsx
+✔ Corrigido: seed.js
+✔ Corrigido: buffer.buffer.d.ts
+✔ Corrigido: buffer.buffer.d.ts
+✔ Corrigido: package.json
+✔ Corrigido: pt_BR.json
+✔ Corrigido: caseFolding.json
+✔ Corrigido: registry.json
+PS C:\Users\Administrador\pecuariatech> TerminatingError(): "The pipeline has been stopped."
+>> TerminatingError(): "The pipeline has been stopped."
+**********************
+PowerShell transcript end
+End time: 20251022165830
+**********************

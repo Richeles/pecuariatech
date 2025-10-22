@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿ï»¿import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
@@ -6,10 +6,10 @@ export async function POST(req: Request) {
     const pasture = body.pasture || null;
     const climate = body.climate || null;
 
-    const prompt = `Você é um especialista zootécnico.
+    const prompt = `VocÃƒÂª ÃƒÂ© um especialista zootÃƒÂ©cnico.
 Com base na pastagem: ${pasture} e clima: ${climate},
-gere recomendações práticas de manejo, ajustes nutricionais e riscos sanitários.
-Se for apropriado, retorne um bloco \\json ... \\ com ação register_pastagem ou recommend_treatment.`;
+gere recomendaÃƒÂ§ÃƒÂµes prÃƒÂ¡ticas de manejo, ajustes nutricionais e riscos sanitÃƒÂ¡rios.
+Se for apropriado, retorne um bloco \\json ... \\ com aÃƒÂ§ÃƒÂ£o register_pastagem ou recommend_treatment.`;
 
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",

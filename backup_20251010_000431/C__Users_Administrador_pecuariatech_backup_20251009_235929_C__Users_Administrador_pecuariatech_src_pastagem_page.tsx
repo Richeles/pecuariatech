@@ -1,4 +1,4 @@
-"use client";
+﻿ï»¿"use client";
 
 import { useState } from "react";
 
@@ -10,11 +10,11 @@ export default function PastagemPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`🌿 Pastagem cadastrada com sucesso:
-    📍 Nome: ${nome}
-    📏 Área: ${area} hectares
-    🌾 Tipo de capim: ${capim}
-    📅 Última rotação: ${ultimaRotacao}`);
+    alert(`Ã°Å¸Å’Â¿ Pastagem cadastrada com sucesso:
+    Ã°Å¸â€œÂ Nome: ${nome}
+    Ã°Å¸â€œÂ ÃƒÂrea: ${area} hectares
+    Ã°Å¸Å’Â¾ Tipo de capim: ${capim}
+    Ã°Å¸â€œâ€¦ ÃƒÅ¡ltima rotaÃƒÂ§ÃƒÂ£o: ${ultimaRotacao}`);
 
     // resetar campos
     setNome("");
@@ -25,7 +25,7 @@ export default function PastagemPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4">🌿 Cadastro de Pastagem</h1>
+      <h1 className="text-3xl font-bold mb-4">Ã°Å¸Å’Â¿ Cadastro de Pastagem</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
         <div>
@@ -40,7 +40,7 @@ export default function PastagemPage() {
         </div>
 
         <div>
-          <label className="block font-medium">Área (hectares)</label>
+          <label className="block font-medium">ÃƒÂrea (hectares)</label>
           <input
             type="number"
             value={area}
@@ -61,7 +61,7 @@ export default function PastagemPage() {
         </div>
 
         <div>
-          <label className="block font-medium">Última Rotação</label>
+          <label className="block font-medium">ÃƒÅ¡ltima RotaÃƒÂ§ÃƒÂ£o</label>
           <input
             type="date"
             value={ultimaRotacao}
