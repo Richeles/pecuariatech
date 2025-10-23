@@ -1,0 +1,20 @@
+
+added 515 packages, and audited 516 packages in 6m
+
+179 packages are looking for funding
+  run `npm fund` for details
+
+3 vulnerabilities (2 low, 1 moderate)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+> pecuariatech@0.1.0 build
+> next build
+
+   Ôû▓ Next.js 15.3.4
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
