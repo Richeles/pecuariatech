@@ -1,4 +1,4 @@
-﻿ï»¿<meta charSet='UTF-8' />
+ï»¿<meta charSet='UTF-8' />
 'use client';
 import useSWR from 'swr';
 

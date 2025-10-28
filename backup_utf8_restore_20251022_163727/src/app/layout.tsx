@@ -1,4 +1,4 @@
-﻿<meta charSet='UTF-8' />
+<meta charSet='UTF-8' />
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";

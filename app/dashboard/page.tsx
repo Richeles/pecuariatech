@@ -1,5 +1,5 @@
-﻿ï»¿<meta charSet='UTF-8' />
 'use client';
+<meta charSet='UTF-8' />
 import useSWR from 'swr';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -41,6 +41,11 @@ function Kpi({ title, value, emoji }: { title: string, value: any, emoji: string
     </div>
   );
 }
+
+
+
+
+
 
 
 

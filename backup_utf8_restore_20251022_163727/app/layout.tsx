@@ -1,4 +1,4 @@
-﻿<meta charSet='UTF-8' />
+<meta charSet='UTF-8' />
 import './globals.css'
 import { Inter } from 'next/font/google'
 

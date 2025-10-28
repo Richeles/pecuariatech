@@ -1,4 +1,4 @@
-﻿<meta charSet='UTF-8' />
+<meta charSet='UTF-8' />
 "use client";
 
 import { useState } from "react";

@@ -1,20 +1,9 @@
-
-added 515 packages, and audited 516 packages in 6m
-
-179 packages are looking for funding
-  run `npm fund` for details
-
-3 vulnerabilities (2 low, 1 moderate)
-
-To address all issues, run:
-  npm audit fix
-
-Run `npm audit` for details.
-
-> pecuariatech@0.1.0 build
-> next build
-
-   Ôû▓ Next.js 15.3.4
-   - Environments: .env.local, .env
-
-   Creating an optimized production build ...
+Relatório de Deploy PecuariaTech
+Data/Hora: 10/22/2025 23:22:08
+URL: https://www.pecuariatech.com/dashboard
+Content-Type: text/html; charset=utf-8
+Charset: utf-8
+------------------------------------------------
+Trecho inicial do HTML:
+<!DOCTYPE html><html lang="pt-BR"><head><meta charSet="utf-8"/><meta charSet="UTF-8"/><meta charSet="UTF-8"/><meta charSet="utf-8"/><meta charSet="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/_next/static/css/71a5e513ebc80d2c.css" data-precedence="next"/><link rel="prel
+------------------------------------------------

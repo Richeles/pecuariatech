@@ -1,4 +1,4 @@
-﻿import pino from 'pino';
+import pino from 'pino';
 import fetch from 'node-fetch';
 
 // Logger ultrabiolÃ³gico

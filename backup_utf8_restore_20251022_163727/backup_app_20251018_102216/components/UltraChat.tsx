@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import React, { useEffect, useRef, useState } from 'react';
 
 type Msg = { role: 'user'|'assistant'|'system'; text: string; ts?: string };

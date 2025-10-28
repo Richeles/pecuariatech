@@ -1,4 +1,4 @@
-﻿ï»¿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
@@ -32,5 +32,10 @@ Sempre recomende consultar veterinÃƒÂ¡rio quando houver sinais de gravidade.
     return NextResponse.json({ ok: false, error: err });
   }
 }
+
+
+
+
+
 
 

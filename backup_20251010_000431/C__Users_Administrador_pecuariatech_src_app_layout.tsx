@@ -1,4 +1,4 @@
-﻿ï»¿import type { Metadata } from "next";
+ï»¿import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "../components/Sidebar"; // Ã¢Å“â€¦ Importando a Sidebar

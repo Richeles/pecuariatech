@@ -1,4 +1,4 @@
-﻿ï»¿'use client';
+'use client';
 import React, { useEffect, useRef, useState } from 'react';
 
 type Msg = { role: 'user'|'assistant'|'system'; text: string; ts?: string };
@@ -23,20 +23,20 @@ export default function UltraChat(){
 
   async function sendMessage(){
     if (!text.trim()) return;
-    const user = { role: 'user', text: text.trim(), ts: new Date().toISOString() };
-    setMessages(m => [...m, user]);
+    const user: Msg = { role: 'user', text: text.trim(), ts: new Date().toISOString() };
+    setMessages((m: Msg[]) => [...m, user]);
     setText(''); setLoading(true);
     try {
       const r = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message: user.text }) });
       const j = await r.json();
       if (r.ok && j.reply) {
-        setMessages(m => [...m, { role:'assistant', text: j.reply, ts: new Date().toISOString() }]);
-        if (j.actionResult) setMessages(m => [...m, { role:'system', text: 'AÃƒÂ§ÃƒÂ£o: ' + JSON.stringify(j.actionResult), ts: new Date().toISOString() }]);
+        setMessages((m: Msg[]) => [...m, { role:'assistant', text: j.reply, ts: new Date().toISOString() }]);
+        if (j.actionResult) setMessages((m: Msg[]) => [...m, { role:'system', text: 'AÃƒÂ§ÃƒÂ£o: ' + JSON.stringify(j.actionResult), ts: new Date().toISOString() }]);
       } else {
-        setMessages(m => [...m, { role:'assistant', text: 'Erro: ' + (j.error || 'sem resposta'), ts: new Date().toISOString() }]);
+        setMessages((m: Msg[]) => [...m, { role:'assistant', text: 'Erro: ' + (j.error || 'sem resposta'), ts: new Date().toISOString() }]);
       }
     } catch(e) {
-      setMessages(m => [...m, { role:'assistant', text: 'Erro de conexÃƒÂ£o', ts: new Date().toISOString() }]);
+      setMessages((m: Msg[]) => [...m, { role:'assistant', text: 'Erro de conexÃƒÂ£o', ts: new Date().toISOString() }]);
     } finally { setLoading(false); }
   }
 
@@ -60,6 +60,12 @@ export default function UltraChat(){
     </div>
   );
 }
+
+
+
+
+
+
 
 
 

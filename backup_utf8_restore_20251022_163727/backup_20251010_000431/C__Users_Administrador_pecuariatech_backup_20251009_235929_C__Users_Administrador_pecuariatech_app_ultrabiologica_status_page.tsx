@@ -1,4 +1,4 @@
-﻿export default function ultrabiologicastatus() { return <h1>PÃƒÂ¡gina ultrabiologica/status - Placeholder</h1>; }
+export default function ultrabiologicastatus() { return <h1>PÃƒÂ¡gina ultrabiologica/status - Placeholder</h1>; }
 
 
 

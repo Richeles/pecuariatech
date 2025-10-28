@@ -1,13 +1,19 @@
-/** UTF-8 fix */
+import next from 'next';
+
+/**
+ * 🌾 PecuariaTech Next.js Config (versão limpa e moderna)
+ * - ESLint ignorado durante build
+ * - Suporte a server actions
+ * - React Strict Mode habilitado
+ */
 const nextConfig = {
   reactStrictMode: true,
-  headers: async () => [
-    {
-      source: '/(.*)',
-      headers: [
-        { key: 'Content-Type', value: 'text/html; charset=utf-8' },
-      ],
-    },
-  ],
+  experimental: {
+    serverActions: true
+  },
+  eslint: {
+    ignoreDuringBuilds: true
+  }
 };
-module.exports = nextConfig;
+
+export default nextConfig;

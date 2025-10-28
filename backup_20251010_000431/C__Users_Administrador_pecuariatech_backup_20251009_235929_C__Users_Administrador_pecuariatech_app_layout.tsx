@@ -1,4 +1,4 @@
-﻿ï»¿import './globals.css';
+ï»¿import './globals.css';
 export const metadata = { title: 'PecuariaTech' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

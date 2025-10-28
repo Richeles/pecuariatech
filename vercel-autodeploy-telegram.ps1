@@ -1,8 +1,8 @@
 <# 
- UltraBiológica Cloud — PecuariaTech v5.4
- Script: vercel-autodeploy-telegram.ps1
+ UltraBiológica Cloud — PecuariaTech v5.5
  Autor: Richeles Alves dos Santos ⚙️🚀
- Função: Rebuild + deploy + monitoramento via Telegram
+ Função: Remover BOM + rebuild + deploy + verificação + notificação via Telegram
+ Compatível com PowerShell 7+
 #>
 
 $ErrorActionPreference = "Stop"
@@ -10,13 +10,14 @@ $Root = "C:\Users\Administrador\pecuariatech"
 $LogDir = Join-Path $Root "logs"
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir | Out-Null }
 
-# CONFIGURAÇÕES TELEGRAM — personalize aqui:
-$BotToken = "SEU_TOKEN_AQUI"    # ex: 1234567890:ABCxyzXYZ
-$ChatID   = "SEU_CHATID_AQUI"   # ex: 987654321
+# 🔧 CONFIGURAÇÕES TELEGRAM
+$BotToken = "SEU_TOKEN_AQUI"    # Exemplo: 1234567890:ABCxyzXYZ
+$ChatID   = "SEU_CHATID_AQUI"   # Exemplo: 987654321
 
 $Date = Get-Date -Format "yyyyMMdd_HHmmss"
 $Url = "https://www.pecuariatech.com/dashboard"
-$LogFile = Join-Path $LogDir "vercel-autodeploy-$Date.log"
+$DeployLog = Join-Path $LogDir "vercel-autodeploy-$Date.log"
+$FixBOMLog = Join-Path $LogDir "fix-bom-$Date.log"
 
 function Send-Telegram($msg) {
     try {
@@ -28,34 +29,58 @@ function Send-Telegram($msg) {
     }
 }
 
-Write-Host "🚀 Iniciando pipeline autônoma do PecuariaTech..." -ForegroundColor Cyan
-Send-Telegram "🚀 Iniciando rebuild e deploy automático do PecuariaTech (v5.4)..."
+Write-Host "🚀 Iniciando pipeline autônoma do PecuariaTech Cloud v5.5..." -ForegroundColor Cyan
+Send-Telegram "🚀 Iniciando deploy automático do PecuariaTech Cloud v5.5..."
 
-# 1️⃣ LIMPEZA COMPLETA
-Write-Host "🧹 Limpando cache local e build..." -ForegroundColor Yellow
-@(".next", "node_modules", ".turbo", ".vercel") | ForEach-Object {
+# 🧹 LIMPEZA DE BOM (Byte Order Mark)
+Write-Host "`n🧩 Verificando arquivos com BOM..." -ForegroundColor Yellow
+$exts = "*.ts","*.tsx","*.js","*.jsx","*.json","*.html","*.css"
+$Count = 0
+Get-ChildItem -Path $Root -Include $exts -Recurse -File | ForEach-Object {
+    try {
+        $bytes = [System.IO.File]::ReadAllBytes($_.FullName)
+        if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+            $clean = $bytes[3..($bytes.Length - 1)]
+            [System.IO.File]::WriteAllBytes($_.FullName, $clean)
+            Write-Host "✔️ BOM removido: $($_.FullName)" -ForegroundColor Green
+            "Removido BOM -> $($_.FullName)" | Out-File -FilePath $FixBOMLog -Append -Encoding UTF8
+            $Count++
+        }
+    } catch {
+        Write-Host "⚠️ Erro ao processar $($_.FullName): $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+}
+if ($Count -eq 0) {
+    Write-Host "✅ Nenhum arquivo com BOM encontrado." -ForegroundColor Yellow
+} else {
+    Write-Host "💾 Log de correção salvo em: $FixBOMLog" -ForegroundColor Cyan
+    Write-Host "🧩 Total de arquivos corrigidos: $Count" -ForegroundColor Green
+}
+
+# 🧼 LIMPEZA DE BUILD
+Write-Host "`n🧹 Limpando cache local e build..." -ForegroundColor Yellow
+@(".next", ".vercel", ".turbo", "node_modules") | ForEach-Object {
     if (Test-Path $_) { Remove-Item $_ -Recurse -Force -ErrorAction SilentlyContinue }
 }
 npm cache clean --force | Out-Null
 
-# 2️⃣ REINSTALAÇÃO
-Write-Host "📦 Instalando dependências..." -ForegroundColor Yellow
-npm install | Tee-Object -FilePath $LogFile -Append
+# 📦 REINSTALAÇÃO
+Write-Host "`n📦 Instalando dependências..." -ForegroundColor Yellow
+npm install | Tee-Object -FilePath $DeployLog -Append
 
-# 3️⃣ BUILD COMPLETO
-Write-Host "⚙️ Compilando projeto Next.js..." -ForegroundColor Yellow
-npm run build | Tee-Object -FilePath $LogFile -Append
+# ⚙️ COMPILAÇÃO
+Write-Host "`n⚙️ Compilando projeto Next.js..." -ForegroundColor Yellow
+npm run build | Tee-Object -FilePath $DeployLog -Append
 
-# 4️⃣ DEPLOY (via GitHub)
-Write-Host "☁️ Enviando para GitHub (forçando deploy na Vercel)..." -ForegroundColor Yellow
+# ☁️ DEPLOY VIA GITHUB
+Write-Host "`n☁️ Enviando para GitHub (forçando deploy na Vercel)..." -ForegroundColor Yellow
 git add -A
-git commit --allow-empty -m "deploy: auto rebuild completo UTF-8 ($Date)" | Out-Null
-git push origin main | Tee-Object -FilePath $LogFile -Append
+git commit --allow-empty -m "deploy: auto rebuild UTF-8 + BOM fix ($Date)" | Out-Null
+git push origin main | Tee-Object -FilePath $DeployLog -Append
 
-# 5️⃣ VERIFICAÇÃO PÓS-DEPLOY
+# 🌐 VERIFICAÇÃO ONLINE
 Start-Sleep -Seconds 10
-Write-Host "🌐 Verificando status do site..." -ForegroundColor Cyan
-
+Write-Host "`n🌍 Verificando status online..." -ForegroundColor Cyan
 try {
     Add-Type -AssemblyName System.Net.Http
     $client = [System.Net.Http.HttpClient]::new()
@@ -66,12 +91,13 @@ try {
 
     if ($charset -match "utf-8") {
         Write-Host "✅ UTF-8 detectado corretamente!" -ForegroundColor Green
-        $msg = "✅ Deploy concluído com sucesso! Site online em UTF-8 🌍
-$Url
-Build finalizado em $(Get-Date)"
+        $msg = "✅ Deploy concluído com sucesso! 🌍
+PecuariaTech está online e íntegro.
+URL: $Url
+Build: $(Get-Date -Format 'dd/MM/yyyy HH:mm:ss')"
     } else {
         Write-Host "⚠️ Charset incorreto detectado: $charset" -ForegroundColor Red
-        $msg = "⚠️ Deploy concluído, mas charset incorreto detectado: $charset"
+        $msg = "⚠️ Deploy concluído, mas charset incorreto: $charset"
     }
 
     Send-Telegram $msg
@@ -82,20 +108,20 @@ Data/Hora: $(Get-Date)
 URL: $Url
 Content-Type: $contentType
 Charset: $charset
-------------------------------------------------
+-------------------------------------------
 Trecho inicial do HTML:
 $($html.Substring(0,[Math]::Min($html.Length,400)))
-------------------------------------------------
+-------------------------------------------
 "@
-    $report | Out-File -FilePath $LogFile -Encoding UTF8
-    Write-Host "`n💾 Log salvo em: $LogFile" -ForegroundColor Cyan
+    $report | Out-File -FilePath $DeployLog -Encoding UTF8
+    Write-Host "`n💾 Log salvo em: $DeployLog" -ForegroundColor Cyan
 }
 catch {
     $err = $_.Exception.Message
     Write-Host "❌ Erro durante verificação pós-deploy: $err" -ForegroundColor Red
-    Send-Telegram "❌ Erro na verificação pós-deploy: $err"
+    Send-Telegram "❌ Erro pós-deploy: $err"
 }
 
-Write-Host "`n✨ Processo concluído. Aguarde o build na Vercel (~5 min) e acesse:" -ForegroundColor Green
+Write-Host "`n✨ Processo concluído! Acesse o site em alguns minutos:" -ForegroundColor Green
 Write-Host "👉 $Url" -ForegroundColor Yellow
-Send-Telegram "✨ Processo finalizado! Acesse o painel: $Url"
+Send-Telegram "✨ Deploy finalizado! Acesse o painel: $Url"

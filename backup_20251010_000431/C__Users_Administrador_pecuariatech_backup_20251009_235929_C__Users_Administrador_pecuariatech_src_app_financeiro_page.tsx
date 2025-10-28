@@ -1,4 +1,4 @@
-﻿ï»¿'use client'
+ï»¿'use client'
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'

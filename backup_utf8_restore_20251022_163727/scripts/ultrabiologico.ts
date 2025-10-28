@@ -1,4 +1,4 @@
-﻿import * as dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 dotenv.config({ path: './scripts/.env.local' }); // garante carregamento certo
 
 import fetch from 'node-fetch';
