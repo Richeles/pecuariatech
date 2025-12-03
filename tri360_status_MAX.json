@@ -1,0 +1,15 @@
+{
+  "rest": true,
+  "dns": true,
+  "supabase": false,
+  "vercel": true,
+  "network": true,
+  "timestamp": "2025-11-19 22:28:34",
+  "tables": {
+    "racas": "error",
+    "pastagem": "error",
+    "rebanho": "error",
+    "financeiro": "error"
+  },
+  "localapp": false
+}

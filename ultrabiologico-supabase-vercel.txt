@@ -1,0 +1,161 @@
+param(
+    [string]$Url = "https://pecuariatech.com",
+
+    # === SUPABASE - preencha com suas credenciais ===
+    [string]$SupabaseUrl = "<YOUR_SUPABASE_URL>",            # ex: https://xyz.supabase.co
+    [string]$SupabaseKey = "<YOUR_SUPABASE_SERVICE_ROLE>",  # SERVICE ROLE KEY (segredo)
+
+    # === TELEGRAM (opcional) ===
+    [string]$TelegramToken = "<SEU_TELEGRAM_BOT_TOKEN>",
+    [string]$TelegramChatId = "<SEU_CHAT_ID>",
+
+    # === TWILIO / WhatsApp (opcional) ===
+    [string]$TwilioSid = "<TWILIO_SID>",
+    [string]$TwilioAuth = "<TWILIO_AUTH>",
+    [string]$TwilioFrom = "<TWILIO_WHATSAPP_FROM>",   # ex: +1415xxxxxxx (Twilio WhatsApp)
+    [string]$WhatsAppTo = "<WHATSAPP_TO>",           # ex: +55DDDNÚMERO
+
+    # === Vercel deploy (opcional) ===
+    [switch]$EnableVercelDeploy = $false,
+    [string]$VercelProjectName = "pecuariatech",
+
+    # Intervalo e tolerância
+    [int]$IntervalSeconds = 300,
+    [int]$MaxConsecutiveFailsToRedeploy = 3
+)
+
+# ------------------- Setup de logfile local -------------------
+if ($PSScriptRoot) {
+    $LogLocal = Join-Path $PSScriptRoot "ultrabiologico-local.log"
+} else {
+    $LogLocal = "C:\Users\Administrador\pecuariatech\ultrabiologico-local.log"
+}
+if (-not (Test-Path (Split-Path $LogLocal -Parent))) { New-Item -ItemType Directory -Path (Split-Path $LogLocal -Parent) -Force | Out-Null }
+if (-not (Test-Path $LogLocal)) { New-Item -Path $LogLocal -ItemType File -Force | Out-Null }
+
+function Write-LocalLog([string]$message) {
+    $ts = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+    $line = "$ts - $message"
+    Add-Content -Path $LogLocal -Value $line -Encoding UTF8
+    Write-Host $line
+}
+
+# ------------------- Helpers de alertas -------------------
+function Send-Telegram([string]$message) {
+    if ([string]::IsNullOrWhiteSpace($TelegramToken) -or [string]::IsNullOrWhiteSpace($TelegramChatId)) {
+        Write-LocalLog "Telegram não configurado - pular envio."
+        return
+    }
+    try {
+        $uri = "https://api.telegram.org/bot$TelegramToken/sendMessage"
+        $body = @{ chat_id = $TelegramChatId; text = $message } | ConvertTo-Json
+        Invoke-RestMethod -Uri $uri -Method Post -Body $body -ContentType "application/json" -TimeoutSec 15 -ErrorAction Stop | Out-Null
+        Write-LocalLog "Telegram enviado."
+    } catch {
+        Write-LocalLog ("Erro ao enviar Telegram: {0}" -f $_.Exception.Message)
+    }
+}
+
+function Send-WhatsAppTwilio([string]$message) {
+    if ([string]::IsNullOrWhiteSpace($TwilioSid) -or [string]::IsNullOrWhiteSpace($TwilioAuth) -or [string]::IsNullOrWhiteSpace($TwilioFrom) -or [string]::IsNullOrWhiteSpace($WhatsAppTo)) {
+        Write-LocalLog "WhatsApp (Twilio) não configurado - pular envio."
+        return
+    }
+    try {
+        $uri = "https://api.twilio.com/2010-04-01/Accounts/$TwilioSid/Messages.json"
+        $body = @{
+            From = "whatsapp:$TwilioFrom"
+            To   = "whatsapp:$WhatsAppTo"
+            Body = $message
+        }
+        $auth = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$TwilioSid`:$TwilioAuth"))
+        $headers = @{ Authorization = "Basic $auth" }
+        Invoke-RestMethod -Uri $uri -Method Post -Body $body -Headers $headers -TimeoutSec 15 -ErrorAction Stop | Out-Null
+        Write-LocalLog "WhatsApp via Twilio enviado."
+    } catch {
+        Write-LocalLog ("Erro ao enviar WhatsApp (Twilio): {0}" -f $_.Exception.Message)
+    }
+}
+
+# ------------------- Função para enviar log ao Supabase -------------------
+function Insert-SupabaseLog([string]$url, [string]$status, [string]$message) {
+    if ([string]::IsNullOrWhiteSpace($SupabaseUrl) -or [string]::IsNullOrWhiteSpace($SupabaseKey)) {
+        Write-LocalLog "Supabase não configurado - pular insert."
+        return
+    }
+    try {
+        $endpoint = ($SupabaseUrl.TrimEnd('/') + "/rest/v1/logs")
+        $payload = @{ url = $url; status = $status; message = $message } | ConvertTo-Json
+        $headers = @{
+            "apikey" = $SupabaseKey
+            "Authorization" = "Bearer $SupabaseKey"
+            "Content-Type" = "application/json"
+            "Prefer" = "return=representation"
+        }
+        Invoke-RestMethod -Uri $endpoint -Method Post -Body $payload -Headers $headers -TimeoutSec 15 -ErrorAction Stop | Out-Null
+        Write-LocalLog "Log enviado ao Supabase."
+    } catch {
+        Write-LocalLog ("Falha ao inserir log no Supabase: {0}" -f $_.Exception.Message)
+    }
+}
+
+# ------------------- Redeploy Vercel (opcional) -------------------
+function Redeploy-Vercel {
+    if (-not $EnableVercelDeploy) {
+        Write-LocalLog "Redeploy Vercel desativado."
+        return
+    }
+    try {
+        Write-LocalLog "Iniciando redeploy Vercel para projeto $VercelProjectName"
+        # requer vercel CLI configurada e login feito no sistema
+        $proc = Start-Process -FilePath "vercel" -ArgumentList "--prod --confirm --name $VercelProjectName" -NoNewWindow -Wait -PassThru
+        Write-LocalLog ("Vercel exit code: {0}" -f $proc.ExitCode)
+    } catch {
+        Write-LocalLog ("Erro ao executar Vercel redeploy: {0}" -f $_.Exception.Message)
+    }
+}
+
+# ------------------- Loop principal -------------------
+$failCount = 0
+Write-LocalLog "Iniciado monitoramento do site $Url (intervalo $IntervalSeconds segundos)."
+
+while ($true) {
+    try {
+        $resp = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+        if ($resp.StatusCode -eq 200) {
+            $status = "online"
+            $msg = "Site online"
+            Write-LocalLog "OK: $Url"
+            $failCount = 0
+        } else {
+            $status = "warning"
+            $msg = "Status $($resp.StatusCode)"
+            Write-LocalLog "Aviso: $Url retornou $($resp.StatusCode)"
+            $failCount++
+        }
+    } catch {
+        $status = "offline"
+        $msg = ($_ | Select-Object -ExpandProperty Exception).Message
+        Write-LocalLog ("Erro acessando $Url: {0}" -f $msg)
+        $failCount++
+    }
+
+    # salvar online (Supabase)
+    Insert-SupabaseLog -url $Url -status $status -message $msg
+
+    # alertas (somente quando offline ou aviso)
+    if ($status -ne "online") {
+        $alertText = ("ALERTA: {0} - {1} - {2}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $Url, $msg)
+        Send-Telegram $alertText
+        Send-WhatsAppTwilio $alertText
+    }
+
+    # se falhas consecutivas atingirem limite, opcionalmente redeploy
+    if ($failCount -ge $MaxConsecutiveFailsToRedeploy) {
+        Write-LocalLog ("Falhas consecutivas = {0}. Ação: redeploy (se habilitado)." -f $failCount)
+        Redeploy-Vercel
+        $failCount = 0
+    }
+
+    Start-Sleep -Seconds $IntervalSeconds
+}

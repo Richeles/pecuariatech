@@ -1,0 +1,6 @@
+body {
+  background-color: #f4f6f8;
+  color: #222;
+}
+table { border-collapse: collapse; width: 100%; background: #fff; }
+th { background: #0a7b37; color: white; }

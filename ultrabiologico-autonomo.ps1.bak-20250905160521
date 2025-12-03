@@ -1,0 +1,89 @@
+param(
+    [string]$Domain        = "pecuariatech.com",
+    [string]$ProjectName   = "pecuariatech",
+    [string]$WhatsAppToken = "<SEU_TOKEN_META>",
+    [string]$PhoneNumberId = "<SEU_PHONE_NUMBER_ID>",
+    [string]$WhatsAppTo    = "5567999564560",
+    [string]$TelegramToken = "<SEU_TOKEN_BOT>",
+    [string]$TelegramChat  = "<SEU_CHAT_ID>",
+    [int]$MaxFails         = 3
+)
+
+$LogFile = "$PSScriptRoot\ultrabiologico-total-log.txt"
+
+function Write-Stamp($msg) {
+    $stamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+    $line = "$stamp $msg"
+    Write-Host $line
+    Add-Content -Path $LogFile -Value $line -Encoding UTF8
+}
+
+function Send-WhatsAppAlert($msg) {
+    $url = "https://graph.facebook.com/v17.0/$PhoneNumberId/messages"
+    $headers = @{ "Authorization" = "Bearer $WhatsAppToken"; "Content-Type" = "application/json" }
+    $body = @{ messaging_product="whatsapp"; to=$WhatsAppTo; type="text"; text=@{body=$msg} } | ConvertTo-Json -Depth 3
+    try { Invoke-RestMethod -Method Post -Uri $url -Headers $headers -Body $body; Write-Stamp "✅ WhatsApp enviado." } catch { Write-Stamp "❌ WhatsApp falhou: $_" }
+}
+
+function Send-TelegramAlert($msg) {
+    $url = "https://api.telegram.org/bot$TelegramToken/sendMessage"
+    $body = @{ chat_id=$TelegramChat; text=$msg } | ConvertTo-Json
+    try { Invoke-RestMethod -Method Post -Uri $url -Body $body -ContentType "application/json"; Write-Stamp "✅ Telegram enviado." } catch { Write-Stamp "❌ Telegram falhou: $_" }
+}
+
+function Send-AllAlerts($msg) { 
+    Send-WhatsAppAlert $msg
+    Send-TelegramAlert $msg
+}
+
+function Build-And-Deploy {
+    Write-Stamp "🔧 Instalando dependências e rodando build..."
+    npm install
+    npm run build
+    Write-Stamp "🚀 Deploy no Vercel..."
+    vercel --prod --confirm
+    Write-Stamp "✅ Deploy concluído."
+}
+
+function Configure-Domain {
+    Write-Stamp "🌐 Configurando domínio $Domain..."
+    vercel domains add $Domain --yes
+    vercel domains add "www.$Domain" --yes
+    vercel alias set $ProjectName "www.$Domain" --yes
+}
+
+function Monitor-Site {
+    Write-Stamp "🔄 Monitoramento contínuo iniciado..."
+    $fails = 0
+    while ($true) {
+        try {
+            $status = (Invoke-WebRequest "https://www.$Domain" -UseBasicParsing -TimeoutSec 10).StatusCode
+            $ok = $status -eq 200
+        } catch { $ok = $false }
+
+        if (-not $ok) {
+            $fails++
+            Write-Stamp "⚠️ Falha detectada no site ($fails/$MaxFails)."
+            if ($fails -ge $MaxFails) {
+                Send-AllAlerts "🚨 Site $Domain caiu $fails vezes consecutivas! Reiniciando deploy..."
+                Write-Stamp "🔧 Redeploy automático iniciado..."
+                Build-And-Deploy
+                $fails = 0
+            }
+        } else {
+            if ($fails -gt 0) { Write-Stamp "✅ Site voltou a responder." }
+            $fails = 0
+        }
+
+        Start-Sleep -Seconds 60
+    }
+}
+
+# === Fluxo principal ===
+if (-not (Test-Path $LogFile)) { New-Item -Path $LogFile -ItemType File -Force | Out-Null }
+
+Build-And-Deploy
+Configure-Domain
+Send-AllAlerts "✅ PecuariaTech implantado com sucesso em https://www.$Domain"
+
+Monitor-Site

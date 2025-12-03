@@ -1,0 +1,5 @@
+UltraPro v5 – Log de Setup
+Executado em: 11/28/2025 17:08:06
+Node: v24.11.0
+NPM: 11.5.2
+Setup concluído com sucesso.

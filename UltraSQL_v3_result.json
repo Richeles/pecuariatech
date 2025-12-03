@@ -1,0 +1,26 @@
+[
+  {
+    "tabela": "pastagem",
+    "anon_select": "BLOQUEADO",
+    "service_role_select": "ERRO",
+    "rls": "Ativo"
+  },
+  {
+    "tabela": "rebanho",
+    "anon_select": "BLOQUEADO",
+    "service_role_select": "ERRO",
+    "rls": "Ativo"
+  },
+  {
+    "tabela": "financeiro",
+    "anon_select": "BLOQUEADO",
+    "service_role_select": "ERRO",
+    "rls": "Ativo"
+  },
+  {
+    "tabela": "racas",
+    "anon_select": "BLOQUEADO",
+    "service_role_select": "ERRO",
+    "rls": "Ativo"
+  }
+]

@@ -1,0 +1,8 @@
+{
+  \"name\": \"forecast_clima\",
+  \"version\": \"0.1.0\",
+  \"type\": \"module\",
+  \"scripts\": { \"start\": \"deno run -A --unstable src/index.ts\" }
+}
+
+

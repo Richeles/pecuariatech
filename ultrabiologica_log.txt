@@ -1,0 +1,103 @@
+[2025-11-17 22:00:33][INFO] UltraBiologica v24.2.4 iniciada.
+[2025-11-17 22:00:45][WARN] Erro ao atualizar GPS: The request was canceled due to the configured HttpClient.Timeout of 10 seconds elapsing.
+[2025-11-17 22:01:05][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:01:15][INFO] GPS atualizado: lat=-17.7657, long=-53.2784
+[2025-11-17 22:01:50][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:02:12][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:02:34][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:02:56][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:03:18][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:03:41][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:04:03][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:04:24][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:04:47][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:05:09][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:05:31][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:05:53][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:06:04][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:06:25][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:06:48][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:07:09][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:07:31][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:07:53][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:08:15][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:08:37][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:08:59][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:09:21][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:09:43][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:10:05][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:10:27][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:10:46][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:10:57][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:11:08][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:11:19][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:11:29][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:11:40][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:11:51][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:12:02][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:12:13][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:12:24][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:12:35][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:12:46][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:12:57][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:13:07][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:13:18][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:13:29][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:13:40][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:13:51][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:14:02][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:14:13][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:14:24][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:14:34][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:14:45][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2025-11-17 22:14:56][ERROR] Erro no loop principal: The term 'if' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.

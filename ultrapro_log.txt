@@ -1,0 +1,105 @@
+🔵 UltraPro v5 — Iniciando Setup Completo...
+🛠️ Configurando ambiente npm...
+✔️ NPM configurado para ignorar conflitos de dependências.
+🔍 Verificando versão do Node...
+v24.11.0
+11.5.2
+📦 Instalando pacotes principais...
+
+changed 1 package, and audited 574 packages in 20s
+
+185 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+up to date, audited 574 packages in 8s
+
+185 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+up to date, audited 574 packages in 5s
+
+185 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+up to date, audited 574 packages in 4s
+
+185 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+up to date, audited 574 packages in 4s
+
+185 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+added 2 packages, and audited 576 packages in 5s
+
+186 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+✔️ Pacotes base instalados.
+📦 Rodando npm install completo...
+
+up to date, audited 576 packages in 4s
+
+186 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+✔️ Instalação finalizada sem conflitos.
+📁 Garantindo estrutura de pastas...
+📁 Criada: public/images/pecuaria
+📁 Criada: logs
+✔️ Estrutura OK.
+🖼️ Criando imagens profissionais do Agro...
+✔️ Imagens preparadas (placeholders).
+📝 Gerando log...
+✔️ Log disponível em logs\ultrapro-status.txt
+🌐 Testando servidor de desenvolvimento...
+✔️ Servidor iniciado. Acesse: http://localhost:3000
+🎉 UltraPro v5 — Setup completo!

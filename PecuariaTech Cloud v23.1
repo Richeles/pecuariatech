@@ -1,0 +1,199 @@
+# =====================================================================
+# PECUARIATECH CLOUD v23.1 — ANTI-FALHA
+# Backup seguro, aliases fixados, libs garantidas e build limpo.
+# =====================================================================
+
+Write-Host "=== INICIANDO PECUARIATECH CLOUD v23.1 ==="
+
+$base = "C:\Users\Administrador\pecuariatech"
+$backupDir = "$base\backups"
+
+if (-not (Test-Path $backupDir)) {
+    New-Item -ItemType Directory -Path $backupDir | Out-Null
+}
+
+# =====================================================================
+# 1. BACKUP SEGURO (ANTI-FALHA)
+# =====================================================================
+
+function New-SafeBackup {
+    param ($backupDir)
+
+    $timestamp = (Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+    $rand = -join ((48..57 + 65..90 + 97..122) | Get-Random -Count 6 | ForEach-Object {[char]$_})
+    $zipPath = "$backupDir\backup_v23_1_${timestamp}_$rand.zip"
+
+    Write-Host "Criando backup seguro: $zipPath"
+
+    try {
+        Compress-Archive -Path "$base\*" -DestinationPath $zipPath -Force -ErrorAction Stop
+        Write-Host "Backup criado com sucesso."
+        return $zipPath
+    }
+    catch {
+        Write-Host "⚠ ZIP estava em uso. Gerando outro nome..."
+        Start-Sleep -Milliseconds 600
+
+        $rand2 = -join ((48..57 + 65..90 + 97..122) | Get-Random -Count 8 | ForEach-Object {[char]$_})
+        $zipPath2 = "$backupDir\backup_v23_1_${timestamp}_$rand2.zip"
+
+        Compress-Archive -Path "$base\*" -DestinationPath $zipPath2 -Force
+        Write-Host "Backup criado com nome alternativo: $zipPath2"
+
+        return $zipPath2
+    }
+}
+
+$backup = New-SafeBackup -backupDir $backupDir
+
+# =====================================================================
+# 2. FIXAR ALIAS DO NEXT E LIBS
+# =====================================================================
+
+Write-Host "Corrigindo alias e bibliotecas..."
+
+# tsconfig (garantindo paths corretos)
+Set-Content "$base\tsconfig.json" @'
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "jsx": "preserve",
+    "module": "esnext",
+    "target": "es2017",
+    "allowJs": true,
+    "moduleResolution": "bundler"
+  }
+}
+'@
+
+# Garantir pastas
+if (-not (Test-Path "$base\src")) { New-Item -ItemType Directory -Path "$base\src" | Out-Null }
+if (-not (Test-Path "$base\src\lib")) { New-Item -ItemType Directory -Path "$base\src\lib" | Out-Null }
+
+# Criar libs essenciais
+Set-Content "$base\src\lib\supabase-browser.ts" @'
+import { createBrowserClient } from "@supabase/ssr";
+
+export const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON!
+);
+'@
+
+Set-Content "$base\src\lib\supabase-server.ts" @'
+import { createServerClient } from "@supabase/ssr";
+
+export const supabaseServer = (cookies: any) =>
+  createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON!,
+    { cookies }
+  );
+'@
+
+Set-Content "$base\src\lib\auth.ts" @'
+export const ADMIN_EMAIL = "admin@pecuariatech.com";
+
+export function getSession() {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("session");
+}
+
+export function signOut() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("session");
+}
+'@
+
+Write-Host "Libs corrigidas."
+
+# =====================================================================
+# 3. AUTO-HEAL DE ARQUIVOS CORROMPIDOS
+# =====================================================================
+
+Write-Host "Executando Auto-Heal..."
+
+function Fix-Quotes {
+    param ($file)
+
+    $content = Get-Content $file -Raw
+    $fixed = $content -replace '""', '"'
+    $fixed | Set-Content $file -Encoding UTF8
+}
+
+$tsFiles = Get-ChildItem -Path $base -Recurse -Include *.tsx,*.ts
+
+foreach ($f in $tsFiles) {
+    Fix-Quotes $f.FullName
+}
+
+Write-Host "Auto-Heal concluído."
+
+# =====================================================================
+# 4. RECRIAR LOGIN COM STRING CORRETA
+# =====================================================================
+
+Set-Content "$base\app\login\page.tsx" @'
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase-browser";
+
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [msg, setMsg] = useState(null);
+
+  const router = useRouter();
+
+  async function login() {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: senha
+    });
+
+    if (error) setMsg(error.message);
+    else router.push("/admin");
+  }
+
+  return (
+    <div style={{ padding: 40 }}>
+      <h1>Login PecuariaTech</h1>
+
+      <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+      <br />
+
+      <input placeholder="Senha" type="password" value={senha} onChange={e => setSenha(e.target.value)} />
+      <br />
+
+      <button onClick={login}>Entrar</button>
+
+      {msg && <p>{msg}</p>}
+    </div>
+  );
+}
+'@
+
+Write-Host "Login corrigido."
+
+# =====================================================================
+# 5. BUILD + DEPLOY
+# =====================================================================
+
+Write-Host "Rodando npm install..."
+npm install
+
+Write-Host "Rodando build..."
+npm run build
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "❌ ERRO NO BUILD — verifique acima."
+    exit
+}
+
+Write-Host "Enviando para Vercel..."
+vercel --prod --yes
+
+Write-Host "=== PECUARIATECH CLOUD v23.1 FINALIZADO ==="

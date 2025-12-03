@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ES2020",
+    "rootDir": "./supabase/functions",
+    "outDir": "./supabase/functions/dist"
+  },
+  "include": ["supabase/functions"]
+}

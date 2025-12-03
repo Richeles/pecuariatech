@@ -1,0 +1,6 @@
+[10/30/2025 20:40:00] Execução Triangular360 finalizada com sucesso
+2025-11-19 23:03:16 - Iniciando Triângulo360...
+2025-11-19 23:03:16 - DNS OK: 64.29.17.1 216.198.79.1
+2025-11-19 23:03:16 - SITE OK: 200
+2025-11-19 23:03:17 - SUPABASE ERRO
+2025-11-19 23:03:17 - API ERRO

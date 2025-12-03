@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "allowJs": true,
+    "noEmit": true,
+    "isolatedModules": true
+  },
+  "include": ["./**/*"]
+}

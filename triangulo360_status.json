@@ -1,0 +1,55 @@
+﻿{
+  "painelUrl": "https://www.pecuariatech.com/api/triangulo360/push",
+  "supabaseUrl": "https://kpzzekflqpoeccnqfkng.supabase.co",
+  "dominio": "www.pecuariatech.com",
+  "supabaseLoggingAtivo": true,
+  "node": "RICHELE-PC",
+  "resultados": [
+    {
+      "detail": "resolvido",
+      "status": "OK",
+      "ms": 135,
+      "item": "DNS"
+    },
+    {
+      "detail": "200",
+      "status": "OK",
+      "ms": 148,
+      "item": "HTTPS"
+    },
+    {
+      "detail": "Response status code does not indicate success: 404 (Not Found).",
+      "status": "FAIL",
+      "ms": 0,
+      "item": "REST-pastagem"
+    },
+    {
+      "detail": "Response status code does not indicate success: 404 (Not Found).",
+      "status": "FAIL",
+      "ms": 0,
+      "item": "REST-rebanho"
+    },
+    {
+      "detail": "Response status code does not indicate success: 404 (Not Found).",
+      "status": "FAIL",
+      "ms": 0,
+      "item": "REST-financeiro"
+    },
+    {
+      "detail": "Response status code does not indicate success: 404 (Not Found).",
+      "status": "FAIL",
+      "ms": 0,
+      "item": "REST-racas"
+    },
+    {
+      "detail": "Response status code does not indicate success: 404 (Not Found).",
+      "status": "FAIL",
+      "ms": 0,
+      "item": "REST-dashboard"
+    }
+  ],
+  "painelTokenConfigurado": true,
+  "healthScore": 28.57,
+  "versao": "v17.3",
+  "horario": "2025-11-15 12:40:16"
+}

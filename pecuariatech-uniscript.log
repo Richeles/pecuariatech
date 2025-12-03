@@ -1,0 +1,29 @@
+[2025-11-16 19:29:37][INFO] UniScript PecuariaTech v24.2 - Ultra Hardening (script único) iniciado.
+[2025-11-16 19:29:37][INFO] Root: C:\Users\Administrador\pecuariatech | Log: C:\Users\Administrador\pecuariatech\pecuariatech-uniscript.log
+[2025-11-16 19:29:37][MONITOR] Iniciando ciclo de monitoramento...
+[2025-11-16 19:29:47][HEALTH] Site ONLINE (200).
+[2025-11-16 19:29:50][ERROR] Erro ao enviar dados ao Supabase: O servidor remoto retornou um erro: (404) N�o Localizado.
+[2025-11-16 19:29:50][MONITOR] Site ONLINE. Nenhuma ação corretiva necessária neste ciclo.
+[2025-11-16 19:31:50][MONITOR] Iniciando ciclo de monitoramento...
+[2025-11-16 19:31:51][HEALTH] Site ONLINE (200).
+[2025-11-16 19:31:52][ERROR] Erro ao enviar dados ao Supabase: O servidor remoto retornou um erro: (404) N�o Localizado.
+[2025-11-16 19:31:52][MONITOR] Site ONLINE. Nenhuma ação corretiva necessária neste ciclo.
+[2025-11-16 19:33:52][MONITOR] Iniciando ciclo de monitoramento...
+[2025-11-16 19:33:53][HEALTH] Site ONLINE (200).
+[2025-11-16 19:33:53][ERROR] Erro ao enviar dados ao Supabase: O servidor remoto retornou um erro: (404) N�o Localizado.
+[2025-11-16 19:33:53][MONITOR] Site ONLINE. Nenhuma ação corretiva necessária neste ciclo.
+[2025-11-16 19:35:54][MONITOR] Iniciando ciclo de monitoramento...
+[2025-11-16 19:35:54][HEALTH] Site ONLINE (200).
+[2025-11-16 19:35:55][ERROR] Erro ao enviar dados ao Supabase: O servidor remoto retornou um erro: (404) N�o Localizado.
+[2025-11-16 19:35:55][MONITOR] Site ONLINE. Nenhuma ação corretiva necessária neste ciclo.
+[2025-11-16 19:37:55][MONITOR] Iniciando ciclo de monitoramento...
+[2025-11-16 19:37:56][HEALTH] Site ONLINE (200).
+[2025-11-16 19:37:58][SUPABASE] Registro enviado ao Supabase com status ONLINE.
+[2025-11-16 19:37:58][MONITOR] Site ONLINE. Nenhuma ação corretiva necessária neste ciclo.
+[2025-11-16 19:46:05][INFO] UniScript v24.2.3 iniciado.
+[2025-11-16 19:46:06][MONITOR] Novo ciclo...
+[2025-11-16 19:46:14][SUPABASE] Supabase OK (status ONLINE).
+[2025-11-16 19:48:14][MONITOR] Novo ciclo...
+[2025-11-16 19:48:16][SUPABASE] Supabase OK (status ONLINE).
+[2025-11-16 19:50:16][MONITOR] Novo ciclo...
+[2025-11-16 19:50:20][SUPABASE] Supabase OK (status ONLINE).

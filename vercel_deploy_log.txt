@@ -1,0 +1,11 @@
+Vercel CLI 48.4.0
+Retrieving projectÔÇª
+Deploying richeles-alves-dos-santos-projects/pecuariatech
+Uploading [--------------------] (0.0B/1.7KB)
+Uploading [====================] (1.7KB/1.7KB)
+Inspect: https://vercel.com/richeles-alves-dos-santos-projects/pecuariatech/84u66QCLZAwSxEJZj5rtouhVawVY [8s]
+Production: https://pecuariatech-r7gl85e4m-richeles-alves-dos-santos-projects.vercel.app [8s]
+Queued
+Building
+Completing
+https://pecuariatech-r7gl85e4m-richeles-alves-dos-santos-projects.vercel.app

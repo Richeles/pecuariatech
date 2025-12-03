@@ -1,0 +1,72 @@
+[
+  {
+    "tabela": "pastagem",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "rebanho",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "financeiro",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "racas",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "triangulo_logs",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "triangulo360_logs",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "triangulo_monitor",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "triangulo_monitor_v55",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "unilog",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "monitor_gps",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "function_performance_logs",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "dashboard",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "vendas",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  },
+  {
+    "tabela": "tapete",
+    "anon": "bloqueado",
+    "serviceRole": "erro"
+  }
+]

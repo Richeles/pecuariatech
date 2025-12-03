@@ -1,0 +1,136 @@
+2025-11-21 00:41:39 | Iniciando execução da versão 9.1
+2025-11-21 00:41:40 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:40 | Falha ao ativar RLS em rebanho
+2025-11-21 00:41:40 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:40 | Política SERVICE_ROLE já existia (rebanho)
+2025-11-21 00:41:40 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:40 | Política ANON já existia (rebanho)
+2025-11-21 00:41:40 | ERRO: SERVICE_ROLE não lê rebanho — reparando...
+2025-11-21 00:41:40 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:40 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:41 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:41 | Auto-repair executado (rebanho)
+2025-11-21 00:41:41 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:41 | Falha ao ativar RLS em tapete
+2025-11-21 00:41:41 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:41 | Política SERVICE_ROLE já existia (tapete)
+2025-11-21 00:41:41 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:41 | Política ANON já existia (tapete)
+2025-11-21 00:41:41 | ERRO: SERVICE_ROLE não lê tapete — reparando...
+2025-11-21 00:41:41 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:41 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:43 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:43 | Auto-repair executado (tapete)
+2025-11-21 00:41:43 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:43 | Falha ao ativar RLS em financeiro
+2025-11-21 00:41:43 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:43 | Política SERVICE_ROLE já existia (financeiro)
+2025-11-21 00:41:43 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:43 | Política ANON já existia (financeiro)
+2025-11-21 00:41:43 | ERRO: SERVICE_ROLE não lê financeiro — reparando...
+2025-11-21 00:41:43 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:43 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:43 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:43 | Auto-repair executado (financeiro)
+2025-11-21 00:41:43 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:43 | Falha ao ativar RLS em triangulo_logs
+2025-11-21 00:41:44 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:44 | Política SERVICE_ROLE já existia (triangulo_logs)
+2025-11-21 00:41:44 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:44 | Política ANON já existia (triangulo_logs)
+2025-11-21 00:41:44 | ERRO: SERVICE_ROLE não lê triangulo_logs — reparando...
+2025-11-21 00:41:44 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:44 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:44 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:44 | Auto-repair executado (triangulo_logs)
+2025-11-21 00:41:44 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:44 | Falha ao ativar RLS em pastagem
+2025-11-21 00:41:44 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:44 | Política SERVICE_ROLE já existia (pastagem)
+2025-11-21 00:41:45 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:45 | Política ANON já existia (pastagem)
+2025-11-21 00:41:45 | ERRO: SERVICE_ROLE não lê pastagem — reparando...
+2025-11-21 00:41:45 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:45 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:45 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:45 | Auto-repair executado (pastagem)
+2025-11-21 00:41:45 | triangulo_monitor_v55 ignorada (VIEW)
+2025-11-21 00:41:45 | triangulo_monitor ignorada (VIEW)
+2025-11-21 00:41:45 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:45 | Falha ao ativar RLS em function_performance_logs
+2025-11-21 00:41:45 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:45 | Política SERVICE_ROLE já existia (function_performance_logs)
+2025-11-21 00:41:45 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:45 | Política ANON já existia (function_performance_logs)
+2025-11-21 00:41:46 | ERRO: SERVICE_ROLE não lê function_performance_logs — reparando...
+2025-11-21 00:41:46 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:46 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:46 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:46 | Auto-repair executado (function_performance_logs)
+2025-11-21 00:41:46 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:46 | Falha ao ativar RLS em vendas
+2025-11-21 00:41:46 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:46 | Política SERVICE_ROLE já existia (vendas)
+2025-11-21 00:41:46 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:46 | Política ANON já existia (vendas)
+2025-11-21 00:41:46 | ERRO: SERVICE_ROLE não lê vendas — reparando...
+2025-11-21 00:41:47 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:47 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:47 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:47 | Auto-repair executado (vendas)
+2025-11-21 00:41:47 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:47 | Falha ao ativar RLS em racas
+2025-11-21 00:41:47 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:47 | Política SERVICE_ROLE já existia (racas)
+2025-11-21 00:41:47 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:47 | Política ANON já existia (racas)
+2025-11-21 00:41:47 | ERRO: SERVICE_ROLE não lê racas — reparando...
+2025-11-21 00:41:47 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:47 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:48 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:48 | Auto-repair executado (racas)
+2025-11-21 00:41:48 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:48 | Falha ao ativar RLS em unilog
+2025-11-21 00:41:48 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:48 | Política SERVICE_ROLE já existia (unilog)
+2025-11-21 00:41:48 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:48 | Política ANON já existia (unilog)
+2025-11-21 00:41:48 | ERRO: SERVICE_ROLE não lê unilog — reparando...
+2025-11-21 00:41:48 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:48 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:48 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:48 | Auto-repair executado (unilog)
+2025-11-21 00:41:49 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:49 | Falha ao ativar RLS em triangulo360_logs
+2025-11-21 00:41:49 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:49 | Política SERVICE_ROLE já existia (triangulo360_logs)
+2025-11-21 00:41:49 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:49 | Política ANON já existia (triangulo360_logs)
+2025-11-21 00:41:49 | ERRO: SERVICE_ROLE não lê triangulo360_logs — reparando...
+2025-11-21 00:41:49 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:49 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:49 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:49 | Auto-repair executado (triangulo360_logs)
+2025-11-21 00:41:49 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:49 | Falha ao ativar RLS em monitor_gps
+2025-11-21 00:41:49 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:49 | Política SERVICE_ROLE já existia (monitor_gps)
+2025-11-21 00:41:50 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:50 | Política ANON já existia (monitor_gps)
+2025-11-21 00:41:50 | ERRO: SERVICE_ROLE não lê monitor_gps — reparando...
+2025-11-21 00:41:50 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:50 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:50 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:50 | Auto-repair executado (monitor_gps)
+2025-11-21 00:41:50 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:50 | Falha ao ativar RLS em dashboard
+2025-11-21 00:41:50 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:50 | Política SERVICE_ROLE já existia (dashboard)
+2025-11-21 00:41:50 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:50 | Política ANON já existia (dashboard)
+2025-11-21 00:41:50 | ERRO: SERVICE_ROLE não lê dashboard — reparando...
+2025-11-21 00:41:51 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:51 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:51 | ERRO ExecSQL: Response status code does not indicate success: 404 (Not Found).
+2025-11-21 00:41:51 | Auto-repair executado (dashboard)
+2025-11-21 00:41:51 | Execução finalizada com sucesso (v9.1)

@@ -1,0 +1,5 @@
+2025-12-01 22:50:08 — Limpeza feita
+2025-12-01 22:50:11 — Supabase OK
+https://pecuariatech-ezp8ojdrc-richeles-alves-dos-santos-projects.vercel.app
+2025-12-01 22:50:58 — Health FAIL
+2025-12-01 22:50:59 — Script finalizado

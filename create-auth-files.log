@@ -1,0 +1,5 @@
+2025-11-28 09:59:37 - === Iniciando create-auth-files.ps1 ===
+2025-11-28 09:59:37 - Pasta src\lib já existe
+2025-11-28 09:59:37 - auth-server.ts criado
+2025-11-28 09:59:37 - auth-client.ts criado
+2025-11-28 09:59:39 - Nenhum import antigo encontrado em admin/page.tsx

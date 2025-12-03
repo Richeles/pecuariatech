@@ -1,0 +1,10 @@
+✅ Corrigido: C:\Users\Administrador\pecuariatech\app\dashboard\page.tsx
+🧩 jsconfig.json criado.
+
+> pecuariatech@0.1.0 build
+> next build
+
+   Ôû▓ Next.js 15.3.4
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...

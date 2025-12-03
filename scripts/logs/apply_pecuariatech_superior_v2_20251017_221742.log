@@ -1,0 +1,106 @@
+[2025-10-17 22:17:43] [INFO] Iniciando apply_pecuariatech_superior_v2 (atualizado) - projeto: C:\Users\Administrador\pecuariatech
+[2025-10-17 22:17:43] [INFO] Carregando variáveis de C:\Users\Administrador\pecuariatech\.env.local
+[2025-10-17 22:17:43] [OK] .env.local carregado.
+[2025-10-17 22:17:43] [WARN] Variáveis faltando: OPENWEATHER_API_KEY, OPENAI_API_KEY, VERCEL_TOKEN
+[2025-10-17 22:17:43] [WARN] Algumas funcionalidades (forecast, OpenAI, vercel deploy) podem não funcionar sem as variáveis acima.
+[2025-10-17 22:17:43] [INFO] SUPABASE_URL = https://kpzzekflqpoeccnqfkng.supabase.co
+[2025-10-17 22:17:43] [INFO] SUPABASE_ANON = eyJhbG...9...
+[2025-10-17 22:17:43] [INFO] SUPABASE_SVC = eyJhbG...9...
+[2025-10-17 22:17:43] [INFO] OPENWEATHER = <MISSING>
+[2025-10-17 22:17:43] [INFO] OPENAI = <MISSING>
+[2025-10-17 22:17:43] [OK] Pasta criada: app/api/forecast_clima
+[2025-10-17 22:17:43] [OK] Pasta criada: supabase/functions/forecast_clima/src
+[2025-10-17 22:17:43] [OK] Pasta criada: app/api/predict_weight
+[2025-10-17 22:17:43] [OK] Pasta criada: app/api/ultrachat
+[2025-10-17 22:17:43] [OK] Migration criada: C:\Users\Administrador\pecuariatech\supabase_migrations\0002_ultrachat_messages.sql
+[2025-10-17 22:17:43] [OK] Function forecast_clima criada: C:\Users\Administrador\pecuariatech\supabase\functions\forecast_clima\src\index.ts
+[2025-10-17 22:17:43] [OK] package.json da function criado
+[2025-10-17 22:17:43] [OK] API route criada: C:\Users\Administrador\pecuariatech\app\api\forecast_clima\route.ts
+[2025-10-17 22:17:43] [OK] Componente UltraChatAgro criado: C:\Users\Administrador\pecuariatech\components\UltraChatAgro.tsx
+[2025-10-17 22:17:44] [OK] Service worker e manifest criados em public/
+[2025-10-17 22:17:44] [OK] SWRegister component criado: C:\Users\Administrador\pecuariatech\components\SWRegister.tsx
+[2025-10-17 22:17:44] [WARN] Backup do layout salvo: C:\Users\Administrador\pecuariatech\app\layout.tsx.bak
+[2025-10-17 22:17:44] [OK] Inserido <SWRegister/> no app/layout.tsx automaticamente.
+[2025-10-17 22:17:44] [OK] API /api/ultrachat criada: C:\Users\Administrador\pecuariatech\app\api\ultrachat\route.ts
+[2025-10-17 22:17:44] [OK] Endpoint predict_weight criado: C:\Users\Administrador\pecuariatech\app\api\predict_weight\route.ts
+[2025-10-17 22:17:44] [INFO] Instalando dependências: @supabase/supabase-js openai (se aplicável)
+
+added 1 package, and changed 6 packages in 1m
+npm notice
+npm notice New minor version of npm available! 11.5.2 -> 11.6.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.2
+npm notice To update run: npm install -g npm@11.6.2
+npm notice
+[2025-10-17 22:19:07] [OK] npm install finalizado.
+[2025-10-17 22:19:07] [OK] CSV comparativo criado: C:\Users\Administrador\pecuariatech\comparativo_concorrentes.csv
+[2025-10-17 22:19:07] [INFO] Executando: supabase db push --yes
+Initialising login role...
+Connecting to remote database...
+Remote database is up to date.
+A new version of Supabase CLI is available: v2.51.0 (currently installed v2.40.7)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+[2025-10-17 22:19:18] [OK] supabase db push finalizado.
+[?25l[?2004h
+[K
+    Select a project:                                                                            [K
+                                                                                                 [K
+  >  1. girkgszyajljunwsnwav [name: roteiros-aulas, org: wvtsuriqbgurmlfigijk, region: sa-east-1][K
+    2. kpzzekflqpoeccnqfkng [name: pecuariatech, org: rhrgbwstneacnazjcbfd, region: sa-east-1]   [K
+                                                                                                 [K
+                                                                                                 [K
+    Ôåæ/k up ÔÇó Ôåô/j down ÔÇó / filter ÔÇó q quit ÔÇó ? more                                               [K
+                                                                                                 [K
+[8A [K[J
+Selected project: girkgszyajljunwsnwav
+[2K
+WARNING: Docker is not running
+WARN: failed to read file: open supabase\functions\forecast_clima\index.ts: O sistema n├úo pode encontrar o caminho especificado.
+unexpected deploy status 404: {"message":"Cannot retrieve service for project girkgszyajljunwsnwav with currect status 'INACTIVE'."}
+Try rerunning the command with --debug to troubleshoot the error.
+[?2004l[?25h[?1002l[?1003l[?1006l
+[2025-10-17 22:20:34] [INFO] Deploy da function (se aplicável) solicitado.
+[main 72a7f13] feat: pecuariatech superior v2.1 - SW auto-register, predict_weight endpoint, comparativo CSV
+ 22 files changed, 523 insertions(+), 283 deletions(-)
+ create mode 100644 app/api/forecast_clima/route.ts
+ create mode 100644 app/api/predict_weight/route.ts
+ create mode 100644 app/api/ultrachat/route.ts
+ create mode 100644 app/layout.tsx.bak
+ create mode 100644 build_log.txt
+ create mode 100644 comparativo_concorrentes.csv
+ create mode 100644 components/SWRegister.tsx
+ create mode 100644 components/UltraBiologico2.tsx
+ create mode 100644 components/UltraChat.tsx
+ create mode 100644 components/UltraChatAgro.tsx
+ create mode 100644 public/manifest.json
+ create mode 100644 public/service-worker.js
+ create mode 100644 scripts/logs/apply_pecuariatech_superior_v2_20251017_221742.log
+ create mode 100644 supabase/functions/forecast_clima/package.json
+ create mode 100644 supabase/functions/forecast_clima/src/index.ts
+ create mode 100644 supabase_migrations/0002_ultrachat_messages.sql
+ create mode 100644 vercel_deploy_log.txt
+
+To https://github.com/Richeles/pecuariatech.git
+   6e1aefc..72a7f13  main -> main
+[2025-10-17 22:21:23] [OK] Commit/push realizados.
+[2025-10-17 22:21:24] [INFO] Iniciando vercel --prod
+C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:34780
+                throw new ArgError(`option requires argument: ${originalArgName}${extended}`, "ARG_MISSING_REQUIRED_LONGARG");
+                ^
+
+_ArgError: option requires argument: --token
+    at arg2 (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:34780:23)
+    at getArgs (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:34806:33)
+    at getGlobalPathConfig (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:61079:20)
+    at src/util/config/files.ts (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:61189:18)
+    at __init (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:10:60)
+    at src/util/client.ts (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:61304:5)
+    at __init (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:10:60)
+    at Object.<anonymous> (C:\Users\Administrador\AppData\Roaming\npm\node_modules\vercel\dist\index.js:184282:1)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10) {
+  code: 'ARG_MISSING_REQUIRED_LONGARG'
+}
+
+Node.js v22.16.0
+[2025-10-17 22:21:25] [OK] Deploy Vercel solicitado.
+[2025-10-17 22:21:25] [INFO] apply_pecuariatech_superior_v2.1: Execução finalizada. Verifique o log em: 
