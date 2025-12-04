@@ -1,38 +1,32 @@
-export async function POST(req: Request) {
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const message = body.message?.text || "";
-    const chatId = body.message?.chat.id;
+    const chat_id = body.message?.chat?.id;
 
-    if (!chatId) {
-      return Response.json({ ok: false, error: "chatId inválido" });
-    }
+    let resposta = "Mensagem não reconhecida.";
 
-    let resposta = "Olá! Sou o UltraChat PecuariaTech 🚜🌱";
-
-    if (message.toUpperCase() === "A") resposta = "Menu A selecionado!";
-    if (message.toUpperCase() === "B") resposta = "Menu B ativo!";
-    if (message.toUpperCase() === "C") resposta = "Menu C carregado!";
     if (message.toUpperCase() === "D") resposta = "Menu D funcionando!";
 
-    await fetch(
-      \https://api.telegram.org/bot8384906982:AAFkRtD5ye7O_Z2JQNZTp9rpXweSy3RFXzg/sendMessage\,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: resposta,
-        }),
-      }
-    );
+    if (chat_id) {
+      await fetch(
+        "https://api.telegram.org/bot8384906982:AAFkRtD5ye7O_Z2JQNZTp9rpXweSy3RFXzg/sendMessage",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chat_id,
+            text: resposta,
+          }),
+        }
+      );
+    }
 
-    return Response.json({ ok: true });
-  } catch (e) {
-    return Response.json({ ok: false, error: e.toString() });
+    return NextResponse.json({ status: "ok" });
+  } catch (error) {
+    console.error("Erro no webhook:", error);
+    return NextResponse.json({ status: "error", message: error.message });
   }
-}
-
-export function GET() {
-  return Response.json({ ok: true, message: "Webhook ativo 👍" });
 }
