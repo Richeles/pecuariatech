@@ -1,23 +1,15 @@
 "use client";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+
+import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
+
+const MapComponent = dynamic(() => import("./mapa-client"), { ssr: false });
 
 export default function MapaPage() {
   return (
-    <div>
-      <h1>🗺️ Mapa das Pastagens</h1>
-      <MapContainer center={[-15.78, -47.93]} zoom={4} style={{ height: "500px", width: "100%" }}>
-        <TileLayer
-          attribution="&copy; OpenStreetMap"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <Marker position={[-15.78, -47.93]}>
-          <Popup>Fazenda Central — PecuariaTech</Popup>
-        </Marker>
-      </MapContainer>
-    </div>
+    <main className="p-6">
+      <h1 className="text-3xl font-bold mb-4">🗺️ Mapa das Pastagens</h1>
+      <MapComponent />
+    </main>
   );
 }
-
-
-
