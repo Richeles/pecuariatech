@@ -1,8 +1,6 @@
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    optimizePackageImports: ["lucide-react"],
-  },
-  output: "standalone",
-  distDir: ".next",
+  reactStrictMode: true,
 };
+
 module.exports = nextConfig;

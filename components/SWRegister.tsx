@@ -12,11 +12,15 @@ export default function SWRegister() {
   }, [])
 
   return (
-    <div style={{ display: 'none' }}>
+    <div style={{ display: 'none' }} style={{ minHeight: "300px" }}>
       {/* SWRegister ativo */}
     </div>
   )
 }
+
+
+
+
 
 
 

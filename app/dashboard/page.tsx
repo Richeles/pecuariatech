@@ -1,24 +1,42 @@
-export default function Dashboard() {
+"use client";
+
+import { getKPIs } from "../lib/kpis";
+
+export default async function DashboardPage() {
+  const kpis = await getKPIs();
+
   return (
-    <div>
-      <h1 className='text-3xl font-bold mb-6'>Dashboard UltraPro</h1>
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-        <div className='bg-white p-6 shadow rounded-xl'>
-          <h2 className='text-xl font-semibold'>Rebanho Total</h2>
-          <p className='text-4xl font-bold mt-2 text-green-700'>128</p>
-        </div>
-        <div className='bg-white p-6 shadow rounded-xl'>
-          <h2 className='text-xl font-semibold'>Área da Fazenda</h2>
-          <p className='text-4xl font-bold mt-2 text-blue-700'>240 ha</p>
-        </div>
-        <div className='bg-white p-6 shadow rounded-xl'>
-          <h2 className='text-xl font-semibold'>Financeiro</h2>
-          <p className='text-4xl font-bold mt-2 text-yellow-700'>R$ 52.800</p>
-        </div>
+    <main className="space-y-10">
+      <h1 className="text-4xl font-bold text-green-700">
+        📊 PecuariaTech UltraDashboard
+      </h1>
+
+      {/* Hero sem imagem remota */}
+      <div className="bg-green-200 rounded-xl p-10 shadow text-xl font-semibold">
+        🌱 Produção sustentável e inteligente
       </div>
 
-      <h2 className='text-2xl font-bold mt-10'>Gráfico Financeiro</h2>
-      <p className='text-gray-600'>Gráfico dinâmico será integrado em breve.</p>
-    </div>
+      <section className="grid grid-cols-2 gap-6">
+        <div className="border p-6 rounded-xl shadow bg-white">
+          <h2 className="font-semibold">🧬 Total Animais</h2>
+          <p className="text-2xl">{kpis.totalAnimais}</p>
+        </div>
+
+        <div className="border p-6 rounded-xl shadow bg-white">
+          <h2 className="font-semibold">🌾 Pastagem</h2>
+          <p className="text-2xl">{kpis.pastagemDisponivel} ha</p>
+        </div>
+
+        <div className="border p-6 rounded-xl shadow bg-white">
+          <h2 className="font-semibold">🔥 Status Biológico</h2>
+          <p className="text-2xl">{kpis.statusBiologico}</p>
+        </div>
+
+        <div className="border p-6 rounded-xl shadow bg-white">
+          <h2 className="font-semibold">⚠️ Risco Nutricional</h2>
+          <p className="text-2xl">{kpis.riscoNutricional}</p>
+        </div>
+      </section>
+    </main>
   );
 }

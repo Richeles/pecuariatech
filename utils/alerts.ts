@@ -1,3 +1,4 @@
+'use client';
 export function simulateAlerts() {
     return [
         { id: 1, message: 'Alerta: Rebanho abaixo do esperado', type: 'warning' },
@@ -5,3 +6,4 @@ export function simulateAlerts() {
         { id: 3, message: 'Saldo financeiro negativo', type: 'danger' }
     ];
 }
+

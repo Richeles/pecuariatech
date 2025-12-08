@@ -1,3 +1,4 @@
+'use client';
 import { cookies } from "next/headers";
 
 export async function createServerClient() {
@@ -11,3 +12,4 @@ export async function createServerClient() {
     },
   };
 }
+

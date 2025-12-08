@@ -1,3 +1,4 @@
+'use client';
 import * as dotenv from 'dotenv';
 dotenv.config({ path: './scripts/.env.local' }); // garante carregamento certo
 
@@ -88,6 +89,7 @@ export async function runPipeline() {
 
 // Executa pipeline direto
 if (require.main === module) runPipeline();
+
 
 
 

@@ -26,17 +26,21 @@ export default function UltraChatAgro(){
   }
 
   return (
-    <div style={{border:'1px solid #ddd',padding:12,borderRadius:8}}>
-      <div style={{maxHeight:300,overflow:'auto'}}>
-        {msgs.map((m:any)=> <div key={m.id}><b>{m.user_name}</b>: {m.content}</div> )}
+    <div style={{border:'1px solid #ddd',padding:12,borderRadius:8}} style={{ minHeight: "300px" }}>
+      <div style={{maxHeight:300,overflow:'auto'}} style={{ minHeight: "300px" }}>
+        {msgs.map((m:any)=> <div key={m.id} style={{ minHeight: "300px" }}><b>{m.user_name}</b>: {m.content}</div> )}
       </div>
-      <div style={{display:'flex',gap:8,marginTop:8}}>
+      <div style={{display:'flex',gap:8,marginTop:8}} style={{ minHeight: "300px" }}>
         <input value={text} onChange={e=>setText(e.target.value)} style={{flex:1}} />
         <button onClick={send}>Enviar</button>
       </div>
     </div>
   );
 }
+
+
+
+
 
 
 

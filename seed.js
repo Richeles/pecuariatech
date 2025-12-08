@@ -1,3 +1,4 @@
+'use client';
 import axios from 'axios';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -52,5 +53,6 @@ async function insertData() {
 }
 
 insertData();
+
 
 

@@ -1,3 +1,4 @@
+'use client';
 import pino from 'pino';
 import fetch from 'node-fetch';
 
@@ -74,6 +75,7 @@ export async function runPipeline() {
 
 // Permite execuÃ§Ã£o direta
 if (require.main === module) runPipeline();
+
 
 
 

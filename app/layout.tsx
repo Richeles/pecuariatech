@@ -1,21 +1,36 @@
-import Link from 'next/link';
+import "./globals.css";
+import StatusOverlay from "./components/StatusOverlay";
 
-export default function Layout({ children }) {
+export const metadata = {
+  title: "PecuariaTech",
+  description: "Gestão inteligente para pecuária",
+};
+
+export default function RootLayout({ children }) {
   return (
-    <div className='flex min-h-screen bg-gray-100'>
-      <aside className='w-64 bg-green-900 text-white p-6 space-y-6'>
-        <h1 className='text-2xl font-bold'>PecuariaTech UltraPro</h1>
-        <nav className='space-y-3'>
-          <Link href='/dashboard' className='block hover:text-yellow-300'>Dashboard</Link>
-          <Link href='/admin/usuarios' className='block hover:text-yellow-300'>Usuários</Link>
-          <Link href='/admin/ultrabiologica' className='block hover:text-yellow-300'>UltraBiológica</Link>
-          <Link href='/admin/config' className='block hover:text-yellow-300'>Configurações</Link>
-        </nav>
-      </aside>
+    <html lang="pt-BR">
+      <body className="min-h-screen text-gray-900">
 
-      <main className='flex-1 p-10'>
-        {children}
-      </main>
-    </div>
+        {/* Inteligência visual sobre o fundo */}
+        <StatusOverlay />
+
+        {/* Cabeçalho */}
+        <header className="w-full bg-green-700 text-white px-6 py-4 shadow">
+          <h1 className="text-2xl font-bold">🐂 PecuariaTech</h1>
+
+          <nav className="mt-2 flex gap-4 text-sm">
+            <a href="/" className="hover:underline">🏠 Portal</a>
+            <a href="/dashboard" className="hover:underline">📊 Dashboard</a>
+            <a href="/financeiro" className="hover:underline">💰 Financeiro</a>
+            <a href="/rebanho" className="hover:underline">🐄 Rebanho</a>
+            <a href="/pastagem" className="hover:underline">🌾 Pastagem</a>
+          </nav>
+        </header>
+
+        {/* Conteúdo */}
+        <main className="page-container">{children}</main>
+
+      </body>
+    </html>
   );
 }

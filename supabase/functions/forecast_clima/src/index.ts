@@ -1,3 +1,4 @@
+'use client';
 import { serve } from 'std/server';
 
 serve(async (req: Request) => {
@@ -17,6 +18,7 @@ serve(async (req: Request) => {
     return new Response(JSON.stringify({ok:false,error:String(e)}),{status:500});
   }
 });
+
 
 
 

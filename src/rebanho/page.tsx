@@ -9,15 +9,17 @@ export default function RebanhoPage() {
   const [dataNascimento, setDataNascimento] = useState("");
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Cadastro de Animal</h1>
+    <div className=" min-h-[100vh]" style={{ minHeight: "300px" }}>
+      <h1 className=" min-h-[100vh]">Cadastro de Animal</h1>
 
-      <div className="space-y-3">
-        <input className="text-black p-2 rounded" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
-        <input className="text-black p-2 rounded" placeholder="Brinco" value={brinco} onChange={(e) => setBrinco(e.target.value)} />
-        <input className="text-black p-2 rounded" placeholder="Raça" value={raca} onChange={(e) => setRaca(e.target.value)} />
-        <input className="text-black p-2 rounded" placeholder="Data de Nascimento" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)} />
+      <div className=" min-h-[100vh]" style={{ minHeight: "300px" }}>
+        <input className=" min-h-[100vh]" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+        <input className=" min-h-[100vh]" placeholder="Brinco" value={brinco} onChange={(e) => setBrinco(e.target.value)} />
+        <input className=" min-h-[100vh]" placeholder="Raça" value={raca} onChange={(e) => setRaca(e.target.value)} />
+        <input className=" min-h-[100vh]" placeholder="Data de Nascimento" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)} />
       </div>
     </div>
   );
 }
+
+

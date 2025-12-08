@@ -1,3 +1,4 @@
+'use client';
 const CACHE_NAME = 'pecuariatech-v1';
 const urlsToCache = [
   '/',
@@ -39,5 +40,6 @@ self.addEventListener('activate', event => {
     )
   );
 });
+
 
 

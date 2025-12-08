@@ -36,7 +36,7 @@ export default function MapaPastagem() {
     <MapContainer
       center={[-20.4697, -54.6201]} // Campo Grande - MS
       zoom={13}
-      className="h-full w-full"
+      className=" min-h-[100vh] flex flex-col"
       scrollWheelZoom={true}
     >
       <TileLayer
@@ -47,5 +47,8 @@ export default function MapaPastagem() {
     </MapContainer>
   );
 }
+
+
+
 
 

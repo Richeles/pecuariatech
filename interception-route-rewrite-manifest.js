@@ -1,0 +1,2 @@
+'use client';
+self.__INTERCEPTION_ROUTE_REWRITE_MANIFEST="[]"

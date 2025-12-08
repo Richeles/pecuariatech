@@ -1,3 +1,4 @@
+'use client';
 export function getClientSession() {
   if (typeof window === "undefined") return null;
 
@@ -20,3 +21,4 @@ export function signOutClient() {
   if (typeof window === "undefined") return;
   localStorage.removeItem("session");
 }
+

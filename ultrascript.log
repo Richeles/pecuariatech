@@ -1,0 +1,112 @@
+[2025-11-28 23:20:00] ================ INICIANDO ULTRASCRIPT v25 ================
+[2025-11-28 23:20:02] Checando ambiente...
+[2025-11-28 23:20:02] ✔ Node, NPM e Git OK
+[2025-11-28 23:20:02] Entrando no diretório do projeto: C:\Users\Administrador\pecuariatech
+[2025-11-28 23:20:02] 🔍 Testando Supabase...
+[2025-11-28 23:20:02] 🔴 Supabase offline!
+[2025-11-28 23:20:03] WhatsApp enviado: 🔴 ALERTA: Supabase OFFLINE!
+[2025-11-28 23:20:03] 🟢 Domínio online
+[2025-11-28 23:20:05] 🟢 API /ultra/stats OK
+[2025-11-28 23:20:05] 🚀 Iniciando Next.js em nova janela...
+[2025-11-28 23:20:06] WhatsApp enviado: 🟢 PecuariaTech INICIADO com sucesso!
+[2025-11-28 23:20:06] 🔄 Iniciando monitoramento contínuo (loop 24/7)...
+[2025-11-28 23:20:06] 🔴 Supabase caiu!
+[2025-11-28 23:20:07] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:20:07] ⚠️ Servidor Next.js caiu — reiniciando...
+[2025-11-28 23:20:08] WhatsApp enviado: ⚠️ Next.js caiu, mas foi reiniciado!
+[2025-11-28 23:20:28] 🔴 Supabase caiu!
+[2025-11-28 23:20:29] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:21:07] ================ INICIANDO ULTRASCRIPT v25 ================
+[2025-11-28 23:21:08] Checando ambiente...
+[2025-11-28 23:21:08] ✔ Node, NPM e Git OK
+[2025-11-28 23:21:09] Entrando no diretório do projeto: C:\Users\Administrador\pecuariatech
+[2025-11-28 23:21:09] 🔍 Testando Supabase...
+[2025-11-28 23:21:09] 🔴 Supabase offline!
+[2025-11-28 23:21:09] WhatsApp enviado: 🔴 ALERTA: Supabase OFFLINE!
+[2025-11-28 23:21:10] 🟢 Domínio online
+[2025-11-28 23:21:10] 🟢 API /ultra/stats OK
+[2025-11-28 23:21:10] 🚀 Iniciando Next.js em nova janela...
+[2025-11-28 23:21:11] WhatsApp enviado: 🟢 PecuariaTech INICIADO com sucesso!
+[2025-11-28 23:21:11] 🔄 Iniciando monitoramento contínuo (loop 24/7)...
+[2025-11-28 23:21:11] 🔴 Supabase caiu!
+[2025-11-28 23:21:12] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:21:33] 🔴 Supabase caiu!
+[2025-11-28 23:21:33] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:21:54] 🔴 Supabase caiu!
+[2025-11-28 23:21:55] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:22:16] 🔴 Supabase caiu!
+[2025-11-28 23:22:17] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:22:38] 🔴 Supabase caiu!
+[2025-11-28 23:22:39] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:22:59] 🔴 Supabase caiu!
+[2025-11-28 23:23:00] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:23:20] 🔴 Supabase caiu!
+[2025-11-28 23:23:21] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:23:42] 🔴 Supabase caiu!
+[2025-11-28 23:23:42] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:24:03] 🔴 Supabase caiu!
+[2025-11-28 23:24:04] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:26:31] ================ INICIANDO ULTRASCRIPT v25 ================
+[2025-11-28 23:26:32] Checando ambiente...
+[2025-11-28 23:26:32] ✔ Node, NPM e Git OK
+[2025-11-28 23:26:32] Entrando no diretório do projeto: C:\Users\Administrador\pecuariatech
+[2025-11-28 23:26:32] 🔍 Testando Supabase...
+[2025-11-28 23:26:32] 🔴 Supabase offline!
+[2025-11-28 23:26:33] WhatsApp enviado: 🔴 ALERTA: Supabase OFFLINE!
+[2025-11-28 23:26:33] 🟢 Domínio online
+[2025-11-28 23:26:34] 🟢 API /ultra/stats OK
+[2025-11-28 23:26:34] 🚀 Iniciando Next.js em nova janela...
+[2025-11-28 23:26:34] WhatsApp enviado: 🟢 PecuariaTech INICIADO com sucesso!
+[2025-11-28 23:26:34] 🔄 Iniciando monitoramento contínuo (loop 24/7)...
+[2025-11-28 23:26:34] 🔴 Supabase caiu!
+[2025-11-28 23:26:35] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:26:35] ⚠️ Servidor Next.js caiu — reiniciando...
+[2025-11-28 23:26:36] WhatsApp enviado: ⚠️ Next.js caiu, mas foi reiniciado!
+[2025-11-28 23:26:56] 🔴 Supabase caiu!
+[2025-11-28 23:26:57] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:27:18] 🔴 Supabase caiu!
+[2025-11-28 23:27:19] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:27:39] 🔴 Supabase caiu!
+[2025-11-28 23:27:40] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:28:00] 🔴 Supabase caiu!
+[2025-11-28 23:28:01] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:28:22] 🔴 Supabase caiu!
+[2025-11-28 23:28:22] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:28:43] 🔴 Supabase caiu!
+[2025-11-28 23:28:44] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:29:04] 🔴 Supabase caiu!
+[2025-11-28 23:29:05] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:29:25] 🔴 Supabase caiu!
+[2025-11-28 23:29:26] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:29:46] 🔴 Supabase caiu!
+[2025-11-28 23:29:47] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:30:08] 🔴 Supabase caiu!
+[2025-11-28 23:30:08] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:30:29] 🔴 Supabase caiu!
+[2025-11-28 23:30:30] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:30:54] 🔴 Supabase caiu!
+[2025-11-28 23:30:55] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:31:16] 🔴 Supabase caiu!
+[2025-11-28 23:31:16] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:31:37] 🔴 Supabase caiu!
+[2025-11-28 23:31:38] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:31:58] 🔴 Supabase caiu!
+[2025-11-28 23:31:59] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:32:20] 🔴 Supabase caiu!
+[2025-11-28 23:32:21] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:32:41] 🔴 Supabase caiu!
+[2025-11-28 23:32:42] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:33:02] 🔴 Supabase caiu!
+[2025-11-28 23:33:03] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:33:24] 🔴 Supabase caiu!
+[2025-11-28 23:33:25] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:33:45] 🔴 Supabase caiu!
+[2025-11-28 23:33:46] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:34:07] 🔴 Supabase caiu!
+[2025-11-28 23:34:08] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:34:28] 🔴 Supabase caiu!
+[2025-11-28 23:34:29] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:34:50] 🔴 Supabase caiu!
+[2025-11-28 23:34:51] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!
+[2025-11-28 23:35:11] 🔴 Supabase caiu!
+[2025-11-28 23:35:12] WhatsApp enviado: 🔴 ALERTA: Supabase caiu!

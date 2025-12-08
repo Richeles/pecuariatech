@@ -14,8 +14,8 @@ const cowIcon = new L.Icon({
 
 export default function Mapa() {
   return (
-    <div className="p-6 bg-white rounded-2xl shadow-md mt-6">
-      <h2 className="text-xl font-bold mb-4 text-green-700">🌾 Mapa das Pastagens</h2>
+    <div className=" min-h-[100vh] flex flex-col" style={{ minHeight: "300px" }}>
+      <h2 className=" min-h-[100vh] flex flex-col">🌾 Mapa das Pastagens</h2>
 
       <MapContainer center={center} zoom={6} style={{ height: "400px", width: "100%" }}>
         <TileLayer
@@ -30,3 +30,7 @@ export default function Mapa() {
     </div>
   );
 }
+
+
+
+
