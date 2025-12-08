@@ -1,42 +1,28 @@
-"use client";
+import { getFarmKPIs } from "../lib/kpis";
 
-import { getKPIs } from "../lib/kpis";
-
-export default async function DashboardPage() {
-  const kpis = await getKPIs();
+export default async function Dashboard() {
+  const stats = await getFarmKPIs();
 
   return (
-    <main className="space-y-10">
-      <h1 className="text-4xl font-bold text-green-700">
-        📊 PecuariaTech UltraDashboard
-      </h1>
+    <main className="p-6">
+      <h1 className="text-3xl font-bold mb-6">📊 PecuariaTech Dashboard</h1>
 
-      {/* Hero sem imagem remota */}
-      <div className="bg-green-200 rounded-xl p-10 shadow text-xl font-semibold">
-        🌱 Produção sustentável e inteligente
+      <div className="grid grid-cols-3 gap-6">
+        <div className="bg-green-700 text-white p-6 rounded-xl shadow">
+          <h2 className="text-lg">🐂 Animais</h2>
+          <p className="text-4xl font-bold">{stats.animais}</p>
+        </div>
+
+        <div className="bg-blue-600 text-white p-6 rounded-xl shadow">
+          <h2 className="text-lg">🌾 Pastos</h2>
+          <p className="text-4xl font-bold">{stats.pastos}</p>
+        </div>
+
+        <div className="bg-yellow-600 text-gray-900 p-6 rounded-xl shadow">
+          <h2 className="text-lg">💰 Gastos Totais</h2>
+          <p className="text-4xl font-bold">R$ {stats.gastos}</p>
+        </div>
       </div>
-
-      <section className="grid grid-cols-2 gap-6">
-        <div className="border p-6 rounded-xl shadow bg-white">
-          <h2 className="font-semibold">🧬 Total Animais</h2>
-          <p className="text-2xl">{kpis.totalAnimais}</p>
-        </div>
-
-        <div className="border p-6 rounded-xl shadow bg-white">
-          <h2 className="font-semibold">🌾 Pastagem</h2>
-          <p className="text-2xl">{kpis.pastagemDisponivel} ha</p>
-        </div>
-
-        <div className="border p-6 rounded-xl shadow bg-white">
-          <h2 className="font-semibold">🔥 Status Biológico</h2>
-          <p className="text-2xl">{kpis.statusBiologico}</p>
-        </div>
-
-        <div className="border p-6 rounded-xl shadow bg-white">
-          <h2 className="font-semibold">⚠️ Risco Nutricional</h2>
-          <p className="text-2xl">{kpis.riscoNutricional}</p>
-        </div>
-      </section>
     </main>
   );
 }
