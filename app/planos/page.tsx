@@ -5,29 +5,33 @@ import { useEffect, useState } from "react";
 export default function PlanosPage() {
   const [planos, setPlanos] = useState([]);
 
-  async function carregar() {
-    const res = await fetch("/api/planos");
-    const data = await res.json();
-    setPlanos(data);
-  }
-
   useEffect(() => {
-    carregar();
+    async function load() {
+      const res = await fetch("/api/planos");
+      const data = await res.json();
+      setPlanos(data);
+    }
+    load();
   }, []);
 
   return (
-    <div className="p-8 max-w-3xl mx-auto text-black">
-      <h1 className="text-4xl font-bold mb-8 text-center">📦 Escolha Seu Plano</h1>
+    <div className="min-h-screen bg-green-50 p-8">
+      <h1 className="text-3xl font-bold text-green-800 mb-6">📌 Planos de Assinatura</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {planos.map(plan => (
-          <div key={plan.id} className="border shadow p-6 rounded-xl bg-white">
-            <h2 className="text-xl font-bold">{plan.nome}</h2>
-            <p className="text-2xl font-bold text-green-700 mt-2">
-              R$ {plan.preco}
+        {planos.map((p: any) => (
+          <div className="border rounded-xl p-6 bg-white shadow hover:shadow-lg transition">
+            <h2 className="font-bold text-xl text-green-700">{p.nome}</h2>
+
+            <p className="text-gray-700 mt-2">
+              💰 <strong>R$ {p.preco}</strong>
             </p>
-            <button className="mt-4 w-full bg-green-700 text-white py-2 rounded hover:bg-green-900">
-              Assinar agora
+
+            <p className="text-sm mt-1">📌 Tipo: {p.nivel}</p>
+            <p className="text-sm">⏳ Período: {p.periodo}</p>
+
+            <button className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+              Assinar
             </button>
           </div>
         ))}
