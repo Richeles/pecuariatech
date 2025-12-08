@@ -1,77 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function CheckoutPage() {
+  const [planos, setPlanos] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  async function handleCheckout(plano_id: string) {
-    try {
-      setLoading(true);
-
-      const res = await fetch("/api/mercadopago", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plano_id }),
-      });
-
+  useEffect(() => {
+    async function fetchPlanos() {
+      const res = await fetch("/api/planos");
       const data = await res.json();
-      setLoading(false);
+      setPlanos(data);
+    }
+    fetchPlanos();
+  }, []);
 
-      if (data?.url) {
-        window.location.href = data.url; // Redireciona para pagamento MP
-      } else {
-        alert("Falha ao gerar checkout.");
-      }
-    } catch (e) {
-      setLoading(false);
-      alert("Erro de comunicação com servidor.");
+  async function handleCheckout(plano_id: string) {
+    setLoading(true);
+
+    const res = await fetch("/api/mercadopago", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plano_id }),
+    });
+
+    const data = await res.json();
+    setLoading(false);
+
+    if (data?.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Erro ao iniciar pagamento.");
     }
   }
 
   return (
     <main style={{ padding: 32 }}>
-
-      <h1 style={{ fontSize: 28, fontWeight: "bold", marginBottom: 10 }}>
-        ✨ Escolha seu plano e assine
+      <h1 style={{ fontSize: 28, fontWeight: "bold" }}>
+        Escolha seu plano e assine 🚀
       </h1>
 
-      <p style={{ marginBottom: 30 }}>
-        Você será direcionado ao checkout seguro para pagamento via PIX ou Cartão 💳
-      </p>
+      <p>Você será redirecionado para o checkout seguro.</p>
 
-      {/* Botões temporários — mais tarde vamos buscar da API */}
-      <div style={{ display: "flex", gap: "12px" }}>
+      {planos.length === 0 && <p>Carregando planos...</p>}
+
+      {planos.map((plano) => (
         <button
-          onClick={() => handleCheckout("ID_DO_PLANO_BASICO")}
+          key={plano.id}
+          onClick={() => handleCheckout(plano.id)}
           disabled={loading}
           style={{
             background: "green",
-            padding: "12px 22px",
+            padding: "12px 20px",
             color: "white",
             borderRadius: 6,
+            marginTop: 20,
             fontSize: 16,
-            cursor: "pointer",
+            display: "block",
           }}
         >
-          {loading ? "Aguarde..." : "Assinar Plano Básico"}
+          Assinar {plano.nome} — R$ {plano.preco}
         </button>
-
-        <button
-          onClick={() => handleCheckout("ID_DO_PLANO_PRO")}
-          disabled={loading}
-          style={{
-            background: "blue",
-            padding: "12px 22px",
-            color: "white",
-            borderRadius: 6,
-            fontSize: 16,
-            cursor: "pointer",
-          }}
-        >
-          {loading ? "Aguarde..." : "Assinar Profissional"}
-        </button>
-      </div>
+      ))}
     </main>
   );
 }
