@@ -3,53 +3,63 @@ import Link from "next/link";
 
 export const metadata = {
   title: "PecuariaTech",
-  description: "Gestão inteligente para pecuária moderna",
+  description: "Gestão inteligente para fazendas modernas",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body className="min-h-screen bg-cover bg-no-repeat bg-fixed" style={{ backgroundImage: "url('/fundo-boi.jpg')" }}>
+      <body className="bg-[#eef5ee] text-gray-900">
 
-        {/* NAVBAR PRINCIPAL */}
-        <nav className="w-full bg-green-800 bg-opacity-80 text-white shadow-lg px-6 py-4 flex justify-between items-center">
-
-          {/* LOGO */}
-          <Link href="/" className="text-2xl font-bold flex items-center gap-2">
-            🐂 PecuariaTech
-          </Link>
-
-          {/* MENU */}
-          <div className="flex gap-6 items-center text-lg font-medium">
-            <Link href="/dashboard">Dashboard</Link>
-            <Link href="/financeiro">Financeiro</Link>
-            <Link href="/rebanho">Rebanho</Link>
-            <Link href="/pastagem">Pastagem</Link>
-            <Link href="/planos">Planos</Link>
-
-            {/* BOTÃO ASSINAR PREMIUM */}
-            <a
-              href="/planos"
-              className="relative inline-flex items-center px-5 py-2 font-bold text-white 
-                         bg-green-600 rounded-xl shadow-lg overflow-hidden group 
-                         hover:bg-green-700 transition-all"
-            >
-              <span className="absolute inset-0 w-full h-full bg-gradient-to-r 
-                               from-green-400 via-green-500 to-green-600 opacity-0 
-                               group-hover:opacity-100 transition-opacity">
+        {/* NAVBAR */}
+        <header
+          className="w-full bg-[#2f7a43] shadow-md fixed top-0 left-0 z-50"
+        >
+          <nav
+            className="max-w-7xl mx-auto flex justify-between items-center px-6 h-16"
+          >
+            {/* LOGO */}
+            <Link href="/" className="flex items-center gap-2">
+              <span className="text-2xl">🐂</span>
+              <span className="text-white text-xl font-bold drop-shadow">
+                PecuariaTech
               </span>
+            </Link>
 
-              <span className="relative flex items-center gap-2">
-                🚀 Assinar
-              </span>
-            </a>
-          </div>
-        </nav>
+            {/* MENU */}
+            <div className="flex items-center gap-6 text-white text-md font-semibold">
+              <Link href="/dashboard" className="hover:text-green-300 transition">
+                Dashboard
+              </Link>
+              <Link href="/financeiro" className="hover:text-green-300 transition">
+                Financeiro
+              </Link>
+              <Link href="/rebanho" className="hover:text-green-300 transition">
+                Rebanho
+              </Link>
+              <Link href="/pastagem" className="hover:text-green-300 transition">
+                Pastagem
+              </Link>
+              <Link href="/planos" className="hover:text-green-300 transition">
+                Planos
+              </Link>
 
-        {/* CONTEÚDO DAS PÁGINAS */}
-        <main className="p-4 md:p-8">
-          {children}
-        </main>
+              {/* BOTÃO ASSINAR */}
+              <Link
+                href="/planos"
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-md transition font-bold"
+              >
+                Assinar
+              </Link>
+            </div>
+          </nav>
+        </header>
+
+        {/* ESPAÇAMENTO PARA NAVBAR FIXA */}
+        <div className="h-20"></div>
+
+        {/* CONTEÚDO */}
+        <main className="min-h-screen">{children}</main>
 
       </body>
     </html>
