@@ -9,21 +9,12 @@ export default function HomePage() {
   return (
     <main className="flex flex-col items-center text-center pt-20 px-4">
 
-      {/* HERO IMAGE */}
-      <div className="w-full max-w-5xl mb-8">
-        <img
-          src="/bois-header.png"
-          alt="PecuariaTech Fazenda"
-          className="w-full rounded-2xl shadow-2xl object-cover"
-        />
-      </div>
-
       {/* TÍTULO */}
       <h1 className="text-4xl font-bold text-green-800 drop-shadow mb-2">
         Bem-vindo ao PecuariaTech
       </h1>
 
-      <p className="text-lg text-gray-900 font-medium mb-10">
+      <p className="text-lg text-gray-700 mb-10">
         Gestão inteligente e moderna para sua fazenda 🐂🧠
       </p>
 
@@ -33,7 +24,7 @@ export default function HomePage() {
         {/* Dashboard */}
         <Link
           href="/dashboard"
-          className="bg-white/90 shadow-lg p-6 rounded-2xl border border-green-200 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+          className="bg-white/90 shadow-lg p-6 rounded-2xl border border-green-200 hover:shadow-2xl hover:bg-white transition-all"
         >
           <FaChartLine className="text-green-700 text-4xl mx-auto mb-3" />
           <h2 className="text-xl font-bold text-green-700">Dashboard</h2>
@@ -43,7 +34,7 @@ export default function HomePage() {
         {/* Financeiro */}
         <Link
           href="/financeiro"
-          className="bg-white/90 shadow-lg p-6 rounded-2xl border border-green-200 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+          className="bg-white/90 shadow-lg p-6 rounded-2xl border border-green-200 hover:shadow-2xl hover:bg-white transition-all"
         >
           <FaMoneyBillWave className="text-green-700 text-4xl mx-auto mb-3" />
           <h2 className="text-xl font-bold text-green-700">Financeiro</h2>
@@ -53,7 +44,7 @@ export default function HomePage() {
         {/* Rebanho */}
         <Link
           href="/rebanho"
-          className="bg-white/90 shadow-lg p-6 rounded-2xl border border-green-200 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+          className="bg-white/90 shadow-lg p-6 rounded-2xl border border-green-200 hover:shadow-2xl hover:bg-white transition-all"
         >
           <GiCow className="text-green-700 text-4xl mx-auto mb-3" />
           <h2 className="text-xl font-bold text-green-700">Rebanho</h2>
@@ -63,7 +54,7 @@ export default function HomePage() {
         {/* Pastagem */}
         <Link
           href="/pastagem"
-          className="bg-white/90 shadow-lg p-6 rounded-2xl border border-green-200 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+          className="bg-white/90 shadow-lg p-6 rounded-2xl border border-green-200 hover:shadow-2xl hover:bg-white transition-all"
         >
           <FaMapMarkedAlt className="text-green-700 text-4xl mx-auto mb-3" />
           <h2 className="text-xl font-bold text-green-700">Pastagem</h2>
@@ -73,7 +64,7 @@ export default function HomePage() {
         {/* UltraBiológica */}
         <Link
           href="/ultrabiologica/status"
-          className="bg-white/90 shadow-lg p-6 rounded-2xl border border-green-200 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+          className="bg-white/90 shadow-lg p-6 rounded-2xl border border-green-200 hover:shadow-2xl hover:bg-white transition-all"
         >
           <MdBiotech className="text-green-700 text-4xl mx-auto mb-3" />
           <h2 className="text-xl font-bold text-green-700">UltraBiológica</h2>
