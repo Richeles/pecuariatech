@@ -14,16 +14,16 @@ export default function HomePage() {
         <img
           src="/bois-header.jpg"
           alt="PecuariaTech Header"
-          className="w-full rounded-2xl shadow-xl"
+          className="w-full rounded-2xl shadow-xl object-cover h-56 md:h-72"
         />
       </div>
 
       {/* TÍTULO */}
-      <h1 className="text-4xl font-bold text-green-800 drop-shadow mb-2">
+      <h1 className="text-4xl font-extrabold text-white drop-shadow-2xl mb-3 bg-black/40 px-6 py-2 rounded-xl inline-block">
         Bem-vindo ao PecuariaTech
       </h1>
 
-      <p className="text-lg text-gray-800 mb-10">
+      <p className="text-lg text-white drop-shadow-xl bg-black/30 px-4 py-1 rounded-lg mb-10 inline-block">
         Gestão inteligente e moderna para sua fazenda 🐂🧠
       </p>
 
