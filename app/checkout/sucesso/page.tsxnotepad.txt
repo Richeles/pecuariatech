@@ -1,0 +1,8 @@
+export default function Page() {
+  return (
+    <main style={{ padding: 40 }}>
+      <h1>🎉 Pagamento aprovado!</h1>
+      <p>Seu acesso foi liberado. Bem-vindo à PecuariaTech 🚜🐂</p>
+    </main>
+  );
+}
