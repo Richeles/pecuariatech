@@ -2,63 +2,56 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { plano_id } = await request.json();
+    // Recupera o token configurado no Vercel
+    const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
 
-    if (!plano_id) {
-      return NextResponse.json(
-        { error: "Plano inválido." },
-        { status: 400 }
-      );
+    if (!accessToken) {
+      console.error("Token do Mercado Pago NÃO encontrado!");
+      return NextResponse.json({ error: "Token do Mercado Pago não encontrado." }, { status: 500 });
     }
 
-    const ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    const body = await request.json();
 
-    if (!ACCESS_TOKEN) {
-      return NextResponse.json(
-        { error: "Token do Mercado Pago não encontrado." },
-        { status: 500 }
-      );
-    }
+    // 🔹 Para já funcionar — valor fixo de teste
+    const amount = 10; // R$10 (pode ajustar depois)
 
-    // 🔥 Cria uma preferência simples
-    const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
+    console.log("Criando preferência Mercado Pago...");
+
+    const res = await fetch("https://api.mercadopago.com/checkout/preferences", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${ACCESS_TOKEN}`,
+        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         items: [
           {
-            title: `Assinatura do plano ${plano_id}`,
+            title: "Assinatura PecuariaTech",
             quantity: 1,
             currency_id: "BRL",
-            unit_price: 10,
+            unit_price: amount,
           },
         ],
         back_urls: {
-          success: "https://www.pecuariatech.com/sucesso",
-          failure: "https://www.pecuariatech.com/erro",
-          pending: "https://www.pecuariatech.com/pendente",
-        }
+          success: "https://www.pecuariatech.com/dashboard",
+          failure: "https://www.pecuariatech.com/checkout?error=true",
+          pending: "https://www.pecuariatech.com/checkout?pending=true",
+        },
+        auto_return: "approved",
       }),
     });
 
-    const data = await mpResponse.json();
+    const data = await res.json();
+    console.log("Resposta Mercado Pago:", data);
 
     if (!data?.init_point) {
-      return NextResponse.json(
-        { error: "Erro interno Mercado Pago", detalhes: data },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Falha ao gerar link" }, { status: 500 });
     }
 
     return NextResponse.json({ url: data.init_point });
 
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Falha no servidor", detalhes: error },
-      { status: 500 }
-    );
+  } catch (e) {
+    console.error("Erro no servidor:", e);
+    return NextResponse.json({ error: "Falha no servidor" }, { status: 500 });
   }
 }
