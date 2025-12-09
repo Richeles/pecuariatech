@@ -1,41 +1,64 @@
 import { NextResponse } from "next/server";
-import { MercadoPagoConfig, Preference } from "mercadopago";
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const { plano_id } = await req.json();
+    const { plano_id } = await request.json();
 
     if (!plano_id) {
-      return NextResponse.json({ error: "plano_id obrigatório" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Plano inválido." },
+        { status: 400 }
+      );
     }
 
-    const client = new MercadoPagoConfig({
-      accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN ?? "",
-    });
+    const ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
 
-    const pref = new Preference(client);
+    if (!ACCESS_TOKEN) {
+      return NextResponse.json(
+        { error: "Token do Mercado Pago não encontrado." },
+        { status: 500 }
+      );
+    }
 
-    const result = await pref.create({
-      body: {
+    // 🔥 Cria uma preferência simples
+    const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         items: [
           {
-            title: "Assinatura PecuariaTech",
+            title: `Assinatura do plano ${plano_id}`,
             quantity: 1,
-            unit_price: 1, // 🔥 para teste — depois mudamos
+            currency_id: "BRL",
+            unit_price: 10,
           },
         ],
         back_urls: {
-          success: "https://www.pecuariatech.com",
-          failure: "https://www.pecuariatech.com",
-          pending: "https://www.pecuariatech.com",
-        },
-        auto_return: "approved",
-      },
+          success: "https://www.pecuariatech.com/sucesso",
+          failure: "https://www.pecuariatech.com/erro",
+          pending: "https://www.pecuariatech.com/pendente",
+        }
+      }),
     });
 
-    return NextResponse.json({ url: result.init_point });
-  } catch (e: any) {
-    console.error("ERRO MP:", e);
-    return NextResponse.json({ error: e.message ?? "Falha MP" }, { status: 500 });
+    const data = await mpResponse.json();
+
+    if (!data?.init_point) {
+      return NextResponse.json(
+        { error: "Erro interno Mercado Pago", detalhes: data },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ url: data.init_point });
+
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Falha no servidor", detalhes: error },
+      { status: 500 }
+    );
   }
 }
