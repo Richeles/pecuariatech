@@ -1,70 +1,147 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-type Plano = {
-  id: string;
-  nome: string;
-  preco: number;
-  nivel: string;
-  periodicidade: string;
-};
+import { useState } from "react";
 
 export default function PlanosPage() {
-  const [planos, setPlanos] = useState<Plano[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [periodo, setPeriodo] = useState<"mensal" | "trimestral" | "anual">("mensal");
 
-  useEffect(() => {
-    fetch("/api/planos")
-      .then((res) => res.json())
-      .then((data) => {
-        // filtra duplicados por nome
-        const únicos = Array.from(new Map(data.map(p => [p.nome, p])).values());
-        setPlanos(únicos);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const planos = [
+    {
+      nome: "Básico",
+      preco: {
+        mensal: 27.9,
+        trimestral: 74.9,
+        anual: 259.9,
+      },
+      beneficios: [
+        "Dashboard simples",
+        "Controle de rebanho",
+        "Controle de pastagem",
+        "Checklist básico (PDF)",
+      ],
+      botao: "Assinar Básico",
+      cor: "border-green-600",
+    },
+    {
+      nome: "Profissional",
+      preco: {
+        mensal: 34.9,
+        trimestral: 94.9,
+        anual: 339.9,
+      },
+      beneficios: [
+        "Relatórios avançados",
+        "Exportação Excel",
+        "Indicadores financeiros",
+        "Planilhas profissionais",
+      ],
+      botao: "Assinar Profissional",
+      cor: "border-blue-600",
+    },
+    {
+      nome: "Empresarial",
+      preco: {
+        mensal: 59.9,
+        trimestral: 159.9,
+        anual: 569.9,
+      },
+      beneficios: [
+        "Multi-fazendas",
+        "Funcionários",
+        "Relatórios personalizados",
+        "IA Intermediária",
+        "Bônus Premium",
+      ],
+      botao: "Assinar Empresarial",
+      cor: "border-orange-600",
+    },
+    {
+      nome: "Ultra",
+      preco: {
+        mensal: 89.9,
+        trimestral: 239.9,
+        anual: 899.9,
+      },
+      beneficios: [
+        "Tudo do Empresarial",
+        "IA Completa Ultra",
+        "Relatórios WhatsApp",
+        "UltraBiológica v1.0",
+        "Planilhas Ultra (todas)",
+        "Checklist Premium",
+        "Relatório mensal automático",
+      ],
+      botao: "Assinar Ultra",
+      cor: "border-yellow-500",
+      destaque: true,
+    },
+  ];
+
+  async function criarCheckout(plano: string, valor: number) {
+    const response = await fetch("/api/mercadopago", {
+      method: "POST",
+      body: JSON.stringify({
+        plano,
+        valor,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.init_point) {
+      window.location.href = data.init_point;
+    } else {
+      alert("Erro ao criar pagamento.");
+    }
+  }
 
   return (
-    <main style={{ padding: 32 }}>
-      <h1 style={{ fontSize: "32px", fontWeight: "bold", marginBottom: 20 }}>
-        Planos PecuariaTech 🐂💰
-      </h1>
+    <main className="p-8">
+      <h1 className="text-4xl font-bold text-white mb-6">Planos PecuariaTech</h1>
 
-      {loading && <p>Carregando planos...</p>}
+      {/* Seleção de período */}
+      <div className="flex gap-4 mb-8">
+        {["mensal", "trimestral", "anual"].map((p) => (
+          <button
+            key={p}
+            onClick={() => setPeriodo(p as any)}
+            className={`px-4 py-2 rounded-lg font-medium ${
+              periodo === p ? "bg-green-600 text-white" : "bg-gray-200 text-black"
+            }`}
+          >
+            {p.toUpperCase()}
+          </button>
+        ))}
+      </div>
 
-      <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+      {/* Cards dos planos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {planos.map((plano) => (
           <div
-            key={plano.id}
-            style={{
-              border: "1px solid #ccc",
-              borderRadius: 10,
-              padding: 16,
-              width: 250,
-              background: "#fff",
-            }}
+            key={plano.nome}
+            className={`p-6 rounded-2xl bg-white bg-opacity-90 shadow-xl border-4 ${plano.cor}`}
           >
-            <h2 style={{ fontSize: 20, fontWeight: "bold" }}>{plano.nome}</h2>
-            <p style={{ fontSize: 16 }}>
-              💵 <b>R$ {plano.preco.toFixed(2)}</b>
+            {plano.destaque && (
+              <div className="text-center text-yellow-600 font-bold">⭐ RECOMENDADO</div>
+            )}
+
+            <h2 className="text-xl font-bold text-black mb-2">{plano.nome}</h2>
+
+            <p className="text-3xl font-bold text-green-700 mb-4">
+              R$ {plano.preco[periodo].toFixed(2)}
             </p>
-            <p>📌 Nível: <b>{plano.nivel}</b></p>
-            <p>⏳ Ciclo: <b>{plano.periodicidade}</b></p>
+
+            <ul className="text-black mb-4 space-y-1">
+              {plano.beneficios.map((b, i) => (
+                <li key={i}>✔ {b}</li>
+              ))}
+            </ul>
+
             <button
-              style={{
-                marginTop: 15,
-                width: "100%",
-                padding: 10,
-                background: "#2b8a3e",
-                color: "#fff",
-                borderRadius: 8,
-                border: "none",
-                cursor: "pointer",
-                fontWeight: "bold",
-              }}
+              onClick={() => criarCheckout(plano.nome, plano.preco[periodo])}
+              className="w-full px-4 py-3 rounded-xl font-bold text-white bg-green-600 hover:bg-green-700 transition-all shadow-lg"
             >
-              Assinar Plano
+              {plano.botao}
             </button>
           </div>
         ))}
