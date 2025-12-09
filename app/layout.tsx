@@ -14,7 +14,7 @@ export default function RootLayout({ children }) {
         {/* NAVBAR FIXA */}
         <header className="w-full bg-[#2f7a43] shadow-md fixed top-0 left-0 z-50">
           <nav className="max-w-7xl mx-auto flex justify-between items-center px-6 h-16">
-            
+
             {/* LOGO */}
             <Link href="/" className="flex items-center gap-2">
               <span className="text-2xl">🐂</span>
@@ -25,11 +25,25 @@ export default function RootLayout({ children }) {
 
             {/* MENU */}
             <div className="flex items-center gap-6 text-white text-md font-semibold">
-              <Link href="/dashboard" className="hover:text-green-300 transition">Dashboard</Link>
-              <Link href="/financeiro" className="hover:text-green-300 transition">Financeiro</Link>
-              <Link href="/rebanho" className="hover:text-green-300 transition">Rebanho</Link>
-              <Link href="/pastagem" className="hover:text-green-300 transition">Pastagem</Link>
-              <Link href="/planos" className="hover:text-green-300 transition">Planos</Link>
+              <Link href="/dashboard" className="hover:text-green-300 transition">
+                Dashboard
+              </Link>
+
+              <Link href="/financeiro" className="hover:text-green-300 transition">
+                Financeiro
+              </Link>
+
+              <Link href="/rebanho" className="hover:text-green-300 transition">
+                Rebanho
+              </Link>
+
+              <Link href="/pastagem" className="hover:text-green-300 transition">
+                Pastagem
+              </Link>
+
+              <Link href="/planos" className="hover:text-green-300 transition">
+                Planos
+              </Link>
 
               {/* BOTÃO ASSINAR */}
               <Link
@@ -39,10 +53,11 @@ export default function RootLayout({ children }) {
                 Assinar
               </Link>
             </div>
+
           </nav>
         </header>
 
-        {/* ESPAÇAMENTO PARA ABAIXAR O CONTEÚDO */}
+        {/* ESPAÇO PARA NÃO FICAR ATRÁS DA NAVBAR */}
         <div className="h-20"></div>
 
         {/* CONTEÚDO DAS PÁGINAS */}
