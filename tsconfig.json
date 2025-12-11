@@ -22,7 +22,9 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/lib/*": ["app/lib/*"],
+      "@/app/*": ["app/*"]
     },
 
     "plugins": [
@@ -31,15 +33,10 @@
       }
     ]
   },
-  "files": [
-    "index.d.ts",
-    "index.test-d.ts"
-  ],
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts",
     "**/*.ts",
     "**/*.tsx"
   ],
