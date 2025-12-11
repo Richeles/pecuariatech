@@ -1,34 +1,42 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    const body = await req.json();
-    const { usuario_id, plano_id } = body;
-
-    if (!usuario_id || !plano_id) {
-      return NextResponse.json({ erro: "Dados inválidos" }, { status: 400 });
+    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
+    if (!token) {
+      return NextResponse.json({ nivel: "sem_autenticacao" }, { status: 200 });
     }
 
-    const { data, error } = await supabase
+    const { data: user, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !user) {
+      return NextResponse.json({ nivel: "erro_usuario" }, { status: 200 });
+    }
+
+    const { data: assinatura } = await supabase
       .from("assinaturas")
-      .insert({
-        usuario_id,
-        plano_id,
-        status: "pendente",
-      })
       .select("*")
-      .single();
+      .eq("user_id", user.user.id)
+      .maybeSingle();
 
-    if (error) throw error;
+    if (!assinatura) {
+      return NextResponse.json({ nivel: "nenhuma_assinatura" }, { status: 200 });
+    }
 
-    return NextResponse.json({ sucesso: true, assinatura: data });
+    const hoje = new Date();
+    const expira = new Date(assinatura.expiracao);
+
+    if (expira < hoje)
+      return NextResponse.json({ nivel: "trial_expirado" }, { status: 200 });
+
+    return NextResponse.json(
+      {
+        nivel: assinatura.nivel,
+        expira_em: assinatura.expiracao,
+      },
+      { status: 200 }
+    );
   } catch (e) {
-    return NextResponse.json({ erro: e }, { status: 500 });
+    return NextResponse.json({ error: e }, { status: 500 });
   }
 }

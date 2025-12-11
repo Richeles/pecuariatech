@@ -15,19 +15,20 @@
     "not op_mini all"
   ],
   "dependencies": {
-    "@supabase/supabase-js": "^2.25.0",
+    "@supabase/supabase-js": "^2.87.1",
     "axios": "^1.6.0",
     "chart.js": "3.9",
     "framer-motion": "^12.23.25",
     "leaflet": "1.9",
     "mercadopago": "^2.11.0",
     "next": "^16.0.7",
+    "pdfkit": "^0.17.2",
     "react": "^18.3.0",
     "react-chartjs-2": "4.3",
     "react-dom": "^18.3.0",
     "react-icons": "^5.5.0",
     "react-leaflet": "^4.2.1",
-    "recharts": "^2.7.0"
+    "recharts": "^2.15.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",
