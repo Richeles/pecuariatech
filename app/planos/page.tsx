@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase-browser";
+import { createClient } from "@supabase/supabase-js";
 
 type Periodo = "mensal" | "trimestral" | "anual";
 
@@ -14,9 +14,14 @@ type Plano = {
   anual: number;
 };
 
-/**
- * MAPA OFICIAL — precisa bater com o banco
- */
+// ============================================================
+// SUPABASE CLIENT (CLIENT-ONLY, BUILD SAFE)
+// ============================================================
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 const MAPA_PLANO_ID: Record<string, number> = {
   basico: 1,
   profissional: 2,
@@ -25,7 +30,7 @@ const MAPA_PLANO_ID: Record<string, number> = {
   premium_dominus: 5,
 };
 
-const PAYWALL_PLANOS = ["ultra", "empresarial", "premium_dominus"];
+const PAYWALL_PLANOS = ["premium_dominus", "empresarial", "ultra"];
 
 export default function PlanosPage() {
   const [periodo, setPeriodo] = useState<Periodo>("mensal");
@@ -33,75 +38,69 @@ export default function PlanosPage() {
   const [loading, setLoading] = useState(true);
 
   // ============================================================
-  // CARREGAR PLANOS (FONTE ÚNICA — EQUAÇÃO Y)
+  // LOAD PLANOS (runtime only)
   // ============================================================
   useEffect(() => {
+    let ativo = true;
+
     async function loadPlanos() {
-      const { data, error } = await supabase
-        .from("planos_precos_view")
-        .select("*")
-        .order("nivel_ordem", { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from("planos_precos_view")
+          .select("*")
+          .order("nivel_ordem");
 
-      if (error) {
-        console.error("Erro ao carregar planos:", error);
-        return;
+        if (error) throw error;
+        if (ativo) setPlanos(data as Plano[]);
+      } catch (e) {
+        console.error("Erro ao carregar planos:", e);
+      } finally {
+        if (ativo) setLoading(false);
       }
-
-      setPlanos(data ?? []);
-      setLoading(false);
     }
 
     loadPlanos();
+    return () => {
+      ativo = false;
+    };
   }, []);
 
   // ============================================================
   // CHECKOUT
   // ============================================================
   async function criarCheckout(plano_codigo: string, valor: number) {
-    const plano_id = MAPA_PLANO_ID[plano_codigo];
-
-    if (!plano_id) {
-      alert("Plano inválido.");
-      return;
-    }
-
-    const response = await fetch("/api/mercadopago", {
+    const res = await fetch("/api/mercadopago", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         plano: plano_codigo,
-        plano_id,
         valor,
+        plano_id: MAPA_PLANO_ID[plano_codigo],
       }),
     });
 
-    const data = await response.json();
-
-    if (data?.init_point) {
-      window.location.href = data.init_point;
-    } else {
-      alert("Erro ao criar pagamento.");
-    }
-  }
-
-  if (loading) {
-    return (
-      <main className="p-8 text-white">
-        Carregando planos...
-      </main>
-    );
+    const data = await res.json();
+    if (data.init_point) window.location.href = data.init_point;
+    else alert("Erro ao criar pagamento.");
   }
 
   // ============================================================
   // UI
   // ============================================================
+  if (loading) {
+    return (
+      <main className="p-8 bg-green-900 min-h-screen text-white">
+        Carregando planos...
+      </main>
+    );
+  }
+
   return (
     <main className="p-8 bg-green-900 min-h-screen">
       <h1 className="text-4xl font-bold text-white mb-6">
         Planos PecuariaTech
       </h1>
 
-      {/* SELETOR */}
       <div className="flex gap-4 mb-8">
         {(["mensal", "trimestral", "anual"] as Periodo[]).map((p) => (
           <button
@@ -118,7 +117,6 @@ export default function PlanosPage() {
         ))}
       </div>
 
-      {/* CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {planos.map((plano) => {
           const isUltra = plano.codigo === "ultra";
@@ -137,7 +135,7 @@ export default function PlanosPage() {
                 </div>
               )}
 
-              <h2 className="text-xl font-bold mb-2">
+              <h2 className="text-xl font-bold text-black mb-2">
                 {plano.nome_exibicao}
               </h2>
 
@@ -149,7 +147,7 @@ export default function PlanosPage() {
                 onClick={() =>
                   criarCheckout(plano.codigo, plano[periodo])
                 }
-                className="w-full px-4 py-3 rounded-xl font-bold text-white bg-green-600 hover:bg-green-700 transition-all"
+                className="w-full px-4 py-3 rounded-xl font-bold text-white bg-green-600 hover:bg-green-700"
               >
                 Assinar {plano.nome_exibicao}
               </button>
