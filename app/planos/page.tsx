@@ -3,11 +3,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase-browser";
 
-/**
- * ============================================================
- * TIPOS
- * ============================================================
- */
 type Periodo = "mensal" | "trimestral" | "anual";
 
 type Plano = {
@@ -20,41 +15,26 @@ type Plano = {
 };
 
 /**
- * ============================================================
- * MAPA OFICIAL DE PLANO → ID (ÂNCORA Y)
- * Deve refletir exatamente a hierarquia do negócio
- * ============================================================
+ * MAPA OFICIAL — precisa bater com o banco
  */
 const MAPA_PLANO_ID: Record<string, number> = {
   basico: 1,
   profissional: 2,
   ultra: 3,
   empresarial: 4,
-  premium: 5,
+  premium_dominus: 5,
 };
 
-/**
- * ============================================================
- * PLANOS COM PAYWALL
- * ============================================================
- */
-const PAYWALL_PLANOS = ["ultra", "empresarial", "premium"];
+const PAYWALL_PLANOS = ["ultra", "empresarial", "premium_dominus"];
 
-/**
- * ============================================================
- * COMPONENTE
- * ============================================================
- */
 export default function PlanosPage() {
   const [periodo, setPeriodo] = useState<Periodo>("mensal");
   const [planos, setPlanos] = useState<Plano[]>([]);
   const [loading, setLoading] = useState(true);
 
-  /**
-   * ============================================================
-   * CARREGAR PLANOS — FONTE ÚNICA: SUPABASE (VIEW)
-   * ============================================================
-   */
+  // ============================================================
+  // CARREGAR PLANOS (FONTE ÚNICA — EQUAÇÃO Y)
+  // ============================================================
   useEffect(() => {
     async function loadPlanos() {
       const { data, error } = await supabase
@@ -67,23 +47,21 @@ export default function PlanosPage() {
         return;
       }
 
-      setPlanos(data as Plano[]);
+      setPlanos(data ?? []);
       setLoading(false);
     }
 
     loadPlanos();
   }, []);
 
-  /**
-   * ============================================================
-   * CHECKOUT MERCADO PAGO
-   * ============================================================
-   */
+  // ============================================================
+  // CHECKOUT
+  // ============================================================
   async function criarCheckout(plano_codigo: string, valor: number) {
     const plano_id = MAPA_PLANO_ID[plano_codigo];
 
     if (!plano_id) {
-      alert("Plano inválido. Entre em contato com o suporte.");
+      alert("Plano inválido.");
       return;
     }
 
@@ -92,8 +70,8 @@ export default function PlanosPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         plano: plano_codigo,
-        valor,
         plano_id,
+        valor,
       }),
     });
 
@@ -106,24 +84,30 @@ export default function PlanosPage() {
     }
   }
 
-  /**
-   * ============================================================
-   * RENDER
-   * ============================================================
-   */
+  if (loading) {
+    return (
+      <main className="p-8 text-white">
+        Carregando planos...
+      </main>
+    );
+  }
+
+  // ============================================================
+  // UI
+  // ============================================================
   return (
     <main className="p-8 bg-green-900 min-h-screen">
       <h1 className="text-4xl font-bold text-white mb-6">
-        Planos PecuariaTech • Atualizado
+        Planos PecuariaTech
       </h1>
 
-      {/* SELETOR DE PERÍODO */}
+      {/* SELETOR */}
       <div className="flex gap-4 mb-8">
         {(["mensal", "trimestral", "anual"] as Periodo[]).map((p) => (
           <button
             key={p}
             onClick={() => setPeriodo(p)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            className={`px-4 py-2 rounded-lg font-medium ${
               periodo === p
                 ? "bg-green-600 text-white"
                 : "bg-gray-200 text-black"
@@ -134,11 +118,6 @@ export default function PlanosPage() {
         ))}
       </div>
 
-      {/* LOADING */}
-      {loading && (
-        <p className="text-white text-lg">Carregando planos...</p>
-      )}
-
       {/* CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {planos.map((plano) => {
@@ -148,7 +127,7 @@ export default function PlanosPage() {
           return (
             <div
               key={plano.codigo}
-              className={`p-6 rounded-2xl bg-white shadow-xl border-4 bg-opacity-90 ${
+              className={`p-6 rounded-2xl bg-white shadow-xl border-4 ${
                 isUltra ? "border-yellow-500" : "border-green-600"
               }`}
             >
@@ -158,7 +137,7 @@ export default function PlanosPage() {
                 </div>
               )}
 
-              <h2 className="text-xl font-bold text-black mb-2">
+              <h2 className="text-xl font-bold mb-2">
                 {plano.nome_exibicao}
               </h2>
 
@@ -170,7 +149,7 @@ export default function PlanosPage() {
                 onClick={() =>
                   criarCheckout(plano.codigo, plano[periodo])
                 }
-                className="w-full px-4 py-3 rounded-xl font-bold text-white bg-green-600 hover:bg-green-700 transition-all shadow-lg"
+                className="w-full px-4 py-3 rounded-xl font-bold text-white bg-green-600 hover:bg-green-700 transition-all"
               >
                 Assinar {plano.nome_exibicao}
               </button>
