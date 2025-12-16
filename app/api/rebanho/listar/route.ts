@@ -1,27 +1,39 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// Garantindo que as variáveis existem
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error("ERRO: Variáveis de ambiente do Supabase não foram definidas.");
-}
-
-// Cliente oficial do Supabase — server only
-const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!);
-
+// =====================================================
+// GET /api/rebanho/listar
+// Build-safe | Runtime-only | Equação Y compliant
+// =====================================================
 export async function GET() {
   try {
-    // Consulta na tabela animals
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("ERRO: Variáveis de ambiente do Supabase não definidas.");
+      return NextResponse.json(
+        { error: "Configuração do Supabase ausente" },
+        { status: 500 }
+      );
+    }
+
+    // 🔑 Cliente Supabase criado APENAS em runtime
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
     const { data, error } = await supabase
       .from("animals")
-      .select("id, brinco, nome, sexo, categoria, peso_atual, lote_id, status")
+      .select(
+        "id, brinco, nome, sexo, categoria, peso_atual, lote_id, status"
+      )
       .order("created_at", { ascending: false });
 
     if (error) {
-      return NextResponse.json({ error }, { status: 400 });
+      console.error("Erro Supabase:", error);
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json(data);
@@ -33,4 +45,3 @@ export async function GET() {
     );
   }
 }
-
