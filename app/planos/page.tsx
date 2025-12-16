@@ -14,6 +14,49 @@ interface Plano {
   anual: number;
 }
 
+/* 🔒 Benefícios por plano (modelo antigo aprovado)
+   Isso é APENAS apresentação, não altera Equação Y */
+const beneficios: Record<string, string[]> = {
+  basico: [
+    "Dashboard simples",
+    "Controle de rebanho",
+    "Controle de pastagem",
+    "Relatório mensal básico",
+  ],
+  profissional: [
+    "Tudo do plano Básico",
+    "Relatórios mensais avançados",
+    "Exportação de dados (Excel)",
+    "Indicadores financeiros iniciais",
+    "Planilhas profissionais",
+    "Suporte via Telegram",
+  ],
+  ultra: [
+    "Tudo do plano Profissional",
+    "Relatórios premium automatizados",
+    "Análises financeiras avançadas",
+    "Suporte estratégico",
+    "Integrações inteligentes",
+  ],
+  empresarial: [
+    "Tudo do plano Ultra",
+    "Multi-fazendas e multi-usuários",
+    "Gestão de equipes",
+    "Relatórios personalizados",
+    "Alertas automáticos",
+    "Suporte prioritário",
+  ],
+  premium_dominus: [
+    "Tudo do plano Empresarial",
+    "IA completa (predição e diagnóstico)",
+    "UltraBiológica 360°",
+    "Financeiro avançado (CAPEX / OPEX)",
+    "EBITDA e EBIT automáticos",
+    "Valuation para fundos e holdings",
+    "Suporte Ultra VIP",
+  ],
+};
+
 export default function PlanosPage() {
   const [periodo, setPeriodo] = useState<Periodo>("mensal");
   const [planos, setPlanos] = useState<Plano[]>([]);
@@ -40,7 +83,7 @@ export default function PlanosPage() {
         if (error) throw error;
 
         setPlanos(data as Plano[]);
-      } catch (err: any) {
+      } catch (err) {
         console.error("Erro ao carregar planos:", err);
         setErro("Não foi possível carregar os planos no momento.");
       } finally {
@@ -52,36 +95,26 @@ export default function PlanosPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="p-10 text-white text-lg">
-        Carregando planos...
-      </div>
-    );
+    return <div className="p-10 text-white">Carregando planos…</div>;
   }
 
   if (erro) {
-    return (
-      <div className="p-10 text-red-300">
-        {erro}
-      </div>
-    );
+    return <div className="p-10 text-red-400">{erro}</div>;
   }
 
   return (
     <div className="p-10 text-white">
-      <h1 className="text-3xl font-bold mb-6">
-        Planos PecuariaTech
-      </h1>
+      <h1 className="text-3xl font-bold mb-6">Planos PecuariaTech</h1>
 
-      {/* CONTROLE DE PERÍODO */}
+      {/* Período */}
       <div className="flex gap-3 mb-8">
-        {(["mensal", "trimestral", "anual"] as Periodo[]).map(p => (
+        {(["mensal", "trimestral", "anual"] as Periodo[]).map((p) => (
           <button
             key={p}
             onClick={() => setPeriodo(p)}
-            className={`px-4 py-2 rounded ${
+            className={`px-4 py-2 rounded font-semibold ${
               periodo === p
-                ? "bg-green-600"
+                ? "bg-green-600 text-white"
                 : "bg-white text-black"
             }`}
           >
@@ -90,22 +123,32 @@ export default function PlanosPage() {
         ))}
       </div>
 
-      {/* CARDS */}
+      {/* Cards */}
       <div className="grid md:grid-cols-5 gap-6">
-        {planos.map(plano => (
+        {planos.map((plano) => (
           <div
             key={plano.codigo}
-            className="bg-white text-black rounded-xl p-6 shadow"
+            className="bg-white text-black rounded-xl p-6 shadow flex flex-col"
           >
-            <h2 className="text-xl font-bold mb-2">
+            {/* Nome */}
+            <h2 className="text-xl font-bold mb-3">
               {plano.nome_exibicao}
             </h2>
 
-            <p className="text-3xl font-bold text-green-700 mb-4">
-              R$ {plano[periodo].toFixed(2)}
-            </p>
+            {/* O QUE ENTREGA (MODELO ANTIGO) */}
+            <ul className="text-sm mb-4 space-y-1">
+              {beneficios[plano.codigo]?.map((item, idx) => (
+                <li key={idx}>✓ {item}</li>
+              ))}
+            </ul>
 
-            <button className="w-full bg-green-600 text-white py-2 rounded">
+            {/* Preço */}
+            <div className="text-3xl font-bold text-green-700 mb-4">
+              R$ {plano[periodo].toFixed(2)}
+            </div>
+
+            {/* Botão */}
+            <button className="mt-auto w-full bg-green-600 text-white py-2 rounded">
               Assinar
             </button>
           </div>
