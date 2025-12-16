@@ -14,46 +14,61 @@ interface Plano {
   anual: number;
 }
 
-/* 🔒 Benefícios por plano (modelo antigo aprovado)
-   Isso é APENAS apresentação, não altera Equação Y */
-const beneficios: Record<string, string[]> = {
+const BENEFICIOS: Record<string, string[]> = {
   basico: [
-    "Dashboard simples",
-    "Controle de rebanho",
-    "Controle de pastagem",
-    "Relatório mensal básico",
+    "Dashboard simples e intuitivo",
+    "Controle básico de rebanho",
+    "Controle essencial de pastagem",
+    "Relatório mensal automático",
+    "Indicadores operacionais iniciais",
+    "Histórico simples da fazenda",
+    "Ideal para sair do caderno e começar certo",
   ],
   profissional: [
     "Tudo do plano Básico",
     "Relatórios mensais avançados",
     "Exportação de dados (Excel)",
     "Indicadores financeiros iniciais",
-    "Planilhas profissionais",
+    "Planilhas profissionais automatizadas",
+    "Índice PecuariaTech de Performance (IPP)",
+    "Alertas operacionais inteligentes",
     "Suporte via Telegram",
+    "Para entender números antes de decidir",
   ],
   ultra: [
     "Tudo do plano Profissional",
     "Relatórios premium automatizados",
     "Análises financeiras avançadas",
-    "Suporte estratégico",
-    "Integrações inteligentes",
+    "Diagnóstico mensal automático",
+    "IPP por lote e categoria",
+    "Alertas de decisão (não só dados)",
+    "Simulação básica de cenários",
+    "Integrações inteligentes de manejo",
+    "Plano mais escolhido por profissionais",
   ],
   empresarial: [
     "Tudo do plano Ultra",
     "Multi-fazendas e multi-usuários",
-    "Gestão de equipes",
+    "Gestão de equipes e permissões",
     "Relatórios personalizados",
-    "Alertas automáticos",
+    "Alertas automáticos avançados",
+    "Diagnóstico contínuo por IA",
+    "IPP consolidado por fazenda",
     "Suporte prioritário",
+    "Para operações estruturadas",
   ],
   premium_dominus: [
     "Tudo do plano Empresarial",
-    "IA completa (predição e diagnóstico)",
+    "IA completa (preditiva + diagnóstica)",
     "UltraBiológica 360°",
     "Financeiro avançado (CAPEX / OPEX)",
     "EBITDA e EBIT automáticos",
     "Valuation para fundos e holdings",
+    "Benchmark regional e histórico",
+    "Simulador financeiro completo",
+    "Diagnóstico explicável (IA auditável)",
     "Suporte Ultra VIP",
+    "Visão de dono e investidor",
   ],
 };
 
@@ -66,14 +81,10 @@ export default function PlanosPage() {
   useEffect(() => {
     async function carregarPlanos() {
       try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-        if (!supabaseUrl || !supabaseAnonKey) {
-          throw new Error("Variáveis do Supabase não configuradas");
-        }
-
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
 
         const { data, error } = await supabase
           .from("planos_precos_view")
@@ -81,11 +92,10 @@ export default function PlanosPage() {
           .order("nivel_ordem", { ascending: true });
 
         if (error) throw error;
-
         setPlanos(data as Plano[]);
-      } catch (err) {
-        console.error("Erro ao carregar planos:", err);
-        setErro("Não foi possível carregar os planos no momento.");
+      } catch (e) {
+        console.error(e);
+        setErro("Não foi possível carregar os planos.");
       } finally {
         setLoading(false);
       }
@@ -95,27 +105,25 @@ export default function PlanosPage() {
   }, []);
 
   if (loading) {
-    return <div className="p-10 text-white">Carregando planos…</div>;
+    return <div className="p-10 text-white">Carregando planos...</div>;
   }
 
   if (erro) {
-    return <div className="p-10 text-red-400">{erro}</div>;
+    return <div className="p-10 text-red-300">{erro}</div>;
   }
 
   return (
     <div className="p-10 text-white">
       <h1 className="text-3xl font-bold mb-6">Planos PecuariaTech</h1>
 
-      {/* Período */}
+      {/* PERÍODO */}
       <div className="flex gap-3 mb-8">
-        {(["mensal", "trimestral", "anual"] as Periodo[]).map((p) => (
+        {(["mensal", "trimestral", "anual"] as Periodo[]).map(p => (
           <button
             key={p}
             onClick={() => setPeriodo(p)}
-            className={`px-4 py-2 rounded font-semibold ${
-              periodo === p
-                ? "bg-green-600 text-white"
-                : "bg-white text-black"
+            className={`px-4 py-2 rounded ${
+              periodo === p ? "bg-green-600" : "bg-white text-black"
             }`}
           >
             {p.toUpperCase()}
@@ -123,32 +131,38 @@ export default function PlanosPage() {
         ))}
       </div>
 
-      {/* Cards */}
+      {/* CARDS */}
       <div className="grid md:grid-cols-5 gap-6">
-        {planos.map((plano) => (
+        {planos.map(plano => (
           <div
             key={plano.codigo}
-            className="bg-white text-black rounded-xl p-6 shadow flex flex-col"
+            className={`bg-white text-black rounded-xl p-6 shadow ${
+              plano.codigo === "ultra"
+                ? "border-4 border-yellow-400"
+                : "border"
+            }`}
           >
-            {/* Nome */}
+            {plano.codigo === "ultra" && (
+              <div className="text-xs font-bold text-yellow-600 mb-2">
+                ⭐ RECOMENDADO
+              </div>
+            )}
+
             <h2 className="text-xl font-bold mb-3">
               {plano.nome_exibicao}
             </h2>
 
-            {/* O QUE ENTREGA (MODELO ANTIGO) */}
-            <ul className="text-sm mb-4 space-y-1">
-              {beneficios[plano.codigo]?.map((item, idx) => (
-                <li key={idx}>✓ {item}</li>
+            <ul className="text-sm space-y-1 mb-4">
+              {BENEFICIOS[plano.codigo]?.map((b, i) => (
+                <li key={i}>✓ {b}</li>
               ))}
             </ul>
 
-            {/* Preço */}
-            <div className="text-3xl font-bold text-green-700 mb-4">
+            <p className="text-2xl font-bold text-green-700 mb-4">
               R$ {plano[periodo].toFixed(2)}
-            </div>
+            </p>
 
-            {/* Botão */}
-            <button className="mt-auto w-full bg-green-600 text-white py-2 rounded">
+            <button className="w-full bg-green-600 text-white py-2 rounded">
               Assinar
             </button>
           </div>
