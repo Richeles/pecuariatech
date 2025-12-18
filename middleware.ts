@@ -1,54 +1,89 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
+// ================================
+// ROTAS PÚBLICAS
+// ================================
+const ROTAS_PUBLICAS = [
+  "/",
+  "/login",
+  "/planos",
+  "/checkout",
+  "/api",
+];
+
+// ================================
+// MIDDLEWARE GLOBAL (SaaS)
+// ================================
 export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  const { pathname, origin } = req.nextUrl;
 
-  // Rotas públicas
-  const publicRoutes = ["/login", "/planos", "/"];
-  if (publicRoutes.some(r => pathname.startsWith(r))) {
+  // --------------------------------
+  // 1️⃣ DEV LIBERADO
+  // --------------------------------
+  if (process.env.NODE_ENV === "development") {
     return NextResponse.next();
   }
 
-  // Somente proteger estas áreas
-  const protectedRoutes = ["/dashboard", "/financeiro", "/rebanho"];
-  if (!protectedRoutes.some(r => pathname.startsWith(r))) {
+  // --------------------------------
+  // 2️⃣ ROTAS PÚBLICAS
+  // --------------------------------
+  if (ROTAS_PUBLICAS.some((r) => pathname.startsWith(r))) {
     return NextResponse.next();
   }
 
-  // Token Supabase (cookie padrão)
-  const accessToken =
-    req.cookies.get("sb-access-token")?.value ||
-    req.cookies.get("sb-access-token.0")?.value;
+  // --------------------------------
+  // 3️⃣ VERIFICAR SESSÃO
+  // --------------------------------
+  const tokenCookie = req.cookies
+    .getAll()
+    .find(
+      (c) =>
+        c.name.startsWith("sb-") &&
+        c.name.includes("auth-token")
+    );
 
-  if (!accessToken) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  if (!tokenCookie?.value) {
+    return NextResponse.redirect(
+      new URL("/login", req.url)
+    );
   }
 
-  // Consultar status central
-  const statusResp = await fetch(
-    `${req.nextUrl.origin}/api/assinatura/status`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+  // --------------------------------
+  // 4️⃣ VERIFICAR ASSINATURA ATIVA
+  // --------------------------------
+  try {
+    const res = await fetch(
+      `${origin}/api/assinaturas/status`,
+      {
+        headers: {
+          Authorization: `Bearer ${tokenCookie.value}`,
+        },
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data.ativo) {
+      return NextResponse.redirect(
+        new URL("/planos", req.url)
+      );
     }
-  );
-
-  if (!statusResp.ok) {
-    return NextResponse.redirect(new URL("/planos", req.url));
+  } catch {
+    return NextResponse.redirect(
+      new URL("/planos", req.url)
+    );
   }
 
-  const status = await statusResp.json();
-
-  // Regras finais
-  if (status.status === "anonimo" || status.status === "trial_expirado") {
-    return NextResponse.redirect(new URL("/planos", req.url));
-  }
-
+  // --------------------------------
+  // 5️⃣ ACESSO LIBERADO
+  // --------------------------------
   return NextResponse.next();
 }
 
-// Matcher oficial
+// ================================
+// MATCHER
+// ================================
 export const config = {
-  matcher: ["/dashboard/:path*", "/financeiro/:path*", "/rebanho/:path*"],
+  matcher: ["/((?!_next|favicon.ico).*)"],
 };
