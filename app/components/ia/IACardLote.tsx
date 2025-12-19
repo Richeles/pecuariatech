@@ -1,6 +1,6 @@
 // app/components/ia/IACardLote.tsx
 // Card de Diagnóstico UltraBiológico por Lote
-// Ajustado para build seguro (Tailwind + props reais)
+// Versão segura para Tailwind + props reais
 
 "use client";
 
@@ -23,26 +23,15 @@ export default function IACardLote({
     Props["status"],
     { border: string; text: string }
   > = {
-    adequado: {
-      border: "border-green-500",
-      text: "text-green-600",
-    },
-    atencao: {
-      border: "border-yellow-500",
-      text: "text-yellow-600",
-    },
-    critico: {
-      border: "border-red-500",
-      text: "text-red-600",
-    },
+    adequado: { border: "border-green-500", text: "text-green-600" },
+    atencao: { border: "border-yellow-500", text: "text-yellow-600" },
+    critico: { border: "border-red-500", text: "text-red-600" },
   };
 
   const estilo = estilosPorStatus[status];
 
   return (
-    <div
-      className={`border-l-4 ${estilo.border} bg-white p-6 rounded shadow`}
-    >
+    <div className={`border-l-4 ${estilo.border} bg-white p-6 rounded shadow`}>
       <h3 className="font-semibold text-lg mb-2">
         Diagnóstico UltraBiológico — Lote
       </h3>
@@ -51,4 +40,29 @@ export default function IACardLote({
         Lote analisado: <b>{lote_id}</b>
       </p>
 
-      <p clas
+      <p className="text-sm mb-2">
+        Status técnico:{" "}
+        <span className={`font-semibold ${estilo.text}`}>
+          {status.toUpperCase()}
+        </span>
+      </p>
+
+      <p className="text-sm mb-2">
+        Score UltraBiológico:{" "}
+        <span className="font-semibold">
+          {score_ultrabiologico}/100
+        </span>
+      </p>
+
+      {alerta && (
+        <div className="text-sm text-red-600 mb-2">
+          ⚠ {alerta}
+        </div>
+      )}
+
+      <p className="text-sm text-gray-700">
+        <b>Orientação técnica:</b> {recomendacao}
+      </p>
+    </div>
+  );
+}
