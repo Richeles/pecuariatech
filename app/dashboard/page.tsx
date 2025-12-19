@@ -1,11 +1,12 @@
 // app/dashboard/page.tsx
 // Next.js 16 + TypeScript strict
-// Dashboard responsivo + KPIs + Plano ativo
+// Dashboard responsivo + KPIs + Plano ativo + Recursos por plano
 
 "use client";
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabase";
+import RecursoCard from "@/app/components/recursos/RecursoCard";
 
 type KPIs = {
   totalAnimais: number;
@@ -133,31 +134,23 @@ export default function DashboardPage() {
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <KpiCard
               titulo="Total de Animais"
-              valor={
-                loading ? "—" : kpis?.totalAnimais ?? "0"
-              }
+              valor={loading ? "—" : kpis?.totalAnimais ?? "0"}
             />
             <KpiCard
               titulo="Peso Médio (kg)"
-              valor={
-                loading ? "—" : kpis?.pesoMedio ?? "0"
-              }
+              valor={loading ? "—" : kpis?.pesoMedio ?? "0"}
             />
             <KpiCard
               titulo="Ganho Médio Diário"
-              valor={
-                loading ? "—" : kpis?.ganhoMedio ?? "0"
-              }
+              valor={loading ? "—" : kpis?.ganhoMedio ?? "0"}
             />
             <KpiCard
               titulo="Custo Médio (R$)"
-              valor={
-                loading ? "—" : kpis?.custoMedio ?? "0"
-              }
+              valor={loading ? "—" : kpis?.custoMedio ?? "0"}
             />
           </section>
 
-          {/* STATUS DE CAPACIDADES (VISUAL) */}
+          {/* STATUS DE CAPACIDADES */}
           {recursos && (
             <section className="bg-white p-6 rounded shadow">
               <h2 className="font-semibold mb-4">
@@ -165,4 +158,69 @@ export default function DashboardPage() {
               </h2>
 
               <ul className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                <li>KPIs básic
+                <li>KPIs básicos: {recursos.kpisBasicos ? "✔" : "—"}</li>
+                <li>KPIs avançados: {recursos.kpisAvancados ? "✔" : "—"}</li>
+                <li>Planilhas: {recursos.planilhas ? "✔" : "—"}</li>
+                <li>IA: {recursos.ia ? "✔" : "—"}</li>
+                <li>Dispositivos: {recursos.dispositivos ? "✔" : "—"}</li>
+              </ul>
+            </section>
+          )}
+
+          {/* ===============================
+              RECURSOS AVANÇADOS POR PLANO
+          =============================== */}
+          {recursos && (
+            <section className="space-y-4">
+              <h2 className="text-lg font-semibold">
+                Recursos Avançados
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <RecursoCard
+                  titulo="IA Analítica"
+                  descricao="Análises inteligentes sobre desempenho, custo e produtividade."
+                  ativo={recursos.ia}
+                />
+
+                <RecursoCard
+                  titulo="Planilhas Automáticas"
+                  descricao="Exportação e relatórios automáticos em Excel."
+                  ativo={recursos.planilhas}
+                />
+
+                <RecursoCard
+                  titulo="Dispositivos & Sensores"
+                  descricao="Integração com sensores, GPS e dispositivos de campo."
+                  ativo={recursos.dispositivos}
+                />
+              </div>
+            </section>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+// ===============================
+// COMPONENTE KPI
+// ===============================
+function KpiCard({
+  titulo,
+  valor,
+}: {
+  titulo: string;
+  valor: string | number;
+}) {
+  return (
+    <div className="bg-white p-4 rounded shadow">
+      <p className="text-sm text-gray-500">
+        {titulo}
+      </p>
+      <p className="text-2xl font-bold">
+        {valor}
+      </p>
+    </div>
+  );
+}
