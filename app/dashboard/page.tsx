@@ -5,9 +5,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/app/lib/supabase";
-import RecursoCard from "@/app/components/recursos/RecursoCard";
-import IACardLote from "@/app/components/ia/IACardLote";
+import { supabase } from "../lib/supabase";
+import RecursoCard from "../components/recursos/RecursoCard";
+import IACardLote from "../components/ia/IACardLote";
 
 // ===============================
 // TIPOS
