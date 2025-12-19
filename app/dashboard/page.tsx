@@ -1,13 +1,13 @@
 // app/dashboard/page.tsx
 // Next.js 16 + TypeScript strict
-// Dashboard + KPIs + Planos + Planilhas + IA UltraBiológica + Telegram
+// Dashboard real: KPIs + HARVAN (decisão do dia) + IA + Planilhas + Telegram
 
 "use client";
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabase";
 
-// ✅ IMPORTS CORRETOS (LINUX / VERCEL)
+// IMPORTS CORRETOS (LINUX / VERCEL)
 import RecursoCard from "../../components/recursos/RecursoCard";
 import IACardLote from "../../components/ia/IACardLote";
 
@@ -37,6 +37,14 @@ type IALote = {
   recomendacao: string;
 };
 
+type HarvanDecisao = {
+  severidade: "ok" | "atencao" | "critico";
+  diagnostico: string;
+  recomendacao: string;
+  impacto_financeiro: number;
+  confianca: number;
+};
+
 // ===============================
 // CONFIG TEMPORÁRIA
 // ===============================
@@ -47,22 +55,24 @@ export default function DashboardPage() {
   const [plano, setPlano] = useState<string>("trial");
   const [recursos, setRecursos] = useState<Recursos | null>(null);
   const [iaLote, setIaLote] = useState<IALote | null>(null);
+  const [harvan, setHarvan] = useState<HarvanDecisao | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [exportando, setExportando] = useState(false);
   const [telegramConectado, setTelegramConectado] = useState(false);
   const [conectandoTelegram, setConectandoTelegram] = useState(false);
 
   // ===============================
-  // VINCULAR ASSINATURA
+  // VINCULAR ASSINATURA (SAFE)
   // ===============================
   useEffect(() => {
     const vincular = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
+      const { data } = await supabase.auth.getSession();
+      if (!data.session?.access_token) return;
 
       await fetch("/api/assinaturas/vincular", {
         method: "POST",
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
       });
     };
     vincular();
@@ -73,22 +83,22 @@ export default function DashboardPage() {
   // ===============================
   useEffect(() => {
     const carregarPlano = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
+      const { data } = await supabase.auth.getSession();
+      if (!data.session?.access_token) return;
 
       const res = await fetch("/api/assinaturas/plano", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
       });
 
-      const data = await res.json();
-      setPlano(data.plano);
-      setRecursos(data.recursos);
+      const json = await res.json();
+      setPlano(json.plano);
+      setRecursos(json.recursos);
     };
     carregarPlano();
   }, []);
 
   // ===============================
-  // KPIs
+  // KPIs BÁSICOS
   // ===============================
   useEffect(() => {
     const carregarKPIs = async () => {
@@ -106,45 +116,64 @@ export default function DashboardPage() {
   }, []);
 
   // ===============================
+  // HARVAN — DECISÃO DO DIA
+  // ===============================
+  useEffect(() => {
+    const carregarHarvan = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session?.access_token) return;
+
+      const res = await fetch("/api/harvan/dashboard", {
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
+      });
+
+      if (!res.ok) return;
+      const json = await res.json();
+      setHarvan(json);
+    };
+    carregarHarvan();
+  }, []);
+
+  // ===============================
   // IA ULTRABIOLÓGICA (LOTE)
   // ===============================
   useEffect(() => {
     const carregarIA = async () => {
       if (!recursos?.ia) return;
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
+      const { data } = await supabase.auth.getSession();
+      if (!data.session?.access_token) return;
 
       const res = await fetch(`/api/ia/lote/${LOTE_PADRAO}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
       });
 
       if (!res.ok) return;
-      const data = await res.json();
-      setIaLote(data);
+      const json = await res.json();
+      setIaLote(json);
     };
     carregarIA();
   }, [recursos]);
 
   // ===============================
-  // CONECTAR TELEGRAM
+  // TELEGRAM
   // ===============================
   const conectarTelegram = async () => {
     try {
       setConectandoTelegram(true);
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
+      const { data } = await supabase.auth.getSession();
+      if (!data.session?.access_token) return;
 
       const res = await fetch("/api/telegram/link", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
       });
 
       if (!res.ok) return;
 
-      const data = await res.json();
-      if (data?.link) {
-        window.open(data.link, "_blank");
+      const json = await res.json();
+      if (json?.link) {
+        window.open(json.link, "_blank");
         setTelegramConectado(true);
       }
     } finally {
@@ -158,29 +187,32 @@ export default function DashboardPage() {
   const exportarPlanilha = async () => {
     try {
       setExportando(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
+
+      const { data } = await supabase.auth.getSession();
+      if (!data.session?.access_token) return;
 
       const res = await fetch("/api/planilhas/rebanho", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
       });
 
       if (!res.ok) return;
 
       const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
+
       const a = document.createElement("a");
       a.href = url;
       a.download = "rebanho.csv";
       a.click();
-      window.URL.revokeObjectURL(url);
+
+      URL.revokeObjectURL(url);
     } finally {
       setExportando(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow px-4 py-3">
         <h1 className="text-lg font-semibold">PecuariaTech</h1>
         <p className="text-xs text-gray-500">
@@ -188,7 +220,23 @@ export default function DashboardPage() {
         </p>
       </header>
 
-      <main className="flex-1 p-4 md:p-6 space-y-6">
+      <main className="p-4 md:p-6 space-y-6">
+        {/* HARVAN — VISÃO DO DIA */}
+        {harvan && (
+          <section className="bg-white border-l-4 border-green-600 p-4 rounded shadow">
+            <h2 className="font-semibold mb-1">🧠 Harvan — Visão do Dia</h2>
+            <p className="text-sm text-gray-700">{harvan.diagnostico}</p>
+            <p className="text-sm font-medium text-green-700 mt-1">
+              👉 {harvan.recomendacao}
+            </p>
+            {harvan.impacto_financeiro !== 0 && (
+              <p className="text-sm text-red-600 mt-2">
+                Impacto estimado: R$ {harvan.impacto_financeiro.toFixed(2)}
+              </p>
+            )}
+          </section>
+        )}
+
         {/* KPIs */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <KpiCard titulo="Total de Animais" valor={loading ? "—" : kpis?.totalAnimais ?? "0"} />
@@ -198,10 +246,10 @@ export default function DashboardPage() {
         </section>
 
         {/* PLANILHA */}
-        <section className="bg-white p-6 rounded shadow flex justify-between">
+        <section className="bg-white p-6 rounded shadow flex justify-between items-center">
           <div>
             <h2 className="font-semibold">Planilha do Rebanho</h2>
-            <p className="text-sm text-gray-600">Exportação CSV.</p>
+            <p className="text-sm text-gray-600">Exportação CSV inteligente.</p>
           </div>
 
           {recursos?.planilhas ? (
@@ -217,10 +265,10 @@ export default function DashboardPage() {
           )}
         </section>
 
-        {/* IA */}
+        {/* IA LOTE */}
         {recursos?.ia && iaLote && (
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold">Diagnóstico Inteligente</h2>
+          <section>
+            <h2 className="text-lg font-semibold mb-2">Diagnóstico UltraBiológico</h2>
             <IACardLote {...iaLote} />
           </section>
         )}
@@ -243,8 +291,8 @@ export default function DashboardPage() {
         {recursos && (
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <RecursoCard titulo="IA Analítica" descricao="Orientação técnica automática." ativo={recursos.ia} />
-            <RecursoCard titulo="Planilhas Automáticas" descricao="Relatórios CSV." ativo={recursos.planilhas} />
-            <RecursoCard titulo="Dispositivos & Sensores" descricao="Integrações de campo." ativo={recursos.dispositivos} />
+            <RecursoCard titulo="Planilhas Inteligentes" descricao="Relatórios explicáveis." ativo={recursos.planilhas} />
+            <RecursoCard titulo="Sensores & GPS" descricao="Integração com campo." ativo={recursos.dispositivos} />
           </section>
         )}
       </main>
