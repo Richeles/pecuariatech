@@ -6,8 +6,10 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import RecursoCard from "../components/recursos/RecursoCard";
-import IACardLote from "../components/ia/IACardLote";
+
+// 🔥 IMPORTS CORRETOS PARA LINUX / VERCEL
+import RecursoCard from "../../components/recursos/RecursoCard";
+import IACardLote from "../../components/ia/IACardLote";
 
 // ===============================
 // TIPOS
