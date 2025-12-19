@@ -1,6 +1,6 @@
 // app/dashboard/page.tsx
 // Next.js 16 + TypeScript strict
-// Dashboard responsivo + KPIs + Plano ativo + Recursos por plano
+// Dashboard responsivo + KPIs + Plano ativo + Recursos + Planilhas
 
 "use client";
 
@@ -28,15 +28,15 @@ export default function DashboardPage() {
   const [plano, setPlano] = useState<string>("trial");
   const [recursos, setRecursos] = useState<Recursos | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exportando, setExportando] = useState(false);
 
   // ===============================
   // VINCULAR ASSINATURA AO USUÁRIO
   // ===============================
   useEffect(() => {
     const vincularAssinatura = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { session } } =
+        await supabase.auth.getSession();
 
       if (!session?.access_token) return;
 
@@ -56,9 +56,8 @@ export default function DashboardPage() {
   // ===============================
   useEffect(() => {
     const carregarPlano = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { session } } =
+        await supabase.auth.getSession();
 
       if (!session?.access_token) return;
 
@@ -95,110 +94,105 @@ export default function DashboardPage() {
     carregarKPIs();
   }, []);
 
+  // ===============================
+  // EXPORTAR PLANILHA (CSV)
+  // ===============================
+  const exportarPlanilha = async () => {
+    try {
+      setExportando(true);
+
+      const { data: { session } } =
+        await supabase.auth.getSession();
+
+      if (!session?.access_token) return;
+
+      const res = await fetch("/api/planilhas/rebanho", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!res.ok) {
+        alert("Seu plano não permite exportação.");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "rebanho.csv";
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Erro exportação:", err);
+    } finally {
+      setExportando(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* ================= HEADER ================= */}
-      <header className="w-full bg-white shadow px-4 py-3 flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold">
-            PecuariaTech
-          </h1>
-          <p className="text-xs text-gray-500">
-            Plano ativo:{" "}
-            <span className="font-medium capitalize">
-              {plano}
-            </span>
-          </p>
-        </div>
-
-        <button className="md:hidden text-sm font-medium">
-          ☰
-        </button>
+      <header className="w-full bg-white shadow px-4 py-3">
+        <h1 className="text-lg font-semibold">
+          PecuariaTech
+        </h1>
+        <p className="text-xs text-gray-500">
+          Plano ativo:{" "}
+          <span className="font-medium capitalize">
+            {plano}
+          </span>
+        </p>
       </header>
 
       {/* ================= CONTEÚDO ================= */}
-      <div className="flex flex-1">
-        {/* ===== SIDEBAR (DESKTOP) ===== */}
-        <aside className="hidden md:flex md:w-64 bg-white shadow-sm flex-col p-4">
-          <nav className="space-y-3">
-            <a className="font-medium">Dashboard</a>
-            <a className="text-gray-600">Rebanho</a>
-            <a className="text-gray-600">Financeiro</a>
-            <a className="text-gray-600">Relatórios</a>
-          </nav>
-        </aside>
+      <main className="flex-1 p-4 md:p-6 space-y-6">
+        {/* KPIs */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard titulo="Total de Animais" valor={loading ? "—" : kpis?.totalAnimais ?? "0"} />
+          <KpiCard titulo="Peso Médio (kg)" valor={loading ? "—" : kpis?.pesoMedio ?? "0"} />
+          <KpiCard titulo="Ganho Médio Diário" valor={loading ? "—" : kpis?.ganhoMedio ?? "0"} />
+          <KpiCard titulo="Custo Médio (R$)" valor={loading ? "—" : kpis?.custoMedio ?? "0"} />
+        </section>
 
-        {/* ===== ÁREA PRINCIPAL ===== */}
-        <main className="flex-1 p-4 md:p-6 space-y-6">
-          {/* KPIs */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <KpiCard
-              titulo="Total de Animais"
-              valor={loading ? "—" : kpis?.totalAnimais ?? "0"}
-            />
-            <KpiCard
-              titulo="Peso Médio (kg)"
-              valor={loading ? "—" : kpis?.pesoMedio ?? "0"}
-            />
-            <KpiCard
-              titulo="Ganho Médio Diário"
-              valor={loading ? "—" : kpis?.ganhoMedio ?? "0"}
-            />
-            <KpiCard
-              titulo="Custo Médio (R$)"
-              valor={loading ? "—" : kpis?.custoMedio ?? "0"}
-            />
+        {/* EXPORTAÇÃO DE PLANILHA */}
+        <section className="bg-white p-6 rounded shadow flex flex-col md:flex-row md:justify-between gap-4">
+          <div>
+            <h2 className="font-semibold">
+              Planilha do Rebanho
+            </h2>
+            <p className="text-sm text-gray-600">
+              Exportação dos dados em CSV.
+            </p>
+          </div>
+
+          {recursos?.planilhas ? (
+            <button
+              onClick={exportarPlanilha}
+              disabled={exportando}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              {exportando ? "Exportando..." : "Exportar Planilha"}
+            </button>
+          ) : (
+            <a href="/planos" className="text-blue-600 font-medium">
+              Fazer upgrade
+            </a>
+          )}
+        </section>
+
+        {/* RECURSOS AVANÇADOS */}
+        {recursos && (
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <RecursoCard titulo="IA Analítica" descricao="Análises inteligentes do rebanho." ativo={recursos.ia} />
+            <RecursoCard titulo="Planilhas Automáticas" descricao="Relatórios e exportações." ativo={recursos.planilhas} />
+            <RecursoCard titulo="Dispositivos & Sensores" descricao="Integração com sensores e GPS." ativo={recursos.dispositivos} />
           </section>
-
-          {/* STATUS DE CAPACIDADES */}
-          {recursos && (
-            <section className="bg-white p-6 rounded shadow">
-              <h2 className="font-semibold mb-4">
-                Recursos do seu plano
-              </h2>
-
-              <ul className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                <li>KPIs básicos: {recursos.kpisBasicos ? "✔" : "—"}</li>
-                <li>KPIs avançados: {recursos.kpisAvancados ? "✔" : "—"}</li>
-                <li>Planilhas: {recursos.planilhas ? "✔" : "—"}</li>
-                <li>IA: {recursos.ia ? "✔" : "—"}</li>
-                <li>Dispositivos: {recursos.dispositivos ? "✔" : "—"}</li>
-              </ul>
-            </section>
-          )}
-
-          {/* ===============================
-              RECURSOS AVANÇADOS POR PLANO
-          =============================== */}
-          {recursos && (
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold">
-                Recursos Avançados
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <RecursoCard
-                  titulo="IA Analítica"
-                  descricao="Análises inteligentes sobre desempenho, custo e produtividade."
-                  ativo={recursos.ia}
-                />
-
-                <RecursoCard
-                  titulo="Planilhas Automáticas"
-                  descricao="Exportação e relatórios automáticos em Excel."
-                  ativo={recursos.planilhas}
-                />
-
-                <RecursoCard
-                  titulo="Dispositivos & Sensores"
-                  descricao="Integração com sensores, GPS e dispositivos de campo."
-                  ativo={recursos.dispositivos}
-                />
-              </div>
-            </section>
-          )}
-        </main>
-      </div>
+        )}
+      </main>
     </div>
   );
 }
@@ -215,12 +209,8 @@ function KpiCard({
 }) {
   return (
     <div className="bg-white p-4 rounded shadow">
-      <p className="text-sm text-gray-500">
-        {titulo}
-      </p>
-      <p className="text-2xl font-bold">
-        {valor}
-      </p>
+      <p className="text-sm text-gray-500">{titulo}</p>
+      <p className="text-2xl font-bold">{valor}</p>
     </div>
   );
 }
