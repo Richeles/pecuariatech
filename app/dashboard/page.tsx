@@ -1,6 +1,6 @@
 // app/dashboard/page.tsx
 // Next.js 16 + TypeScript strict
-// Dashboard responsivo + KPIs reais
+// Dashboard responsivo + KPIs + Plano ativo
 
 "use client";
 
@@ -14,8 +14,18 @@ type KPIs = {
   custoMedio: string;
 };
 
+type Recursos = {
+  kpisBasicos: boolean;
+  kpisAvancados: boolean;
+  planilhas: boolean;
+  ia: boolean;
+  dispositivos: boolean;
+};
+
 export default function DashboardPage() {
   const [kpis, setKpis] = useState<KPIs | null>(null);
+  const [plano, setPlano] = useState<string>("trial");
+  const [recursos, setRecursos] = useState<Recursos | null>(null);
   const [loading, setLoading] = useState(true);
 
   // ===============================
@@ -41,7 +51,32 @@ export default function DashboardPage() {
   }, []);
 
   // ===============================
-  // BUSCAR KPIs REAIS
+  // BUSCAR PLANO ATIVO + RECURSOS
+  // ===============================
+  useEffect(() => {
+    const carregarPlano = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) return;
+
+      const res = await fetch("/api/assinaturas/plano", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      const data = await res.json();
+      setPlano(data.plano);
+      setRecursos(data.recursos);
+    };
+
+    carregarPlano();
+  }, []);
+
+  // ===============================
+  // BUSCAR KPIs
   // ===============================
   useEffect(() => {
     const carregarKPIs = async () => {
@@ -50,7 +85,7 @@ export default function DashboardPage() {
         const data = await res.json();
         setKpis(data);
       } catch (err) {
-        console.error("Erro ao carregar KPIs:", err);
+        console.error("Erro KPIs:", err);
       } finally {
         setLoading(false);
       }
@@ -63,9 +98,17 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* ================= HEADER ================= */}
       <header className="w-full bg-white shadow px-4 py-3 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">
-          PecuariaTech
-        </h1>
+        <div>
+          <h1 className="text-lg font-semibold">
+            PecuariaTech
+          </h1>
+          <p className="text-xs text-gray-500">
+            Plano ativo:{" "}
+            <span className="font-medium capitalize">
+              {plano}
+            </span>
+          </p>
+        </div>
 
         <button className="md:hidden text-sm font-medium">
           ☰
@@ -114,33 +157,12 @@ export default function DashboardPage() {
             />
           </section>
 
-          {/* Área futura */}
-          <section className="bg-white p-6 rounded shadow min-h-[200px]">
-            <p className="text-gray-500">
-              Gráficos e análises avançadas
-            </p>
-          </section>
-        </main>
-      </div>
-    </div>
-  );
-}
+          {/* STATUS DE CAPACIDADES (VISUAL) */}
+          {recursos && (
+            <section className="bg-white p-6 rounded shadow">
+              <h2 className="font-semibold mb-4">
+                Recursos do seu plano
+              </h2>
 
-// ===============================
-// COMPONENTE KPI
-// ===============================
-function KpiCard({
-  titulo,
-  valor,
-}: {
-  titulo: string;
-  valor: string | number;
-}) {
-  return (
-    <div className="bg-white p-4 rounded shadow">
-      <p className="text-sm text-gray-500">
-        {titulo}
-      </p>
-      <p className="text-2xl font-bold">
-        {valor}
-      </p>
+              <ul className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                <li>KPIs básic
