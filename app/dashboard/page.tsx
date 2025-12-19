@@ -1,13 +1,23 @@
 // app/dashboard/page.tsx
 // Next.js 16 + TypeScript strict
-// Dashboard responsivo (mobile, tablet, desktop)
+// Dashboard responsivo + KPIs reais
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabase";
 
+type KPIs = {
+  totalAnimais: number;
+  pesoMedio: string;
+  ganhoMedio: string;
+  custoMedio: string;
+};
+
 export default function DashboardPage() {
+  const [kpis, setKpis] = useState<KPIs | null>(null);
+  const [loading, setLoading] = useState(true);
+
   // ===============================
   // VINCULAR ASSINATURA AO USUÁRIO
   // ===============================
@@ -30,6 +40,25 @@ export default function DashboardPage() {
     vincularAssinatura();
   }, []);
 
+  // ===============================
+  // BUSCAR KPIs REAIS
+  // ===============================
+  useEffect(() => {
+    const carregarKPIs = async () => {
+      try {
+        const res = await fetch("/api/dashboard/kpis");
+        const data = await res.json();
+        setKpis(data);
+      } catch (err) {
+        console.error("Erro ao carregar KPIs:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    carregarKPIs();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* ================= HEADER ================= */}
@@ -38,7 +67,6 @@ export default function DashboardPage() {
           PecuariaTech
         </h1>
 
-        {/* Menu Mobile */}
         <button className="md:hidden text-sm font-medium">
           ☰
         </button>
@@ -60,47 +88,36 @@ export default function DashboardPage() {
         <main className="flex-1 p-4 md:p-6 space-y-6">
           {/* KPIs */}
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white p-4 rounded shadow">
-              <p className="text-sm text-gray-500">
-                Total de Animais
-              </p>
-              <p className="text-2xl font-bold">
-                —
-              </p>
-            </div>
-
-            <div className="bg-white p-4 rounded shadow">
-              <p className="text-sm text-gray-500">
-                Peso Médio
-              </p>
-              <p className="text-2xl font-bold">
-                —
-              </p>
-            </div>
-
-            <div className="bg-white p-4 rounded shadow">
-              <p className="text-sm text-gray-500">
-                Ganho Diário
-              </p>
-              <p className="text-2xl font-bold">
-                —
-              </p>
-            </div>
-
-            <div className="bg-white p-4 rounded shadow">
-              <p className="text-sm text-gray-500">
-                Custo Médio
-              </p>
-              <p className="text-2xl font-bold">
-                —
-              </p>
-            </div>
+            <KpiCard
+              titulo="Total de Animais"
+              valor={
+                loading ? "—" : kpis?.totalAnimais ?? "0"
+              }
+            />
+            <KpiCard
+              titulo="Peso Médio (kg)"
+              valor={
+                loading ? "—" : kpis?.pesoMedio ?? "0"
+              }
+            />
+            <KpiCard
+              titulo="Ganho Médio Diário"
+              valor={
+                loading ? "—" : kpis?.ganhoMedio ?? "0"
+              }
+            />
+            <KpiCard
+              titulo="Custo Médio (R$)"
+              valor={
+                loading ? "—" : kpis?.custoMedio ?? "0"
+              }
+            />
           </section>
 
-          {/* Gráfico / Conteúdo futuro */}
+          {/* Área futura */}
           <section className="bg-white p-6 rounded shadow min-h-[200px]">
             <p className="text-gray-500">
-              Área de gráficos (responsiva)
+              Gráficos e análises avançadas
             </p>
           </section>
         </main>
@@ -108,3 +125,22 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+// ===============================
+// COMPONENTE KPI
+// ===============================
+function KpiCard({
+  titulo,
+  valor,
+}: {
+  titulo: string;
+  valor: string | number;
+}) {
+  return (
+    <div className="bg-white p-4 rounded shadow">
+      <p className="text-sm text-gray-500">
+        {titulo}
+      </p>
+      <p className="text-2xl font-bold">
+        {valor}
+      </p>
