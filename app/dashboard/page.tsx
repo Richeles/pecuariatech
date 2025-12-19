@@ -1,13 +1,17 @@
 // app/dashboard/page.tsx
 // Next.js 16 + TypeScript strict
-// Dashboard responsivo + KPIs + Plano ativo + Recursos + Planilhas
+// Dashboard + KPIs + Planos + Planilhas + IA UltraBiológica
 
 "use client";
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabase";
 import RecursoCard from "@/app/components/recursos/RecursoCard";
+import IACardLote from "@/app/components/ia/IACardLote";
 
+// ===============================
+// TIPOS
+// ===============================
 type KPIs = {
   totalAnimais: number;
   pesoMedio: string;
@@ -23,18 +27,33 @@ type Recursos = {
   dispositivos: boolean;
 };
 
+type IALote = {
+  lote_id: string;
+  status: "adequado" | "atencao" | "critico";
+  score_ultrabiologico: number;
+  alerta?: string | null;
+  recomendacao: string;
+};
+
+// ===============================
+// CONFIG TEMPORÁRIA
+// ===============================
+// Depois isso virá do banco ou seleção do usuário
+const LOTE_PADRAO = "00000000-0000-0000-0000-000000000001";
+
 export default function DashboardPage() {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [plano, setPlano] = useState<string>("trial");
   const [recursos, setRecursos] = useState<Recursos | null>(null);
+  const [iaLote, setIaLote] = useState<IALote | null>(null);
   const [loading, setLoading] = useState(true);
   const [exportando, setExportando] = useState(false);
 
   // ===============================
-  // VINCULAR ASSINATURA AO USUÁRIO
+  // VINCULAR ASSINATURA
   // ===============================
   useEffect(() => {
-    const vincularAssinatura = async () => {
+    const vincular = async () => {
       const { data: { session } } =
         await supabase.auth.getSession();
 
@@ -48,11 +67,11 @@ export default function DashboardPage() {
       });
     };
 
-    vincularAssinatura();
+    vincular();
   }, []);
 
   // ===============================
-  // BUSCAR PLANO ATIVO + RECURSOS
+  // PLANO + RECURSOS
   // ===============================
   useEffect(() => {
     const carregarPlano = async () => {
@@ -76,7 +95,7 @@ export default function DashboardPage() {
   }, []);
 
   // ===============================
-  // BUSCAR KPIs
+  // KPIs
   // ===============================
   useEffect(() => {
     const carregarKPIs = async () => {
@@ -95,7 +114,37 @@ export default function DashboardPage() {
   }, []);
 
   // ===============================
-  // EXPORTAR PLANILHA (CSV)
+  // IA ULTRABIOLÓGICA (LOTE)
+  // ===============================
+  useEffect(() => {
+    const carregarIA = async () => {
+      if (!recursos?.ia) return;
+
+      const { data: { session } } =
+        await supabase.auth.getSession();
+
+      if (!session?.access_token) return;
+
+      const res = await fetch(
+        `/api/ia/lote/${LOTE_PADRAO}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      setIaLote(data);
+    };
+
+    carregarIA();
+  }, [recursos]);
+
+  // ===============================
+  // EXPORTAÇÃO CSV
   // ===============================
   const exportarPlanilha = async () => {
     try {
@@ -126,8 +175,6 @@ export default function DashboardPage() {
       a.click();
 
       window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Erro exportação:", err);
     } finally {
       setExportando(false);
     }
@@ -135,20 +182,15 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* ================= HEADER ================= */}
-      <header className="w-full bg-white shadow px-4 py-3">
-        <h1 className="text-lg font-semibold">
-          PecuariaTech
-        </h1>
+      {/* HEADER */}
+      <header className="bg-white shadow px-4 py-3">
+        <h1 className="text-lg font-semibold">PecuariaTech</h1>
         <p className="text-xs text-gray-500">
           Plano ativo:{" "}
-          <span className="font-medium capitalize">
-            {plano}
-          </span>
+          <span className="font-medium capitalize">{plano}</span>
         </p>
       </header>
 
-      {/* ================= CONTEÚDO ================= */}
       <main className="flex-1 p-4 md:p-6 space-y-6">
         {/* KPIs */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -158,12 +200,10 @@ export default function DashboardPage() {
           <KpiCard titulo="Custo Médio (R$)" valor={loading ? "—" : kpis?.custoMedio ?? "0"} />
         </section>
 
-        {/* EXPORTAÇÃO DE PLANILHA */}
-        <section className="bg-white p-6 rounded shadow flex flex-col md:flex-row md:justify-between gap-4">
+        {/* PLANILHA */}
+        <section className="bg-white p-6 rounded shadow flex justify-between">
           <div>
-            <h2 className="font-semibold">
-              Planilha do Rebanho
-            </h2>
+            <h2 className="font-semibold">Planilha do Rebanho</h2>
             <p className="text-sm text-gray-600">
               Exportação dos dados em CSV.
             </p>
@@ -173,23 +213,40 @@ export default function DashboardPage() {
             <button
               onClick={exportarPlanilha}
               disabled={exportando}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+              className="bg-green-600 text-white px-4 py-2 rounded"
             >
-              {exportando ? "Exportando..." : "Exportar Planilha"}
+              {exportando ? "Exportando..." : "Exportar"}
             </button>
           ) : (
-            <a href="/planos" className="text-blue-600 font-medium">
+            <a href="/planos" className="text-blue-600">
               Fazer upgrade
             </a>
           )}
         </section>
 
-        {/* RECURSOS AVANÇADOS */}
+        {/* IA ULTRABIOLÓGICA */}
+        {recursos?.ia && iaLote && (
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold">
+              Diagnóstico Inteligente
+            </h2>
+
+            <IACardLote
+              loteId={iaLote.lote_id}
+              status={iaLote.status}
+              score={iaLote.score_ultrabiologico}
+              alerta={iaLote.alerta}
+              recomendacao={iaLote.recomendacao}
+            />
+          </section>
+        )}
+
+        {/* RECURSOS */}
         {recursos && (
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <RecursoCard titulo="IA Analítica" descricao="Análises inteligentes do rebanho." ativo={recursos.ia} />
-            <RecursoCard titulo="Planilhas Automáticas" descricao="Relatórios e exportações." ativo={recursos.planilhas} />
-            <RecursoCard titulo="Dispositivos & Sensores" descricao="Integração com sensores e GPS." ativo={recursos.dispositivos} />
+            <RecursoCard titulo="IA Analítica" descricao="Orientação técnica automática." ativo={recursos.ia} />
+            <RecursoCard titulo="Planilhas Automáticas" descricao="Relatórios e CSV." ativo={recursos.planilhas} />
+            <RecursoCard titulo="Dispositivos & Sensores" descricao="Integrações de campo." ativo={recursos.dispositivos} />
           </section>
         )}
       </main>
@@ -198,7 +255,7 @@ export default function DashboardPage() {
 }
 
 // ===============================
-// COMPONENTE KPI
+// KPI CARD
 // ===============================
 function KpiCard({
   titulo,
