@@ -6,8 +6,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import RecursoCard from "@/app/components/recursos/RecursoCard";
-import IACardLote from "@/app/components/ia/IACardLote";
+import RecursoCard from "../components/recursos/RecursoCard";
+import IACardLote from "../components/ia/IACardLote";
 
 // ===============================
 // TIPOS
@@ -55,14 +55,20 @@ export default function DashboardPage() {
   // ===============================
   useEffect(() => {
     const vincular = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session?.access_token) return;
 
       await fetch("/api/assinaturas/vincular", {
         method: "POST",
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
     };
+
     vincular();
   }, []);
 
@@ -71,17 +77,23 @@ export default function DashboardPage() {
   // ===============================
   useEffect(() => {
     const carregarPlano = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session?.access_token) return;
 
       const res = await fetch("/api/assinaturas/plano", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       const data = await res.json();
       setPlano(data.plano);
       setRecursos(data.recursos);
     };
+
     carregarPlano();
   }, []);
 
@@ -100,6 +112,7 @@ export default function DashboardPage() {
         setLoading(false);
       }
     };
+
     carregarKPIs();
   }, []);
 
@@ -110,35 +123,47 @@ export default function DashboardPage() {
     const carregarIA = async () => {
       if (!recursos?.ia) return;
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session?.access_token) return;
 
       const res = await fetch(`/api/ia/lote/${LOTE_PADRAO}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (!res.ok) return;
+
       const data = await res.json();
       setIaLote(data);
     };
+
     carregarIA();
   }, [recursos]);
 
   // ===============================
-  // CONECTAR TELEGRAM (C3.4)
+  // CONECTAR TELEGRAM
   // ===============================
   const conectarTelegram = async () => {
     try {
       setConectandoTelegram(true);
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session?.access_token) {
         alert("Usuário não autenticado");
         return;
       }
 
       const res = await fetch("/api/telegram/link", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (!res.ok) {
@@ -147,6 +172,7 @@ export default function DashboardPage() {
       }
 
       const data = await res.json();
+
       if (!data.link) {
         alert("Link do Telegram inválido");
         return;
@@ -168,11 +194,17 @@ export default function DashboardPage() {
   const exportarPlanilha = async () => {
     try {
       setExportando(true);
-      const { data: { session } } = await supabase.auth.getSession();
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session?.access_token) return;
 
       const res = await fetch("/api/planilhas/rebanho", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (!res.ok) {
@@ -182,10 +214,12 @@ export default function DashboardPage() {
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
+
       const a = document.createElement("a");
       a.href = url;
       a.download = "rebanho.csv";
       a.click();
+
       window.URL.revokeObjectURL(url);
     } finally {
       setExportando(false);
@@ -198,24 +232,39 @@ export default function DashboardPage() {
       <header className="bg-white shadow px-4 py-3">
         <h1 className="text-lg font-semibold">PecuariaTech</h1>
         <p className="text-xs text-gray-500">
-          Plano ativo: <span className="font-medium capitalize">{plano}</span>
+          Plano ativo:{" "}
+          <span className="font-medium capitalize">{plano}</span>
         </p>
       </header>
 
       <main className="flex-1 p-4 md:p-6 space-y-6">
         {/* KPIs */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard titulo="Total de Animais" valor={loading ? "—" : kpis?.totalAnimais ?? "0"} />
-          <KpiCard titulo="Peso Médio (kg)" valor={loading ? "—" : kpis?.pesoMedio ?? "0"} />
-          <KpiCard titulo="Ganho Médio Diário" valor={loading ? "—" : kpis?.ganhoMedio ?? "0"} />
-          <KpiCard titulo="Custo Médio (R$)" valor={loading ? "—" : kpis?.custoMedio ?? "0"} />
+          <KpiCard
+            titulo="Total de Animais"
+            valor={loading ? "—" : kpis?.totalAnimais ?? "0"}
+          />
+          <KpiCard
+            titulo="Peso Médio (kg)"
+            valor={loading ? "—" : kpis?.pesoMedio ?? "0"}
+          />
+          <KpiCard
+            titulo="Ganho Médio Diário"
+            valor={loading ? "—" : kpis?.ganhoMedio ?? "0"}
+          />
+          <KpiCard
+            titulo="Custo Médio (R$)"
+            valor={loading ? "—" : kpis?.custoMedio ?? "0"}
+          />
         </section>
 
         {/* PLANILHA */}
         <section className="bg-white p-6 rounded shadow flex justify-between">
           <div>
             <h2 className="font-semibold">Planilha do Rebanho</h2>
-            <p className="text-sm text-gray-600">Exportação dos dados em CSV.</p>
+            <p className="text-sm text-gray-600">
+              Exportação dos dados em CSV.
+            </p>
           </div>
 
           {recursos?.planilhas ? (
@@ -227,22 +276,35 @@ export default function DashboardPage() {
               {exportando ? "Exportando..." : "Exportar"}
             </button>
           ) : (
-            <a href="/planos" className="text-blue-600">Fazer upgrade</a>
+            <a href="/planos" className="text-blue-600">
+              Fazer upgrade
+            </a>
           )}
         </section>
 
         {/* IA ULTRABIOLÓGICA */}
         {recursos?.ia && iaLote && (
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold">Diagnóstico Inteligente</h2>
-            <IACardLote {...iaLote} />
+            <h2 className="text-lg font-semibold">
+              Diagnóstico Inteligente
+            </h2>
+
+            <IACardLote
+              loteId={iaLote.lote_id}
+              status={iaLote.status}
+              score={iaLote.score_ultrabiologico}
+              alerta={iaLote.alerta}
+              recomendacao={iaLote.recomendacao}
+            />
           </section>
         )}
 
         {/* TELEGRAM */}
         {recursos?.ia && (
           <section className="bg-white p-6 rounded shadow">
-            <h2 className="font-semibold mb-2">Alertas via Telegram</h2>
+            <h2 className="font-semibold mb-2">
+              Alertas via Telegram
+            </h2>
             <p className="text-sm text-gray-600 mb-4">
               Receba alertas automáticos da IA UltraBiológica.
             </p>
@@ -264,9 +326,21 @@ export default function DashboardPage() {
         {/* RECURSOS */}
         {recursos && (
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <RecursoCard titulo="IA Analítica" descricao="Orientação técnica automática." ativo={recursos.ia} />
-            <RecursoCard titulo="Planilhas Automáticas" descricao="Relatórios e CSV." ativo={recursos.planilhas} />
-            <RecursoCard titulo="Dispositivos & Sensores" descricao="Integrações de campo." ativo={recursos.dispositivos} />
+            <RecursoCard
+              titulo="IA Analítica"
+              descricao="Orientação técnica automática."
+              ativo={recursos.ia}
+            />
+            <RecursoCard
+              titulo="Planilhas Automáticas"
+              descricao="Relatórios e CSV."
+              ativo={recursos.planilhas}
+            />
+            <RecursoCard
+              titulo="Dispositivos & Sensores"
+              descricao="Integrações de campo."
+              ativo={recursos.dispositivos}
+            />
           </section>
         )}
       </main>
@@ -277,7 +351,13 @@ export default function DashboardPage() {
 // ===============================
 // KPI CARD
 // ===============================
-function KpiCard({ titulo, valor }: { titulo: string; valor: string | number }) {
+function KpiCard({
+  titulo,
+  valor,
+}: {
+  titulo: string;
+  valor: string | number;
+}) {
   return (
     <div className="bg-white p-4 rounded shadow">
       <p className="text-sm text-gray-500">{titulo}</p>
