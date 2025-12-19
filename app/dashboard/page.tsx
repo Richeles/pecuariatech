@@ -1,6 +1,7 @@
-// app/dashboard/page.tsx
+// CAMINHO: app/dashboard/page.tsx
 // Next.js 16 + TypeScript strict
-// Dashboard real: KPIs + HARVAN (decisão do dia) + IA + Planilhas + Telegram
+// Dashboard Real — Campo-first
+// KPIs + HARVAN (decisão do dia) + IA + Planilhas + Telegram
 
 "use client";
 
@@ -98,7 +99,7 @@ export default function DashboardPage() {
   }, []);
 
   // ===============================
-  // KPIs BÁSICOS
+  // KPIs
   // ===============================
   useEffect(() => {
     const carregarKPIs = async () => {
@@ -124,7 +125,9 @@ export default function DashboardPage() {
       if (!data.session?.access_token) return;
 
       const res = await fetch("/api/harvan/dashboard", {
-        headers: { Authorization: `Bearer ${data.session.access_token}` },
+        headers: {
+          Authorization: `Bearer ${data.session.access_token}`,
+        },
       });
 
       if (!res.ok) return;
@@ -135,7 +138,7 @@ export default function DashboardPage() {
   }, []);
 
   // ===============================
-  // IA ULTRABIOLÓGICA (LOTE)
+  // IA ULTRABIOLÓGICA
   // ===============================
   useEffect(() => {
     const carregarIA = async () => {
@@ -161,7 +164,6 @@ export default function DashboardPage() {
   const conectarTelegram = async () => {
     try {
       setConectandoTelegram(true);
-
       const { data } = await supabase.auth.getSession();
       if (!data.session?.access_token) return;
 
@@ -170,8 +172,8 @@ export default function DashboardPage() {
       });
 
       if (!res.ok) return;
-
       const json = await res.json();
+
       if (json?.link) {
         window.open(json.link, "_blank");
         setTelegramConectado(true);
@@ -187,7 +189,6 @@ export default function DashboardPage() {
   const exportarPlanilha = async () => {
     try {
       setExportando(true);
-
       const { data } = await supabase.auth.getSession();
       if (!data.session?.access_token) return;
 
@@ -204,52 +205,64 @@ export default function DashboardPage() {
       a.href = url;
       a.download = "rebanho.csv";
       a.click();
-
       URL.revokeObjectURL(url);
     } finally {
       setExportando(false);
     }
   };
 
+  // ===============================
+  // RENDER
+  // ===============================
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow px-4 py-3">
-        <h1 className="text-lg font-semibold">PecuariaTech</h1>
+        <h1 className="text-lg font-semibold">Dashboard</h1>
         <p className="text-xs text-gray-500">
           Plano ativo: <span className="font-medium capitalize">{plano}</span>
         </p>
       </header>
 
       <main className="p-4 md:p-6 space-y-6">
-        {/* HARVAN — VISÃO DO DIA */}
-        {harvan && (
-          <section className="bg-white border-l-4 border-green-600 p-4 rounded shadow">
-            <h2 className="font-semibold mb-1">🧠 Harvan — Visão do Dia</h2>
-            <p className="text-sm text-gray-700">{harvan.diagnostico}</p>
-            <p className="text-sm font-medium text-green-700 mt-1">
-              👉 {harvan.recomendacao}
-            </p>
-            {harvan.impacto_financeiro !== 0 && (
-              <p className="text-sm text-red-600 mt-2">
-                Impacto estimado: R$ {harvan.impacto_financeiro.toFixed(2)}
+        {/* HARVAN */}
+        <section className="bg-white p-5 rounded shadow border-l-4 border-green-600">
+          <h2 className="font-semibold mb-1">🧠 Harvan — O que importa hoje</h2>
+
+          {harvan ? (
+            <>
+              <p className="text-sm text-gray-700">{harvan.diagnostico}</p>
+              <p className="text-sm font-medium text-green-700 mt-1">
+                👉 {harvan.recomendacao}
               </p>
-            )}
-          </section>
-        )}
+
+              {harvan.impacto_financeiro !== 0 && (
+                <p className="text-sm text-red-600 mt-2">
+                  Impacto estimado: R$ {harvan.impacto_financeiro.toFixed(2)}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-gray-400">
+              Harvan está analisando os dados do dia…
+            </p>
+          )}
+        </section>
 
         {/* KPIs */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <KpiCard titulo="Total de Animais" valor={loading ? "—" : kpis?.totalAnimais ?? "0"} />
           <KpiCard titulo="Peso Médio (kg)" valor={loading ? "—" : kpis?.pesoMedio ?? "0"} />
-          <KpiCard titulo="Ganho Médio Diário" valor={loading ? "—" : kpis?.ganhoMedio ?? "0"} />
+          <KpiCard titulo="Ganho Diário" valor={loading ? "—" : kpis?.ganhoMedio ?? "0"} />
           <KpiCard titulo="Custo Médio (R$)" valor={loading ? "—" : kpis?.custoMedio ?? "0"} />
         </section>
 
-        {/* PLANILHA */}
+        {/* PLANILHAS */}
         <section className="bg-white p-6 rounded shadow flex justify-between items-center">
           <div>
             <h2 className="font-semibold">Planilha do Rebanho</h2>
-            <p className="text-sm text-gray-600">Exportação CSV inteligente.</p>
+            <p className="text-sm text-gray-600">
+              Exportação CSV explicável.
+            </p>
           </div>
 
           {recursos?.planilhas ? (
@@ -261,14 +274,18 @@ export default function DashboardPage() {
               {exportando ? "Exportando..." : "Exportar"}
             </button>
           ) : (
-            <a href="/planos" className="text-blue-600">Fazer upgrade</a>
+            <a href="/planos" className="text-blue-600">
+              Fazer upgrade
+            </a>
           )}
         </section>
 
-        {/* IA LOTE */}
+        {/* IA */}
         {recursos?.ia && iaLote && (
           <section>
-            <h2 className="text-lg font-semibold mb-2">Diagnóstico UltraBiológico</h2>
+            <h2 className="text-lg font-semibold mb-2">
+              Diagnóstico UltraBiológico
+            </h2>
             <IACardLote {...iaLote} />
           </section>
         )}
@@ -290,9 +307,9 @@ export default function DashboardPage() {
         {/* RECURSOS */}
         {recursos && (
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <RecursoCard titulo="IA Analítica" descricao="Orientação técnica automática." ativo={recursos.ia} />
-            <RecursoCard titulo="Planilhas Inteligentes" descricao="Relatórios explicáveis." ativo={recursos.planilhas} />
-            <RecursoCard titulo="Sensores & GPS" descricao="Integração com campo." ativo={recursos.dispositivos} />
+            <RecursoCard titulo="IA Analítica" descricao="Decisão técnica automática." ativo={recursos.ia} />
+            <RecursoCard titulo="Planilhas Inteligentes" descricao="Financeiro explicável." ativo={recursos.planilhas} />
+            <RecursoCard titulo="Sensores & GPS" descricao="Integração campo." ativo={recursos.dispositivos} />
           </section>
         )}
       </main>
