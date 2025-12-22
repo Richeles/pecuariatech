@@ -1,330 +1,185 @@
-// CAMINHO: app/dashboard/page.tsx
-// Next.js 16 + TypeScript strict
-// Dashboard Real — Campo-first
-// KPIs + HARVAN (decisão do dia) + IA + Planilhas + Telegram
+// app/dashboard/page.tsx
+// Dashboard Real — PecuariaTech
+// Next.js 16 | TypeScript strict
 
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/app/lib/supabase";
+import GraficoFinanceiro from "../components/GraficoFinanceiro";
 
-// IMPORTS CORRETOS (LINUX / VERCEL)
-import RecursoCard from "../../components/recursos/RecursoCard";
-import IACardLote from "../../components/ia/IACardLote";
-
-// ===============================
+// =======================
 // TIPOS
-// ===============================
-type KPIs = {
-  totalAnimais: number;
-  pesoMedio: string;
-  ganhoMedio: string;
-  custoMedio: string;
+// =======================
+type DreMensal = {
+  mes_referencia: string;
+  receita_bruta: number;
+  despesas_operacionais: number;
+  resultado_operacional: number;
 };
 
-type Recursos = {
-  kpisBasicos: boolean;
-  kpisAvancados: boolean;
-  planilhas: boolean;
-  ia: boolean;
-  dispositivos: boolean;
+type EbitdaMensal = {
+  mes_referencia: string;
+  receita: number;
+  despesas: number;
+  ebitda: number;
 };
 
-type IALote = {
-  lote_id: string;
-  status: "adequado" | "atencao" | "critico";
-  score_ultrabiologico: number;
-  alerta?: string | null;
-  recomendacao: string;
+type SanidadeMensal = {
+  mes_referencia: string;
+  eventos_sanitarios: number;
+  custo_sanitario_total: number;
 };
 
-type HarvanDecisao = {
-  severidade: "ok" | "atencao" | "critico";
-  diagnostico: string;
-  recomendacao: string;
-  impacto_financeiro: number;
-  confianca: number;
+type FinanceiroMensalGrafico = {
+  periodo: string;
+  receita_total: number;
+  custo_total: number;
+  resultado_operacional: number;
 };
 
-// ===============================
-// CONFIG TEMPORÁRIA
-// ===============================
-const LOTE_PADRAO = "00000000-0000-0000-0000-000000000001";
-
-export default function DashboardPage() {
-  const [kpis, setKpis] = useState<KPIs | null>(null);
-  const [plano, setPlano] = useState<string>("trial");
-  const [recursos, setRecursos] = useState<Recursos | null>(null);
-  const [iaLote, setIaLote] = useState<IALote | null>(null);
-  const [harvan, setHarvan] = useState<HarvanDecisao | null>(null);
-
+export default function DashboardReal() {
   const [loading, setLoading] = useState(true);
-  const [exportando, setExportando] = useState(false);
-  const [telegramConectado, setTelegramConectado] = useState(false);
-  const [conectandoTelegram, setConectandoTelegram] = useState(false);
 
-  // ===============================
-  // VINCULAR ASSINATURA (SAFE)
-  // ===============================
+  const [dre, setDre] = useState<DreMensal[]>([]);
+  const [ebitda, setEbitda] = useState<EbitdaMensal[]>([]);
+  const [sanidade, setSanidade] = useState<SanidadeMensal[]>([]);
+  const [grafico, setGrafico] = useState<FinanceiroMensalGrafico[]>([]);
+
   useEffect(() => {
-    const vincular = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session?.access_token) return;
-
-      await fetch("/api/assinaturas/vincular", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${data.session.access_token}` },
-      });
-    };
-    vincular();
-  }, []);
-
-  // ===============================
-  // PLANO + RECURSOS
-  // ===============================
-  useEffect(() => {
-    const carregarPlano = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session?.access_token) return;
-
-      const res = await fetch("/api/assinaturas/plano", {
-        headers: { Authorization: `Bearer ${data.session.access_token}` },
-      });
-
-      const json = await res.json();
-      setPlano(json.plano);
-      setRecursos(json.recursos);
-    };
-    carregarPlano();
-  }, []);
-
-  // ===============================
-  // KPIs
-  // ===============================
-  useEffect(() => {
-    const carregarKPIs = async () => {
+    async function carregarDashboard() {
       try {
-        const res = await fetch("/api/dashboard/kpis");
-        const data = await res.json();
-        setKpis(data);
-      } catch (err) {
-        console.error("Erro KPIs:", err);
+        const [dreRes, ebitdaRes, sanidadeRes] = await Promise.all([
+          fetch("/api/financeiro/dre"),
+          fetch("/api/financeiro/ebitda"),
+          fetch("/api/financeiro/sanidade"),
+        ]);
+
+        if (!dreRes.ok || !ebitdaRes.ok || !sanidadeRes.ok) {
+          throw new Error("Falha ao buscar dados financeiros");
+        }
+
+        const dreData: DreMensal[] = await dreRes.json();
+        const ebitdaData: EbitdaMensal[] = await ebitdaRes.json();
+        const sanidadeData: SanidadeMensal[] = await sanidadeRes.json();
+
+        const ordenar = <T extends { mes_referencia: string }>(arr: T[]): T[] =>
+          [...arr].sort(
+            (a, b) =>
+              new Date(b.mes_referencia).getTime() -
+              new Date(a.mes_referencia).getTime()
+          );
+
+        const dreOrdenado = ordenar(dreData);
+
+        setDre(dreOrdenado);
+        setEbitda(ordenar(ebitdaData));
+        setSanidade(ordenar(sanidadeData));
+
+        setGrafico(
+          dreOrdenado.map((item) => ({
+            periodo: item.mes_referencia,
+            receita_total: item.receita_bruta,
+            custo_total: item.despesas_operacionais,
+            resultado_operacional: item.resultado_operacional,
+          }))
+        );
+      } catch (error) {
+        console.error("Erro ao carregar dashboard financeiro:", error);
       } finally {
         setLoading(false);
       }
-    };
-    carregarKPIs();
+    }
+
+    carregarDashboard();
   }, []);
 
-  // ===============================
-  // HARVAN — DECISÃO DO DIA
-  // ===============================
-  useEffect(() => {
-    const carregarHarvan = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session?.access_token) return;
+  if (loading) {
+    return <div className="p-6">Carregando Dashboard Financeiro…</div>;
+  }
 
-      const res = await fetch("/api/harvan/dashboard", {
-        headers: {
-          Authorization: `Bearer ${data.session.access_token}`,
-        },
-      });
+  const dreAtual = dre[0] ?? null;
+  const dreAnterior = dre[1] ?? null;
+  const sanidadeAtual = sanidade[0] ?? null;
 
-      if (!res.ok) return;
-      const json = await res.json();
-      setHarvan(json);
-    };
-    carregarHarvan();
-  }, []);
+  if (!dreAtual) {
+    return (
+      <div className="p-6 text-red-600">
+        Erro ao carregar dados financeiros reais.
+      </div>
+    );
+  }
 
-  // ===============================
-  // IA ULTRABIOLÓGICA
-  // ===============================
-  useEffect(() => {
-    const carregarIA = async () => {
-      if (!recursos?.ia) return;
+  function calcularDelta(atual: number, anterior?: number) {
+    if (!anterior || anterior === 0) return 0;
+    return ((atual - anterior) / Math.abs(anterior)) * 100;
+  }
 
-      const { data } = await supabase.auth.getSession();
-      if (!data.session?.access_token) return;
+  const deltaReceita = calcularDelta(
+    dreAtual.receita_bruta,
+    dreAnterior?.receita_bruta
+  );
 
-      const res = await fetch(`/api/ia/lote/${LOTE_PADRAO}`, {
-        headers: { Authorization: `Bearer ${data.session.access_token}` },
-      });
+  const deltaCustos = calcularDelta(
+    dreAtual.despesas_operacionais,
+    dreAnterior?.despesas_operacionais
+  );
 
-      if (!res.ok) return;
-      const json = await res.json();
-      setIaLote(json);
-    };
-    carregarIA();
-  }, [recursos]);
+  const deltaResultado = calcularDelta(
+    dreAtual.resultado_operacional,
+    dreAnterior?.resultado_operacional
+  );
 
-  // ===============================
-  // TELEGRAM
-  // ===============================
-  const conectarTelegram = async () => {
-    try {
-      setConectandoTelegram(true);
-      const { data } = await supabase.auth.getSession();
-      if (!data.session?.access_token) return;
+  const margemPercentual =
+    dreAtual.receita_bruta > 0
+      ? (dreAtual.resultado_operacional / dreAtual.receita_bruta) * 100
+      : 0;
 
-      const res = await fetch("/api/telegram/link", {
-        headers: { Authorization: `Bearer ${data.session.access_token}` },
-      });
-
-      if (!res.ok) return;
-      const json = await res.json();
-
-      if (json?.link) {
-        window.open(json.link, "_blank");
-        setTelegramConectado(true);
-      }
-    } finally {
-      setConectandoTelegram(false);
-    }
-  };
-
-  // ===============================
-  // EXPORTAÇÃO CSV
-  // ===============================
-  const exportarPlanilha = async () => {
-    try {
-      setExportando(true);
-      const { data } = await supabase.auth.getSession();
-      if (!data.session?.access_token) return;
-
-      const res = await fetch("/api/planilhas/rebanho", {
-        headers: { Authorization: `Bearer ${data.session.access_token}` },
-      });
-
-      if (!res.ok) return;
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "rebanho.csv";
-      a.click();
-      URL.revokeObjectURL(url);
-    } finally {
-      setExportando(false);
-    }
-  };
-
-  // ===============================
-  // RENDER
-  // ===============================
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow px-4 py-3">
-        <h1 className="text-lg font-semibold">Dashboard</h1>
-        <p className="text-xs text-gray-500">
-          Plano ativo: <span className="font-medium capitalize">{plano}</span>
-        </p>
-      </header>
+    <div className="p-6 space-y-6">
+      <h1 className="text-3xl font-bold text-green-700">
+        Dashboard Real — PecuariaTech
+      </h1>
 
-      <main className="p-4 md:p-6 space-y-6">
-        {/* HARVAN */}
-        <section className="bg-white p-5 rounded shadow border-l-4 border-green-600">
-          <h2 className="font-semibold mb-1">🧠 Harvan — O que importa hoje</h2>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card titulo="Receita" valor={`R$ ${dreAtual.receita_bruta.toLocaleString("pt-BR")}`} delta={deltaReceita} />
+        <Card titulo="Custos" valor={`R$ ${dreAtual.despesas_operacionais.toLocaleString("pt-BR")}`} delta={deltaCustos} />
+        <Card titulo="Resultado" valor={`R$ ${dreAtual.resultado_operacional.toLocaleString("pt-BR")}`} delta={deltaResultado} />
+        <Card titulo="Margem" valor={`${margemPercentual.toFixed(2)}%`} />
+      </div>
 
-          {harvan ? (
-            <>
-              <p className="text-sm text-gray-700">{harvan.diagnostico}</p>
-              <p className="text-sm font-medium text-green-700 mt-1">
-                👉 {harvan.recomendacao}
-              </p>
-
-              {harvan.impacto_financeiro !== 0 && (
-                <p className="text-sm text-red-600 mt-2">
-                  Impacto estimado: R$ {harvan.impacto_financeiro.toFixed(2)}
-                </p>
-              )}
-            </>
-          ) : (
-            <p className="text-sm text-gray-400">
-              Harvan está analisando os dados do dia…
-            </p>
-          )}
-        </section>
-
-        {/* KPIs */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard titulo="Total de Animais" valor={loading ? "—" : kpis?.totalAnimais ?? "0"} />
-          <KpiCard titulo="Peso Médio (kg)" valor={loading ? "—" : kpis?.pesoMedio ?? "0"} />
-          <KpiCard titulo="Ganho Diário" valor={loading ? "—" : kpis?.ganhoMedio ?? "0"} />
-          <KpiCard titulo="Custo Médio (R$)" valor={loading ? "—" : kpis?.custoMedio ?? "0"} />
-        </section>
-
-        {/* PLANILHAS */}
-        <section className="bg-white p-6 rounded shadow flex justify-between items-center">
-          <div>
-            <h2 className="font-semibold">Planilha do Rebanho</h2>
-            <p className="text-sm text-gray-600">
-              Exportação CSV explicável.
-            </p>
-          </div>
-
-          {recursos?.planilhas ? (
-            <button
-              onClick={exportarPlanilha}
-              disabled={exportando}
-              className="bg-green-600 text-white px-4 py-2 rounded"
-            >
-              {exportando ? "Exportando..." : "Exportar"}
-            </button>
-          ) : (
-            <a href="/planos" className="text-blue-600">
-              Fazer upgrade
-            </a>
-          )}
-        </section>
-
-        {/* IA */}
-        {recursos?.ia && iaLote && (
-          <section>
-            <h2 className="text-lg font-semibold mb-2">
-              Diagnóstico UltraBiológico
-            </h2>
-            <IACardLote {...iaLote} />
-          </section>
-        )}
-
-        {/* TELEGRAM */}
-        {recursos?.ia && (
-          <section className="bg-white p-6 rounded shadow">
-            <h2 className="font-semibold mb-2">Alertas via Telegram</h2>
-            <button
-              onClick={conectarTelegram}
-              disabled={conectandoTelegram}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              {telegramConectado ? "Telegram Conectado" : "Conectar Telegram"}
-            </button>
-          </section>
-        )}
-
-        {/* RECURSOS */}
-        {recursos && (
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <RecursoCard titulo="IA Analítica" descricao="Decisão técnica automática." ativo={recursos.ia} />
-            <RecursoCard titulo="Planilhas Inteligentes" descricao="Financeiro explicável." ativo={recursos.planilhas} />
-            <RecursoCard titulo="Sensores & GPS" descricao="Integração campo." ativo={recursos.dispositivos} />
-          </section>
-        )}
-      </main>
+      <GraficoFinanceiro dados={grafico} />
     </div>
   );
 }
 
-// ===============================
-// KPI CARD
-// ===============================
-function KpiCard({ titulo, valor }: { titulo: string; valor: string | number }) {
+function Card({
+  titulo,
+  valor,
+  delta,
+}: {
+  titulo: string;
+  valor: string;
+  delta?: number;
+}) {
+  const deltaCor =
+    delta === undefined
+      ? "text-gray-400"
+      : delta > 0
+      ? "text-green-600"
+      : delta < 0
+      ? "text-red-600"
+      : "text-gray-500";
+
   return (
-    <div className="bg-white p-4 rounded shadow">
+    <div className="bg-white rounded-xl shadow p-4">
       <p className="text-sm text-gray-500">{titulo}</p>
-      <p className="text-2xl font-bold">{valor}</p>
+      <p className="text-2xl font-bold text-gray-800">{valor}</p>
+      {delta !== undefined && (
+        <p className={`text-xs mt-1 ${deltaCor}`}>
+          Δ {delta > 0 ? "+" : ""}
+          {delta.toFixed(2)}%
+        </p>
+      )}
     </div>
   );
 }
