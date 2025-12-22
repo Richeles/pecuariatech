@@ -5,7 +5,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import GraficoFinanceiro from "../components/GraficoFinanceiro";
+import GraficoFinanceiro from "./components/GraficoFinanceiro";
 
 // =======================
 // TIPOS
@@ -38,7 +38,7 @@ type FinanceiroMensalGrafico = {
 };
 
 export default function DashboardReal() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const [dre, setDre] = useState<DreMensal[]>([]);
   const [ebitda, setEbitda] = useState<EbitdaMensal[]>([]);
@@ -62,7 +62,7 @@ export default function DashboardReal() {
         const ebitdaData: EbitdaMensal[] = await ebitdaRes.json();
         const sanidadeData: SanidadeMensal[] = await sanidadeRes.json();
 
-        const ordenar = <T extends { mes_referencia: string }>(arr: T[]): T[] =>
+        const ordenar = <T extends { mes_referencia: string }>(arr: T[]) =>
           [...arr].sort(
             (a, b) =>
               new Date(b.mes_referencia).getTime() -
@@ -97,9 +97,8 @@ export default function DashboardReal() {
     return <div className="p-6">Carregando Dashboard Financeiro…</div>;
   }
 
-  const dreAtual = dre[0] ?? null;
-  const dreAnterior = dre[1] ?? null;
-  const sanidadeAtual = sanidade[0] ?? null;
+  const dreAtual = dre[0];
+  const dreAnterior = dre[1];
 
   if (!dreAtual) {
     return (
@@ -109,25 +108,10 @@ export default function DashboardReal() {
     );
   }
 
-  function calcularDelta(atual: number, anterior?: number) {
-    if (!anterior || anterior === 0) return 0;
-    return ((atual - anterior) / Math.abs(anterior)) * 100;
-  }
-
-  const deltaReceita = calcularDelta(
-    dreAtual.receita_bruta,
-    dreAnterior?.receita_bruta
-  );
-
-  const deltaCustos = calcularDelta(
-    dreAtual.despesas_operacionais,
-    dreAnterior?.despesas_operacionais
-  );
-
-  const deltaResultado = calcularDelta(
-    dreAtual.resultado_operacional,
-    dreAnterior?.resultado_operacional
-  );
+  const calcularDelta = (atual: number, anterior?: number) =>
+    !anterior || anterior === 0
+      ? 0
+      : ((atual - anterior) / Math.abs(anterior)) * 100;
 
   const margemPercentual =
     dreAtual.receita_bruta > 0
@@ -141,9 +125,27 @@ export default function DashboardReal() {
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card titulo="Receita" valor={`R$ ${dreAtual.receita_bruta.toLocaleString("pt-BR")}`} delta={deltaReceita} />
-        <Card titulo="Custos" valor={`R$ ${dreAtual.despesas_operacionais.toLocaleString("pt-BR")}`} delta={deltaCustos} />
-        <Card titulo="Resultado" valor={`R$ ${dreAtual.resultado_operacional.toLocaleString("pt-BR")}`} delta={deltaResultado} />
+        <Card
+          titulo="Receita"
+          valor={`R$ ${dreAtual.receita_bruta.toLocaleString("pt-BR")}`}
+          delta={calcularDelta(dreAtual.receita_bruta, dreAnterior?.receita_bruta)}
+        />
+        <Card
+          titulo="Custos"
+          valor={`R$ ${dreAtual.despesas_operacionais.toLocaleString("pt-BR")}`}
+          delta={calcularDelta(
+            dreAtual.despesas_operacionais,
+            dreAnterior?.despesas_operacionais
+          )}
+        />
+        <Card
+          titulo="Resultado"
+          valor={`R$ ${dreAtual.resultado_operacional.toLocaleString("pt-BR")}`}
+          delta={calcularDelta(
+            dreAtual.resultado_operacional,
+            dreAnterior?.resultado_operacional
+          )}
+        />
         <Card titulo="Margem" valor={`${margemPercentual.toFixed(2)}%`} />
       </div>
 
