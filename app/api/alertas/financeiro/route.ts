@@ -1,8 +1,9 @@
 // app/api/alertas/financeiro/route.ts
 // Next.js 16 | Produção-ready | PecuariaTech
 
-// 🔴 OBRIGATÓRIO: forçar Node.js runtime para acesso a process.env
+// 🔴 OBRIGATÓRIO PARA FUNCIONAR NA VERCEL
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 
@@ -16,22 +17,16 @@ export async function GET() {
     // ============================
     if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) {
       return NextResponse.json(
-        {
-          erro: "Variáveis TELEGRAM não configuradas",
-        },
+        { erro: "Variáveis TELEGRAM não configuradas" },
         { status: 500 }
       );
     }
 
     // ============================
     // 2️⃣ DADO FINANCEIRO (TEMPORÁRIO)
-    // Depois ligar no Supabase
     // ============================
     const resultadoOperacional = -1250;
 
-    // ============================
-    // 3️⃣ SEM PROBLEMA → SEM ALERTA
-    // ============================
     if (resultadoOperacional >= 0) {
       return NextResponse.json({
         status: "ok",
@@ -40,7 +35,7 @@ export async function GET() {
     }
 
     // ============================
-    // 4️⃣ MENSAGEM CFO
+    // 3️⃣ MENSAGEM CFO
     // ============================
     const texto =
       "🚨 *ALERTA FINANCEIRO — PecuariaTech*\n\n" +
@@ -50,7 +45,7 @@ export async function GET() {
       "Revisar custos operacionais e sanitários.";
 
     // ============================
-    // 5️⃣ ENVIO TELEGRAM
+    // 4️⃣ ENVIO TELEGRAM
     // ============================
     const response = await fetch(
       `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,
@@ -73,9 +68,6 @@ export async function GET() {
       );
     }
 
-    // ============================
-    // 6️⃣ SUCESSO
-    // ============================
     return NextResponse.json({
       status: "alerta_enviado",
       canal: "telegram",
@@ -85,9 +77,7 @@ export async function GET() {
     console.error("Erro alerta financeiro:", error);
 
     return NextResponse.json(
-      {
-        erro: "Erro interno ao processar alerta financeiro",
-      },
+      { erro: "Erro interno ao processar alerta financeiro" },
       { status: 500 }
     );
   }
