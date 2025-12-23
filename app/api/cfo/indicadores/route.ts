@@ -17,8 +17,13 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from("dre_mensal_view")
-      .select("*")
-      .order("atualizado_em", { ascending: false })
+      .select(`
+        mes_referencia,
+        receita_bruta,
+        despesas_operacionais,
+        resultado_operacional
+      `)
+      .order("mes_referencia", { ascending: false })
       .limit(1)
       .single();
 
@@ -30,20 +35,30 @@ export async function GET() {
       );
     }
 
+    const margem_percentual =
+      data.receita_bruta > 0
+        ? Number(
+            (
+              (data.resultado_operacional / data.receita_bruta) *
+              100
+            ).toFixed(2)
+          )
+        : 0;
+
     return NextResponse.json({
       status: "ok",
       sistema: "PecuariaTech CFO",
-      atualizado_em: data.atualizado_em,
+      mes_referencia: data.mes_referencia,
       indicadores: {
-        receita_total: data.receita_total,
-        custo_total: data.custo_total,
+        receita_bruta: data.receita_bruta,
+        despesas_operacionais: data.despesas_operacionais,
         resultado_operacional: data.resultado_operacional,
-        margem_percentual: data.margem_percentual,
+        margem_percentual,
       },
       diagnostico:
         data.resultado_operacional < 0
-          ? "Resultado negativo. Ação corretiva imediata recomendada."
-          : "Resultado saudável. Operação dentro do esperado.",
+          ? "Resultado negativo. Revisar custos operacionais com prioridade."
+          : "Resultado positivo. Operação financeiramente saudável.",
     });
   } catch (err) {
     console.error("Erro API CFO:", err);
