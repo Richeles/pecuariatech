@@ -1,6 +1,9 @@
 // app/api/alertas/financeiro/route.ts
 // Next.js 16 | Produção-ready | PecuariaTech
 
+// 🔴 OBRIGATÓRIO: forçar Node.js runtime para acesso a process.env
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -65,7 +68,9 @@ export async function GET() {
     const telegramResult = await response.json();
 
     if (!telegramResult.ok) {
-      throw new Error("Falha no envio para Telegram");
+      throw new Error(
+        `Falha no envio para Telegram: ${telegramResult.description}`
+      );
     }
 
     // ============================
