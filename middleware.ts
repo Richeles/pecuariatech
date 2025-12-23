@@ -2,14 +2,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // ================================
-// ROTAS PÚBLICAS
+// ROTAS PÚBLICAS (UI)
 // ================================
 const ROTAS_PUBLICAS = [
-  "/",
   "/login",
   "/planos",
   "/checkout",
-  "/api",
 ];
 
 // ================================
@@ -26,7 +24,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // --------------------------------
-  // 2️⃣ ROTAS PÚBLICAS
+  // 2️⃣ ROTAS PÚBLICAS (UI)
   // --------------------------------
   if (ROTAS_PUBLICAS.some((r) => pathname.startsWith(r))) {
     return NextResponse.next();
@@ -82,8 +80,18 @@ export async function middleware(req: NextRequest) {
 }
 
 // ================================
-// MATCHER
+// MATCHER (CRÍTICO)
 // ================================
 export const config = {
-  matcher: ["/((?!_next|favicon.ico).*)"],
+  matcher: [
+    /*
+      🔒 Apenas páginas (UI)
+      🚫 APIs fora do middleware (Fonte Y)
+    */
+    "/dashboard/:path*",
+    "/financeiro/:path*",
+    "/rebanho/:path*",
+    "/pastagem/:path*",
+    "/planos/:path*",
+  ],
 };
