@@ -17,6 +17,13 @@ export async function middleware(req: NextRequest) {
   const { pathname, origin } = req.nextUrl;
 
   // --------------------------------
+  // 0️⃣ NUNCA INTERCEPTAR APIs (FONTE Y)
+  // --------------------------------
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
+  // --------------------------------
   // 1️⃣ DEV LIBERADO
   // --------------------------------
   if (process.env.NODE_ENV === "development") {
@@ -62,7 +69,7 @@ export async function middleware(req: NextRequest) {
 
     const data = await res.json();
 
-    if (!data.ativo) {
+    if (!data?.ativo) {
       return NextResponse.redirect(
         new URL("/planos", req.url)
       );
@@ -80,14 +87,10 @@ export async function middleware(req: NextRequest) {
 }
 
 // ================================
-// MATCHER (CRÍTICO)
+// MATCHER (APENAS UI)
 // ================================
 export const config = {
   matcher: [
-    /*
-      🔒 Apenas páginas (UI)
-      🚫 APIs fora do middleware (Fonte Y)
-    */
     "/dashboard/:path*",
     "/financeiro/:path*",
     "/rebanho/:path*",
