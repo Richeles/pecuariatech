@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from "react";
 import GraficoFinanceiro from "./components/GraficoFinanceiro";
+import CardCFO from "../components/cfo/CardCFO";
 
 // =======================
 // TIPOS
@@ -124,11 +125,15 @@ export default function DashboardReal() {
         Dashboard Real — PecuariaTech
       </h1>
 
+      {/* CARDS FINANCEIROS EXISTENTES */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card
           titulo="Receita"
           valor={`R$ ${dreAtual.receita_bruta.toLocaleString("pt-BR")}`}
-          delta={calcularDelta(dreAtual.receita_bruta, dreAnterior?.receita_bruta)}
+          delta={calcularDelta(
+            dreAtual.receita_bruta,
+            dreAnterior?.receita_bruta
+          )}
         />
         <Card
           titulo="Custos"
@@ -149,6 +154,10 @@ export default function DashboardReal() {
         <Card titulo="Margem" valor={`${margemPercentual.toFixed(2)}%`} />
       </div>
 
+      {/* CARD CFO — CAMADA EXECUTIVA */}
+      <CardCFO />
+
+      {/* GRÁFICO FINANCEIRO */}
       <GraficoFinanceiro dados={grafico} />
     </div>
   );
