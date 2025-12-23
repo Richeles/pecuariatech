@@ -11,34 +11,44 @@ const ROTAS_PUBLICAS = [
 ];
 
 // ================================
-// MIDDLEWARE GLOBAL (SaaS)
+// MIDDLEWARE GLOBAL (UI ONLY)
 // ================================
-export async function middleware(req: NextRequest) {
-  const { pathname, origin } = req.nextUrl;
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
   // --------------------------------
-  // 0️⃣ NUNCA INTERCEPTAR APIs (FONTE Y)
+  // 1️⃣ IGNORAR QUALQUER API
   // --------------------------------
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
 
   // --------------------------------
-  // 1️⃣ DEV LIBERADO
+  // 2️⃣ IGNORAR ASSETS
+  // --------------------------------
+  if (
+    pathname.startsWith("/_next") ||
+    pathname === "/favicon.ico"
+  ) {
+    return NextResponse.next();
+  }
+
+  // --------------------------------
+  // 3️⃣ DEV LIBERADO
   // --------------------------------
   if (process.env.NODE_ENV === "development") {
     return NextResponse.next();
   }
 
   // --------------------------------
-  // 2️⃣ ROTAS PÚBLICAS (UI)
+  // 4️⃣ ROTAS PÚBLICAS
   // --------------------------------
   if (ROTAS_PUBLICAS.some((r) => pathname.startsWith(r))) {
     return NextResponse.next();
   }
 
   // --------------------------------
-  // 3️⃣ VERIFICAR SESSÃO
+  // 5️⃣ VERIFICAR SESSÃO (COOKIE PURO)
   // --------------------------------
   const tokenCookie = req.cookies
     .getAll()
@@ -48,53 +58,21 @@ export async function middleware(req: NextRequest) {
         c.name.includes("auth-token")
     );
 
-  if (!tokenCookie?.value) {
+  if (!tokenCookie) {
     return NextResponse.redirect(
       new URL("/login", req.url)
     );
   }
 
   // --------------------------------
-  // 4️⃣ VERIFICAR ASSINATURA ATIVA
-  // --------------------------------
-  try {
-    const res = await fetch(
-      `${origin}/api/assinaturas/status`,
-      {
-        headers: {
-          Authorization: `Bearer ${tokenCookie.value}`,
-        },
-      }
-    );
-
-    const data = await res.json();
-
-    if (!data?.ativo) {
-      return NextResponse.redirect(
-        new URL("/planos", req.url)
-      );
-    }
-  } catch {
-    return NextResponse.redirect(
-      new URL("/planos", req.url)
-    );
-  }
-
-  // --------------------------------
-  // 5️⃣ ACESSO LIBERADO
+  // 6️⃣ ACESSO LIBERADO
   // --------------------------------
   return NextResponse.next();
 }
 
 // ================================
-// MATCHER (APENAS UI)
+// MATCHER — GLOBAL SEGURO
 // ================================
 export const config = {
-  matcher: [
-    "/dashboard/:path*",
-    "/financeiro/:path*",
-    "/rebanho/:path*",
-    "/pastagem/:path*",
-    "/planos/:path*",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
