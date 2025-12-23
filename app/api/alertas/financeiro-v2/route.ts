@@ -1,29 +1,30 @@
-// app/api/alertas/financeiro/route.ts
+// CAMINHO: app/api/alertas/financeiro-v2/route.ts
 // Next.js 16 | Produção-ready | PecuariaTech
-
-// 🔴 OBRIGATÓRIO PARA FUNCIONAR NA VERCEL
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+// Rota NOVA para quebrar cache antigo da Vercel
 
 import { NextResponse } from "next/server";
 
+// 🔒 OBRIGATÓRIO para uso de process.env na Vercel
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
+    // ============================
+    // 1️⃣ VARIÁVEIS (FONTE ÚNICA)
+    // ============================
     const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
-    // ============================
-    // 1️⃣ VALIDAR AMBIENTE
-    // ============================
     if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) {
       return NextResponse.json(
-        { erro: "Variáveis TELEGRAM não configuradas" },
+        { erro: "Variáveis TELEGRAM não configuradas (Production)" },
         { status: 500 }
       );
     }
 
     // ============================
-    // 2️⃣ DADO FINANCEIRO (TEMPORÁRIO)
+    // 2️⃣ DADO FINANCEIRO (FIXO)
     // ============================
     const resultadoOperacional = -1250;
 
@@ -41,7 +42,7 @@ export async function GET() {
       "🚨 *ALERTA FINANCEIRO — PecuariaTech*\n\n" +
       "Resultado operacional negativo detectado.\n\n" +
       `📉 Resultado: R$ ${resultadoOperacional.toLocaleString("pt-BR")}\n\n` +
-      "👉 *Recomendação imediata:*\n" +
+      "👉 *Ação recomendada:*\n" +
       "Revisar custos operacionais e sanitários.";
 
     // ============================
@@ -63,11 +64,18 @@ export async function GET() {
     const telegramResult = await response.json();
 
     if (!telegramResult.ok) {
-      throw new Error(
-        `Falha no envio para Telegram: ${telegramResult.description}`
+      return NextResponse.json(
+        {
+          erro: "Falha ao enviar para Telegram",
+          detalhe: telegramResult,
+        },
+        { status: 500 }
       );
     }
 
+    // ============================
+    // 5️⃣ SUCESSO
+    // ============================
     return NextResponse.json({
       status: "alerta_enviado",
       canal: "telegram",
@@ -77,7 +85,7 @@ export async function GET() {
     console.error("Erro alerta financeiro:", error);
 
     return NextResponse.json(
-      { erro: "Erro interno ao processar alerta financeiro" },
+      { erro: "Erro interno no alerta financeiro" },
       { status: 500 }
     );
   }
