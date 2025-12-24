@@ -7,18 +7,23 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   try {
-    // ===============================
-    // BASE URL DERIVADA DO REQUEST
-    // (100% SERVER-SAFE)
-    // ===============================
+    // =====================================
+    // BASE URL DERIVADA DO REQUEST (SERVER)
+    // =====================================
     const baseUrl = new URL(request.url).origin;
 
-    // ===============================
-    // 1️⃣ Chamar CFO Ultra (ÂNCORA)
-    // ===============================
+    // =====================================
+    // 1️⃣ CHAMAR CFO ULTRA (ÂNCORA)
+    // =====================================
     const avaliarRes = await fetch(
       `${baseUrl}/api/cfo/ultra/avaliar`,
-      { cache: "no-store" }
+      {
+        cache: "no-store",
+        headers: {
+          // 🔐 Header interno para bypass do middleware
+          "x-internal-call": "cfo-monitorar",
+        },
+      }
     );
 
     if (!avaliarRes.ok) {
@@ -27,22 +32,26 @@ export async function GET(request: Request) {
 
     const avaliacao = await avaliarRes.json();
 
-    // ===============================
-    // 2️⃣ Validar estrutura mínima
-    // ===============================
+    // =====================================
+    // 2️⃣ VALIDAR ESTRUTURA
+    // =====================================
     if (!avaliacao?.avaliacao || !avaliacao.avaliacao.nivel) {
       throw new Error("Resposta inválida do CFO Ultra");
     }
 
-    // ===============================
-    // 3️⃣ Se crítico → enviar alerta
-    // ===============================
+    // =====================================
+    // 3️⃣ SE CRÍTICO → ENVIAR ALERTA
+    // =====================================
     if (avaliacao.avaliacao.nivel === "critico") {
       const alertaRes = await fetch(
         `${baseUrl}/api/cfo/alertas/enviar`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            // 🔐 Mantém padrão interno
+            "x-internal-call": "cfo-monitorar",
+          },
           body: JSON.stringify({
             origem: "CFO Ultra",
             nivel: avaliacao.avaliacao.nivel,
@@ -63,14 +72,13 @@ export async function GET(request: Request) {
       });
     }
 
-    // ===============================
-    // 4️⃣ Caso não crítico
-    // ===============================
+    // =====================================
+    // 4️⃣ CASO NÃO CRÍTICO
+    // =====================================
     return NextResponse.json({
       status: "sem_alerta",
       avaliacao: avaliacao.avaliacao,
     });
-
   } catch (error: any) {
     return NextResponse.json(
       {

@@ -1,3 +1,7 @@
+// CAMINHO: middleware.ts
+// Middleware Global — UI + Proteção
+// CFO interno bypassado com header seguro
+
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -11,13 +15,20 @@ const ROTAS_PUBLICAS = [
 ];
 
 // ================================
-// MIDDLEWARE GLOBAL (UI ONLY)
+// MIDDLEWARE GLOBAL
 // ================================
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // --------------------------------
-  // 1️⃣ IGNORAR QUALQUER API
+  // 🔓 0️⃣ BYPASS INTERNO (CFO)
+  // --------------------------------
+  if (req.headers.get("x-internal-call") === "cfo-monitorar") {
+    return NextResponse.next();
+  }
+
+  // --------------------------------
+  // 1️⃣ IGNORAR TODAS AS APIs
   // --------------------------------
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
@@ -48,7 +59,7 @@ export function middleware(req: NextRequest) {
   }
 
   // --------------------------------
-  // 5️⃣ VERIFICAR SESSÃO (COOKIE PURO)
+  // 5️⃣ VERIFICAR SESSÃO (COOKIE)
   // --------------------------------
   const tokenCookie = req.cookies
     .getAll()
@@ -71,7 +82,7 @@ export function middleware(req: NextRequest) {
 }
 
 // ================================
-// MATCHER — GLOBAL SEGURO
+// MATCHER GLOBAL
 // ================================
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
