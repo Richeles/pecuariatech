@@ -5,36 +5,13 @@
 
 import { NextResponse } from "next/server";
 
-// ===============================
-// RESOLUÇÃO ROBUSTA DA BASE URL
-// (SERVER-SIDE SAFE)
-// ===============================
-function getBaseUrl(): string {
-  // 1️⃣ Prioridade absoluta (server explícito)
-  if (process.env.SITE_URL) {
-    return process.env.SITE_URL;
-  }
-
-  // 2️⃣ Compatibilidade com config existente
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL;
-  }
-
-  if (process.env.NEXT_PUBLIC_BASE_URL) {
-    return process.env.NEXT_PUBLIC_BASE_URL;
-  }
-
-  // 3️⃣ Fallback automático Vercel
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
-  throw new Error("Base URL não configurada no ambiente");
-}
-
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const baseUrl = getBaseUrl();
+    // ===============================
+    // BASE URL DERIVADA DO REQUEST
+    // (100% SERVER-SAFE)
+    // ===============================
+    const baseUrl = new URL(request.url).origin;
 
     // ===============================
     // 1️⃣ Chamar CFO Ultra (ÂNCORA)
