@@ -1,6 +1,6 @@
 // CAMINHO: middleware.ts
-// Middleware Global — UI + Proteção
-// CFO interno bypassado com header seguro
+// PecuariaTech — Middleware Global (UI Protection Only)
+// APIs internas e públicas ficam 100% livres
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
@@ -21,21 +21,16 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // --------------------------------
-  // 🔓 0️⃣ BYPASS INTERNO (CFO)
+  // 1️⃣ LIBERAR TODAS AS APIs
   // --------------------------------
-  if (req.headers.get("x-internal-call") === "cfo-monitorar") {
-    return NextResponse.next();
-  }
-
-  // --------------------------------
-  // 1️⃣ IGNORAR TODAS AS APIs
-  // --------------------------------
+  // ⚠️ Middleware NÃO deve proteger API
+  // (CFO, IA, cron, alertas, webhooks, etc.)
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
 
   // --------------------------------
-  // 2️⃣ IGNORAR ASSETS
+  // 2️⃣ IGNORAR ASSETS DO NEXT
   // --------------------------------
   if (
     pathname.startsWith("/_next") ||
@@ -45,7 +40,7 @@ export function middleware(req: NextRequest) {
   }
 
   // --------------------------------
-  // 3️⃣ DEV LIBERADO
+  // 3️⃣ DEV MODE LIBERADO
   // --------------------------------
   if (process.env.NODE_ENV === "development") {
     return NextResponse.next();
@@ -54,12 +49,12 @@ export function middleware(req: NextRequest) {
   // --------------------------------
   // 4️⃣ ROTAS PÚBLICAS
   // --------------------------------
-  if (ROTAS_PUBLICAS.some((r) => pathname.startsWith(r))) {
+  if (ROTAS_PUBLICAS.some((rota) => pathname.startsWith(rota))) {
     return NextResponse.next();
   }
 
   // --------------------------------
-  // 5️⃣ VERIFICAR SESSÃO (COOKIE)
+  // 5️⃣ VERIFICA COOKIE DE SESSÃO SUPABASE
   // --------------------------------
   const tokenCookie = req.cookies
     .getAll()
@@ -76,14 +71,16 @@ export function middleware(req: NextRequest) {
   }
 
   // --------------------------------
-  // 6️⃣ ACESSO LIBERADO
+  // 6️⃣ ACESSO AUTORIZADO
   // --------------------------------
   return NextResponse.next();
 }
 
 // ================================
-// MATCHER GLOBAL
+// MATCHER GLOBAL (SEGURO)
 // ================================
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
 };
