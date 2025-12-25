@@ -1,1 +1,9 @@
-{}
+{
+  "crons": [
+    {
+      "path": "/api/cfo/ultra/monitorar",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}
+
