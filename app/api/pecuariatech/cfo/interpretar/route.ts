@@ -1,7 +1,7 @@
 // CAMINHO: app/api/pecuariatech/cfo/interpretar/route.ts
 // Next.js 16 + TypeScript strict
 // PecuariaTech CFO AI — Interpretação Financeira
-// Equação Y preservada (server-safe)
+// Equação Y preservada (server-safe absoluto)
 
 import { NextResponse } from "next/server";
 
@@ -58,15 +58,10 @@ function gerarRecomendacao(decisao: DecisaoCFO) {
 export async function GET(request: Request) {
   try {
     // ===============================
-    // BASE URL DERIVADA DO REQUEST
-    // ===============================
-    const baseUrl = new URL(request.url).origin;
-
-    // ===============================
-    // 1️⃣ Buscar última decisão do CFO
+    // 1️⃣ FETCH INTERNO — PADRÃO CORRETO
     // ===============================
     const res = await fetch(
-      `${baseUrl}/api/cfo/decisoes/latest`,
+      new URL("/api/cfo/decisoes/latest", request.url),
       { cache: "no-store" }
     );
 
@@ -83,12 +78,12 @@ export async function GET(request: Request) {
     const ultima: DecisaoCFO = json.decisoes[0];
 
     // ===============================
-    // 2️⃣ Gerar interpretação
+    // 2️⃣ GERAR INTERPRETAÇÃO
     // ===============================
     const interpretacao = gerarRecomendacao(ultima);
 
     // ===============================
-    // 3️⃣ Resposta final
+    // 3️⃣ RESPOSTA FINAL
     // ===============================
     return NextResponse.json({
       status: "ok",
