@@ -1,4 +1,3 @@
-// CAMINHO: app/reset-password/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -12,16 +11,25 @@ export default function ResetPasswordPage() {
   const [erro, setErro] = useState("");
   const [ok, setOk] = useState(false);
 
+  // 🔑 MATERIALIZA A SESSÃO A PARTIR DO HASH
   useEffect(() => {
-    // Garante que a sessão do reset foi carregada
-    supabase.auth.getSession();
+    async function initRecovery() {
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error || !data.session) {
+        setErro("Link inválido ou expirado.");
+        return;
+      }
+    }
+
+    initRecovery();
   }, []);
 
-  async function redefinirSenha() {
+  async function salvarNovaSenha() {
     setErro("");
 
     if (senha.length < 6) {
-      setErro("A senha deve ter no mínimo 6 caracteres.");
+      setErro("Senha precisa ter no mínimo 6 caracteres.");
       return;
     }
 
@@ -50,20 +58,17 @@ export default function ResetPasswordPage() {
     <main className="min-h-screen flex items-center justify-center bg-[#eef5ee]">
       <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-sm space-y-4">
         <h1 className="text-xl font-bold text-center">
-          Redefinir senha
+          Redefinir Senha · PecuariaTech
         </h1>
 
-        {erro && (
-          <p className="text-red-600 text-sm text-center">
-            {erro}
+        {erro && <p className="text-red-600 text-sm">{erro}</p>}
+        {ok && (
+          <p className="text-green-600 text-sm">
+            Senha redefinida com sucesso. Redirecionando…
           </p>
         )}
 
-        {ok ? (
-          <p className="text-green-600 text-center">
-            Senha redefinida com sucesso. Redirecionando…
-          </p>
-        ) : (
+        {!ok && (
           <>
             <input
               type="password"
@@ -82,7 +87,7 @@ export default function ResetPasswordPage() {
             />
 
             <button
-              onClick={redefinirSenha}
+              onClick={salvarNovaSenha}
               className="w-full bg-green-600 text-white py-2 rounded font-semibold"
             >
               Salvar nova senha
