@@ -12,6 +12,7 @@ const ROTAS_PUBLICAS = [
   "/login",
   "/planos",
   "/checkout",
+  "/reset-password", // 🔥 OBRIGATÓRIO PARA SUPABASE RECOVERY
 ];
 
 // ================================
@@ -23,8 +24,6 @@ export function middleware(req: NextRequest) {
   // --------------------------------
   // 1️⃣ LIBERAR TODAS AS APIs
   // --------------------------------
-  // ⚠️ Middleware NÃO deve proteger API
-  // (CFO, IA, cron, alertas, webhooks, etc.)
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
