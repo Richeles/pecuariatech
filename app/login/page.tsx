@@ -1,32 +1,43 @@
 // CAMINHO: app/login/page.tsx
+// Next.js App Router + Supabase
+// Login seguro com reset de senha e fallback de recovery (Equação Y)
+
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/app/lib/supabaseClient";
+import { supabaseClient } from "@/app/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
+  const [info, setInfo] = useState("");
 
-  // 🔑 EQUAÇÃO Y — CAPTURA DO RESET
+  // 🔑 EQUAÇÃO Y — CAPTURA DE RECOVERY (LINK DO EMAIL)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const hash = window.location.hash;
 
-    if (hash.includes("type=recovery")) {
-      // 🔥 Reset detectado → vai para página correta
+    if (hash && hash.includes("type=recovery")) {
       router.replace("/reset-password" + hash);
     }
   }, [router]);
 
+  // 🔐 LOGIN NORMAL
   async function entrar() {
     setErro("");
+    setInfo("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    if (!email || !senha) {
+      setErro("Informe email e senha.");
+      return;
+    }
+
+    const { error } = await supabaseClient.auth.signInWithPassword({
       email,
       password: senha,
     });
@@ -39,6 +50,33 @@ export default function LoginPage() {
     router.push("/dashboard");
   }
 
+  // 🔁 RESET DE SENHA (ENVIA EMAIL)
+  async function resetarSenha() {
+    setErro("");
+    setInfo("");
+
+    if (!email) {
+      setErro("Informe seu email para redefinir a senha.");
+      return;
+    }
+
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(
+      email,
+      {
+        redirectTo: "https://www.pecuariatech.com/reset-password",
+      }
+    );
+
+    if (error) {
+      setErro(error.message);
+      return;
+    }
+
+    setInfo(
+      "Email de redefinição enviado. Verifique sua caixa de entrada."
+    );
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#eef5ee]">
       <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-sm space-y-4">
@@ -49,6 +87,12 @@ export default function LoginPage() {
         {erro && (
           <p className="text-red-600 text-sm text-center">
             {erro}
+          </p>
+        )}
+
+        {info && (
+          <p className="text-green-700 text-sm text-center">
+            {info}
           </p>
         )}
 
@@ -73,6 +117,15 @@ export default function LoginPage() {
           className="w-full bg-green-600 text-white py-2 rounded font-semibold"
         >
           Entrar
+        </button>
+
+        {/* 🔁 ESQUECI MINHA SENHA */}
+        <button
+          type="button"
+          onClick={resetarSenha}
+          className="w-full text-sm text-green-700 hover:underline mt-2"
+        >
+          Esqueci minha senha
         </button>
       </div>
     </main>
