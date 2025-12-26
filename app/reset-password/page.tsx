@@ -9,20 +9,25 @@ export default function ResetPasswordPage() {
   const [senha, setSenha] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [erro, setErro] = useState("");
+  const [ready, setReady] = useState(false);
   const [ok, setOk] = useState(false);
 
-  // 🔑 MATERIALIZA A SESSÃO A PARTIR DO HASH
+  // 🔑 PASSO CRÍTICO: CONVERTER HASH EM SESSÃO
   useEffect(() => {
-    async function initRecovery() {
-      const { data, error } = await supabase.auth.getSession();
+    async function init() {
+      const { data, error } = await supabase.auth.getSessionFromUrl({
+        storeSession: true,
+      });
 
       if (error || !data.session) {
         setErro("Link inválido ou expirado.");
         return;
       }
+
+      setReady(true);
     }
 
-    initRecovery();
+    init();
   }, []);
 
   async function salvarNovaSenha() {
@@ -54,6 +59,10 @@ export default function ResetPasswordPage() {
     }, 2000);
   }
 
+  if (!ready && !erro) {
+    return <p className="p-6 text-center">Validando link…</p>;
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#eef5ee]">
       <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-sm space-y-4">
@@ -68,7 +77,7 @@ export default function ResetPasswordPage() {
           </p>
         )}
 
-        {!ok && (
+        {!ok && ready && (
           <>
             <input
               type="password"
