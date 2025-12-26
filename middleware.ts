@@ -1,6 +1,6 @@
 // CAMINHO: middleware.ts
 // PecuariaTech — Middleware Global (UI Protection Only)
-// APIs internas e públicas ficam 100% livres
+// Reset de senha e callbacks SEMPRE liberados
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
@@ -12,7 +12,8 @@ const ROTAS_PUBLICAS = [
   "/login",
   "/planos",
   "/checkout",
-  "/reset-password", // 🔥 OBRIGATÓRIO PARA SUPABASE RECOVERY
+  "/reset-password",
+  "/auth/callback",
 ];
 
 // ================================
@@ -21,16 +22,12 @@ const ROTAS_PUBLICAS = [
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // --------------------------------
   // 1️⃣ LIBERAR TODAS AS APIs
-  // --------------------------------
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
 
-  // --------------------------------
   // 2️⃣ IGNORAR ASSETS DO NEXT
-  // --------------------------------
   if (
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico"
@@ -38,23 +35,17 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // --------------------------------
   // 3️⃣ DEV MODE LIBERADO
-  // --------------------------------
   if (process.env.NODE_ENV === "development") {
     return NextResponse.next();
   }
 
-  // --------------------------------
   // 4️⃣ ROTAS PÚBLICAS
-  // --------------------------------
   if (ROTAS_PUBLICAS.some((rota) => pathname.startsWith(rota))) {
     return NextResponse.next();
   }
 
-  // --------------------------------
-  // 5️⃣ VERIFICA COOKIE DE SESSÃO SUPABASE
-  // --------------------------------
+  // 5️⃣ VERIFICAR COOKIE DE SESSÃO SUPABASE
   const tokenCookie = req.cookies
     .getAll()
     .find(
@@ -69,14 +60,12 @@ export function middleware(req: NextRequest) {
     );
   }
 
-  // --------------------------------
   // 6️⃣ ACESSO AUTORIZADO
-  // --------------------------------
   return NextResponse.next();
 }
 
 // ================================
-// MATCHER GLOBAL (SEGURO)
+// MATCHER GLOBAL
 // ================================
 export const config = {
   matcher: [
