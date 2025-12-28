@@ -1,109 +1,61 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/app/lib/supabaseClient";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { supabaseClient } from "@/app/lib/supabaseClient";
 
 export default function ResetPasswordPage() {
-  const router = useRouter();
-  const [senha, setSenha] = useState("");
-  const [confirmar, setConfirmar] = useState("");
-  const [erro, setErro] = useState("");
-  const [ready, setReady] = useState(false);
-  const [ok, setOk] = useState(false);
+  const [email, setEmail] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // 🔑 PASSO CRÍTICO: CONVERTER HASH EM SESSÃO
-  useEffect(() => {
-    async function init() {
-      const { data, error } = await supabase.auth.getSessionFromUrl({
-        storeSession: true,
-      });
+  async function enviar(e: React.FormEvent) {
+    e.preventDefault();
+    setErro(null);
+    setMsg(null);
+    setLoading(true);
 
-      if (error || !data.session) {
-        setErro("Link inválido ou expirado.");
-        return;
-      }
-
-      setReady(true);
-    }
-
-    init();
-  }, []);
-
-  async function salvarNovaSenha() {
-    setErro("");
-
-    if (senha.length < 6) {
-      setErro("Senha precisa ter no mínimo 6 caracteres.");
-      return;
-    }
-
-    if (senha !== confirmar) {
-      setErro("As senhas não coincidem.");
-      return;
-    }
-
-    const { error } = await supabase.auth.updateUser({
-      password: senha,
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: "https://www.pecuariatech.com/update-password",
     });
 
+    setLoading(false);
+
     if (error) {
-      setErro(error.message);
+      setErro("Erro ao enviar email de recuperação.");
       return;
     }
 
-    setOk(true);
-
-    setTimeout(() => {
-      router.push("/login");
-    }, 2000);
-  }
-
-  if (!ready && !erro) {
-    return <p className="p-6 text-center">Validando link…</p>;
+    setMsg("Email enviado! Verifique sua caixa de entrada.");
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#eef5ee]">
-      <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-sm space-y-4">
+    <main className="min-h-screen flex items-center justify-center bg-gray-50">
+      <form className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm space-y-4">
         <h1 className="text-xl font-bold text-center">
-          Redefinir Senha · PecuariaTech
+          Recuperar senha · PecuariaTech
         </h1>
 
+        <input
+          type="email"
+          placeholder="Seu email"
+          className="w-full border rounded px-3 py-2"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
         {erro && <p className="text-red-600 text-sm">{erro}</p>}
-        {ok && (
-          <p className="text-green-600 text-sm">
-            Senha redefinida com sucesso. Redirecionando…
-          </p>
-        )}
+        {msg && <p className="text-green-700 text-sm">{msg}</p>}
 
-        {!ok && ready && (
-          <>
-            <input
-              type="password"
-              placeholder="Nova senha"
-              className="w-full border rounded px-3 py-2"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-            />
-
-            <input
-              type="password"
-              placeholder="Confirmar nova senha"
-              className="w-full border rounded px-3 py-2"
-              value={confirmar}
-              onChange={(e) => setConfirmar(e.target.value)}
-            />
-
-            <button
-              onClick={salvarNovaSenha}
-              className="w-full bg-green-600 text-white py-2 rounded font-semibold"
-            >
-              Salvar nova senha
-            </button>
-          </>
-        )}
-      </div>
+        <button
+          onClick={enviar}
+          disabled={loading}
+          className="w-full bg-green-600 text-white py-2 rounded hover:opacity-90"
+        >
+          {loading ? "Enviando..." : "Enviar link de recuperação"}
+        </button>
+      </form>
     </main>
   );
 }

@@ -1,8 +1,12 @@
+// CAMINHO: app/planos/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseClient } from "@/app/lib/supabaseClient";
 
+// ===============================
+// TIPOS
+// ===============================
 type Periodo = "mensal" | "trimestral" | "anual";
 
 interface Plano {
@@ -14,6 +18,9 @@ interface Plano {
   anual: number;
 }
 
+// ===============================
+// BENEFÍCIOS (FIXOS POR PLANO)
+// ===============================
 const BENEFICIOS: Record<string, string[]> = {
   basico: [
     "Dashboard simples e intuitivo",
@@ -72,58 +79,110 @@ const BENEFICIOS: Record<string, string[]> = {
   ],
 };
 
+// ===============================
+// COMPONENTE
+// ===============================
 export default function PlanosPage() {
   const [periodo, setPeriodo] = useState<Periodo>("mensal");
   const [planos, setPlanos] = useState<Plano[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
+  // ===============================
+  // CHECKOUT SEGURO (CLIENT)
+  // ===============================
+  async function assinar(planoCodigo: string) {
+    try {
+      const res = await fetch("/api/checkout/preference", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plano: planoCodigo }),
+      });
+
+      const data = await res.json();
+
+      if (data?.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        alert("Erro ao iniciar pagamento.");
+        console.error("Checkout sem init_point:", data);
+      }
+    } catch (err) {
+      console.error("Erro no checkout:", err);
+      alert("Erro de conexão com o checkout.");
+    }
+  }
+
+  // ===============================
+  // CARREGAR PLANOS (FONTE Y + LOG)
+  // ===============================
   useEffect(() => {
     async function carregarPlanos() {
-      try {
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
+      setLoading(true);
+      setErro(null);
 
-        const { data, error } = await supabase
-          .from("planos_precos_view")
-          .select("*")
-          .order("nivel_ordem", { ascending: true });
+      const { data, error } = await supabaseClient
+        .from("planos_precos_view")
+        .select("*")
+        .order("nivel_ordem", { ascending: true });
 
-        if (error) throw error;
-        setPlanos(data as Plano[]);
-      } catch (e) {
-        console.error(e);
-        setErro("Não foi possível carregar os planos.");
-      } finally {
+      console.group("DEBUG /planos");
+      console.log("DATA:", data);
+      console.log("ERROR:", error);
+      console.groupEnd();
+
+      if (error) {
+        setErro(error.message || "Erro ao consultar planos.");
         setLoading(false);
+        return;
       }
+
+      if (!data || data.length === 0) {
+        setErro("Nenhum plano encontrado.");
+        setLoading(false);
+        return;
+      }
+
+      setPlanos(data as Plano[]);
+      setLoading(false);
     }
 
     carregarPlanos();
   }, []);
 
+  // ===============================
+  // RENDER
+  // ===============================
   if (loading) {
-    return <div className="p-10 text-white">Carregando planos...</div>;
+    return (
+      <div className="p-10 text-gray-500">
+        Carregando planos…
+      </div>
+    );
   }
 
   if (erro) {
-    return <div className="p-10 text-red-300">{erro}</div>;
+    return (
+      <div className="p-10 text-red-600">
+        {erro}
+      </div>
+    );
   }
 
   return (
-    <div className="p-10 text-white">
-      <h1 className="text-3xl font-bold mb-6">Planos PecuariaTech</h1>
+    <main className="max-w-7xl mx-auto p-8 space-y-8">
+      <h1 className="text-3xl font-bold">Planos PecuariaTech</h1>
 
-      {/* PERÍODO */}
-      <div className="flex gap-3 mb-8">
-        {(["mensal", "trimestral", "anual"] as Periodo[]).map(p => (
+      {/* SELETOR DE PERÍODO (VISUAL) */}
+      <div className="flex gap-3">
+        {(["mensal", "trimestral", "anual"] as Periodo[]).map((p) => (
           <button
             key={p}
             onClick={() => setPeriodo(p)}
-            className={`px-4 py-2 rounded ${
-              periodo === p ? "bg-green-600" : "bg-white text-black"
+            className={`px-4 py-2 rounded font-semibold ${
+              periodo === p
+                ? "bg-green-600 text-white"
+                : "bg-gray-100 text-gray-700"
             }`}
           >
             {p.toUpperCase()}
@@ -132,14 +191,14 @@ export default function PlanosPage() {
       </div>
 
       {/* CARDS */}
-      <div className="grid md:grid-cols-5 gap-6">
-        {planos.map(plano => (
+      <section className="grid md:grid-cols-5 gap-6">
+        {planos.map((plano) => (
           <div
             key={plano.codigo}
-            className={`bg-white text-black rounded-xl p-6 shadow ${
+            className={`rounded-xl p-6 shadow bg-white border ${
               plano.codigo === "ultra"
-                ? "border-4 border-yellow-400"
-                : "border"
+                ? "border-yellow-400 border-4"
+                : "border-gray-200"
             }`}
           >
             {plano.codigo === "ultra" && (
@@ -162,12 +221,15 @@ export default function PlanosPage() {
               R$ {plano[periodo].toFixed(2)}
             </p>
 
-            <button className="w-full bg-green-600 text-white py-2 rounded">
+            <button
+              onClick={() => assinar(plano.codigo)}
+              className="w-full bg-green-600 text-white py-2 rounded hover:opacity-90"
+            >
               Assinar
             </button>
           </div>
         ))}
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

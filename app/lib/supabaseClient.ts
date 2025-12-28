@@ -1,14 +1,21 @@
-// app/lib/supabaseClient.ts
 import { createClient } from "@supabase/supabase-js";
+
+/**
+ * Supabase Client — Browser only
+ * Fonte única de verdade (Equação Y)
+ */
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Variáveis públicas do Supabase não configuradas");
-}
-
 export const supabaseClient = createClient(
   supabaseUrl,
-  supabaseAnonKey
+  supabaseAnonKey,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  }
 );

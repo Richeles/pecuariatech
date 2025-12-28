@@ -8,21 +8,29 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+// ===============================
+// SUPABASE — FONTE Y (SERVER ONLY)
+// ===============================
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// ===============================
+// GET /api/cfo/indicadores
+// ===============================
 export async function GET() {
   try {
     const { data, error } = await supabase
       .from("dre_mensal_view")
-      .select(`
+      .select(
+        `
         mes_referencia,
         receita_bruta,
         despesas_operacionais,
         resultado_operacional
-      `)
+      `
+      )
       .order("mes_referencia", { ascending: false })
       .limit(1)
       .single();

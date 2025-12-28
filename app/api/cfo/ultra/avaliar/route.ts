@@ -9,10 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    /**
-     * 🔹 Fonte Y (temporária)
-     * Na próxima iteração, isso virá do Supabase (dre_mensal_view)
-     */
+    // 🔹 Fonte Y (temporária)
     const resultado_operacional = -1250;
     const margem_percentual = 0;
 
@@ -36,7 +33,6 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Erro CFO Ultra:", error);
     return NextResponse.json(
       { erro: "Falha no motor CFO Ultra" },
       { status: 500 }

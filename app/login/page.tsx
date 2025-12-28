@@ -1,46 +1,28 @@
-// CAMINHO: app/login/page.tsx
-// Next.js App Router + Supabase
-// Login seguro com reset de senha e fallback de recovery (Equação Y)
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabaseClient } from "@/app/lib/supabaseClient";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [erro, setErro] = useState("");
-  const [info, setInfo] = useState("");
+  const [erro, setErro] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // 🔑 EQUAÇÃO Y — CAPTURA DE RECOVERY (LINK DO EMAIL)
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const hash = window.location.hash;
-
-    if (hash && hash.includes("type=recovery")) {
-      router.replace("/reset-password" + hash);
-    }
-  }, [router]);
-
-  // 🔐 LOGIN NORMAL
-  async function entrar() {
-    setErro("");
-    setInfo("");
-
-    if (!email || !senha) {
-      setErro("Informe email e senha.");
-      return;
-    }
+  async function entrar(e: React.FormEvent) {
+    e.preventDefault();
+    setErro(null);
+    setLoading(true);
 
     const { error } = await supabaseClient.auth.signInWithPassword({
       email,
       password: senha,
     });
+
+    setLoading(false);
 
     if (error) {
       setErro("Email ou senha inválidos.");
@@ -50,51 +32,13 @@ export default function LoginPage() {
     router.push("/dashboard");
   }
 
-  // 🔁 RESET DE SENHA (ENVIA EMAIL)
-  async function resetarSenha() {
-    setErro("");
-    setInfo("");
-
-    if (!email) {
-      setErro("Informe seu email para redefinir a senha.");
-      return;
-    }
-
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(
-      email,
-      {
-        redirectTo: "https://www.pecuariatech.com/reset-password",
-      }
-    );
-
-    if (error) {
-      setErro(error.message);
-      return;
-    }
-
-    setInfo(
-      "Email de redefinição enviado. Verifique sua caixa de entrada."
-    );
-  }
-
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#eef5ee]">
-      <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-sm space-y-4">
-        <h1 className="text-xl font-bold text-center">
-          Login · PecuariaTech
-        </h1>
-
-        {erro && (
-          <p className="text-red-600 text-sm text-center">
-            {erro}
-          </p>
-        )}
-
-        {info && (
-          <p className="text-green-700 text-sm text-center">
-            {info}
-          </p>
-        )}
+    <main className="min-h-screen flex items-center justify-center bg-gray-50">
+      <form
+        onSubmit={entrar}
+        className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm space-y-4"
+      >
+        <h1 className="text-xl font-bold text-center">Login · PecuariaTech</h1>
 
         <input
           type="email"
@@ -102,6 +46,7 @@ export default function LoginPage() {
           className="w-full border rounded px-3 py-2"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
 
         <input
@@ -110,24 +55,29 @@ export default function LoginPage() {
           className="w-full border rounded px-3 py-2"
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
+          required
         />
 
+        {erro && <p className="text-red-600 text-sm">{erro}</p>}
+
         <button
-          onClick={entrar}
-          className="w-full bg-green-600 text-white py-2 rounded font-semibold"
+          type="submit"
+          disabled={loading}
+          className="w-full bg-green-600 text-white py-2 rounded hover:opacity-90"
         >
-          Entrar
+          {loading ? "Entrando..." : "Entrar"}
         </button>
 
-        {/* 🔁 ESQUECI MINHA SENHA */}
-        <button
-          type="button"
-          onClick={resetarSenha}
-          className="w-full text-sm text-green-700 hover:underline mt-2"
-        >
-          Esqueci minha senha
-        </button>
-      </div>
+        {/* 🔑 ESQUECI SENHA */}
+        <div className="text-center">
+          <Link
+            href="/reset-password"
+            className="text-sm text-green-700 hover:underline"
+          >
+            Esqueci minha senha
+          </Link>
+        </div>
+      </form>
     </main>
   );
 }

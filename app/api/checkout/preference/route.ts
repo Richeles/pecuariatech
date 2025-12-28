@@ -1,79 +1,47 @@
 // app/api/checkout/preference/route.ts
 // Next.js 16 + TypeScript strict
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import MercadoPagoConfig, { Preference } from "mercadopago";
 
-export const runtime = "nodejs";
+// 🔒 CONFIGURAÇÃO SERVER-ONLY
+const mp = new MercadoPagoConfig({
+  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
+});
 
-// ================================
-// POST /api/checkout/preference
-// ================================
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { plano_id } = (await req.json()) as {
-      plano_id?: string;
-    };
+    const { plano } = await req.json();
 
-    if (!plano_id) {
-      return NextResponse.json(
-        { error: "plano_id obrigatório" },
-        { status: 400 }
-      );
-    }
-
-    // ================================
-    // FONTE Y — PLANOS (BACKEND)
-    // ================================
-    const PLANOS: Record<
-      string,
-      { titulo: string; preco: number }
-    > = {
+    // ⚠️ Fonte simples agora (sem Supabase)
+    const PLANOS: Record<string, { titulo: string; preco: number }> = {
       basico: { titulo: "Plano Básico", preco: 31.75 },
       profissional: { titulo: "Plano Profissional", preco: 52.99 },
       ultra: { titulo: "Plano Ultra", preco: 106.09 },
       empresarial: { titulo: "Plano Empresarial", preco: 159.19 },
-      dominus: {
-        titulo: "Premium Dominus 360",
-        preco: 318.49,
-      },
+      dominus360: { titulo: "Premium Dominus 360°", preco: 318.49 },
     };
 
-    const plano = PLANOS[plano_id];
-
-    if (!plano) {
-      return NextResponse.json(
-        { error: "Plano inválido" },
-        { status: 400 }
-      );
+    const selecionado = PLANOS[plano];
+    if (!selecionado) {
+      return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
     }
 
-    // ================================
-    // CLIENTE MERCADO PAGO (PRODUÇÃO)
-    // ================================
-    const client = new MercadoPagoConfig({
-      accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
-    });
-
-    const preference = new Preference(client);
+    const preference = new Preference(mp);
 
     const result = await preference.create({
       body: {
         items: [
           {
-            title: plano.titulo,
+            title: selecionado.titulo,
             quantity: 1,
-            currency_id: "BRL",
-            unit_price: plano.preco,
+            unit_price: selecionado.preco,
           },
         ],
-        metadata: {
-          plano_id,
-        },
         back_urls: {
-          success: "https://www.pecuariatech.com/dashboard",
-          failure: "https://www.pecuariatech.com/planos",
-          pending: "https://www.pecuariatech.com/planos",
+          success: "https://www.pecuariatech.com/checkout/sucesso",
+          failure: "https://www.pecuariatech.com/checkout/erro",
+          pending: "https://www.pecuariatech.com/checkout/pendente",
         },
         auto_return: "approved",
       },
@@ -82,8 +50,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       init_point: result.init_point,
     });
-  } catch (error) {
-    console.error("Erro Mercado Pago:", error);
+  } catch (err) {
     return NextResponse.json(
       { error: "Erro ao criar checkout" },
       { status: 500 }

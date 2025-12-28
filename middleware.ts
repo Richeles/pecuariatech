@@ -1,74 +1,125 @@
 // CAMINHO: middleware.ts
-// PecuariaTech — Middleware Global (UI Protection Only)
-// Reset de senha e callbacks SEMPRE liberados
+// Next.js 16 — Paywall Real por Plano (Opção A)
+// Middleware ajustado para liberar /planos e checkout
 
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-// ================================
-// ROTAS PÚBLICAS (UI)
-// ================================
-const ROTAS_PUBLICAS = [
+// ==============================
+// CONFIGURAÇÃO CENTRAL (EQUAÇÃO Y)
+// ==============================
+
+// Rotas SEM paywall (PÚBLICAS)
+const ROTAS_LIVRES = [
+  "/",
+  "/inicio",
   "/login",
+  "/reset-password",
   "/planos",
   "/checkout",
-  "/reset-password",
-  "/auth/callback",
+  "/sucesso",
+  "/erro",
+  "/api",
+  "/_next",
+  "/favicon.ico",
 ];
 
-// ================================
-// MIDDLEWARE GLOBAL
-// ================================
+// Rotas COM paywall
+const ROTAS_PROTEGIDAS = [
+  "/dashboard",
+  "/financeiro",
+  "/rebanho",
+  "/pastagem",
+  "/cfo",
+  "/ultra",
+];
+
+// Plano mínimo exigido (quando paywall estiver ativo)
+const PLANO_MINIMO = "profissional";
+
+// ==============================
+// FUNÇÕES AUXILIARES
+// ==============================
+
+function rotaLivre(pathname: string) {
+  return ROTAS_LIVRES.some((rota) => pathname.startsWith(rota));
+}
+
+function rotaProtegida(pathname: string) {
+  return ROTAS_PROTEGIDAS.some((rota) => pathname.startsWith(rota));
+}
+
+// ==============================
+// MIDDLEWARE
+// ==============================
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // 1️⃣ LIBERAR TODAS AS APIs
-  if (pathname.startsWith("/api/")) {
-    return NextResponse.next();
-  }
-
-  // 2️⃣ IGNORAR ASSETS DO NEXT
+  // 1️⃣ Ignora arquivos estáticos explicitamente
   if (
     pathname.startsWith("/_next") ||
-    pathname === "/favicon.ico"
+    pathname.includes(".")
   ) {
     return NextResponse.next();
   }
 
-  // 3️⃣ DEV MODE LIBERADO
-  if (process.env.NODE_ENV === "development") {
+  // 2️⃣ Libera rotas públicas
+  if (rotaLivre(pathname)) {
     return NextResponse.next();
   }
 
-  // 4️⃣ ROTAS PÚBLICAS
-  if (ROTAS_PUBLICAS.some((rota) => pathname.startsWith(rota))) {
+  // 3️⃣ Se não for rota protegida, libera
+  if (!rotaProtegida(pathname)) {
     return NextResponse.next();
   }
 
-  // 5️⃣ VERIFICAR COOKIE DE SESSÃO SUPABASE
-  const tokenCookie = req.cookies
-    .getAll()
-    .find(
-      (c) =>
-        c.name.startsWith("sb-") &&
-        c.name.includes("auth-token")
-    );
+  /**
+   * 4️⃣ PAYWALL (MODO CONTROLADO)
+   *
+   * Enquanto o login real está pausado:
+   * - Plano vem de cookie
+   * - Depois será ligado ao user_id
+   */
+  const planoAtual =
+    req.cookies.get("plano_ativo")?.value ?? "nenhum";
 
-  if (!tokenCookie) {
-    return NextResponse.redirect(
-      new URL("/login", req.url)
-    );
+  // 5️⃣ Sem plano → redireciona para /planos
+  if (planoAtual === "nenhum") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/planos";
+    return NextResponse.redirect(url);
   }
 
-  // 6️⃣ ACESSO AUTORIZADO
+  // 6️⃣ Hierarquia de planos
+  const ordemPlanos = [
+    "basico",
+    "profissional",
+    "ultra",
+    "empresarial",
+    "dominus360",
+  ];
+
+  const nivelAtual = ordemPlanos.indexOf(planoAtual);
+  const nivelMinimo = ordemPlanos.indexOf(PLANO_MINIMO);
+
+  if (nivelAtual === -1 || nivelAtual < nivelMinimo) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/planos";
+    return NextResponse.redirect(url);
+  }
+
+  // 7️⃣ Plano válido → acesso liberado
   return NextResponse.next();
 }
 
-// ================================
-// MATCHER GLOBAL
-// ================================
+// ==============================
+// MATCHER (CRÍTICO)
+// ==============================
+
 export const config = {
   matcher: [
+    // Aplica middleware a TODAS as rotas
+    // EXCETO arquivos estáticos e rotas internas
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };
