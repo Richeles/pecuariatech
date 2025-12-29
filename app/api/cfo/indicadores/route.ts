@@ -1,26 +1,33 @@
 // app/api/cfo/indicadores/route.ts
 // PecuariaTech CFO — Produção Real
 // Fonte Y: dre_mensal_view (Supabase)
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+// Runtime-only | Build-safe | Equação Y aplicada
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// ===============================
-// SUPABASE — FONTE Y (SERVER ONLY)
-// ===============================
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 // ===============================
 // GET /api/cfo/indicadores
 // ===============================
 export async function GET() {
   try {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceKey) {
+      console.error("ENV CFO ausente");
+      return NextResponse.json(
+        { erro: "Configuração do CFO indisponível" },
+        { status: 500 }
+      );
+    }
+
+    // 🔐 Supabase criado SOMENTE em runtime
+    const supabase = createClient(supabaseUrl, serviceKey);
+
     const { data, error } = await supabase
       .from("dre_mensal_view")
       .select(
@@ -29,7 +36,7 @@ export async function GET() {
         receita_bruta,
         despesas_operacionais,
         resultado_operacional
-      `
+        `
       )
       .order("mes_referencia", { ascending: false })
       .limit(1)
