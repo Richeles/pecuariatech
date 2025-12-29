@@ -1,62 +1,63 @@
-// app/api/cfo/historico/route.ts
+// app/api/cfo/historico-v2/route.ts
 // PecuariaTech CFO — Histórico Financeiro
-// Fonte Y: dre_mensal_view (Supabase)
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+// Runtime-only | Build-safe | Equação Y aplicada
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
+// ===============================
+// GET /api/cfo/historico-v2
+// ===============================
 export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from("dre_mensal_view")
-      .select(`
-        mes_referencia,
-        receita_bruta,
-        despesas_operacionais,
-        resultado_operacional
-      `)
-      .order("mes_referencia", { ascending: false })
-      .limit(12);
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (error || !data) {
-      console.error("CFO Histórico erro:", error);
+    if (!supabaseUrl || !serviceKey) {
+      console.error("ENV CFO ausente (historico-v2)");
       return NextResponse.json(
-        { erro: "Falha ao obter histórico financeiro CFO" },
+        { erro: "Configuração do CFO indisponível" },
         { status: 500 }
       );
     }
 
-    const historico = data.map((item) => ({
-      mes_referencia: item.mes_referencia,
-      resultado_operacional: item.resultado_operacional,
-      margem_percentual:
-        item.receita_bruta > 0
-          ? Number(
-              (
-                (item.resultado_operacional / item.receita_bruta) *
-                100
-              ).toFixed(2)
-            )
-          : 0,
-    }));
+    // 🔐 Supabase criado somente em runtime
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    const { data, error } = await supabase
+      .from("dre_mensal_view")
+      .select(
+        `
+        mes_referencia,
+        receita_bruta,
+        despesas_operacionais,
+        resultado_operacional
+        `
+      )
+      .order("mes_referencia", { ascending: false })
+      .limit(12); // últimos 12 meses
+
+    if (error) {
+      console.error("Erro histórico CFO:", error);
+      return NextResponse.json(
+        { erro: "Falha ao obter histórico financeiro" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       status: "ok",
       sistema: "PecuariaTech CFO",
-      historico,
+      total_meses: data.length,
+      historico: data,
     });
   } catch (err) {
-    console.error("Erro API CFO Histórico:", err);
+    console.error("Erro API CFO histórico:", err);
     return NextResponse.json(
-      { erro: "Erro interno na API CFO Histórico" },
+      { erro: "Erro interno na API CFO (histórico)" },
       { status: 500 }
     );
   }
