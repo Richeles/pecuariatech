@@ -1,65 +1,102 @@
-// app/api/cfo/alertas/enviar/route.ts
-// PecuariaTech CFO — Alerta Automático (Telegram)
-// Fonte Y: motor de decisão CFO
+// app/api/cfo/alertas/enviar-v2/route.ts
+// PecuariaTech CFO — Automação de Alertas (Telegram)
+// Action-only | Runtime-only | Equação Y preservada
+
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import { NextResponse } from "next/server";
-
-export async function GET() {
+// ===============================
+// POST /api/cfo/alertas/enviar-v2
+// ===============================
+export async function POST() {
   try {
-    // 1️⃣ Avaliar situação financeira (motor CFO)
-    const avaliar = await fetch(
-      `${process.env.VERCEL_URL ? "https://" + process.env.VERCEL_URL : ""}/api/cfo/alertas/avaliar`,
-      { cache: "no-store" }
-    );
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+    const telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
-    const data = await avaliar.json();
+    if (
+      !supabaseUrl ||
+      !serviceKey ||
+      !telegramToken ||
+      !telegramChatId
+    ) {
+      console.error("ENV alertas/enviar-v2 incompleto");
+      return NextResponse.json(
+        { erro: "Configuração de automação ausente" },
+        { status: 500 }
+      );
+    }
 
-    if (data.nivel === "ok") {
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    // 1️⃣ Buscar alertas pendentes
+    const { data: alertas, error } = await supabase
+      .from("cfo_alertas")
+      .select("*")
+      .eq("status", "gerado")
+      .order("created_at", { ascending: true });
+
+    if (error || !alertas || alertas.length === 0) {
       return NextResponse.json({
         status: "ok",
-        mensagem: "Nenhum alerta CFO necessário",
+        mensagem: "Nenhum alerta pendente",
       });
     }
 
-    // 2️⃣ Montar mensagem CFO
-    const texto =
-      `🚨 *PecuariaTech CFO — Alerta ${data.nivel.toUpperCase()}*\n\n` +
-      `📅 Referência: ${data.referencia}\n` +
-      `📉 Resultado: R$ ${Number(data.resultado_operacional).toLocaleString("pt-BR")}\n` +
-      `⚠️ Motivo: ${data.motivo}\n\n` +
-      `👉 Ação recomendada: Revisar custos e estratégia financeira.`;
+    // 2️⃣ Enviar um a um (controle fino)
+    for (const alerta of alertas) {
+      const texto = `
+🚨 *Alerta CFO PecuariaTech*
 
-    // 3️⃣ Enviar para Telegram
-    const telegram = await fetch(
-      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: process.env.TELEGRAM_CHAT_ID,
-          text: texto,
-          parse_mode: "Markdown",
-        }),
+Tipo: ${alerta.tipo.toUpperCase()}
+Prioridade: ${alerta.prioridade.toUpperCase()}
+
+${alerta.mensagem}
+
+Mês: ${alerta.mes_referencia}
+`;
+
+      const res = await fetch(
+        `https://api.telegram.org/bot${telegramToken}/sendMessage`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: telegramChatId,
+            text: texto,
+            parse_mode: "Markdown",
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        console.error("Falha envio Telegram:", await res.text());
+        continue;
       }
-    );
 
-    const result = await telegram.json();
-
-    if (!result.ok) {
-      throw new Error("Falha no envio para Telegram");
+      // 3️⃣ Marcar como enviado
+      await supabase
+        .from("cfo_alertas")
+        .update({
+          status: "enviado",
+          enviado_em: new Date().toISOString(),
+          canal: "telegram",
+        })
+        .eq("id", alerta.id);
     }
 
     return NextResponse.json({
-      status: "alerta_enviado",
-      nivel: data.nivel,
+      status: "ok",
+      enviados: alertas.length,
     });
   } catch (err) {
-    console.error("Erro alerta CFO:", err);
+    console.error("Erro alertas/enviar-v2:", err);
     return NextResponse.json(
-      { erro: "Erro ao enviar alerta CFO" },
+      { erro: "Erro interno na automação de alertas" },
       { status: 500 }
     );
   }
