@@ -1,69 +1,88 @@
 // app/api/cfo/alertas/avaliar/route.ts
-// PecuariaTech CFO — Motor de Decisão
-// Fonte Y: dre_mensal_view
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+// PecuariaTech CFO — Avaliação de Alertas
+// Runtime-only | Equação Y | Build-safe
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
+// ===============================
+// GET /api/cfo/alertas/avaliar
+// ===============================
 export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from("dre_mensal_view")
-      .select(`
-        mes_referencia,
-        receita_bruta,
-        resultado_operacional
-      `)
-      .order("mes_referencia", { ascending: false })
-      .limit(3);
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (error || !data || data.length === 0) {
+    if (!supabaseUrl || !serviceKey) {
+      console.error("ENV CFO ausente (alertas/avaliar)");
       return NextResponse.json(
-        { erro: "Dados financeiros insuficientes para avaliação" },
+        { erro: "Configuração indisponível" },
         { status: 500 }
       );
     }
 
-    const mesesNegativos = data.filter(
-      (m) => m.resultado_operacional < 0
-    ).length;
+    const supabase = createClient(supabaseUrl, serviceKey);
 
-    const ultimoMes = data[0];
+    // 🔎 Fonte Y: indicadores financeiros recentes
+    const { data, error } = await supabase
+      .from("dre_mensal_view")
+      .select(
+        `
+        mes_referencia,
+        receita_bruta,
+        despesas_operacionais,
+        resultado_operacional
+        `
+      )
+      .order("mes_referencia", { ascending: false })
+      .limit(1)
+      .single();
 
-    let nivel = "ok";
-    let motivo = "Operação saudável";
-
-    if (ultimoMes.resultado_operacional < 0) {
-      nivel = "alerta";
-      motivo = "Resultado negativo no último mês";
+    if (error || !data) {
+      return NextResponse.json({
+        status: "ok",
+        alerta: null,
+        mensagem: "Sem dados suficientes para avaliação",
+      });
     }
 
-    if (mesesNegativos >= 2) {
-      nivel = "critico";
-      motivo = "Dois ou mais meses consecutivos com resultado negativo";
+    const margem =
+      data.receita_bruta > 0
+        ? data.resultado_operacional / data.receita_bruta
+        : 0;
+
+    // 🎯 Regra de negócio simples (evolutiva)
+    let alerta = null;
+
+    if (margem < 0) {
+      alerta = {
+        tipo: "critico",
+        mensagem:
+          "Resultado operacional negativo. Revisar custos imediatamente.",
+        prioridade: "alta",
+      };
+    } else if (margem < 0.15) {
+      alerta = {
+        tipo: "atencao",
+        mensagem:
+          "Margem operacional baixa. Avaliar eficiência dos custos.",
+        prioridade: "media",
+      };
     }
 
     return NextResponse.json({
-      status: "avaliado",
+      status: "ok",
       sistema: "PecuariaTech CFO",
-      nivel,
-      motivo,
-      referencia: ultimoMes.mes_referencia,
-      resultado_operacional: ultimoMes.resultado_operacional,
-      meses_negativos: mesesNegativos,
+      mes_referencia: data.mes_referencia,
+      alerta,
     });
   } catch (err) {
-    console.error("Erro avaliação CFO:", err);
+    console.error("Erro API CFO alertas/avaliar:", err);
     return NextResponse.json(
-      { erro: "Erro interno no motor CFO" },
+      { erro: "Erro interno na avaliação de alertas" },
       { status: 500 }
     );
   }
