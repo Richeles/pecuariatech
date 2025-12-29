@@ -1,4 +1,3 @@
-// app/api/cfo/alertas/enviar-v2/route.ts
 // PecuariaTech CFO — Automação de Alertas (Telegram)
 // Action-only | Runtime-only | Equação Y preservada
 
@@ -8,9 +7,6 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// ===============================
-// POST /api/cfo/alertas/enviar-v2
-// ===============================
 export async function POST() {
   try {
     const supabaseUrl = process.env.SUPABASE_URL;
@@ -18,46 +14,31 @@ export async function POST() {
     const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
     const telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
-    if (
-      !supabaseUrl ||
-      !serviceKey ||
-      !telegramToken ||
-      !telegramChatId
-    ) {
-      console.error("ENV alertas/enviar-v2 incompleto");
+    if (!supabaseUrl || !serviceKey || !telegramToken || !telegramChatId) {
       return NextResponse.json(
-        { erro: "Configuração de automação ausente" },
+        { erro: "Configuração ausente" },
         { status: 500 }
       );
     }
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // 1️⃣ Buscar alertas pendentes
-    const { data: alertas, error } = await supabase
+    const { data: alertas } = await supabase
       .from("cfo_alertas")
       .select("*")
-      .eq("status", "gerado")
-      .order("created_at", { ascending: true });
+      .eq("status", "gerado");
 
-    if (error || !alertas || alertas.length === 0) {
-      return NextResponse.json({
-        status: "ok",
-        mensagem: "Nenhum alerta pendente",
-      });
+    if (!alertas || alertas.length === 0) {
+      return NextResponse.json({ status: "ok", mensagem: "Nada a enviar" });
     }
 
-    // 2️⃣ Enviar um a um (controle fino)
     for (const alerta of alertas) {
-      const texto = `
-🚨 *Alerta CFO PecuariaTech*
+      const texto = `🚨 *Alerta CFO PecuariaTech*
 
-Tipo: ${alerta.tipo.toUpperCase()}
-Prioridade: ${alerta.prioridade.toUpperCase()}
+Tipo: ${alerta.tipo}
+Prioridade: ${alerta.prioridade}
 
 ${alerta.mensagem}
-
-Mês: ${alerta.mes_referencia}
 `;
 
       const res = await fetch(
@@ -73,31 +54,17 @@ Mês: ${alerta.mes_referencia}
         }
       );
 
-      if (!res.ok) {
-        console.error("Falha envio Telegram:", await res.text());
-        continue;
+      if (res.ok) {
+        await supabase
+          .from("cfo_alertas")
+          .update({ status: "enviado" })
+          .eq("id", alerta.id);
       }
-
-      // 3️⃣ Marcar como enviado
-      await supabase
-        .from("cfo_alertas")
-        .update({
-          status: "enviado",
-          enviado_em: new Date().toISOString(),
-          canal: "telegram",
-        })
-        .eq("id", alerta.id);
     }
 
-    return NextResponse.json({
-      status: "ok",
-      enviados: alertas.length,
-    });
+    return NextResponse.json({ status: "ok", enviados: alertas.length });
   } catch (err) {
-    console.error("Erro alertas/enviar-v2:", err);
-    return NextResponse.json(
-      { erro: "Erro interno na automação de alertas" },
-      { status: 500 }
-    );
+    console.error("Erro enviar-v2:", err);
+    return NextResponse.json({ erro: "Erro interno" }, { status: 500 });
   }
 }

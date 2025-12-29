@@ -1,6 +1,6 @@
 // app/api/ultra/route.ts
-// Ultra — Endpoint placeholder (build-safe)
-// Equação Y preservada
+// Ultra — Endpoint stub seguro
+// Build-safe | Runtime-only | Equação Y preservada
 
 import { NextResponse } from "next/server";
 
