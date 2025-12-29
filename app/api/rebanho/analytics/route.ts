@@ -1,14 +1,25 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+// app/api/rebanho/analytics/route.ts
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+export const runtime = "nodejs";
 
 export async function GET() {
-  const total = await supabase.from('animals').select('*', { count: 'exact' });
-  const pesos = await supabase.from('pesos').select('*');
-  const san = await supabase.from('sanidade').select('*');
+  try {
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-  return NextResponse.json({
-    total_animais: total?.count ?? 0,
-    total_pesagens: pesos?.data?.length ?? 0,
-    eventos_sanitarios: san?.data?.length ?? 0,
-  });
+    const { data, error } = await supabase
+      .from("rebanho")
+      .select("status, count:id");
+
+    if (error) throw error;
+
+    return NextResponse.json(data);
+  } catch (e) {
+    console.error("Erro analytics rebanho:", e);
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+  }
 }

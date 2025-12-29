@@ -1,38 +1,27 @@
-import { NextResponse } from "next/server";
-import { supabase } from "@/app/lib/supabase";
+// app/api/rebanho/excluir/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
-type ExcluirAnimalInput = {
-  id: string;
-};
+export const runtime = "nodejs";
 
-export async function POST(req: Request) {
+export async function DELETE(req: NextRequest) {
   try {
-    const data = (await req.json()) as ExcluirAnimalInput;
-
-    if (!data.id) {
-      return NextResponse.json(
-        { success: false, error: "id é obrigatório" },
-        { status: 400 }
-      );
+    const id = req.nextUrl.searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
     }
 
-    const { error } = await supabase
-      .from("animais")
-      .delete()
-      .eq("id", data.id);
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-    if (error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
-      );
-    }
+    const { error } = await supabase.from("rebanho").delete().eq("id", id);
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json(
-      { success: false, error: err.message },
-      { status: 400 }
-    );
+  } catch (e) {
+    console.error("Erro excluir rebanho:", e);
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }

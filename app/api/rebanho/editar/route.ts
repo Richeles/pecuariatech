@@ -1,45 +1,33 @@
-import { NextResponse } from "next/server";
-import { supabase } from "@/app/lib/supabase";
+// app/api/rebanho/editar/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
-type EditarAnimalInput = {
-  id: string;
-  nome?: string;
-  categoria?: string;
-  sexo?: string;
-  peso_inicial?: number;
-  origem?: string;
-  status?: string;
-};
+export const runtime = "nodejs";
 
-export async function POST(req: Request) {
+export async function PUT(req: NextRequest) {
   try {
-    const data = (await req.json()) as EditarAnimalInput;
-    const { id, ...campos } = data;
+    const body = await req.json();
+    const { id, ...dados } = body;
 
     if (!id) {
-      return NextResponse.json(
-        { success: false, error: "id é obrigatório" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
     }
+
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     const { error } = await supabase
-      .from("animais")
-      .update(campos)
+      .from("rebanho")
+      .update(dados)
       .eq("id", id);
 
-    if (error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
-      );
-    }
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json(
-      { success: false, error: err.message },
-      { status: 400 }
-    );
+  } catch (e) {
+    console.error("Erro editar rebanho:", e);
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }

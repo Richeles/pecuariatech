@@ -1,41 +1,45 @@
-import { NextResponse } from "next/server";
-import { supabase } from "@/app/lib/supabase";
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
-type PesoInput = {
-  animal_id: string;
-  peso: number;
-  data_pesagem: string;
-};
-
-export async function POST(req: Request) {
+// =====================================================
+// POST /api/rebanho/peso
+// Atualiza peso do animal
+// =====================================================
+export async function POST(req: NextRequest) {
   try {
-    const data = (await req.json()) as PesoInput;
+    const { id, peso } = await req.json();
 
-    if (!data.animal_id || typeof data.peso !== "number") {
+    if (!id || peso === undefined) {
       return NextResponse.json(
-        { success: false, error: "Dados inválidos" },
+        { error: "ID e peso são obrigatórios" },
         { status: 400 }
       );
     }
 
-    const { error } = await supabase.from("pesagens").insert({
-      animal_id: data.animal_id,
-      peso: data.peso,
-      data_pesagem: data.data_pesagem,
-    });
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    const { error } = await supabase
+      .from("animals")
+      .update({ peso })
+      .eq("id", id);
 
     if (error) {
+      console.error("Erro atualizar peso:", error);
       return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
+        { error: error.message },
+        { status: 400 }
       );
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err) {
+    console.error("Erro peso:", err);
     return NextResponse.json(
-      { success: false, error: err.message },
-      { status: 400 }
+      { error: "Erro interno ao atualizar peso" },
+      { status: 500 }
     );
   }
 }

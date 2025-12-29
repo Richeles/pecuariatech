@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 // =====================================================
 // GET /api/rebanho/listar
-// Build-safe | Runtime-only | Equação Y compliant
+// Runtime-only | Equação Y | Build-safe
 // =====================================================
 export async function GET() {
   try {
@@ -11,25 +11,33 @@ export async function GET() {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error("ERRO: Variáveis de ambiente do Supabase não definidas.");
+      console.error("Supabase ENV ausente");
       return NextResponse.json(
         { error: "Configuração do Supabase ausente" },
         { status: 500 }
       );
     }
 
-    // 🔑 Cliente Supabase criado APENAS em runtime
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     const { data, error } = await supabase
       .from("animals")
       .select(
-        "id, brinco, nome, sexo, categoria, peso_atual, lote_id, status"
+        `
+        id,
+        brinco,
+        nome,
+        sexo,
+        categoria,
+        peso,
+        lote_id,
+        status
+        `
       )
-      .order("created_at", { ascending: false });
+      .order("criado_em", { ascending: false });
 
     if (error) {
-      console.error("Erro Supabase:", error);
+      console.error("Erro Supabase listar:", error);
       return NextResponse.json(
         { error: error.message },
         { status: 400 }
@@ -38,7 +46,7 @@ export async function GET() {
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error("Erro inesperado:", err);
+    console.error("Erro inesperado listar:", err);
     return NextResponse.json(
       { error: "Erro interno ao listar animais" },
       { status: 500 }

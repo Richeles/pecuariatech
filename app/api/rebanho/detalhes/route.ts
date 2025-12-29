@@ -1,43 +1,32 @@
-import { NextResponse } from "next/server";
-import { supabase } from "@/app/lib/supabase";
+// app/api/rebanho/detalhes/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
-type DetalhesRebanhoInput = {
-  id: string;
-};
+export const runtime = "nodejs";
 
-export async function POST(req: Request) {
+export async function GET(req: NextRequest) {
   try {
-    const data = (await req.json()) as DetalhesRebanhoInput;
-    const { id } = data;
-
+    const id = req.nextUrl.searchParams.get("id");
     if (!id) {
-      return NextResponse.json(
-        { success: false, error: "id é obrigatório" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
     }
 
-    const { data: animal, error } = await supabase
-      .from("animais")
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data, error } = await supabase
+      .from("rebanho")
       .select("*")
       .eq("id", id)
       .single();
 
-    if (error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
-      );
-    }
+    if (error) throw error;
 
-    return NextResponse.json({
-      success: true,
-      data: animal,
-    });
-  } catch (err: any) {
-    return NextResponse.json(
-      { success: false, error: err.message },
-      { status: 400 }
-    );
+    return NextResponse.json(data);
+  } catch (e) {
+    console.error("Erro detalhes rebanho:", e);
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }
