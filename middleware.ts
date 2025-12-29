@@ -1,125 +1,74 @@
-// CAMINHO: middleware.ts
-// Next.js 16 — Paywall Real por Plano (Opção A)
-// Middleware ajustado para liberar /planos e checkout
+// middleware.ts
+// Paywall REAL — produção
+// Fonte Y: Supabase + Assinaturas
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-// ==============================
-// CONFIGURAÇÃO CENTRAL (EQUAÇÃO Y)
-// ==============================
-
-// Rotas SEM paywall (PÚBLICAS)
-const ROTAS_LIVRES = [
+const ROTAS_PUBLICAS = [
   "/",
-  "/inicio",
   "/login",
-  "/reset-password",
   "/planos",
   "/checkout",
   "/sucesso",
   "/erro",
-  "/api",
-  "/_next",
-  "/favicon.ico",
+  "/reset-password",
+  "/api/checkout",
+  "/api/checkout/preference",
+  "/api/checkout/webhook",
+  "/api/trial",
 ];
 
-// Rotas COM paywall
-const ROTAS_PROTEGIDAS = [
-  "/dashboard",
-  "/financeiro",
-  "/rebanho",
-  "/pastagem",
-  "/cfo",
-  "/ultra",
-];
-
-// Plano mínimo exigido (quando paywall estiver ativo)
-const PLANO_MINIMO = "profissional";
-
-// ==============================
-// FUNÇÕES AUXILIARES
-// ==============================
-
-function rotaLivre(pathname: string) {
-  return ROTAS_LIVRES.some((rota) => pathname.startsWith(rota));
-}
-
-function rotaProtegida(pathname: string) {
-  return ROTAS_PROTEGIDAS.some((rota) => pathname.startsWith(rota));
-}
-
-// ==============================
-// MIDDLEWARE
-// ==============================
-
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // 1️⃣ Ignora arquivos estáticos explicitamente
   if (
+    ROTAS_PUBLICAS.some((rota) => pathname.startsWith(rota)) ||
     pathname.startsWith("/_next") ||
     pathname.includes(".")
   ) {
     return NextResponse.next();
   }
 
-  // 2️⃣ Libera rotas públicas
-  if (rotaLivre(pathname)) {
+  const token = req.cookies.get("sb-access-token")?.value;
+
+  if (!token) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL}/api/assinatura/status`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      return NextResponse.redirect(new URL("/planos", req.url));
+    }
+
+    const data = await res.json();
+
+    if (data.status !== "ativa") {
+      return NextResponse.redirect(new URL("/planos", req.url));
+    }
+
     return NextResponse.next();
+  } catch {
+    return NextResponse.redirect(new URL("/erro", req.url));
   }
-
-  // 3️⃣ Se não for rota protegida, libera
-  if (!rotaProtegida(pathname)) {
-    return NextResponse.next();
-  }
-
-  /**
-   * 4️⃣ PAYWALL (MODO CONTROLADO)
-   *
-   * Enquanto o login real está pausado:
-   * - Plano vem de cookie
-   * - Depois será ligado ao user_id
-   */
-  const planoAtual =
-    req.cookies.get("plano_ativo")?.value ?? "nenhum";
-
-  // 5️⃣ Sem plano → redireciona para /planos
-  if (planoAtual === "nenhum") {
-    const url = req.nextUrl.clone();
-    url.pathname = "/planos";
-    return NextResponse.redirect(url);
-  }
-
-  // 6️⃣ Hierarquia de planos
-  const ordemPlanos = [
-    "basico",
-    "profissional",
-    "ultra",
-    "empresarial",
-    "dominus360",
-  ];
-
-  const nivelAtual = ordemPlanos.indexOf(planoAtual);
-  const nivelMinimo = ordemPlanos.indexOf(PLANO_MINIMO);
-
-  if (nivelAtual === -1 || nivelAtual < nivelMinimo) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/planos";
-    return NextResponse.redirect(url);
-  }
-
-  // 7️⃣ Plano válido → acesso liberado
-  return NextResponse.next();
 }
-
-// ==============================
-// MATCHER (CRÍTICO)
-// ==============================
 
 export const config = {
   matcher: [
-    // Aplica middleware a TODAS as rotas
-    // EXCETO arquivos estáticos e rotas internas
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/dashboard/:path*",
+    "/dashboard-real/:path*",
+    "/financeiro/:path*",
+    "/rebanho/:path*",
+    "/pastagem/:path*",
+    "/ultrabiologica/:path*",
   ],
 };
