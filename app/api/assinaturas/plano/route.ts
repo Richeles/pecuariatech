@@ -1,102 +1,51 @@
 // app/api/assinaturas/plano/route.ts
-// Next.js 16 + TypeScript strict
+// Runtime-only | Build-safe | Equação Y
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-export const runtime = "nodejs";
-
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const token = req.headers
-      .get("authorization")
-      ?.replace("Bearer ", "");
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (!token) {
+    if (!url || !anon) {
       return NextResponse.json(
-        { plano: "trial", recursos: {} },
-        { status: 401 }
+        { error: "Configuração do Supabase ausente" },
+        { status: 500 }
       );
     }
 
-    const supabaseUser = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const supabase = createClient(url, anon);
 
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const { data, error } = await supabase
+      .from("planos")
+      .select(
+        `
+        id,
+        codigo,
+        nome,
+        kpis_basicos,
+        kpis_avancados,
+        acesso_cfo,
+        acesso_ultra
+        `
+      )
+      .order("nivel_ordem", { ascending: true });
 
-    // 🔐 Usuário
-    const { data } = await supabaseUser.auth.getUser(token);
-    const user = data?.user;
-
-    if (!user) {
-      return NextResponse.json({ plano: "trial" });
+    if (error) {
+      console.error("Erro plano:", error);
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
     }
 
-    // 🔎 Assinatura ativa
-    const { data: assinatura } = await supabaseAdmin
-      .from("assinaturas")
-      .select("plano_codigo")
-      .eq("user_id", user.id)
-      .eq("status", "ativo")
-      .maybeSingle();
-
-    const plano = assinatura?.plano_codigo ?? "trial";
-
-    // 🎯 CAPACIDADES POR PLANO (BASE)
-    const recursosPorPlano: Record<
-      string,
-      Record<string, boolean>
-    > = {
-      trial: {
-        kpisBasicos: true,
-        kpisAvancados: false,
-        planilhas: false,
-        ia: false,
-        dispositivos: false,
-      },
-      basico: {
-        kpisBasicos: true,
-        kpisAvancados: false,
-        planilhas: false,
-        ia: false,
-        dispositivos: false,
-      },
-      profissional: {
-        kpisBasicos: true,
-        kpisAvancados: true,
-        planilhas: true,
-        ia: false,
-        dispositivos: false,
-      },
-      ultra: {
-        kpisBasicos: true,
-        kpisAvancados: true,
-        planilhas: true,
-        ia: true,
-        dispositivos: false,
-      },
-      dominus: {
-        kpisBasicos: true,
-        kpisAvancados: true,
-        planilhas: true,
-        ia: true,
-        dispositivos: true,
-      },
-    };
-
-    return NextResponse.json({
-      plano,
-      recursos: recursosPorPlano[plano],
-    });
+    return NextResponse.json(data);
   } catch (err) {
     console.error("Erro plano:", err);
     return NextResponse.json(
-      { plano: "trial", recursos: {} },
+      { error: "Erro interno plano" },
       { status: 500 }
     );
   }
