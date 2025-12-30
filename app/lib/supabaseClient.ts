@@ -1,19 +1,21 @@
-// app/lib/supabaseClient.ts
 "use client";
 
 import { createClient } from "@supabase/supabase-js";
 
-/**
- * Supabase Client — Browser only
- * Fonte única de verdade (Equação Y)
- */
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error(
+    "Supabase env vars missing:",
+    supabaseUrl,
+    supabaseAnonKey
+  );
+}
 
 export const supabaseClient = createClient(
-  supabaseUrl,
-  supabaseAnonKey,
+  supabaseUrl ?? "",
+  supabaseAnonKey ?? "",
   {
     auth: {
       persistSession: true,
