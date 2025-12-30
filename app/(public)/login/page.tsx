@@ -25,20 +25,22 @@ export default function LoginPage() {
     setLoading(false);
 
     if (error) {
-      setErro("Email ou senha inválidos.");
+      setErro(error.message);
       return;
     }
 
-    router.push("/dashboard");
+    router.replace("/dashboard");
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50">
+    <main className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4">
       <form
         onSubmit={entrar}
         className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm space-y-4"
       >
-        <h1 className="text-xl font-bold text-center">Login · PecuariaTech</h1>
+        <h1 className="text-xl font-bold text-center">
+          Login · PecuariaTech
+        </h1>
 
         <input
           type="email"
@@ -58,7 +60,11 @@ export default function LoginPage() {
           required
         />
 
-        {erro && <p className="text-red-600 text-sm">{erro}</p>}
+        {erro && (
+          <p className="text-red-600 text-sm text-center">
+            {erro}
+          </p>
+        )}
 
         <button
           type="submit"
@@ -68,8 +74,7 @@ export default function LoginPage() {
           {loading ? "Entrando..." : "Entrar"}
         </button>
 
-        {/* 🔑 ESQUECI SENHA */}
-        <div className="text-center">
+        <div className="text-center pt-2">
           <Link
             href="/reset-password"
             className="text-sm text-green-700 hover:underline"
