@@ -1,24 +1,23 @@
-// CAMINHO: app/api/financeiro/indicadores-avancados/route.ts
 // Next.js 16 + TypeScript strict
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 // ===============================
-// SUPABASE SERVER CLIENT (RUNTIME)
+// SUPABASE SERVER CLIENT (USER CONTEXT)
 // ===============================
 function getSupabaseServerClient(token: string) {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // ✅ ANON, NÃO SERVICE
     {
+      auth: {
+        persistSession: false,
+      },
       global: {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      },
-      auth: {
-        persistSession: false,
       },
     }
   );
@@ -31,33 +30,27 @@ export async function GET(req: NextRequest) {
   try {
     const authHeader = req.headers.get("authorization");
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json(
-        { error: "Token ausente" },
-        { status: 401 }
-      );
+    if (!authHeader?.startsWith("Bearer ")) {
+      return NextResponse.json({ error: "Token ausente" }, { status: 401 });
     }
 
     const token = authHeader.replace("Bearer ", "");
     const supabase = getSupabaseServerClient(token);
 
     // ===============================
-    // VALIDAR USUÁRIO PELO TOKEN
+    // VALIDAR USUÁRIO
     // ===============================
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: "Sessão inválida" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Sessão inválida" }, { status: 401 });
     }
 
     // ===============================
-    // BUSCAR INDICADORES FINANCEIROS
+    // BUSCAR INDICADORES (RLS ATIVO)
     // ===============================
     const { data, error } = await supabase
       .from("financeiro_indicadores_view")
@@ -73,22 +66,19 @@ export async function GET(req: NextRequest) {
       .single();
 
     if (error) {
-      console.error("Erro ao buscar indicadores:", error);
+      console.error("Erro indicadores CFO:", error);
       return NextResponse.json(
         { error: "Erro ao buscar indicadores financeiros" },
         { status: 500 }
       );
     }
 
-    // ===============================
-    // RETORNO FINAL
-    // ===============================
     return NextResponse.json({
       status: "ok",
       indicadores: data,
     });
   } catch (err) {
-    console.error("Erro inesperado:", err);
+    console.error("Erro inesperado CFO:", err);
     return NextResponse.json(
       { error: "Erro interno do servidor" },
       { status: 500 }
