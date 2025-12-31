@@ -1,11 +1,12 @@
 // CAMINHO: app/dashboard/cfo/page.tsx
 // PecuariaTech Autônomo — Dashboard CFO
 // Fonte Y | Token real | CFO Autônomo ativo
+// Linux / Vercel safe
 
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/app/lib/supabase";
+import { supabaseClient } from "../../lib/supabaseClient";
 import CFOResumoEstrategico from "../../components/cfo/CFOResumoEstrategico";
 
 // ===============================
@@ -28,7 +29,7 @@ export default function DashboardCFO() {
       try {
         const {
           data: { session },
-        } = await supabase.auth.getSession();
+        } = await supabaseClient.auth.getSession();
 
         if (!session?.access_token) {
           setErro("Sessão não encontrada");
