@@ -1,11 +1,15 @@
 // CAMINHO: app/components/cfo/CFOResumoEstrategico.tsx
 // Componente de decisão CFO — Opção B4
+// Linux / Vercel safe
 
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/app/lib/supabase";
+import { supabaseClient } from "../../lib/supabaseClient";
 
+// ===============================
+// TIPOS
+// ===============================
 type Alerta = {
   tipo: string;
   severidade: "baixa" | "media" | "alta";
@@ -20,22 +24,21 @@ export default function CFOResumoEstrategico() {
 
   useEffect(() => {
     const carregarResumo = async () => {
-      setLoading(true);
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        setLoading(false);
-        return;
-      }
-
-      const headers = {
-        Authorization: `Bearer ${session.access_token}`,
-      };
-
       try {
+        setLoading(true);
+
+        const {
+          data: { session },
+        } = await supabaseClient.auth.getSession();
+
+        if (!session?.access_token) {
+          return;
+        }
+
+        const headers = {
+          Authorization: `Bearer ${session.access_token}`,
+        };
+
         const [resTendencia, resAlertas, resNarrativa] =
           await Promise.all([
             fetch("/api/financeiro/tendencia", { headers }),
@@ -43,13 +46,20 @@ export default function CFOResumoEstrategico() {
             fetch("/api/financeiro/narrativa", { headers }),
           ]);
 
-        const tendenciaJson = await resTendencia.json();
-        const alertasJson = await resAlertas.json();
-        const narrativaJson = await resNarrativa.json();
+        if (resTendencia.ok) {
+          const tendenciaJson = await resTendencia.json();
+          setTendencia(tendenciaJson.tendencia ?? null);
+        }
 
-        setTendencia(tendenciaJson.tendencia ?? null);
-        setAlertas(alertasJson.alertas ?? []);
-        setNarrativa(narrativaJson.narrativa_principal ?? null);
+        if (resAlertas.ok) {
+          const alertasJson = await resAlertas.json();
+          setAlertas(alertasJson.alertas ?? []);
+        }
+
+        if (resNarrativa.ok) {
+          const narrativaJson = await resNarrativa.json();
+          setNarrativa(narrativaJson.narrativa_principal ?? null);
+        }
       } catch (err) {
         console.error("Erro ao carregar resumo CFO", err);
       } finally {
