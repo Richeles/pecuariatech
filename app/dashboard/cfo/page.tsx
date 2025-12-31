@@ -1,108 +1,174 @@
-// CAMINHO: app/dashboard/cfo/page.tsx
-// Next.js 16 + TypeScript strict
-// Dashboard CFO Real — leitura pura
-// Equação Y preservada
+// app/dashboard/cfo/page.tsx
+// PecuariaTech Autônomo — Dashboard CFO
+// Fonte Y | Token real | CFO Autônomo ativo
 
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabaseClient } from "@/app/lib/supabaseClient";
 
-type DecisaoCFO = {
-  id: string;
-  origem: string;
-  nivel: "critico" | "atencao" | "normal";
+// ===============================
+// TIPOS
+// ===============================
+type Indicadores = {
+  receita_total: number;
+  custo_total: number;
   resultado_operacional: number;
   margem_percentual: number;
-  mensagem: string;
-  criado_em: string;
+};
+
+type DecisaoCFO = {
+  decisao: string;
+  prioridade: "baixa" | "media" | "alta";
 };
 
 export default function DashboardCFO() {
-  const [decisoes, setDecisoes] = useState<DecisaoCFO[]>([]);
+  const [indicadores, setIndicadores] = useState<Indicadores | null>(null);
+  const [historico, setHistorico] = useState<any[]>([]);
+  const [decisao, setDecisao] = useState<DecisaoCFO | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/cfo/decisoes/latest", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((json) => setDecisoes(json.decisoes || []))
-      .finally(() => setLoading(false));
+    async function carregar() {
+      try {
+        const {
+          data: { session },
+        } = await supabaseClient.auth.getSession();
+
+        if (!session) {
+          setErro("Sessão não encontrada");
+          return;
+        }
+
+        const headers = {
+          Authorization: `Bearer ${session.access_token}`,
+        };
+
+        const [indRes, histRes, decRes] = await Promise.all([
+          fetch("/api/financeiro/indicadores-avancados", { headers }),
+          fetch("/api/cfo/historico-v2", { headers }),
+          fetch("/api/financeiro/cfo/decisao", { headers }),
+        ]);
+
+        if (!indRes.ok) {
+          throw new Error("Erro ao carregar indicadores");
+        }
+
+        const indJson = await indRes.json();
+        setIndicadores(indJson.indicadores);
+
+        if (histRes.ok) {
+          const histJson = await histRes.json();
+          setHistorico(histJson.historico ?? []);
+        }
+
+        if (decRes.ok) {
+          const decJson = await decRes.json();
+          setDecisao(decJson);
+        }
+      } catch (e) {
+        console.error("Erro Dashboard CFO:", e);
+        setErro("Falha ao carregar o CFO financeiro");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    carregar();
   }, []);
 
   if (loading) {
-    return <div className="p-6">Carregando CFO...</div>;
+    return <p className="p-6">Analisando dados financeiros...</p>;
   }
 
-  const ultima = decisoes[0];
+  if (erro) {
+    return <p className="p-6 text-red-600">{erro}</p>;
+  }
 
-  const corNivel =
-    ultima?.nivel === "critico"
-      ? "bg-red-600"
-      : ultima?.nivel === "atencao"
-      ? "bg-yellow-500"
-      : "bg-green-600";
+  if (!indicadores) {
+    return (
+      <p className="p-6 text-yellow-700">
+        Nenhum dado financeiro encontrado para este usuário.
+      </p>
+    );
+  }
 
   return (
-    <div className="p-6 space-y-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold">CFO Ultra — Diagnóstico Financeiro</h1>
+    <div className="p-6 space-y-8">
+      <h1 className="text-2xl font-semibold">
+        CFO Autônomo · PecuariaTech
+      </h1>
 
-      {/* Cards principais */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className={`rounded-xl p-4 text-white ${corNivel}`}>
-          <p className="text-sm opacity-90">Status CFO</p>
-          <p className="text-2xl font-bold capitalize">
-            {ultima?.nivel || "-"}
-          </p>
-        </div>
+      {/* DECISÃO AUTÔNOMA */}
+      {decisao && (
+        <BlocoDecisao decisao={decisao} />
+      )}
 
-        <div className="rounded-xl p-4 bg-white shadow">
-          <p className="text-sm text-gray-500">Resultado Operacional</p>
-          <p className="text-2xl font-bold">
-            R$ {ultima?.resultado_operacional?.toLocaleString("pt-BR") || "0"}
-          </p>
-        </div>
-
-        <div className="rounded-xl p-4 bg-white shadow">
-          <p className="text-sm text-gray-500">Margem</p>
-          <p className="text-2xl font-bold">
-            {ultima?.margem_percentual ?? 0}%
-          </p>
-        </div>
+      {/* KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <KPI titulo="Receita" valor={indicadores.receita_total} />
+        <KPI titulo="Custos" valor={indicadores.custo_total} />
+        <KPI titulo="Resultado" valor={indicadores.resultado_operacional} />
+        <KPI
+          titulo="Margem"
+          valor={`${indicadores.margem_percentual}%`}
+        />
       </div>
 
-      {/* Última decisão */}
-      <div className="rounded-xl p-4 bg-white shadow">
-        <p className="text-sm text-gray-500 mb-1">Última decisão do CFO</p>
-        <p className="text-base font-medium">{ultima?.mensagem}</p>
-        <p className="text-xs text-gray-400 mt-2">
-          {ultima?.criado_em
-            ? new Date(ultima.criado_em).toLocaleString("pt-BR")
-            : ""}
-        </p>
-      </div>
+      {/* HISTÓRICO */}
+      <div>
+        <h2 className="font-semibold mb-3">Histórico Financeiro</h2>
 
-      {/* Histórico */}
-      <div className="rounded-xl p-4 bg-white shadow">
-        <p className="text-sm font-semibold mb-3">
-          Histórico recente de decisões
-        </p>
-
-        <ul className="space-y-2">
-          {decisoes.map((d) => (
-            <li
-              key={d.id}
-              className="flex justify-between border-b pb-2 text-sm"
-            >
-              <span className="capitalize font-medium">{d.nivel}</span>
-              <span>
-                R$ {d.resultado_operacional.toLocaleString("pt-BR")}
-              </span>
-              <span className="text-gray-400">
-                {new Date(d.criado_em).toLocaleDateString("pt-BR")}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <table className="w-full text-sm border">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-2 border">Mês</th>
+              <th className="p-2 border">Receita</th>
+              <th className="p-2 border">Resultado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {historico.map((h, i) => (
+              <tr key={i}>
+                <td className="p-2 border">{h.mes_referencia}</td>
+                <td className="p-2 border">{h.receita_bruta}</td>
+                <td className="p-2 border">{h.resultado_operacional}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+    </div>
+  );
+}
+
+// ===============================
+// COMPONENTES AUXILIARES
+// ===============================
+function KPI({ titulo, valor }: { titulo: string; valor: any }) {
+  return (
+    <div className="border rounded-xl p-4 bg-white shadow-sm">
+      <p className="text-sm text-gray-500">{titulo}</p>
+      <p className="text-xl font-semibold">{valor}</p>
+    </div>
+  );
+}
+
+function BlocoDecisao({ decisao }: { decisao: DecisaoCFO }) {
+  const cor =
+    decisao.prioridade === "alta"
+      ? "bg-red-200 text-red-800"
+      : decisao.prioridade === "media"
+      ? "bg-yellow-200 text-yellow-800"
+      : "bg-green-200 text-green-800";
+
+  return (
+    <div className={`p-5 rounded-2xl ${cor}`}>
+      <h2 className="font-bold text-lg mb-2">
+        Decisão do CFO Autônomo
+      </h2>
+      <p>{decisao.decisao}</p>
     </div>
   );
 }
