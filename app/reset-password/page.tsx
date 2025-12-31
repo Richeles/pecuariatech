@@ -1,6 +1,6 @@
 // CAMINHO: app/reset-password/page.tsx
 // PecuariaTech Autônomo — Reset Password (Recovery)
-// Fonte Y | Supabase oficial | Produção segura
+// Compatível com Next.js 16 + Turbopack
 
 "use client";
 
@@ -17,9 +17,9 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [sessaoValida, setSessaoValida] = useState(false);
 
-  // ======================================
-  // 1️⃣ CONVERTER TOKEN DA URL EM SESSÃO
-  // ======================================
+  // ===============================
+  // 1️⃣ Converter token em sessão
+  // ===============================
   useEffect(() => {
     const hash = window.location.hash;
 
@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
       })
       .then(({ error }) => {
         if (error) {
-          console.error("Erro ao setar sessão:", error);
+          console.error(error);
           setErro("Link inválido ou expirado.");
           return;
         }
@@ -54,9 +54,9 @@ export default function ResetPasswordPage() {
       });
   }, []);
 
-  // ======================================
-  // 2️⃣ ATUALIZAR SENHA
-  // ======================================
+  // ===============================
+  // 2️⃣ Atualizar senha
+  // ===============================
   async function atualizarSenha() {
     setErro(null);
 
@@ -79,18 +79,64 @@ export default function ResetPasswordPage() {
     setLoading(false);
 
     if (error) {
-      console.error("Erro ao atualizar senha:", error);
+      console.error(error);
       setErro("Erro ao atualizar a senha.");
       return;
     }
 
-    // Sucesso total → redireciona
     router.replace("/dashboard");
   }
 
-  // ======================================
+  // ===============================
   // UI
-  // ======================================
+  // ===============================
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-6 rounded-xl shadow-md w-full m
+      <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
+        <h1 className="text-xl font-semibold mb-4 text-center">
+          Definir nova senha · PecuariaTech
+        </h1>
+
+        {!sessaoValida && erro && (
+          <p className="text-red-600 text-sm text-center mb-3">
+            {erro}
+          </p>
+        )}
+
+        {sessaoValida && (
+          <>
+            <input
+              type="password"
+              placeholder="Nova senha"
+              className="w-full border rounded px-3 py-2 mb-3"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+            />
+
+            <input
+              type="password"
+              placeholder="Confirmar senha"
+              className="w-full border rounded px-3 py-2 mb-3"
+              value={confirmacao}
+              onChange={(e) => setConfirmacao(e.target.value)}
+            />
+
+            {erro && (
+              <p className="text-red-600 text-sm mb-3 text-center">
+                {erro}
+              </p>
+            )}
+
+            <button
+              onClick={atualizarSenha}
+              disabled={loading}
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
+            >
+              {loading ? "Atualizando..." : "Atualizar senha"}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
