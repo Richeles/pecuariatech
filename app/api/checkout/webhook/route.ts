@@ -1,77 +1,116 @@
 // app/api/checkout/webhook/route.ts
-// Next.js 16 + TypeScript strict
+// Webhook Mercado Pago — Produção
+// Equação Y preservada | Server-only
 
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
 import MercadoPagoConfig, { Payment } from "mercadopago";
+import { createClient } from "@supabase/supabase-js";
 
-export const runtime = "nodejs";
+// ================================
+// CONFIG MERCADO PAGO (SERVER)
+// ================================
+const mp = new MercadoPagoConfig({
+  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
+});
 
-// ======================================================
-// POST /api/checkout/webhook
-// ======================================================
-export async function POST(req: Request) {
+// ================================
+// SUPABASE — SERVICE ROLE (SERVER)
+// ================================
+function supabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  );
+}
+
+// ================================
+// POST — WEBHOOK
+// ================================
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Mercado Pago envia vários eventos
-    if (body.type !== "payment" || !body.data?.id) {
-      return NextResponse.json({ ok: true });
+    /**
+     * Mercado Pago envia:
+     * {
+     *   action: "payment.created" | "payment.updated",
+     *   data: { id: "123456789" }
+     * }
+     */
+    const paymentId = body?.data?.id;
+
+    if (!paymentId) {
+      return NextResponse.json(
+        { erro: "Evento inválido" },
+        { status: 400 }
+      );
     }
 
-    const paymentId = body.data.id;
-
-    // ======================================================
-    // MERCADO PAGO (PRODUÇÃO)
-    // ======================================================
-    const mp = new MercadoPagoConfig({
-      accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
-    });
-
+    // ================================
+    // BUSCAR PAGAMENTO REAL NO MP
+    // ================================
     const payment = new Payment(mp);
-    const paymentData = await payment.get({ id: paymentId });
+    const mpPayment = await payment.get({ id: paymentId });
 
-    if (paymentData.status !== "approved") {
-      return NextResponse.json({ ok: true });
+    const status = mpPayment.status; // approved | pending | rejected
+    const externalRef = mpPayment.external_reference;
+
+    /**
+     * external_reference DEVE conter:
+     * user_id|plano_id|periodo
+     * (definido na criação da preference)
+     */
+    if (!externalRef) {
+      return NextResponse.json(
+        { erro: "external_reference ausente" },
+        { status: 400 }
+      );
     }
 
-    // ======================================================
-    // METADATA (alinhada ao checkout C1)
-    // ======================================================
-    const { plano_id } = paymentData.metadata || {};
+    const [user_id, plano_id, periodo] = externalRef.split("|");
 
-    if (!plano_id) {
-      console.error("Webhook: metadata.plano_id ausente");
-      return NextResponse.json({ ok: true });
+    if (!user_id || !plano_id) {
+      return NextResponse.json(
+        { erro: "Referência inválida" },
+        { status: 400 }
+      );
     }
 
-    // ======================================================
-    // SUPABASE (SERVICE ROLE — SERVER ONLY)
-    // ======================================================
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = supabaseAdmin();
 
-    // ======================================================
-    // ATIVAR ASSINATURA (MODELO ATUAL DO PROJETO)
-    // ======================================================
-    const { error } = await supabase.from("assinaturas").insert({
-      plano_codigo: plano_id,
-      status: "ativo",
-      origem: "mercado_pago",
-      payment_id: paymentId,
-      criado_em: new Date().toISOString(),
+    // ================================
+    // REGISTRAR EVENTO DE PAGAMENTO
+    // ================================
+    await supabase.from("pagamentos").upsert({
+      gateway: "mercado_pago",
+      gateway_payment_id: String(paymentId),
+      user_id,
+      plano_id,
+      periodo,
+      status,
+      valor: mpPayment.transaction_amount,
+      atualizado_em: new Date().toISOString(),
     });
 
-    if (error) {
-      console.error("Erro ao ativar assinatura:", error);
-      return NextResponse.json({ ok: false }, { status: 500 });
+    // ================================
+    // ATIVAR ASSINATURA SE APROVADO
+    // ================================
+    if (status === "approved") {
+      await supabase.from("assinaturas").upsert({
+        user_id,
+        plano_id,
+        status: "ativo",
+        inicio_em: new Date().toISOString(),
+      });
     }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("Erro webhook Mercado Pago:", err);
-    return NextResponse.json({ ok: false }, { status: 500 });
+    console.error("Webhook erro:", err);
+    return NextResponse.json(
+      { erro: "Falha no webhook" },
+      { status: 500 }
+    );
   }
 }

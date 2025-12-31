@@ -1,36 +1,24 @@
 // middleware.ts
-// Auth Gate — Next.js 16 SAFE
-
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-
-const ROTAS_PUBLICAS = [
-  "/",
-  "/login",
-  "/reset-password",
-  "/planos",
-  "/checkout",
-  "/sucesso",
-  "/erro",
-  "/api",
-];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // ROTAS PÚBLICAS ABSOLUTAS
   if (
-    ROTAS_PUBLICAS.some((rota) => pathname.startsWith(rota)) ||
-    pathname.startsWith("/_next") ||
-    pathname.includes(".")
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/reset-password") ||
+    pathname.startsWith("/api/auth")
   ) {
     return NextResponse.next();
   }
 
-  const accessToken =
-    req.cookies.get("sb-access-token")?.value ||
-    req.cookies.get("supabase-auth-token")?.value;
+  const hasSession =
+    req.cookies.get("sb-access-token") ||
+    req.cookies.get("sb-refresh-token");
 
-  if (!accessToken) {
+  if (!hasSession) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
@@ -40,10 +28,7 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
-    "/dashboard-real/:path*",
     "/financeiro/:path*",
     "/rebanho/:path*",
-    "/pastagem/:path*",
-    "/ultrabiologica/:path*",
   ],
 };
