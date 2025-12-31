@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabase";
+import { supabase } from "@/app/lib/supabase";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
