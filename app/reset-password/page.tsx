@@ -1,12 +1,12 @@
 // CAMINHO: app/reset-password/page.tsx
-// PecuariaTech Autônomo — Reset Password (Recovery)
-// Compatível com Next.js 16 + Turbopack
+// PecuariaTech Autônomo — Reset Password
+// Next.js 16 + Supabase (fluxo oficial, sem atalho)
 
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/app/lib/supabase";
+import { supabase } from "../lib/supabase";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -18,40 +18,17 @@ export default function ResetPasswordPage() {
   const [sessaoValida, setSessaoValida] = useState(false);
 
   // ===============================
-  // 1️⃣ Converter token em sessão
+  // 1️⃣ Validar sessão de recovery
   // ===============================
   useEffect(() => {
-    const hash = window.location.hash;
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error || !data.session) {
+        setErro("Link inválido ou expirado.");
+        return;
+      }
 
-    if (!hash) {
-      setErro("Link inválido ou expirado.");
-      return;
-    }
-
-    const params = new URLSearchParams(hash.substring(1));
-    const access_token = params.get("access_token");
-    const refresh_token = params.get("refresh_token");
-    const type = params.get("type");
-
-    if (!access_token || !refresh_token || type !== "recovery") {
-      setErro("Link inválido ou expirado.");
-      return;
-    }
-
-    supabase.auth
-      .setSession({
-        access_token,
-        refresh_token,
-      })
-      .then(({ error }) => {
-        if (error) {
-          console.error(error);
-          setErro("Link inválido ou expirado.");
-          return;
-        }
-
-        setSessaoValida(true);
-      });
+      setSessaoValida(true);
+    });
   }, []);
 
   // ===============================
@@ -79,7 +56,6 @@ export default function ResetPasswordPage() {
     setLoading(false);
 
     if (error) {
-      console.error(error);
       setErro("Erro ao atualizar a senha.");
       return;
     }
@@ -98,9 +74,7 @@ export default function ResetPasswordPage() {
         </h1>
 
         {!sessaoValida && erro && (
-          <p className="text-red-600 text-sm text-center mb-3">
-            {erro}
-          </p>
+          <p className="text-red-600 text-sm text-center">{erro}</p>
         )}
 
         {sessaoValida && (
