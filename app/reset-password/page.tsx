@@ -15,6 +15,13 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
 
   async function handleReset() {
+    if (loading) return;
+
+    if (password.length < 6) {
+      setError("A senha deve ter no mínimo 6 caracteres.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -23,7 +30,10 @@ export default function ResetPasswordPage() {
     });
 
     if (error) {
-      setError(error.message);
+      setError(
+        error.message ||
+          "Sessão inválida ou expirada. Solicite o reset novamente."
+      );
       setLoading(false);
       return;
     }
@@ -37,7 +47,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: "40px auto" }}>
+    <div style={{ maxWidth: 420, margin: "60px auto", padding: 16 }}>
       <h1>Definir nova senha</h1>
 
       <input
@@ -45,16 +55,33 @@ export default function ResetPasswordPage() {
         placeholder="Nova senha"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        style={{ width: "100%", padding: 10, marginTop: 12 }}
+        style={{
+          width: "100%",
+          padding: 12,
+          marginTop: 16,
+          fontSize: 16,
+        }}
       />
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {success && <p style={{ color: "green" }}>Senha atualizada com sucesso</p>}
+      {error && (
+        <p style={{ color: "red", marginTop: 12 }}>{error}</p>
+      )}
+
+      {success && (
+        <p style={{ color: "green", marginTop: 12 }}>
+          Senha atualizada com sucesso. Redirecionando…
+        </p>
+      )}
 
       <button
         onClick={handleReset}
-        disabled={loading || password.length < 6}
-        style={{ width: "100%", padding: 12, marginTop: 16 }}
+        disabled={loading}
+        style={{
+          width: "100%",
+          padding: 14,
+          marginTop: 20,
+          cursor: loading ? "not-allowed" : "pointer",
+        }}
       >
         {loading ? "Salvando..." : "Salvar nova senha"}
       </button>
