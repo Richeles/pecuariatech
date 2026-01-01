@@ -1,116 +1,63 @@
 // CAMINHO: app/reset-password/page.tsx
-// PecuariaTech Autônomo — Reset Password
-// Next.js 16 + Supabase (fluxo oficial, sem atalho)
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabase";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const supabase = createClientComponentClient();
 
-  const [senha, setSenha] = useState("");
-  const [confirmacao, setConfirmacao] = useState("");
-  const [erro, setErro] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sessaoValida, setSessaoValida] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-  // ===============================
-  // 1️⃣ Validar sessão de recovery
-  // ===============================
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (error || !data.session) {
-        setErro("Link inválido ou expirado.");
-        return;
-      }
-
-      setSessaoValida(true);
-    });
-  }, []);
-
-  // ===============================
-  // 2️⃣ Atualizar senha
-  // ===============================
-  async function atualizarSenha() {
-    setErro(null);
-
-    if (senha.length < 6) {
-      setErro("A senha deve ter no mínimo 6 caracteres.");
-      return;
-    }
-
-    if (senha !== confirmacao) {
-      setErro("As senhas não coincidem.");
-      return;
-    }
-
+  async function handleReset() {
     setLoading(true);
+    setError(null);
 
     const { error } = await supabase.auth.updateUser({
-      password: senha,
+      password,
     });
 
-    setLoading(false);
-
     if (error) {
-      setErro("Erro ao atualizar a senha.");
+      setError(error.message);
+      setLoading(false);
       return;
     }
 
-    router.replace("/dashboard");
+    setSuccess(true);
+    setLoading(false);
+
+    setTimeout(() => {
+      router.push("/login");
+    }, 2000);
   }
 
-  // ===============================
-  // UI
-  // ===============================
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
-        <h1 className="text-xl font-semibold mb-4 text-center">
-          Definir nova senha · PecuariaTech
-        </h1>
+    <div style={{ maxWidth: 400, margin: "40px auto" }}>
+      <h1>Definir nova senha</h1>
 
-        {!sessaoValida && erro && (
-          <p className="text-red-600 text-sm text-center">{erro}</p>
-        )}
+      <input
+        type="password"
+        placeholder="Nova senha"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        style={{ width: "100%", padding: 10, marginTop: 12 }}
+      />
 
-        {sessaoValida && (
-          <>
-            <input
-              type="password"
-              placeholder="Nova senha"
-              className="w-full border rounded px-3 py-2 mb-3"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-            />
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {success && <p style={{ color: "green" }}>Senha atualizada com sucesso</p>}
 
-            <input
-              type="password"
-              placeholder="Confirmar senha"
-              className="w-full border rounded px-3 py-2 mb-3"
-              value={confirmacao}
-              onChange={(e) => setConfirmacao(e.target.value)}
-            />
-
-            {erro && (
-              <p className="text-red-600 text-sm mb-3 text-center">
-                {erro}
-              </p>
-            )}
-
-            <button
-              onClick={atualizarSenha}
-              disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
-            >
-              {loading ? "Atualizando..." : "Atualizar senha"}
-            </button>
-          </>
-        )}
-      </div>
+      <button
+        onClick={handleReset}
+        disabled={loading || password.length < 6}
+        style={{ width: "100%", padding: 12, marginTop: 16 }}
+      >
+        {loading ? "Salvando..." : "Salvar nova senha"}
+      </button>
     </div>
   );
 }
