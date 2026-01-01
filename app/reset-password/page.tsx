@@ -3,9 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-// IMPORT RELATIVO (COMPATÍVEL COM VERCEL)
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../lib/supabase";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
