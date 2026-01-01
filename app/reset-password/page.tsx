@@ -1,9 +1,10 @@
-// CAMINHO: app/reset-password/page.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabase";
+
+// IMPORT RELATIVO CORRETO
+import { supabase } from "../../lib/supabase";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
