@@ -1,12 +1,18 @@
 // app/api/planos/precos/route.ts
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/app/lib/supabase-admin";
+import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
+    // ✅ SUPABASE CRIADO EM RUNTIME (NUNCA NO TOPO)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data, error } = await supabase
       .from("planos_precos")
       .select(`
         preco_base,
@@ -22,7 +28,10 @@ export async function GET() {
       .order("planos(nivel_ordem)", { ascending: true });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
     }
 
     const planos = data.map((item: any) => ({
