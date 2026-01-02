@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// =====================================================
-// Supabase — server only (runtime)
-// =====================================================
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-);
+export const runtime = "nodejs";
 
 // =====================================================
 // GET /api/trial → diagnóstico
@@ -29,6 +22,13 @@ export function GET() {
 // =====================================================
 export async function POST(req: NextRequest) {
   try {
+    // ✅ SUPABASE CRIADO EM RUNTIME (OBRIGATÓRIO)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    );
+
     const { user_id, plano_codigo } = await req.json();
 
     if (!user_id || !plano_codigo) {
