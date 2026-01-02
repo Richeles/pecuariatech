@@ -8,8 +8,12 @@ import MercadoPagoConfig, { Preference } from "mercadopago";
 // ================================
 // CONFIGURAÇÃO MERCADO PAGO (SERVER)
 // ================================
+if (!process.env.MERCADOPAGO_ACCESS_TOKEN) {
+  throw new Error("MERCADOPAGO_ACCESS_TOKEN não configurado");
+}
+
 const mp = new MercadoPagoConfig({
-  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
+  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
 });
 
 // ================================
@@ -29,14 +33,32 @@ const PLANOS: Record<
 
 export async function POST(req: NextRequest) {
   try {
-    const { plano, user_id, periodo } = await req.json();
+    // ================================
+    // BODY
+    // ================================
+    const body = await req.json();
+    const { plano, user_id, periodo } = body ?? {};
 
     // ================================
-    // VALIDAÇÕES FORTES
+    // VALIDAÇÕES FORTES (ANTI-ERRO)
     // ================================
-    if (!plano || !user_id || !periodo) {
+    if (!plano || typeof plano !== "string") {
       return NextResponse.json(
-        { error: "Parâmetros obrigatórios ausentes" },
+        { error: "Plano não informado ou inválido" },
+        { status: 400 }
+      );
+    }
+
+    if (!user_id || typeof user_id !== "string") {
+      return NextResponse.json(
+        { error: "User_id não informado ou inválido" },
+        { status: 400 }
+      );
+    }
+
+    if (!periodo || typeof periodo !== "string") {
+      return NextResponse.json(
+        { error: "Período não informado ou inválido" },
         { status: 400 }
       );
     }
@@ -44,26 +66,31 @@ export async function POST(req: NextRequest) {
     const selecionado = PLANOS[plano];
     if (!selecionado) {
       return NextResponse.json(
-        { error: "Plano inválido" },
+        { error: "Plano inexistente" },
         { status: 400 }
       );
     }
 
     // ================================
-    // CRIA EXTERNAL REFERENCE (Y)
-    // user_id|plano_id|periodo
+    // EXTERNAL REFERENCE (EQUAÇÃO Y)
+    // user_id|plano|periodo
     // ================================
     const externalReference = `${user_id}|${plano}|${periodo}`;
 
     const preference = new Preference(mp);
 
+    // ================================
+    // CRIA PREFERENCE (PADRÃO MP)
+    // ================================
     const result = await preference.create({
       body: {
         items: [
           {
+            id: plano,
             title: selecionado.titulo,
             quantity: 1,
-            unit_price: selecionado.preco,
+            currency_id: "BRL",
+            unit_price: Number(selecionado.preco),
           },
         ],
         external_reference: externalReference,
@@ -73,16 +100,25 @@ export async function POST(req: NextRequest) {
           pending: "https://www.pecuariatech.com/checkout/pendente",
         },
         auto_return: "approved",
+        statement_descriptor: "PECUARIATECH",
       },
     });
+
+    if (!result.init_point) {
+      throw new Error("Mercado Pago não retornou init_point");
+    }
 
     return NextResponse.json({
       init_point: result.init_point,
     });
-  } catch (err) {
-    console.error("Erro checkout:", err);
+  } catch (err: any) {
+    console.error("Erro Mercado Pago (RAW):", err);
+
     return NextResponse.json(
-      { error: "Erro ao criar checkout" },
+      {
+        error: "Erro ao criar checkout",
+        detalhe: err?.message ?? err,
+      },
       { status: 500 }
     );
   }
