@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-// IMPORT RELATIVO CORRETO
-import { supabase } from "../../lib/supabase";
+// ✅ CLIENTE CORRETO PARA BROWSER
+import { supabase } from "@/app/lib/supabase-browser";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -63,9 +63,7 @@ export default function ResetPasswordPage() {
         }}
       />
 
-      {error && (
-        <p style={{ color: "red", marginTop: 12 }}>{error}</p>
-      )}
+      {error && <p style={{ color: "red", marginTop: 12 }}>{error}</p>}
 
       {success && (
         <p style={{ color: "green", marginTop: 12 }}>
