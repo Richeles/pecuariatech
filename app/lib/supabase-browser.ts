@@ -1,3 +1,7 @@
+// CAMINHO: app/lib/supabase-browser.ts
+// Browser-only Supabase client
+// Next.js App Router safe
+
 "use client";
 
 import { createClient } from "@supabase/supabase-js";
