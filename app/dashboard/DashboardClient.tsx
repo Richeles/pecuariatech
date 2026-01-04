@@ -41,6 +41,7 @@ type FinanceiroMensalGrafico = {
 
 export default function DashboardClient() {
   const [loading, setLoading] = useState(true);
+  const [hasFinanceiro, setHasFinanceiro] = useState(false);
 
   const [dre, setDre] = useState<DreMensal[]>([]);
   const [ebitda, setEbitda] = useState<EbitdaMensal[]>([]);
@@ -50,41 +51,43 @@ export default function DashboardClient() {
   useEffect(() => {
     async function carregarDashboard() {
       try {
-        const [dreRes, ebitdaRes, sanidadeRes] = await Promise.all([
-          fetch("/api/financeiro/dre"),
-          fetch("/api/financeiro/ebitda"),
-          fetch("/api/financeiro/sanidade"),
-        ]);
+        const dreRes = await fetch("/api/financeiro/dre");
+        if (dreRes.ok) {
+          const dreData: DreMensal[] = await dreRes.json();
 
-        if (!dreRes.ok || !ebitdaRes.ok || !sanidadeRes.ok) {
-          throw new Error("Falha ao buscar dados financeiros");
+          if (dreData.length > 0) {
+            const ordenar = <T extends { mes_referencia: string }>(arr: T[]) =>
+              [...arr].sort(
+                (a, b) =>
+                  new Date(b.mes_referencia).getTime() -
+                  new Date(a.mes_referencia).getTime()
+              );
+
+            const dreOrdenado = ordenar(dreData);
+            setDre(dreOrdenado);
+
+            setGrafico(
+              dreOrdenado.map((item) => ({
+                periodo: item.mes_referencia,
+                receita_total: item.receita_bruta,
+                custo_total: item.despesas_operacionais,
+                resultado_operacional: item.resultado_operacional,
+              }))
+            );
+
+            setHasFinanceiro(true);
+          }
         }
 
-        const dreData: DreMensal[] = await dreRes.json();
-        const ebitdaData: EbitdaMensal[] = await ebitdaRes.json();
-        const sanidadeData: SanidadeMensal[] = await sanidadeRes.json();
+        const ebitdaRes = await fetch("/api/financeiro/ebitda");
+        if (ebitdaRes.ok) {
+          setEbitda(await ebitdaRes.json());
+        }
 
-        const ordenar = <T extends { mes_referencia: string }>(arr: T[]) =>
-          [...arr].sort(
-            (a, b) =>
-              new Date(b.mes_referencia).getTime() -
-              new Date(a.mes_referencia).getTime()
-          );
-
-        const dreOrdenado = ordenar(dreData);
-
-        setDre(dreOrdenado);
-        setEbitda(ordenar(ebitdaData));
-        setSanidade(ordenar(sanidadeData));
-
-        setGrafico(
-          dreOrdenado.map((item) => ({
-            periodo: item.mes_referencia,
-            receita_total: item.receita_bruta,
-            custo_total: item.despesas_operacionais,
-            resultado_operacional: item.resultado_operacional,
-          }))
-        );
+        const sanidadeRes = await fetch("/api/financeiro/sanidade");
+        if (sanidadeRes.ok) {
+          setSanidade(await sanidadeRes.json());
+        }
       } catch (error) {
         console.error("Erro ao carregar dashboard financeiro:", error);
       } finally {
@@ -96,19 +99,30 @@ export default function DashboardClient() {
   }, []);
 
   if (loading) {
-    return <div className="p-6">Carregando Dashboard Financeiro…</div>;
+    return <div className="p-6">Carregando Dashboard…</div>;
+  }
+
+  // =======================
+  // DASHBOARD SEM FINANCEIRO
+  // =======================
+  if (!hasFinanceiro) {
+    return (
+      <div className="p-6 space-y-6">
+        <h1 className="text-3xl font-bold text-green-700">
+          Dashboard — PecuariaTech
+        </h1>
+
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-yellow-800">
+          Nenhum dado financeiro disponível ainda.
+        </div>
+
+        <CardCFO />
+      </div>
+    );
   }
 
   const dreAtual = dre[0];
   const dreAnterior = dre[1];
-
-  if (!dreAtual) {
-    return (
-      <div className="p-6 text-red-600">
-        Erro ao carregar dados financeiros reais.
-      </div>
-    );
-  }
 
   const calcularDelta = (atual: number, anterior?: number) =>
     !anterior || anterior === 0
