@@ -3,7 +3,10 @@
     {
       "path": "/api/cfo/ultra/monitorar",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/assinaturas/virada-ciclo",
+      "schedule": "0 6 * * *"
     }
   ]
 }
-
