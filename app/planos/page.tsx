@@ -4,22 +4,12 @@
 
 "use client";
 
-// ================================
-// BLINDAGEM NEXT.JS 16 (ENTERPRISE)
-// ================================
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
-
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 type Periodo = "mensal" | "trimestral" | "anual";
 
-// ================================
-// PLANOS (VISUAL ONLY)
-// Fonte real de preço = backend
-// ================================
 const PLANOS = [
   {
     id: "basico",
@@ -118,9 +108,6 @@ export default function PlanosPage() {
   const [periodo, setPeriodo] = useState<Periodo>("mensal");
   const searchParams = useSearchParams();
 
-  // ================================
-  // CONTEXTO DO PAYWALL
-  // ================================
   const bloqueado = searchParams.get("bloqueado") === "1";
 
   const preco = (v: number) =>
@@ -130,9 +117,7 @@ export default function PlanosPage() {
     <main className="min-h-screen px-6 py-12 bg-gray-50">
       <div className="max-w-7xl mx-auto space-y-10">
         <header className="text-center space-y-3">
-          <h1 className="text-3xl font-bold">
-            Planos PecuariaTech
-          </h1>
+          <h1 className="text-3xl font-bold">Planos PecuariaTech</h1>
           <p className="text-gray-600">
             Cada plano foi pensado para uma realidade diferente no campo.
           </p>
@@ -146,7 +131,6 @@ export default function PlanosPage() {
           </div>
         )}
 
-        {/* TOGGLE DE PERÍODO */}
         <div className="flex justify-center gap-2">
           {(["mensal", "trimestral", "anual"] as Periodo[]).map((p) => (
             <button
@@ -163,24 +147,17 @@ export default function PlanosPage() {
           ))}
         </div>
 
-        {/* LISTA DE PLANOS */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {PLANOS.map((plano) => (
             <div
               key={plano.id}
               className={`bg-white rounded-xl shadow p-6 space-y-4 ${
-                plano.destaque
-                  ? "border-2 border-yellow-400"
-                  : ""
+                plano.destaque ? "border-2 border-yellow-400" : ""
               }`}
             >
-              <h2 className="text-xl font-semibold">
-                {plano.nome}
-              </h2>
+              <h2 className="text-xl font-semibold">{plano.nome}</h2>
 
-              <p className="text-sm text-gray-700 italic">
-                {plano.frase}
-              </p>
+              <p className="text-sm text-gray-700 italic">{plano.frase}</p>
 
               <p className="text-3xl font-bold text-green-600">
                 {preco(plano.precos[periodo])}
@@ -188,9 +165,7 @@ export default function PlanosPage() {
 
               <ul className="text-sm text-gray-600 space-y-1">
                 {plano.descricao.map((d) => (
-                  <li key={`${plano.id}-${d}`}>
-                    ✓ {d}
-                  </li>
+                  <li key={`${plano.id}-${d}`}>✓ {d}</li>
                 ))}
               </ul>
 
