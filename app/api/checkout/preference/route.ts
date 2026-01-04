@@ -1,6 +1,6 @@
-// app/api/checkout/preference/route.ts
+// CAMINHO: app/api/checkout/preference/route.ts
 // Next.js 16 + TypeScript strict
-// Checkout Mercado Pago — Fonte Y preservada
+// Checkout Mercado Pago — Equação Y preservada
 
 import { NextRequest, NextResponse } from "next/server";
 import MercadoPagoConfig, { Preference } from "mercadopago";
@@ -22,97 +22,99 @@ const mp = new MercadoPagoConfig({
 // ================================
 const PLANOS: Record<
   string,
-  { titulo: string; preco: number }
+  {
+    titulo: string;
+    precos: Record<"mensal" | "trimestral" | "anual", number>;
+  }
 > = {
-  basico: { titulo: "Plano Básico", preco: 31.75 },
-  profissional: { titulo: "Plano Profissional", preco: 52.99 },
-  ultra: { titulo: "Plano Ultra", preco: 106.09 },
-  empresarial: { titulo: "Plano Empresarial", preco: 159.19 },
-  dominus360: { titulo: "Premium Dominus 360°", preco: 318.49 },
+  basico: {
+    titulo: "Plano Básico",
+    precos: { mensal: 31.75, trimestral: 79.38, anual: 317.5 },
+  },
+  profissional: {
+    titulo: "Plano Profissional",
+    precos: { mensal: 52.99, trimestral: 132.48, anual: 529.9 },
+  },
+  ultra: {
+    titulo: "Plano Ultra",
+    precos: { mensal: 106.09, trimestral: 265.23, anual: 1060.9 },
+  },
+  empresarial: {
+    titulo: "Plano Empresarial",
+    precos: { mensal: 159.19, trimestral: 397.98, anual: 1591.9 },
+  },
+  // ✅ PADRÃO DEFINITIVO
+  premium_dominus: {
+    titulo: "Premium Dominus 360°",
+    precos: { mensal: 318.49, trimestral: 796.23, anual: 3184.9 },
+  },
 };
 
 export async function POST(req: NextRequest) {
   try {
-    // ================================
-    // BODY
-    // ================================
-    const body = await req.json();
-    const { plano, user_id, periodo } = body ?? {};
+    const { plano, user_id, periodo } = await req.json();
 
     // ================================
-    // VALIDAÇÕES FORTES (ANTI-ERRO)
+    // VALIDAÇÕES FORTES
     // ================================
-    if (!plano || typeof plano !== "string") {
+    if (!plano || !PLANOS[plano]) {
       return NextResponse.json(
-        { error: "Plano não informado ou inválido" },
+        { error: "Plano inválido" },
         { status: 400 }
       );
     }
 
     if (!user_id || typeof user_id !== "string") {
       return NextResponse.json(
-        { error: "User_id não informado ou inválido" },
+        { error: "Usuário inválido" },
         { status: 400 }
       );
     }
 
-    if (!periodo || typeof periodo !== "string") {
+    if (!["mensal", "trimestral", "anual"].includes(periodo)) {
       return NextResponse.json(
-        { error: "Período não informado ou inválido" },
+        { error: "Período inválido" },
         { status: 400 }
       );
     }
 
-    const selecionado = PLANOS[plano];
-    if (!selecionado) {
-      return NextResponse.json(
-        { error: "Plano inexistente" },
-        { status: 400 }
-      );
-    }
+    const planoSelecionado = PLANOS[plano];
+    const preco = planoSelecionado.precos[periodo];
 
     // ================================
-    // EXTERNAL REFERENCE (EQUAÇÃO Y)
-    // user_id|plano|periodo
+    // EQUAÇÃO Y — REFERÊNCIA EXTERNA
     // ================================
     const externalReference = `${user_id}|${plano}|${periodo}`;
 
     const preference = new Preference(mp);
 
-    // ================================
-    // CRIA PREFERENCE (PADRÃO MP)
-    // ================================
     const result = await preference.create({
-      body: {
-        items: [
-          {
-            id: plano,
-            title: selecionado.titulo,
-            quantity: 1,
-            currency_id: "BRL",
-            unit_price: Number(selecionado.preco),
-          },
-        ],
-        external_reference: externalReference,
-        back_urls: {
-          success: "https://www.pecuariatech.com/checkout/sucesso",
-          failure: "https://www.pecuariatech.com/checkout/erro",
-          pending: "https://www.pecuariatech.com/checkout/pendente",
+      items: [
+        {
+          id: plano,
+          title: `${planoSelecionado.titulo} (${periodo})`,
+          quantity: 1,
+          currency_id: "BRL",
+          unit_price: preco,
         },
-        auto_return: "approved",
-        statement_descriptor: "PECUARIATECH",
+      ],
+      external_reference: externalReference,
+      back_urls: {
+        success: "https://www.pecuariatech.com/checkout/sucesso",
+        failure: "https://www.pecuariatech.com/checkout/erro",
+        pending: "https://www.pecuariatech.com/checkout/pendente",
       },
+      auto_return: "approved",
+      statement_descriptor: "PECUARIATECH",
     });
 
     if (!result.init_point) {
       throw new Error("Mercado Pago não retornou init_point");
     }
 
-    return NextResponse.json({
-      init_point: result.init_point,
-    });
+    return NextResponse.json({ init_point: result.init_point });
   } catch (err: any) {
-    console.error("Erro Mercado Pago (RAW):", err);
+    console.error("Erro Mercado Pago:", err);
 
     return NextResponse.json(
       {
