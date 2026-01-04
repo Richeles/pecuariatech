@@ -2,9 +2,13 @@
 // Planos PecuariaTech — PAYWALL REAL (UX Premium)
 // Next.js 16 + App Router
 
-export const dynamic = "force-dynamic";
-
 "use client";
+
+// ================================
+// BLINDAGEM NEXT.JS 16 (ENTERPRISE)
+// ================================
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -12,6 +16,10 @@ import Link from "next/link";
 
 type Periodo = "mensal" | "trimestral" | "anual";
 
+// ================================
+// PLANOS (VISUAL ONLY)
+// Fonte real de preço = backend
+// ================================
 const PLANOS = [
   {
     id: "basico",
@@ -110,6 +118,9 @@ export default function PlanosPage() {
   const [periodo, setPeriodo] = useState<Periodo>("mensal");
   const searchParams = useSearchParams();
 
+  // ================================
+  // CONTEXTO DO PAYWALL
+  // ================================
   const bloqueado = searchParams.get("bloqueado") === "1";
 
   const preco = (v: number) =>
@@ -135,7 +146,7 @@ export default function PlanosPage() {
           </div>
         )}
 
-        {/* TOGGLE */}
+        {/* TOGGLE DE PERÍODO */}
         <div className="flex justify-center gap-2">
           {(["mensal", "trimestral", "anual"] as Periodo[]).map((p) => (
             <button
@@ -152,7 +163,7 @@ export default function PlanosPage() {
           ))}
         </div>
 
-        {/* PLANOS */}
+        {/* LISTA DE PLANOS */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {PLANOS.map((plano) => (
             <div
