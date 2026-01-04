@@ -2,6 +2,8 @@
 // Planos PecuariaTech — PAYWALL REAL (UX Premium)
 // Next.js 16 + App Router
 
+export const dynamic = "force-dynamic";
+
 "use client";
 
 import { useState } from "react";
