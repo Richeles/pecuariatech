@@ -1,235 +1,196 @@
 // CAMINHO: app/planos/page.tsx
+// Planos PecuariaTech — PAYWALL REAL (UX Premium)
+// Next.js 16 + App Router
+
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabaseClient } from "@/app/lib/supabaseClient";
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
-// ===============================
-// TIPOS
-// ===============================
 type Periodo = "mensal" | "trimestral" | "anual";
 
-interface Plano {
-  codigo: string;
-  nome_exibicao: string;
-  nivel_ordem: number;
-  mensal: number;
-  trimestral: number;
-  anual: number;
-}
+const PLANOS = [
+  {
+    id: "basico",
+    nome: "Básico",
+    frase:
+      "Para quem quer sair do caderno, organizar a fazenda e começar a tomar decisões com mais segurança.",
+    descricao: [
+      "Dashboard simples e intuitivo",
+      "Controle básico de rebanho",
+      "Controle essencial de pastagem",
+      "Relatório mensal automático",
+      "Indicadores operacionais iniciais",
+      "Histórico simples da fazenda",
+      "Ideal para sair do caderno e começar certo",
+    ],
+    precos: { mensal: 31.75, trimestral: 79.38, anual: 317.5 },
+  },
+  {
+    id: "profissional",
+    nome: "Profissional",
+    frase:
+      "Para o produtor que já controla a fazenda e agora precisa entender melhor os números antes de decidir.",
+    descricao: [
+      "Tudo do plano Básico",
+      "Relatórios mensais avançados",
+      "Exportação de dados (Excel)",
+      "Indicadores financeiros iniciais",
+      "Planilhas profissionais automatizadas",
+      "Índice PecuariaTech de Performance (IPP)",
+      "Alertas operacionais inteligentes",
+      "Suporte via Telegram",
+      "Para entender números antes de decidir",
+    ],
+    precos: { mensal: 52.99, trimestral: 132.48, anual: 529.9 },
+  },
+  {
+    id: "ultra",
+    nome: "Ultra",
+    destaque: true,
+    frase:
+      "Para quem quer parar de reagir aos problemas e começar a decidir com apoio de análises e inteligência.",
+    descricao: [
+      "Tudo do plano Profissional",
+      "Relatórios premium automatizados",
+      "Análises financeiras avançadas",
+      "Diagnóstico mensal automático",
+      "IPP por lote e categoria",
+      "Alertas de decisão (não só dados)",
+      "Simulação básica de cenários",
+      "Integrações inteligentes de manejo",
+      "Plano mais escolhido por profissionais",
+    ],
+    precos: { mensal: 106.09, trimestral: 265.23, anual: 1060.9 },
+  },
+  {
+    id: "empresarial",
+    nome: "Empresarial",
+    frase:
+      "Para operações maiores, com mais de uma fazenda ou equipe, que precisam de controle, padrão e escala.",
+    descricao: [
+      "Tudo do plano Ultra",
+      "Multi-fazendas e multi-usuários",
+      "Gestão de equipes e permissões",
+      "Relatórios personalizados",
+      "Alertas automáticos avançados",
+      "Diagnóstico contínuo por IA",
+      "IPP consolidado por fazenda",
+      "Suporte prioritário",
+      "Para operações estruturadas",
+    ],
+    precos: { mensal: 159.19, trimestral: 397.98, anual: 1591.9 },
+  },
+  {
+    id: "premium_dominus",
+    nome: "Premium Dominus 360°",
+    frase:
+      "Para quem pensa como dono, investidor ou gestor profissional e precisa enxergar o negócio como empresa.",
+    descricao: [
+      "Tudo do plano Empresarial",
+      "IA completa (preditiva + diagnóstica)",
+      "UltraBiológica 360°",
+      "Financeiro avançado (CAPEX / OPEX)",
+      "EBITDA e EBIT automáticos",
+      "Valuation para fundos e holdings",
+      "Benchmark regional e histórico",
+      "Simulador financeiro completo",
+      "Diagnóstico explicável (IA auditável)",
+      "Suporte Ultra VIP",
+      "Visão de dono e investidor",
+    ],
+    precos: { mensal: 318.49, trimestral: 796.23, anual: 3184.9 },
+  },
+];
 
-// ===============================
-// BENEFÍCIOS (FIXOS POR PLANO)
-// ===============================
-const BENEFICIOS: Record<string, string[]> = {
-  basico: [
-    "Dashboard simples e intuitivo",
-    "Controle básico de rebanho",
-    "Controle essencial de pastagem",
-    "Relatório mensal automático",
-    "Indicadores operacionais iniciais",
-    "Histórico simples da fazenda",
-    "Ideal para sair do caderno e começar certo",
-  ],
-  profissional: [
-    "Tudo do plano Básico",
-    "Relatórios mensais avançados",
-    "Exportação de dados (Excel)",
-    "Indicadores financeiros iniciais",
-    "Planilhas profissionais automatizadas",
-    "Índice PecuariaTech de Performance (IPP)",
-    "Alertas operacionais inteligentes",
-    "Suporte via Telegram",
-    "Para entender números antes de decidir",
-  ],
-  ultra: [
-    "Tudo do plano Profissional",
-    "Relatórios premium automatizados",
-    "Análises financeiras avançadas",
-    "Diagnóstico mensal automático",
-    "IPP por lote e categoria",
-    "Alertas de decisão (não só dados)",
-    "Simulação básica de cenários",
-    "Integrações inteligentes de manejo",
-    "Plano mais escolhido por profissionais",
-  ],
-  empresarial: [
-    "Tudo do plano Ultra",
-    "Multi-fazendas e multi-usuários",
-    "Gestão de equipes e permissões",
-    "Relatórios personalizados",
-    "Alertas automáticos avançados",
-    "Diagnóstico contínuo por IA",
-    "IPP consolidado por fazenda",
-    "Suporte prioritário",
-    "Para operações estruturadas",
-  ],
-  premium_dominus: [
-    "Tudo do plano Empresarial",
-    "IA completa (preditiva + diagnóstica)",
-    "UltraBiológica 360°",
-    "Financeiro avançado (CAPEX / OPEX)",
-    "EBITDA e EBIT automáticos",
-    "Valuation para fundos e holdings",
-    "Benchmark regional e histórico",
-    "Simulador financeiro completo",
-    "Diagnóstico explicável (IA auditável)",
-    "Suporte Ultra VIP",
-    "Visão de dono e investidor",
-  ],
-};
-
-// ===============================
-// COMPONENTE
-// ===============================
 export default function PlanosPage() {
   const [periodo, setPeriodo] = useState<Periodo>("mensal");
-  const [planos, setPlanos] = useState<Plano[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
-  // ===============================
-  // CHECKOUT SEGURO (CLIENT)
-  // ===============================
-  async function assinar(planoCodigo: string) {
-    try {
-      const res = await fetch("/api/checkout/preference", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plano: planoCodigo }),
-      });
+  const bloqueado = searchParams.get("bloqueado") === "1";
 
-      const data = await res.json();
-
-      if (data?.init_point) {
-        window.location.href = data.init_point;
-      } else {
-        alert("Erro ao iniciar pagamento.");
-        console.error("Checkout sem init_point:", data);
-      }
-    } catch (err) {
-      console.error("Erro no checkout:", err);
-      alert("Erro de conexão com o checkout.");
-    }
-  }
-
-  // ===============================
-  // CARREGAR PLANOS (FONTE Y + LOG)
-  // ===============================
-  useEffect(() => {
-    async function carregarPlanos() {
-      setLoading(true);
-      setErro(null);
-
-      const { data, error } = await supabaseClient
-        .from("planos_precos_view")
-        .select("*")
-        .order("nivel_ordem", { ascending: true });
-
-      console.group("DEBUG /planos");
-      console.log("DATA:", data);
-      console.log("ERROR:", error);
-      console.groupEnd();
-
-      if (error) {
-        setErro(error.message || "Erro ao consultar planos.");
-        setLoading(false);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        setErro("Nenhum plano encontrado.");
-        setLoading(false);
-        return;
-      }
-
-      setPlanos(data as Plano[]);
-      setLoading(false);
-    }
-
-    carregarPlanos();
-  }, []);
-
-  // ===============================
-  // RENDER
-  // ===============================
-  if (loading) {
-    return (
-      <div className="p-10 text-gray-500">
-        Carregando planos…
-      </div>
-    );
-  }
-
-  if (erro) {
-    return (
-      <div className="p-10 text-red-600">
-        {erro}
-      </div>
-    );
-  }
+  const preco = (v: number) =>
+    `R$ ${v.toFixed(2).replace(".", ",")}`;
 
   return (
-    <main className="max-w-7xl mx-auto p-8 space-y-8">
-      <h1 className="text-3xl font-bold">Planos PecuariaTech</h1>
+    <main className="min-h-screen px-6 py-12 bg-gray-50">
+      <div className="max-w-7xl mx-auto space-y-10">
+        <header className="text-center space-y-3">
+          <h1 className="text-3xl font-bold">
+            Planos PecuariaTech
+          </h1>
+          <p className="text-gray-600">
+            Cada plano foi pensado para uma realidade diferente no campo.
+          </p>
+        </header>
 
-      {/* SELETOR DE PERÍODO (VISUAL) */}
-      <div className="flex gap-3">
-        {(["mensal", "trimestral", "anual"] as Periodo[]).map((p) => (
-          <button
-            key={p}
-            onClick={() => setPeriodo(p)}
-            className={`px-4 py-2 rounded font-semibold ${
-              periodo === p
-                ? "bg-green-600 text-white"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            {p.toUpperCase()}
-          </button>
-        ))}
-      </div>
-
-      {/* CARDS */}
-      <section className="grid md:grid-cols-5 gap-6">
-        {planos.map((plano) => (
-          <div
-            key={plano.codigo}
-            className={`rounded-xl p-6 shadow bg-white border ${
-              plano.codigo === "ultra"
-                ? "border-yellow-400 border-4"
-                : "border-gray-200"
-            }`}
-          >
-            {plano.codigo === "ultra" && (
-              <div className="text-xs font-bold text-yellow-600 mb-2">
-                ⭐ RECOMENDADO
-              </div>
-            )}
-
-            <h2 className="text-xl font-bold mb-3">
-              {plano.nome_exibicao}
-            </h2>
-
-            <ul className="text-sm space-y-1 mb-4">
-              {BENEFICIOS[plano.codigo]?.map((b, i) => (
-                <li key={i}>✓ {b}</li>
-              ))}
-            </ul>
-
-            <p className="text-2xl font-bold text-green-700 mb-4">
-              R$ {plano[periodo].toFixed(2)}
-            </p>
-
-            <button
-              onClick={() => assinar(plano.codigo)}
-              className="w-full bg-green-600 text-white py-2 rounded hover:opacity-90"
-            >
-              Assinar
-            </button>
+        {bloqueado && (
+          <div className="mx-auto max-w-3xl rounded-xl border border-yellow-400 bg-yellow-50 p-4 text-sm text-yellow-800 text-center">
+            Seu acesso ao sistema está bloqueado no momento.
+            <br />
+            Escolha um plano para continuar usando o PecuariaTech sem interrupções.
           </div>
-        ))}
-      </section>
+        )}
+
+        {/* TOGGLE */}
+        <div className="flex justify-center gap-2">
+          {(["mensal", "trimestral", "anual"] as Periodo[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriodo(p)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                periodo === p
+                  ? "bg-green-600 text-white"
+                  : "bg-white border text-gray-600"
+              }`}
+            >
+              {p.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
+        {/* PLANOS */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {PLANOS.map((plano) => (
+            <div
+              key={plano.id}
+              className={`bg-white rounded-xl shadow p-6 space-y-4 ${
+                plano.destaque
+                  ? "border-2 border-yellow-400"
+                  : ""
+              }`}
+            >
+              <h2 className="text-xl font-semibold">
+                {plano.nome}
+              </h2>
+
+              <p className="text-sm text-gray-700 italic">
+                {plano.frase}
+              </p>
+
+              <p className="text-3xl font-bold text-green-600">
+                {preco(plano.precos[periodo])}
+              </p>
+
+              <ul className="text-sm text-gray-600 space-y-1">
+                {plano.descricao.map((d) => (
+                  <li key={`${plano.id}-${d}`}>
+                    ✓ {d}
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href={`/checkout?plano=${plano.id}&periodo=${periodo}`}
+                className="block text-center bg-green-600 text-white py-2 rounded hover:opacity-90"
+              >
+                Assinar
+              </Link>
+            </div>
+          ))}
+        </section>
+      </div>
     </main>
   );
 }
