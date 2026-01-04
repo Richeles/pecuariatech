@@ -1,34 +1,125 @@
-// middleware.ts
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+// CAMINHO: middleware.ts
+// Paywall Definitivo — PecuariaTech
+// Next.js 16 | App Router
+// Fonte Y soberana: /api/assinaturas/status
 
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+import { NextRequest, NextResponse } from "next/server";
 
-  // ROTAS PÚBLICAS ABSOLUTAS
+// ================================
+// ROTAS PÚBLICAS
+// ================================
+const ROTAS_PUBLICAS = [
+  "/",
+  "/login",
+  "/reset",
+  "/planos",
+  "/checkout",
+  "/api",
+];
+
+// ================================
+// EXTENSÕES ESTÁTICAS
+// ================================
+const EXTENSOES_PUBLICAS = [
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".svg",
+  ".css",
+  ".js",
+  ".ico",
+  ".webp",
+];
+
+// ================================
+// MIDDLEWARE
+// ================================
+export async function middleware(req: NextRequest) {
+  const { pathname, origin } = req.nextUrl;
+
+  // ================================
+  // 1) LIBERAR ARQUIVOS ESTÁTICOS
+  // ================================
   if (
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/reset-password") ||
-    pathname.startsWith("/api/auth")
+    EXTENSOES_PUBLICAS.some((ext) =>
+      pathname.endsWith(ext)
+    ) ||
+    pathname.startsWith("/_next")
   ) {
     return NextResponse.next();
   }
 
-  const hasSession =
-    req.cookies.get("sb-access-token") ||
-    req.cookies.get("sb-refresh-token");
-
-  if (!hasSession) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  // ================================
+  // 2) LIBERAR ROTAS PÚBLICAS
+  // ================================
+  if (
+    ROTAS_PUBLICAS.some((rota) =>
+      pathname.startsWith(rota)
+    )
+  ) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  // ================================
+  // 3) OBTER TOKEN SUPABASE
+  // ================================
+  const token =
+    // Header (API / testes)
+    req.headers
+      .get("authorization")
+      ?.replace("Bearer ", "") ||
+    // Cookie Supabase v2 (genérico)
+    Array.from(req.cookies.getAll()).find((c) =>
+      c.name.includes("auth-token")
+    )?.value;
+
+  if (!token) {
+    return NextResponse.redirect(
+      new URL("/login", req.url)
+    );
+  }
+
+  // ================================
+  // 4) CONSULTAR STATUS REAL
+  // ================================
+  try {
+    const res = await fetch(
+      `${origin}/api/assinaturas/status`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data?.ativo) {
+      return NextResponse.redirect(
+        new URL("/planos", req.url)
+      );
+    }
+
+    // ================================
+    // 5) ACESSO LIBERADO
+    // ================================
+    return NextResponse.next();
+  } catch {
+    return NextResponse.redirect(
+      new URL("/login", req.url)
+    );
+  }
 }
 
+// ================================
+// APLICAR PAYWALL
+// ================================
 export const config = {
   matcher: [
     "/dashboard/:path*",
     "/financeiro/:path*",
-    "/rebanho/:path*",
+    "/cfo/:path*",
+    "/assinatura/:path*",
   ],
 };
