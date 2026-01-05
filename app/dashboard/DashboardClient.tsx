@@ -1,197 +1,247 @@
 "use client";
 
-// CAMINHO: app/dashboard/DashboardClient.tsx
-// Dashboard Real — PecuariaTech
-// KPIs Financeiros + UltraCFO Autônomo
-// Next.js 16 + TypeScript strict
-
 import { useEffect, useState } from "react";
+import { supabase } from "@/app/lib/supabase-browser";
 
 // ===============================
 // TIPOS
 // ===============================
 type IndicadoresFinanceiros = {
   receita_total: number;
-  custos_totais: number;
+  custo_total: number;
   resultado: number;
   margem_percentual: number;
 };
 
-type DecisaoCFO = {
-  titulo: string;
-  mensagem: string;
-  prioridade: "baixa" | "media" | "alta";
-  impacto_estimado: string;
-  acao_recomendada: string;
-};
-
 // ===============================
-// COMPONENTE PRINCIPAL
+// COMPONENTE
 // ===============================
 export default function DashboardClient() {
-  const [dados, setDados] = useState<IndicadoresFinanceiros | null>(null);
-  const [cfo, setCfo] = useState<DecisaoCFO | null>(null);
+  const [indicadores, setIndicadores] =
+    useState<IndicadoresFinanceiros | null>(null);
+  const [erroFinanceiro, setErroFinanceiro] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
 
+  // ===============================
+  // CARREGAR FINANCEIRO (TOKEN OK)
+  // ===============================
   useEffect(() => {
-    async function carregarTudo() {
+    async function carregarFinanceiro() {
       try {
-        // KPIs financeiros
-        const resIndicadores = await fetch(
+        const { data: sessionData } =
+          await supabase.auth.getSession();
+
+        const token =
+          sessionData.session?.access_token;
+
+        if (!token) {
+          throw new Error("Sessão não encontrada");
+        }
+
+        const res = await fetch(
           "/api/financeiro/indicadores-avancados",
-          { credentials: "include" }
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
-        if (!resIndicadores.ok) {
-          throw new Error("Falha ao carregar indicadores financeiros");
+        if (!res.ok) {
+          throw new Error("Erro ao buscar financeiro");
         }
 
-        const json = await resIndicadores.json();
-
-        setDados({
-          receita_total: json.receita ?? 0,
-          custos_totais: json.custos ?? 0,
-          resultado: json.resultado ?? 0,
-          margem_percentual: json.margem_percentual ?? 0,
-        });
-
-        // UltraCFO
-        const resCFO = await fetch(
-          "/api/financeiro/cfo/autonomo",
-          { credentials: "include" }
-        );
-
-        if (resCFO.ok) {
-          const cfoJson = await resCFO.json();
-          setCfo(cfoJson);
-        }
-      } catch (e: any) {
-        setErro(e.message);
+        const data = await res.json();
+        setIndicadores(data);
+      } catch (err) {
+        console.error(err);
+        setErroFinanceiro(true);
       } finally {
         setLoading(false);
       }
     }
 
-    carregarTudo();
+    carregarFinanceiro();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="text-sm text-gray-400">
-        Carregando dados do sistema...
-      </div>
-    );
-  }
-
-  if (erro || !dados) {
-    return (
-      <div className="text-sm text-red-400">
-        Nenhum dado financeiro disponível.
-      </div>
-    );
-  }
-
+  // ===============================
+  // UI
+  // ===============================
   return (
-    <div className="space-y-10">
-      {/* HEADER */}
-      <header>
-        <h1 className="text-2xl font-bold text-white">
-          Dashboard PecuariaTech
-        </h1>
-        <p className="text-sm text-gray-300 mt-1">
-          Visão financeira consolidada + CFO Autônomo
-        </p>
-      </header>
+    <div className="space-y-6">
+      {/* =============================== */}
+      {/* DASHBOARD FINANCEIRO */}
+      {/* =============================== */}
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="rounded-xl border bg-white p-4">
+          <p className="text-sm text-gray-500">
+            Receita Total
+          </p>
+          <p className="text-2xl font-bold text-green-600">
+            {indicadores
+              ? `R$ ${indicadores.receita_total.toFixed(
+                  2
+                )}`
+              : "--"}
+          </p>
+        </div>
 
-      {/* KPIs */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KpiCard
-          titulo="Receita"
-          valor={`R$ ${dados.receita_total.toFixed(2)}`}
-        />
-        <KpiCard
-          titulo="Custos"
-          valor={`R$ ${dados.custos_totais.toFixed(2)}`}
-        />
-        <KpiCard
-          titulo="Resultado"
-          valor={`R$ ${dados.resultado.toFixed(2)}`}
-          destaque
-        />
-        <KpiCard
-          titulo="Margem"
-          valor={`${dados.margem_percentual.toFixed(1)}%`}
-        />
+        <div className="rounded-xl border bg-white p-4">
+          <p className="text-sm text-gray-500">
+            Custos Totais
+          </p>
+          <p className="text-2xl font-bold text-red-600">
+            {indicadores
+              ? `R$ ${indicadores.custo_total.toFixed(
+                  2
+                )}`
+              : "--"}
+          </p>
+        </div>
+
+        <div className="rounded-xl border bg-white p-4">
+          <p className="text-sm text-gray-500">
+            Resultado
+          </p>
+          <p className="text-2xl font-bold">
+            {indicadores
+              ? `R$ ${indicadores.resultado.toFixed(
+                  2
+                )}`
+              : "--"}
+          </p>
+        </div>
+
+        <div className="rounded-xl border bg-white p-4">
+          <p className="text-sm text-gray-500">
+            Margem
+          </p>
+          <p className="text-2xl font-bold">
+            {indicadores
+              ? `${indicadores.margem_percentual.toFixed(
+                  1
+                )}%`
+              : "--"}
+          </p>
+        </div>
       </section>
 
-      {/* ULTRA CFO */}
-      {cfo && (
-        <section>
-          <UltraCFOCard decisao={cfo} />
-        </section>
+      {/* =============================== */}
+      {/* ERRO FINANCEIRO (SEM QUEBRAR UI) */}
+      {/* =============================== */}
+      {erroFinanceiro && (
+        <p className="text-sm text-red-600">
+          Não foi possível carregar os dados financeiros.
+        </p>
       )}
-    </div>
-  );
-}
 
-// ===============================
-// KPI CARD
-// ===============================
-function KpiCard({
-  titulo,
-  valor,
-  destaque,
-}: {
-  titulo: string;
-  valor: string;
-  destaque?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-xl p-5 border ${
-        destaque
-          ? "border-green-500 bg-green-900/20"
-          : "border-white/10 bg-white/5"
-      }`}
-    >
-      <p className="text-sm text-gray-300">{titulo}</p>
-      <p className="text-2xl font-semibold text-white mt-2">{valor}</p>
-    </div>
-  );
-}
+      {/* =============================== */}
+      {/* PLANOS PECUARIATECH (INFORMATIVO) */}
+      {/* =============================== */}
+      <section className="mt-12 rounded-xl border bg-white p-6">
+        <h2 className="text-xl font-semibold mb-2">
+          Qual plano faz sentido para sua realidade?
+        </h2>
 
-// ===============================
-// ULTRA CFO CARD
-// ===============================
-function UltraCFOCard({ decisao }: { decisao: DecisaoCFO }) {
-  const cor =
-    decisao.prioridade === "alta"
-      ? "border-red-500 bg-red-900/20"
-      : decisao.prioridade === "media"
-      ? "border-yellow-500 bg-yellow-900/20"
-      : "border-green-500 bg-green-900/20";
-
-  return (
-    <div className={`rounded-xl p-6 border ${cor}`}>
-      <h2 className="text-xl font-bold text-white mb-2">
-        UltraCFO — {decisao.titulo}
-      </h2>
-
-      <p className="text-sm text-gray-200 mb-4">
-        {decisao.mensagem}
-      </p>
-
-      <div className="text-sm text-gray-300 space-y-1">
-        <p>
-          <strong>Impacto estimado:</strong>{" "}
-          {decisao.impacto_estimado}
+        <p className="text-sm text-gray-600 mb-6">
+          Cada plano foi pensado para um estágio diferente da
+          operação rural.
         </p>
-        <p>
-          <strong>Ação recomendada:</strong>{" "}
-          {decisao.acao_recomendada}
-        </p>
-      </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="border rounded-lg p-4 space-y-2">
+            <h3 className="font-semibold">Básico</h3>
+            <p className="text-sm italic text-gray-700">
+              Para quem quer sair do caderno e organizar a
+              fazenda.
+            </p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>✓ Dashboard simples</li>
+              <li>✓ Controle básico de rebanho</li>
+              <li>✓ Pastagem essencial</li>
+              <li>✓ Relatório mensal</li>
+            </ul>
+            <p className="font-bold text-green-600">
+              a partir de R$ 31,75/mês
+            </p>
+          </div>
+
+          <div className="border rounded-lg p-4 space-y-2">
+            <h3 className="font-semibold">
+              Profissional
+            </h3>
+            <p className="text-sm italic text-gray-700">
+              Para quem precisa entender melhor os números.
+            </p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>✓ Tudo do Básico</li>
+              <li>✓ Relatórios financeiros</li>
+              <li>✓ Indicadores</li>
+            </ul>
+            <p className="font-bold text-green-600">
+              a partir de R$ 52,99/mês
+            </p>
+          </div>
+
+          <div className="border rounded-lg p-4 space-y-2 border-yellow-400">
+            <h3 className="font-semibold">Ultra</h3>
+            <p className="text-sm italic text-gray-700">
+              Para quem quer decidir com inteligência.
+            </p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>✓ Análises avançadas</li>
+              <li>✓ Alertas de decisão</li>
+              <li>✓ IA aplicada</li>
+            </ul>
+            <p className="font-bold text-green-600">
+              a partir de R$ 106,09/mês
+            </p>
+          </div>
+
+          <div className="border rounded-lg p-4 space-y-2">
+            <h3 className="font-semibold">
+              Empresarial
+            </h3>
+            <p className="text-sm italic text-gray-700">
+              Para operações maiores e equipes.
+            </p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>✓ Multi-fazendas</li>
+              <li>✓ Gestão de equipes</li>
+              <li>✓ Relatórios customizados</li>
+            </ul>
+            <p className="font-bold text-green-600">
+              a partir de R$ 159,19/mês
+            </p>
+          </div>
+
+          <div className="border rounded-lg p-4 space-y-2">
+            <h3 className="font-semibold">
+              Premium Dominus 360°
+            </h3>
+            <p className="text-sm italic text-gray-700">
+              Para quem pensa como dono e investidor.
+            </p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>✓ CFO Autônomo</li>
+              <li>✓ EBITDA e valuation</li>
+              <li>✓ IA completa</li>
+            </ul>
+            <p className="font-bold text-green-600">
+              a partir de R$ 318,49/mês
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 text-center">
+          <a
+            href="/planos"
+            className="inline-block rounded bg-green-600 px-6 py-2 text-white hover:opacity-90"
+          >
+            Ver detalhes dos planos
+          </a>
+        </div>
+      </section>
     </div>
   );
 }
