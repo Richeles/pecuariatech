@@ -19,19 +19,6 @@ type DreMensal = {
   resultado_operacional: number;
 };
 
-type EbitdaMensal = {
-  mes_referencia: string;
-  receita: number;
-  despesas: number;
-  ebitda: number;
-};
-
-type SanidadeMensal = {
-  mes_referencia: string;
-  eventos_sanitarios: number;
-  custo_sanitario_total: number;
-};
-
 type FinanceiroMensalGrafico = {
   periodo: string;
   receita_total: number;
@@ -44,52 +31,43 @@ export default function DashboardClient() {
   const [hasFinanceiro, setHasFinanceiro] = useState(false);
 
   const [dre, setDre] = useState<DreMensal[]>([]);
-  const [ebitda, setEbitda] = useState<EbitdaMensal[]>([]);
-  const [sanidade, setSanidade] = useState<SanidadeMensal[]>([]);
   const [grafico, setGrafico] = useState<FinanceiroMensalGrafico[]>([]);
 
   useEffect(() => {
     async function carregarDashboard() {
       try {
-        const dreRes = await fetch("/api/financeiro/dre");
-        if (dreRes.ok) {
-          const dreData: DreMensal[] = await dreRes.json();
+        const res = await fetch("/api/financeiro/dre", {
+          credentials: "include", // 🔐 ENVIA COOKIE DE SESSÃO
+          cache: "no-store",
+        });
 
-          if (dreData.length > 0) {
-            const ordenar = <T extends { mes_referencia: string }>(arr: T[]) =>
-              [...arr].sort(
-                (a, b) =>
-                  new Date(b.mes_referencia).getTime() -
-                  new Date(a.mes_referencia).getTime()
-              );
-
-            const dreOrdenado = ordenar(dreData);
-            setDre(dreOrdenado);
-
-            setGrafico(
-              dreOrdenado.map((item) => ({
-                periodo: item.mes_referencia,
-                receita_total: item.receita_bruta,
-                custo_total: item.despesas_operacionais,
-                resultado_operacional: item.resultado_operacional,
-              }))
-            );
-
-            setHasFinanceiro(true);
-          }
+        if (!res.ok) {
+          console.warn("Financeiro indisponível:", res.status);
+          return;
         }
 
-        const ebitdaRes = await fetch("/api/financeiro/ebitda");
-        if (ebitdaRes.ok) {
-          setEbitda(await ebitdaRes.json());
-        }
+        const data: DreMensal[] = await res.json();
 
-        const sanidadeRes = await fetch("/api/financeiro/sanidade");
-        if (sanidadeRes.ok) {
-          setSanidade(await sanidadeRes.json());
+        if (Array.isArray(data) && data.length > 0) {
+          const ordenado = [...data].sort(
+            (a, b) =>
+              new Date(b.mes_referencia).getTime() -
+              new Date(a.mes_referencia).getTime()
+          );
+
+          setDre(ordenado);
+          setGrafico(
+            ordenado.map((item) => ({
+              periodo: item.mes_referencia,
+              receita_total: item.receita_bruta,
+              custo_total: item.despesas_operacionais,
+              resultado_operacional: item.resultado_operacional,
+            }))
+          );
+          setHasFinanceiro(true);
         }
-      } catch (error) {
-        console.error("Erro ao carregar dashboard financeiro:", error);
+      } catch (e) {
+        console.error("Falha ao carregar financeiro:", e);
       } finally {
         setLoading(false);
       }
@@ -103,25 +81,14 @@ export default function DashboardClient() {
   }
 
   // =======================
-  // DASHBOARD SEM FINANCEIRO
+  // DADOS (OU PLACEHOLDERS)
   // =======================
-  if (!hasFinanceiro) {
-    return (
-      <div className="p-6 space-y-6">
-        <h1 className="text-3xl font-bold text-green-700">
-          Dashboard — PecuariaTech
-        </h1>
+  const dreAtual = dre[0] ?? {
+    receita_bruta: 0,
+    despesas_operacionais: 0,
+    resultado_operacional: 0,
+  };
 
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-yellow-800">
-          Nenhum dado financeiro disponível ainda.
-        </div>
-
-        <CardCFO />
-      </div>
-    );
-  }
-
-  const dreAtual = dre[0];
   const dreAnterior = dre[1];
 
   const calcularDelta = (atual: number, anterior?: number) =>
@@ -137,72 +104,39 @@ export default function DashboardClient() {
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-3xl font-bold text-green-700">
-        Dashboard Real — PecuariaTech
+        Dashboard — PecuariaTech
       </h1>
 
+      {!hasFinanceiro && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-yellow-800">
+          Nenhum dado financeiro disponível ainda.
+        </div>
+      )}
+
+      {/* CARDS SEMPRE VISÍVEIS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card
-          titulo="Receita"
-          valor={`R$ ${dreAtual.receita_bruta.toLocaleString("pt-BR")}`}
-          delta={calcularDelta(
-            dreAtual.receita_bruta,
-            dreAnterior?.receita_bruta
-          )}
-        />
-        <Card
-          titulo="Custos"
-          valor={`R$ ${dreAtual.despesas_operacionais.toLocaleString("pt-BR")}`}
-          delta={calcularDelta(
-            dreAtual.despesas_operacionais,
-            dreAnterior?.despesas_operacionais
-          )}
-        />
-        <Card
-          titulo="Resultado"
-          valor={`R$ ${dreAtual.resultado_operacional.toLocaleString("pt-BR")}`}
-          delta={calcularDelta(
-            dreAtual.resultado_operacional,
-            dreAnterior?.resultado_operacional
-          )}
-        />
+        <Card titulo="Receita" valor={`R$ ${dreAtual.receita_bruta.toLocaleString("pt-BR")}`} />
+        <Card titulo="Custos" valor={`R$ ${dreAtual.despesas_operacionais.toLocaleString("pt-BR")}`} />
+        <Card titulo="Resultado" valor={`R$ ${dreAtual.resultado_operacional.toLocaleString("pt-BR")}`} />
         <Card titulo="Margem" valor={`${margemPercentual.toFixed(2)}%`} />
       </div>
 
-      <CardCFO />
+      {/* CFO BLINDADO — NUNCA QUEBRA */}
+      <div>
+        <CardCFO />
+      </div>
 
+      {/* GRÁFICO SEMPRE PRESENTE */}
       <GraficoFinanceiro dados={grafico} />
     </div>
   );
 }
 
-function Card({
-  titulo,
-  valor,
-  delta,
-}: {
-  titulo: string;
-  valor: string;
-  delta?: number;
-}) {
-  const deltaCor =
-    delta === undefined
-      ? "text-gray-400"
-      : delta > 0
-      ? "text-green-600"
-      : delta < 0
-      ? "text-red-600"
-      : "text-gray-500";
-
+function Card({ titulo, valor }: { titulo: string; valor: string }) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <p className="text-sm text-gray-500">{titulo}</p>
       <p className="text-2xl font-bold text-gray-800">{valor}</p>
-      {delta !== undefined && (
-        <p className={`text-xs mt-1 ${deltaCor}`}>
-          Δ {delta > 0 ? "+" : ""}
-          {delta.toFixed(2)}%
-        </p>
-      )}
     </div>
   );
 }
