@@ -1,146 +1,135 @@
-// app/dashboard/DashboardClient.tsx
-// Dashboard Real — PecuariaTech
-// Client Component
-// Next.js 16 | TypeScript strict
-
 "use client";
 
+// CAMINHO: app/dashboard/DashboardClient.tsx
+// Dashboard Real — PecuariaTech
+// Conectado às APIs financeiras reais
+// Next.js 16 + TypeScript strict
+
 import { useEffect, useState } from "react";
-import GraficoFinanceiro from "./components/GraficoFinanceiro";
-import CardCFO from "../components/cfo/CardCFO";
 
-// =======================
+// ===============================
 // TIPOS
-// =======================
-type DreMensal = {
-  mes_referencia: string;
-  receita_bruta: number;
-  despesas_operacionais: number;
-  resultado_operacional: number;
-};
-
-type FinanceiroMensalGrafico = {
-  periodo: string;
+// ===============================
+type IndicadoresFinanceiros = {
   receita_total: number;
-  custo_total: number;
-  resultado_operacional: number;
+  custos_totais: number;
+  resultado: number;
+  margem_percentual: number;
 };
 
+// ===============================
+// COMPONENTE
+// ===============================
 export default function DashboardClient() {
+  const [dados, setDados] = useState<IndicadoresFinanceiros | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dre, setDre] = useState<DreMensal[]>([]);
-  const [grafico, setGrafico] = useState<FinanceiroMensalGrafico[]>([]);
+  const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    async function carregarDashboard() {
+    async function carregarIndicadores() {
       try {
-        const res = await fetch("/api/financeiro/dre");
+        const res = await fetch("/api/financeiro/indicadores-avancados", {
+          method: "GET",
+          credentials: "include",
+        });
 
         if (!res.ok) {
-          throw new Error("Falha ao buscar DRE");
+          throw new Error("Falha ao carregar indicadores financeiros");
         }
 
-        const data: DreMensal[] = await res.json();
+        const json = await res.json();
 
-        const ordenado = [...data].sort(
-          (a, b) =>
-            new Date(b.mes_referencia).getTime() -
-            new Date(a.mes_referencia).getTime()
-        );
-
-        setDre(ordenado);
-
-        setGrafico(
-          ordenado.map((item) => ({
-            periodo: item.mes_referencia,
-            receita_total: item.receita_bruta,
-            custo_total: item.despesas_operacionais,
-            resultado_operacional: item.resultado_operacional,
-          }))
-        );
-      } catch {
-        // SILENCIOSO: zero ≠ erro
-        setDre([]);
-        setGrafico([]);
+        // A API já retorna os dados consolidados
+        setDados({
+          receita_total: json.receita ?? 0,
+          custos_totais: json.custos ?? 0,
+          resultado: json.resultado ?? 0,
+          margem_percentual: json.margem_percentual ?? 0,
+        });
+      } catch (e: any) {
+        setErro(e.message);
       } finally {
         setLoading(false);
       }
     }
 
-    carregarDashboard();
+    carregarIndicadores();
   }, []);
 
   if (loading) {
-    return <div className="p-6">Carregando Dashboard…</div>;
+    return (
+      <div className="text-sm text-gray-400">
+        Carregando dados financeiros...
+      </div>
+    );
   }
 
-  const atual = dre[0];
-  const anterior = dre[1];
-
-  const receita = atual?.receita_bruta ?? 0;
-  const custos = atual?.despesas_operacionais ?? 0;
-  const resultado = atual?.resultado_operacional ?? 0;
-
-  const margem =
-    receita > 0 ? (resultado / receita) * 100 : 0;
-
-  const delta = (a: number, b?: number) =>
-    !b || b === 0 ? 0 : ((a - b) / Math.abs(b)) * 100;
+  if (erro || !dados) {
+    return (
+      <div className="text-sm text-red-400">
+        Nenhum dado financeiro disponível.
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold text-green-700">
-        Dashboard — PecuariaTech
-      </h1>
+    <div className="space-y-8">
+      {/* HEADER */}
+      <header>
+        <h1 className="text-2xl font-bold text-white">
+          Dashboard PecuariaTech
+        </h1>
+        <p className="text-sm text-gray-300 mt-1">
+          Visão financeira consolidada
+        </p>
+      </header>
 
-      {/* AVISO ÚNICO E NEUTRO */}
-      {dre.length === 0 && (
-        <div className="rounded-lg bg-yellow-50 border border-yellow-300 p-3 text-sm text-yellow-800">
-          Nenhum dado financeiro disponível ainda.
-        </div>
-      )}
-
-      {/* CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card titulo="Receita" valor={receita} delta={delta(receita, anterior?.receita_bruta)} />
-        <Card titulo="Custos" valor={custos} delta={delta(custos, anterior?.despesas_operacionais)} />
-        <Card titulo="Resultado" valor={resultado} delta={delta(resultado, anterior?.resultado_operacional)} />
-        <Card titulo="Margem" valor={`${margem.toFixed(2)}%`} />
-      </div>
-
-      {/* CFO — NUNCA BLOQUEIA */}
-      <CardCFO />
-
-      {/* GRÁFICO */}
-      <GraficoFinanceiro dados={grafico} />
+      {/* KPIs */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <KpiCard
+          titulo="Receita"
+          valor={`R$ ${dados.receita_total.toFixed(2)}`}
+        />
+        <KpiCard
+          titulo="Custos"
+          valor={`R$ ${dados.custos_totais.toFixed(2)}`}
+        />
+        <KpiCard
+          titulo="Resultado"
+          valor={`R$ ${dados.resultado.toFixed(2)}`}
+          destaque
+        />
+        <KpiCard
+          titulo="Margem"
+          valor={`${dados.margem_percentual.toFixed(1)}%`}
+        />
+      </section>
     </div>
   );
 }
 
-function Card({
+// ===============================
+// COMPONENTE AUXILIAR
+// ===============================
+function KpiCard({
   titulo,
   valor,
-  delta,
+  destaque,
 }: {
   titulo: string;
-  valor: number | string;
-  delta?: number;
+  valor: string;
+  destaque?: boolean;
 }) {
-  const texto =
-    typeof valor === "number"
-      ? `R$ ${valor.toLocaleString("pt-BR")}`
-      : valor;
-
   return (
-    <div className="bg-white rounded-xl shadow p-4">
-      <p className="text-sm text-gray-500">{titulo}</p>
-      <p className="text-2xl font-bold">{texto}</p>
-      {delta !== undefined && (
-        <p className={`text-xs mt-1 ${delta >= 0 ? "text-green-600" : "text-red-600"}`}>
-          Δ {delta >= 0 ? "+" : ""}
-          {delta.toFixed(2)}%
-        </p>
-      )}
+    <div
+      className={`rounded-xl p-5 border ${
+        destaque
+          ? "border-green-500 bg-green-900/20"
+          : "border-white/10 bg-white/5"
+      }`}
+    >
+      <p className="text-sm text-gray-300">{titulo}</p>
+      <p className="text-2xl font-semibold text-white mt-2">{valor}</p>
     </div>
   );
 }
