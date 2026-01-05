@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // ================================
-// ROTAS PÚBLICAS
+// ROTAS PÚBLICAS (SITE / AUTH)
 // ================================
 const ROTAS_PUBLICAS = [
   "/",
@@ -14,7 +14,18 @@ const ROTAS_PUBLICAS = [
   "/reset",
   "/planos",
   "/checkout",
-  "/api",
+];
+
+// ================================
+// APIs INTERNAS DO DASHBOARD
+// (LIBERADAS APÓS LOGIN)
+// ================================
+const APIS_DASHBOARD = [
+  "/api/financeiro/indicadores-avancados",
+  "/api/financeiro/dre",
+  "/api/financeiro/ebitda",
+  "/api/financeiro/tendencia",
+  "/api/financeiro/cfo/autonomo",
 ];
 
 // ================================
@@ -54,7 +65,7 @@ export async function middleware(req: NextRequest) {
   // ================================
   if (
     ROTAS_PUBLICAS.some((rota) =>
-      pathname.startsWith(rota)
+      pathname === rota || pathname.startsWith(rota + "/")
     )
   ) {
     return NextResponse.next();
@@ -64,11 +75,11 @@ export async function middleware(req: NextRequest) {
   // 3) OBTER TOKEN SUPABASE
   // ================================
   const token =
-    // Header (API / testes)
+    // Header Authorization (APIs / testes)
     req.headers
       .get("authorization")
       ?.replace("Bearer ", "") ||
-    // Cookie Supabase v2 (genérico)
+    // Cookie Supabase (browser)
     Array.from(req.cookies.getAll()).find((c) =>
       c.name.includes("auth-token")
     )?.value;
@@ -80,7 +91,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // ================================
-  // 4) CONSULTAR STATUS REAL
+  // 4) CONSULTAR STATUS REAL (Y)
   // ================================
   try {
     const res = await fetch(
@@ -95,6 +106,7 @@ export async function middleware(req: NextRequest) {
 
     const data = await res.json();
 
+    // ❌ Assinatura inativa
     if (!data?.ativo) {
       return NextResponse.redirect(
         new URL("/planos", req.url)
@@ -102,8 +114,19 @@ export async function middleware(req: NextRequest) {
     }
 
     // ================================
-    // 5) ACESSO LIBERADO
+    // 5) ASSINATURA ATIVA
     // ================================
+
+    // ✅ Liberar APIs internas do Dashboard
+    if (
+      APIS_DASHBOARD.some((api) =>
+        pathname.startsWith(api)
+      )
+    ) {
+      return NextResponse.next();
+    }
+
+    // ✅ Liberar áreas protegidas
     return NextResponse.next();
   } catch {
     return NextResponse.redirect(
@@ -118,6 +141,7 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/api/financeiro/:path*",
     "/financeiro/:path*",
     "/cfo/:path*",
     "/assinatura/:path*",
