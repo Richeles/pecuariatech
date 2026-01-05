@@ -14,22 +14,29 @@ export default function LoginPage() {
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
+
     setErro(null);
     setLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: senha,
+      email: email.trim(),
+      password: senha.trim(),
     });
-
-    setLoading(false);
 
     if (error) {
       setErro(error.message);
+      setLoading(false);
       return;
     }
 
-    router.replace("/dashboard");
+    // 🔐 GARANTIR QUE A SESSÃO FOI CRIADA
+    await supabase.auth.getSession();
+
+    // ⏱️ Pequeno delay para garantir cookie antes do middleware
+    setTimeout(() => {
+      router.replace("/dashboard");
+    }, 200);
   }
 
   return (
@@ -69,7 +76,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-green-600 text-white py-2 rounded hover:opacity-90"
+          className="w-full bg-green-600 text-white py-2 rounded hover:opacity-90 disabled:opacity-60"
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
