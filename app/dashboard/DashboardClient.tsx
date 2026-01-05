@@ -28,46 +28,40 @@ type FinanceiroMensalGrafico = {
 
 export default function DashboardClient() {
   const [loading, setLoading] = useState(true);
-  const [hasFinanceiro, setHasFinanceiro] = useState(false);
-
   const [dre, setDre] = useState<DreMensal[]>([]);
   const [grafico, setGrafico] = useState<FinanceiroMensalGrafico[]>([]);
 
   useEffect(() => {
     async function carregarDashboard() {
       try {
-        const res = await fetch("/api/financeiro/dre", {
-          credentials: "include", // 🔐 ENVIA COOKIE DE SESSÃO
-          cache: "no-store",
-        });
+        const res = await fetch("/api/financeiro/dre");
 
         if (!res.ok) {
-          console.warn("Financeiro indisponível:", res.status);
-          return;
+          throw new Error("Falha ao buscar DRE");
         }
 
         const data: DreMensal[] = await res.json();
 
-        if (Array.isArray(data) && data.length > 0) {
-          const ordenado = [...data].sort(
-            (a, b) =>
-              new Date(b.mes_referencia).getTime() -
-              new Date(a.mes_referencia).getTime()
-          );
+        const ordenado = [...data].sort(
+          (a, b) =>
+            new Date(b.mes_referencia).getTime() -
+            new Date(a.mes_referencia).getTime()
+        );
 
-          setDre(ordenado);
-          setGrafico(
-            ordenado.map((item) => ({
-              periodo: item.mes_referencia,
-              receita_total: item.receita_bruta,
-              custo_total: item.despesas_operacionais,
-              resultado_operacional: item.resultado_operacional,
-            }))
-          );
-          setHasFinanceiro(true);
-        }
-      } catch (e) {
-        console.error("Falha ao carregar financeiro:", e);
+        setDre(ordenado);
+
+        setGrafico(
+          ordenado.map((item) => ({
+            periodo: item.mes_referencia,
+            receita_total: item.receita_bruta,
+            custo_total: item.despesas_operacionais,
+            resultado_operacional: item.resultado_operacional,
+          }))
+        );
+      } catch {
+        // SILENCIOSO: zero ≠ erro
+        setDre([]);
+        setGrafico([]);
       } finally {
         setLoading(false);
       }
@@ -80,26 +74,18 @@ export default function DashboardClient() {
     return <div className="p-6">Carregando Dashboard…</div>;
   }
 
-  // =======================
-  // DADOS (OU PLACEHOLDERS)
-  // =======================
-  const dreAtual = dre[0] ?? {
-    receita_bruta: 0,
-    despesas_operacionais: 0,
-    resultado_operacional: 0,
-  };
+  const atual = dre[0];
+  const anterior = dre[1];
 
-  const dreAnterior = dre[1];
+  const receita = atual?.receita_bruta ?? 0;
+  const custos = atual?.despesas_operacionais ?? 0;
+  const resultado = atual?.resultado_operacional ?? 0;
 
-  const calcularDelta = (atual: number, anterior?: number) =>
-    !anterior || anterior === 0
-      ? 0
-      : ((atual - anterior) / Math.abs(anterior)) * 100;
+  const margem =
+    receita > 0 ? (resultado / receita) * 100 : 0;
 
-  const margemPercentual =
-    dreAtual.receita_bruta > 0
-      ? (dreAtual.resultado_operacional / dreAtual.receita_bruta) * 100
-      : 0;
+  const delta = (a: number, b?: number) =>
+    !b || b === 0 ? 0 : ((a - b) / Math.abs(b)) * 100;
 
   return (
     <div className="p-6 space-y-6">
@@ -107,36 +93,54 @@ export default function DashboardClient() {
         Dashboard — PecuariaTech
       </h1>
 
-      {!hasFinanceiro && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-yellow-800">
+      {/* AVISO ÚNICO E NEUTRO */}
+      {dre.length === 0 && (
+        <div className="rounded-lg bg-yellow-50 border border-yellow-300 p-3 text-sm text-yellow-800">
           Nenhum dado financeiro disponível ainda.
         </div>
       )}
 
-      {/* CARDS SEMPRE VISÍVEIS */}
+      {/* CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card titulo="Receita" valor={`R$ ${dreAtual.receita_bruta.toLocaleString("pt-BR")}`} />
-        <Card titulo="Custos" valor={`R$ ${dreAtual.despesas_operacionais.toLocaleString("pt-BR")}`} />
-        <Card titulo="Resultado" valor={`R$ ${dreAtual.resultado_operacional.toLocaleString("pt-BR")}`} />
-        <Card titulo="Margem" valor={`${margemPercentual.toFixed(2)}%`} />
+        <Card titulo="Receita" valor={receita} delta={delta(receita, anterior?.receita_bruta)} />
+        <Card titulo="Custos" valor={custos} delta={delta(custos, anterior?.despesas_operacionais)} />
+        <Card titulo="Resultado" valor={resultado} delta={delta(resultado, anterior?.resultado_operacional)} />
+        <Card titulo="Margem" valor={`${margem.toFixed(2)}%`} />
       </div>
 
-      {/* CFO BLINDADO — NUNCA QUEBRA */}
-      <div>
-        <CardCFO />
-      </div>
+      {/* CFO — NUNCA BLOQUEIA */}
+      <CardCFO />
 
-      {/* GRÁFICO SEMPRE PRESENTE */}
+      {/* GRÁFICO */}
       <GraficoFinanceiro dados={grafico} />
     </div>
   );
 }
 
-function Card({ titulo, valor }: { titulo: string; valor: string }) {
+function Card({
+  titulo,
+  valor,
+  delta,
+}: {
+  titulo: string;
+  valor: number | string;
+  delta?: number;
+}) {
+  const texto =
+    typeof valor === "number"
+      ? `R$ ${valor.toLocaleString("pt-BR")}`
+      : valor;
+
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <p className="text-sm text-gray-500">{titulo}</p>
-      <p className="text-2xl font-bold text-gray-800">{valor}</p>
+      <p className="text-2xl font-bold">{texto}</p>
+      {delta !== undefined && (
+        <p className={`text-xs mt-1 ${delta >= 0 ? "text-green-600" : "text-red-600"}`}>
+          Δ {delta >= 0 ? "+" : ""}
+          {delta.toFixed(2)}%
+        </p>
+      )}
     </div>
   );
 }
