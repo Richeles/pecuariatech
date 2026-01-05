@@ -1,38 +1,29 @@
 // app/checkout/CheckoutClient.tsx
 "use client";
 
-import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 export default function CheckoutClient() {
   const params = useSearchParams();
   const plano = params.get("plano");
 
-  const [erro, setErro] = useState<string | null>(null);
-
   useEffect(() => {
+    if (!plano) return;
+
     async function iniciarCheckout() {
-      if (!plano) {
-        setErro("Plano não informado");
-        return;
-      }
+      const res = await fetch("/api/checkout/preference", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plano }),
+      });
 
-      try {
-        const res = await fetch("/api/checkout/preference", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plano }),
-        });
+      const data = await res.json();
 
-        const data = await res.json();
-
-        if (!data.init_point) {
-          throw new Error("Checkout indisponível");
-        }
-
+      if (data?.init_point) {
         window.location.href = data.init_point;
-      } catch (err) {
-        setErro("Erro ao iniciar pagamento");
+      } else {
+        alert("Erro ao iniciar pagamento");
       }
     }
 
@@ -41,11 +32,9 @@ export default function CheckoutClient() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      {erro ? (
-        <p className="text-red-600">{erro}</p>
-      ) : (
-        <p>Redirecionando para o pagamento seguro…</p>
-      )}
+      <p className="text-gray-600 text-lg">
+        Redirecionando para o pagamento seguro…
+      </p>
     </div>
   );
 }
