@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   FaChartLine,
   FaMoneyBillWave,
-  FaHorse,
+  FaCow, // 🐂 ÍCONE CORRETO PARA BOVINO
   FaMapMarkedAlt,
   FaClipboardList,
 } from "react-icons/fa";
@@ -27,7 +27,7 @@ const menu = [
   {
     href: "/dashboard/rebanho",
     label: "Rebanho",
-    icon: FaHorse,
+    icon: FaCow, // ✅ BOI (PECUÁRIA)
   },
   {
     href: "/dashboard/pastagem",
