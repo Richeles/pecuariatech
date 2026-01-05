@@ -2,11 +2,10 @@
 
 // CAMINHO: app/dashboard/DashboardClient.tsx
 // Dashboard Real — PecuariaTech
-// KPIs Financeiros + Card UltraCFO
+// KPIs Financeiros + UltraCFO Autônomo
 // Next.js 16 + TypeScript strict
 
 import { useEffect, useState } from "react";
-import CardUltraCFO from "./components/CardUltraCFO";
 
 // ===============================
 // TIPOS
@@ -18,33 +17,37 @@ type IndicadoresFinanceiros = {
   margem_percentual: number;
 };
 
+type DecisaoCFO = {
+  titulo: string;
+  mensagem: string;
+  prioridade: "baixa" | "media" | "alta";
+  impacto_estimado: string;
+  acao_recomendada: string;
+};
+
 // ===============================
-// COMPONENTE
+// COMPONENTE PRINCIPAL
 // ===============================
 export default function DashboardClient() {
   const [dados, setDados] = useState<IndicadoresFinanceiros | null>(null);
+  const [cfo, setCfo] = useState<DecisaoCFO | null>(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    async function carregarIndicadores() {
+    async function carregarTudo() {
       try {
-        const res = await fetch(
+        // KPIs financeiros
+        const resIndicadores = await fetch(
           "/api/financeiro/indicadores-avancados",
-          {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store",
-          }
+          { credentials: "include" }
         );
 
-        if (!res.ok) {
-          throw new Error(
-            "Falha ao carregar indicadores financeiros"
-          );
+        if (!resIndicadores.ok) {
+          throw new Error("Falha ao carregar indicadores financeiros");
         }
 
-        const json = await res.json();
+        const json = await resIndicadores.json();
 
         setDados({
           receita_total: json.receita ?? 0,
@@ -52,6 +55,17 @@ export default function DashboardClient() {
           resultado: json.resultado ?? 0,
           margem_percentual: json.margem_percentual ?? 0,
         });
+
+        // UltraCFO
+        const resCFO = await fetch(
+          "/api/financeiro/cfo/autonomo",
+          { credentials: "include" }
+        );
+
+        if (resCFO.ok) {
+          const cfoJson = await resCFO.json();
+          setCfo(cfoJson);
+        }
       } catch (e: any) {
         setErro(e.message);
       } finally {
@@ -59,13 +73,13 @@ export default function DashboardClient() {
       }
     }
 
-    carregarIndicadores();
+    carregarTudo();
   }, []);
 
   if (loading) {
     return (
       <div className="text-sm text-gray-400">
-        Carregando dados financeiros...
+        Carregando dados do sistema...
       </div>
     );
   }
@@ -86,16 +100,11 @@ export default function DashboardClient() {
           Dashboard PecuariaTech
         </h1>
         <p className="text-sm text-gray-300 mt-1">
-          Visão financeira consolidada
+          Visão financeira consolidada + CFO Autônomo
         </p>
       </header>
 
-      {/* 🧠 CARD ULTRACFO — PRIORIDADE EXECUTIVA */}
-      <section>
-        <CardUltraCFO />
-      </section>
-
-      {/* KPIs FINANCEIROS */}
+      {/* KPIs */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <KpiCard
           titulo="Receita"
@@ -115,12 +124,19 @@ export default function DashboardClient() {
           valor={`${dados.margem_percentual.toFixed(1)}%`}
         />
       </section>
+
+      {/* ULTRA CFO */}
+      {cfo && (
+        <section>
+          <UltraCFOCard decisao={cfo} />
+        </section>
+      )}
     </div>
   );
 }
 
 // ===============================
-// COMPONENTE AUXILIAR
+// KPI CARD
 // ===============================
 function KpiCard({
   titulo,
@@ -140,9 +156,42 @@ function KpiCard({
       }`}
     >
       <p className="text-sm text-gray-300">{titulo}</p>
-      <p className="text-2xl font-semibold text-white mt-2">
-        {valor}
+      <p className="text-2xl font-semibold text-white mt-2">{valor}</p>
+    </div>
+  );
+}
+
+// ===============================
+// ULTRA CFO CARD
+// ===============================
+function UltraCFOCard({ decisao }: { decisao: DecisaoCFO }) {
+  const cor =
+    decisao.prioridade === "alta"
+      ? "border-red-500 bg-red-900/20"
+      : decisao.prioridade === "media"
+      ? "border-yellow-500 bg-yellow-900/20"
+      : "border-green-500 bg-green-900/20";
+
+  return (
+    <div className={`rounded-xl p-6 border ${cor}`}>
+      <h2 className="text-xl font-bold text-white mb-2">
+        UltraCFO — {decisao.titulo}
+      </h2>
+
+      <p className="text-sm text-gray-200 mb-4">
+        {decisao.mensagem}
       </p>
+
+      <div className="text-sm text-gray-300 space-y-1">
+        <p>
+          <strong>Impacto estimado:</strong>{" "}
+          {decisao.impacto_estimado}
+        </p>
+        <p>
+          <strong>Ação recomendada:</strong>{" "}
+          {decisao.acao_recomendada}
+        </p>
+      </div>
     </div>
   );
 }
