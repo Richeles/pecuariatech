@@ -1,8 +1,8 @@
 "use client";
 
 // CAMINHO: app/dashboard/DashboardClient.tsx
-// Dashboard Base Estável — PecuariaTech
-// Sem dependência de API (reset estrutural)
+// Dashboard Visual Estável — PecuariaTech
+// Base definitiva de UI (sem backend / sem financeiro)
 // Next.js 16 + TypeScript strict
 
 export default function DashboardClient() {
@@ -13,16 +13,16 @@ export default function DashboardClient() {
       {/* HEADER */}
       {/* =============================== */}
       <header>
-        <h1 className="text-2xl font-bold text-white">
+        <h1 className="text-2xl font-bold text-gray-900">
           Dashboard PecuariaTech
         </h1>
-        <p className="text-sm text-gray-200 mt-1">
-          Visão geral da operação
+        <p className="text-sm text-gray-600 mt-1">
+          Visão geral da operação pecuária
         </p>
       </header>
 
       {/* =============================== */}
-      {/* KPIs VISUAIS (PLACEHOLDER) */}
+      {/* KPIs (ALINHADOS À ESQUERDA) */}
       {/* =============================== */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <KpiCard titulo="Receita Total" valor="—" />
@@ -50,7 +50,7 @@ export default function DashboardClient() {
             descricao="Para quem quer sair do caderno e organizar a fazenda."
             itens={[
               "Dashboard simples",
-              "Controle básico de rebanho",
+              "Controle básico de rebanho bovino",
               "Pastagem essencial",
               "Relatório mensal",
             ]}
@@ -133,12 +133,12 @@ function KpiCard({
     <div
       className={`rounded-xl p-5 border ${
         destaque
-          ? "border-green-500 bg-green-900/20"
-          : "border-white/10 bg-white/5"
+          ? "border-green-500 bg-green-50"
+          : "border-gray-200 bg-white"
       }`}
     >
-      <p className="text-sm text-gray-300">{titulo}</p>
-      <p className="text-2xl font-semibold text-white mt-2">{valor}</p>
+      <p className="text-sm text-gray-600">{titulo}</p>
+      <p className="text-2xl font-semibold text-gray-900 mt-2">{valor}</p>
     </div>
   );
 }
@@ -159,7 +159,7 @@ function Plano({
   return (
     <div
       className={`border rounded-lg p-4 space-y-2 ${
-        destaque ? "border-yellow-400" : ""
+        destaque ? "border-yellow-400" : "border-gray-200"
       }`}
     >
       <h3 className="font-semibold">{nome}</h3>
