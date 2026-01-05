@@ -2,10 +2,11 @@
 
 // CAMINHO: app/dashboard/DashboardClient.tsx
 // Dashboard Real — PecuariaTech
-// Conectado às APIs financeiras reais
+// KPIs Financeiros + Card UltraCFO
 // Next.js 16 + TypeScript strict
 
 import { useEffect, useState } from "react";
+import CardUltraCFO from "./components/CardUltraCFO";
 
 // ===============================
 // TIPOS
@@ -28,18 +29,23 @@ export default function DashboardClient() {
   useEffect(() => {
     async function carregarIndicadores() {
       try {
-        const res = await fetch("/api/financeiro/indicadores-avancados", {
-          method: "GET",
-          credentials: "include",
-        });
+        const res = await fetch(
+          "/api/financeiro/indicadores-avancados",
+          {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+          }
+        );
 
         if (!res.ok) {
-          throw new Error("Falha ao carregar indicadores financeiros");
+          throw new Error(
+            "Falha ao carregar indicadores financeiros"
+          );
         }
 
         const json = await res.json();
 
-        // A API já retorna os dados consolidados
         setDados({
           receita_total: json.receita ?? 0,
           custos_totais: json.custos ?? 0,
@@ -73,7 +79,7 @@ export default function DashboardClient() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* HEADER */}
       <header>
         <h1 className="text-2xl font-bold text-white">
@@ -84,7 +90,12 @@ export default function DashboardClient() {
         </p>
       </header>
 
-      {/* KPIs */}
+      {/* 🧠 CARD ULTRACFO — PRIORIDADE EXECUTIVA */}
+      <section>
+        <CardUltraCFO />
+      </section>
+
+      {/* KPIs FINANCEIROS */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <KpiCard
           titulo="Receita"
@@ -129,7 +140,9 @@ function KpiCard({
       }`}
     >
       <p className="text-sm text-gray-300">{titulo}</p>
-      <p className="text-2xl font-semibold text-white mt-2">{valor}</p>
+      <p className="text-2xl font-semibold text-white mt-2">
+        {valor}
+      </p>
     </div>
   );
 }
