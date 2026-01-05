@@ -1,142 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/app/lib/supabase-browser";
+// CAMINHO: app/dashboard/DashboardClient.tsx
+// Dashboard Base Estável — PecuariaTech
+// Sem dependência de API (reset estrutural)
+// Next.js 16 + TypeScript strict
 
-// ===============================
-// TIPOS
-// ===============================
-type IndicadoresFinanceiros = {
-  receita_total: number;
-  custo_total: number;
-  resultado: number;
-  margem_percentual: number;
-};
-
-// ===============================
-// COMPONENTE
-// ===============================
 export default function DashboardClient() {
-  const [indicadores, setIndicadores] =
-    useState<IndicadoresFinanceiros | null>(null);
-  const [erroFinanceiro, setErroFinanceiro] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  // ===============================
-  // CARREGAR FINANCEIRO (TOKEN OK)
-  // ===============================
-  useEffect(() => {
-    async function carregarFinanceiro() {
-      try {
-        const { data: sessionData } =
-          await supabase.auth.getSession();
-
-        const token =
-          sessionData.session?.access_token;
-
-        if (!token) {
-          throw new Error("Sessão não encontrada");
-        }
-
-        const res = await fetch(
-          "/api/financeiro/indicadores-avancados",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error("Erro ao buscar financeiro");
-        }
-
-        const data = await res.json();
-        setIndicadores(data);
-      } catch (err) {
-        console.error(err);
-        setErroFinanceiro(true);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    carregarFinanceiro();
-  }, []);
-
-  // ===============================
-  // UI
-  // ===============================
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
+
       {/* =============================== */}
-      {/* DASHBOARD FINANCEIRO */}
+      {/* HEADER */}
       {/* =============================== */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">
-            Receita Total
-          </p>
-          <p className="text-2xl font-bold text-green-600">
-            {indicadores
-              ? `R$ ${indicadores.receita_total.toFixed(
-                  2
-                )}`
-              : "--"}
-          </p>
-        </div>
+      <header>
+        <h1 className="text-2xl font-bold text-white">
+          Dashboard PecuariaTech
+        </h1>
+        <p className="text-sm text-gray-200 mt-1">
+          Visão geral da operação
+        </p>
+      </header>
 
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">
-            Custos Totais
-          </p>
-          <p className="text-2xl font-bold text-red-600">
-            {indicadores
-              ? `R$ ${indicadores.custo_total.toFixed(
-                  2
-                )}`
-              : "--"}
-          </p>
-        </div>
-
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">
-            Resultado
-          </p>
-          <p className="text-2xl font-bold">
-            {indicadores
-              ? `R$ ${indicadores.resultado.toFixed(
-                  2
-                )}`
-              : "--"}
-          </p>
-        </div>
-
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">
-            Margem
-          </p>
-          <p className="text-2xl font-bold">
-            {indicadores
-              ? `${indicadores.margem_percentual.toFixed(
-                  1
-                )}%`
-              : "--"}
-          </p>
-        </div>
+      {/* =============================== */}
+      {/* KPIs VISUAIS (PLACEHOLDER) */}
+      {/* =============================== */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <KpiCard titulo="Receita Total" valor="—" />
+        <KpiCard titulo="Custos Totais" valor="—" />
+        <KpiCard titulo="Resultado" valor="—" destaque />
+        <KpiCard titulo="Margem" valor="—" />
       </section>
 
       {/* =============================== */}
-      {/* ERRO FINANCEIRO (SEM QUEBRAR UI) */}
-      {/* =============================== */}
-      {erroFinanceiro && (
-        <p className="text-sm text-red-600">
-          Não foi possível carregar os dados financeiros.
-        </p>
-      )}
-
-      {/* =============================== */}
-      {/* PLANOS PECUARIATECH (INFORMATIVO) */}
+      {/* PLANOS PECUARIATECH */}
       {/* =============================== */}
       <section className="mt-12 rounded-xl border bg-white p-6">
         <h2 className="text-xl font-semibold mb-2">
@@ -144,93 +40,67 @@ export default function DashboardClient() {
         </h2>
 
         <p className="text-sm text-gray-600 mb-6">
-          Cada plano foi pensado para um estágio diferente da
-          operação rural.
+          Cada plano foi pensado para um estágio diferente da operação rural.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="border rounded-lg p-4 space-y-2">
-            <h3 className="font-semibold">Básico</h3>
-            <p className="text-sm italic text-gray-700">
-              Para quem quer sair do caderno e organizar a
-              fazenda.
-            </p>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>✓ Dashboard simples</li>
-              <li>✓ Controle básico de rebanho</li>
-              <li>✓ Pastagem essencial</li>
-              <li>✓ Relatório mensal</li>
-            </ul>
-            <p className="font-bold text-green-600">
-              a partir de R$ 31,75/mês
-            </p>
-          </div>
 
-          <div className="border rounded-lg p-4 space-y-2">
-            <h3 className="font-semibold">
-              Profissional
-            </h3>
-            <p className="text-sm italic text-gray-700">
-              Para quem precisa entender melhor os números.
-            </p>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>✓ Tudo do Básico</li>
-              <li>✓ Relatórios financeiros</li>
-              <li>✓ Indicadores</li>
-            </ul>
-            <p className="font-bold text-green-600">
-              a partir de R$ 52,99/mês
-            </p>
-          </div>
+          <Plano
+            nome="Básico"
+            descricao="Para quem quer sair do caderno e organizar a fazenda."
+            itens={[
+              "Dashboard simples",
+              "Controle básico de rebanho",
+              "Pastagem essencial",
+              "Relatório mensal",
+            ]}
+            preco="a partir de R$ 31,75/mês"
+          />
 
-          <div className="border rounded-lg p-4 space-y-2 border-yellow-400">
-            <h3 className="font-semibold">Ultra</h3>
-            <p className="text-sm italic text-gray-700">
-              Para quem quer decidir com inteligência.
-            </p>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>✓ Análises avançadas</li>
-              <li>✓ Alertas de decisão</li>
-              <li>✓ IA aplicada</li>
-            </ul>
-            <p className="font-bold text-green-600">
-              a partir de R$ 106,09/mês
-            </p>
-          </div>
+          <Plano
+            nome="Profissional"
+            descricao="Para quem precisa entender melhor os números."
+            itens={[
+              "Tudo do Básico",
+              "Relatórios financeiros",
+              "Indicadores operacionais",
+            ]}
+            preco="a partir de R$ 52,99/mês"
+          />
 
-          <div className="border rounded-lg p-4 space-y-2">
-            <h3 className="font-semibold">
-              Empresarial
-            </h3>
-            <p className="text-sm italic text-gray-700">
-              Para operações maiores e equipes.
-            </p>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>✓ Multi-fazendas</li>
-              <li>✓ Gestão de equipes</li>
-              <li>✓ Relatórios customizados</li>
-            </ul>
-            <p className="font-bold text-green-600">
-              a partir de R$ 159,19/mês
-            </p>
-          </div>
+          <Plano
+            nome="Ultra"
+            destaque
+            descricao="Para quem quer decidir com inteligência."
+            itens={[
+              "Análises avançadas",
+              "Alertas de decisão",
+              "IA aplicada",
+            ]}
+            preco="a partir de R$ 106,09/mês"
+          />
 
-          <div className="border rounded-lg p-4 space-y-2">
-            <h3 className="font-semibold">
-              Premium Dominus 360°
-            </h3>
-            <p className="text-sm italic text-gray-700">
-              Para quem pensa como dono e investidor.
-            </p>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>✓ CFO Autônomo</li>
-              <li>✓ EBITDA e valuation</li>
-              <li>✓ IA completa</li>
-            </ul>
-            <p className="font-bold text-green-600">
-              a partir de R$ 318,49/mês
-            </p>
-          </div>
+          <Plano
+            nome="Empresarial"
+            descricao="Para operações maiores e equipes."
+            itens={[
+              "Multi-fazendas",
+              "Gestão de equipes",
+              "Relatórios customizados",
+            ]}
+            preco="a partir de R$ 159,19/mês"
+          />
+
+          <Plano
+            nome="Premium Dominus 360°"
+            descricao="Para quem pensa como dono ou investidor."
+            itens={[
+              "CFO Autônomo",
+              "EBITDA e valuation",
+              "IA completa",
+            ]}
+            preco="a partir de R$ 318,49/mês"
+          />
         </div>
 
         <div className="mt-6 text-center">
@@ -242,6 +112,64 @@ export default function DashboardClient() {
           </a>
         </div>
       </section>
+    </div>
+  );
+}
+
+/* =============================== */
+/* COMPONENTES AUXILIARES */
+/* =============================== */
+
+function KpiCard({
+  titulo,
+  valor,
+  destaque,
+}: {
+  titulo: string;
+  valor: string;
+  destaque?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-xl p-5 border ${
+        destaque
+          ? "border-green-500 bg-green-900/20"
+          : "border-white/10 bg-white/5"
+      }`}
+    >
+      <p className="text-sm text-gray-300">{titulo}</p>
+      <p className="text-2xl font-semibold text-white mt-2">{valor}</p>
+    </div>
+  );
+}
+
+function Plano({
+  nome,
+  descricao,
+  itens,
+  preco,
+  destaque,
+}: {
+  nome: string;
+  descricao: string;
+  itens: string[];
+  preco: string;
+  destaque?: boolean;
+}) {
+  return (
+    <div
+      className={`border rounded-lg p-4 space-y-2 ${
+        destaque ? "border-yellow-400" : ""
+      }`}
+    >
+      <h3 className="font-semibold">{nome}</h3>
+      <p className="text-sm italic text-gray-700">{descricao}</p>
+      <ul className="text-sm text-gray-600 space-y-1">
+        {itens.map((item) => (
+          <li key={item}>✓ {item}</li>
+        ))}
+      </ul>
+      <p className="font-bold text-green-600">{preco}</p>
     </div>
   );
 }
