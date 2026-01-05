@@ -1,7 +1,7 @@
-// app/api/checkout/webhook/route.ts
+// CAMINHO: app/api/checkout/webhook/route.ts
 // Next.js 16 + TypeScript strict
-// Webhook Mercado Pago — Produção
-// Fonte Y preservada | Ativação real de assinatura
+// Webhook Mercado Pago — Ativação de Assinatura + Auditoria Financeira
+// Equação Y + Triângulo 360
 
 import { NextRequest, NextResponse } from "next/server";
 import MercadoPagoConfig, { Payment } from "mercadopago";
@@ -21,16 +21,11 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
 }
 
 // ================================
-// CLIENTS (SERVER ONLY)
+// MERCADO PAGO (SERVER)
 // ================================
 const mp = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
 });
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 // ================================
 // WEBHOOK
@@ -39,25 +34,17 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    /**
-     * Mercado Pago envia formatos diferentes.
-     * Garantimos compatibilidade:
-     */
+    // Compatibilidade Mercado Pago
     const paymentId =
       body?.data?.id ||
       body?.id ||
       body?.resource?.split("/")?.pop();
 
     if (!paymentId) {
-      return NextResponse.json(
-        { error: "paymentId não encontrado" },
-        { status: 400 }
-      );
+      return NextResponse.json({ ok: true });
     }
 
-    // ================================
-    // BUSCAR PAGAMENTO REAL
-    // ================================
+    // Buscar pagamento real
     const payment = new Payment(mp);
     const paymentInfo = await payment.get({ id: paymentId });
 
@@ -73,10 +60,7 @@ export async function POST(req: NextRequest) {
       throw new Error("external_reference ausente");
     }
 
-    /**
-     * Equação Y:
-     * user_id|plano|periodo
-     */
+    // user_id|plano|periodo
     const [user_id, plano, periodo] =
       externalReference.split("|");
 
@@ -85,31 +69,27 @@ export async function POST(req: NextRequest) {
     }
 
     // ================================
-    // ENCERRAR TRIAL (SE EXISTIR)
+    // SUPABASE (RUNTIME ONLY)
     // ================================
-    await supabase
-      .from("assinaturas")
-      .update({ status: "expirado" })
-      .eq("user_id", user_id)
-      .eq("status", "trial");
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
 
     // ================================
-    // CALCULAR PERÍODO
+    // CÁLCULO DE PERÍODO (SAFE)
     // ================================
     const inicio = new Date();
+    const fim = new Date(inicio);
 
-    let dias = 30;
-    if (periodo === "trimestral") dias = 90;
-    if (periodo === "anual") dias = 365;
-
-    const fim = new Date(
-      inicio.getTime() + dias * 24 * 60 * 60 * 1000
-    );
+    if (periodo === "mensal") fim.setMonth(fim.getMonth() + 1);
+    if (periodo === "trimestral") fim.setMonth(fim.getMonth() + 3);
+    if (periodo === "anual") fim.setFullYear(fim.getFullYear() + 1);
 
     // ================================
     // ATIVAR ASSINATURA PAGA
     // ================================
-    const { error } = await supabase
+    const { error: assinaturaError } = await supabase
       .from("assinaturas")
       .insert({
         user_id,
@@ -120,11 +100,26 @@ export async function POST(req: NextRequest) {
         inicio,
         fim,
         external_reference: externalReference,
+        payment_id: paymentId,
+        valor: paymentInfo.transaction_amount,
       });
 
-    if (error) {
-      throw error;
-    }
+    if (assinaturaError) throw assinaturaError;
+
+    // ================================
+    // AUDITORIA FINANCEIRA (LOG IMUTÁVEL)
+    // ================================
+    await supabase.from("financeiro_logs").insert({
+      user_id,
+      plano,
+      periodo,
+      valor: paymentInfo.transaction_amount,
+      moeda: paymentInfo.currency_id ?? "BRL",
+      origem: "mercadopago",
+      evento: "pagamento_aprovado",
+      payment_id: paymentId,
+      external_reference: externalReference,
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {
