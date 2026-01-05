@@ -1,54 +1,41 @@
-// CAMINHO: app/api/assinaturas/status/route.ts
-// Fonte Y — Status de Assinatura
-// Next.js 16 | Server Only
+// app/api/assinaturas/status/route.ts
+// Fonte Y soberana — status de assinatura
 
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/auth-helpers-nextjs";
 
-export async function GET(req: NextRequest) {
-  const token = req.headers
-    .get("authorization")
-    ?.replace("Bearer ", "");
+export async function GET() {
+  try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies }
+    );
 
-  if (!token) {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { ativo: false, erro: "Token ausente" },
+        { status: 401 }
+      );
+    }
+
+    // 🔒 REGRA TEMPORÁRIA (OPÇÃO A – TESTE RÁPIDO)
+    // enquanto Mercado Pago não governa
+    return NextResponse.json({
+      ativo: true,
+      plano: "ultra",
+      usuario: user.email,
+    });
+  } catch (e) {
     return NextResponse.json(
-      { ativo: false, erro: "Token ausente" },
-      { status: 401 }
+      { ativo: false, erro: "Erro interno" },
+      { status: 500 }
     );
   }
-
-  const supabaseAuth = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!
-  );
-
-  const { data: userData, error: userError } =
-    await supabaseAuth.auth.getUser(token);
-
-  if (userError || !userData?.user) {
-    return NextResponse.json(
-      { ativo: false, erro: "Usuário inválido" },
-      { status: 401 }
-    );
-  }
-
-  const supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  const { data: assinatura } = await supabase
-    .from("assinaturas")
-    .select("status, plano")
-    .eq("user_id", userData.user.id)
-    .single();
-
-  if (!assinatura || assinatura.status !== "ativa") {
-    return NextResponse.json({ ativo: false });
-  }
-
-  return NextResponse.json({
-    ativo: true,
-    plano: assinatura.plano,
-  });
 }

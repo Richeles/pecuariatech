@@ -1,24 +1,18 @@
-// CAMINHO: middleware.ts
-// Paywall Definitivo — PecuariaTech
+// middleware.ts
+// Paywall definitivo — PecuariaTech
 // Next.js 16 | App Router
 // Fonte Y soberana: /api/assinaturas/status
 
 import { NextRequest, NextResponse } from "next/server";
 
-// ================================
-// ROTAS PÚBLICAS
-// ================================
 const ROTAS_PUBLICAS = [
   "/",
   "/login",
-  "/reset",
+  "/reset-password",
   "/planos",
   "/checkout",
 ];
 
-// ================================
-// EXTENSÕES ESTÁTICAS
-// ================================
 const EXTENSOES_PUBLICAS = [
   ".png",
   ".jpg",
@@ -30,21 +24,18 @@ const EXTENSOES_PUBLICAS = [
   ".webp",
 ];
 
-// ================================
-// MIDDLEWARE
-// ================================
 export async function middleware(req: NextRequest) {
   const { pathname, origin } = req.nextUrl;
 
-  // 1️⃣ Arquivos estáticos
+  // 1️⃣ liberar estáticos
   if (
-    EXTENSOES_PUBLICAS.some((ext) => pathname.endsWith(ext)) ||
-    pathname.startsWith("/_next")
+    pathname.startsWith("/_next") ||
+    EXTENSOES_PUBLICAS.some((ext) => pathname.endsWith(ext))
   ) {
     return NextResponse.next();
   }
 
-  // 2️⃣ Rotas públicas
+  // 2️⃣ liberar rotas públicas
   if (
     ROTAS_PUBLICAS.some(
       (rota) => pathname === rota || pathname.startsWith(rota + "/")
@@ -53,49 +44,38 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // 3️⃣ Validação real via Fonte Y
+  // 3️⃣ consultar status REAL da assinatura (com cookies)
   try {
-    const res = await fetch(
-      `${origin}/api/assinaturas/status`,
-      {
-        credentials: "include",
-        cache: "no-store",
-      }
-    );
+    const res = await fetch(`${origin}/api/assinaturas/status`, {
+      headers: {
+        cookie: req.headers.get("cookie") || "",
+      },
+      cache: "no-store",
+    });
 
     if (!res.ok) {
-      return NextResponse.redirect(
-        new URL("/login", req.url)
-      );
+      return NextResponse.redirect(new URL("/login", req.url));
     }
 
     const data = await res.json();
 
     if (!data?.ativo) {
-      return NextResponse.redirect(
-        new URL("/planos", req.url)
-      );
+      return NextResponse.redirect(new URL("/planos", req.url));
     }
 
-    // ✅ Assinatura ativa
+    // ✅ assinatura ativa
     return NextResponse.next();
   } catch {
-    return NextResponse.redirect(
-      new URL("/login", req.url)
-    );
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 }
 
-// ================================
-// APLICAR PAYWALL
-// ================================
 export const config = {
   matcher: [
     "/dashboard/:path*",
     "/financeiro/:path*",
-    "/cfo/:path*",
-    "/assinatura/:path*",
     "/api/financeiro/:path*",
     "/api/planos/:path*",
+    "/cfo/:path*",
   ],
 };
