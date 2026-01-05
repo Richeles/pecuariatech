@@ -1,17 +1,12 @@
 // CAMINHO: app/api/financeiro/cfo/autonomo/route.ts
-// CFO Autônomo Ultra — Motor Financeiro Inteligente
+// UltraCFO Autônomo — Motor Financeiro Inteligente
 // Next.js 16 + TypeScript strict
+// SERVER ONLY
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-type DecisaoCFO = {
-  titulo: string;
-  mensagem: string;
-  prioridade: "baixa" | "media" | "alta";
-  impacto_estimado: string;
-  acao_recomendada: string;
-};
+type Prioridade = "baixa" | "media" | "alta";
 
 export async function GET() {
   const supabase = createClient(
@@ -20,7 +15,7 @@ export async function GET() {
   );
 
   // ===============================
-  // BASE FINANCEIRA REAL
+  // 1) BASE FINANCEIRA REAL (VIEW)
   // ===============================
   const { data, error } = await supabase
     .from("financeiro_indicadores_view")
@@ -28,7 +23,10 @@ export async function GET() {
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ status: "sem_dados" }, { status: 200 });
+    return NextResponse.json(
+      { status: "sem_dados" },
+      { status: 200 }
+    );
   }
 
   const {
@@ -43,50 +41,70 @@ export async function GET() {
   } = data;
 
   // ===============================
-  // MOTOR ULTRAINTELIGENTE
+  // 2) MOTOR DE DECISÃO ULTRACFO
   // ===============================
-  let prioridade: DecisaoCFO["prioridade"] = "baixa";
+  let prioridade: Prioridade = "baixa";
   let titulo = "Operação financeiramente estável";
   let mensagem =
     "Os indicadores financeiros estão dentro do padrão esperado para sua operação.";
   let impacto_estimado = "Estável";
-  let acao_recomendada = "Manter estratégia atual e monitorar.";
+  let acao_recomendada =
+    "Manter estratégia atual e monitorar indicadores.";
+
+  let plano_recomendado:
+    | "basico"
+    | "profissional"
+    | "ultra"
+    | "empresarial"
+    | "premium_dominus" = "profissional";
 
   // 🔴 ALERTA CRÍTICO — EBITDA
   if (ebitda < baseline_ebitda * 0.85) {
     prioridade = "alta";
     titulo = "Queda crítica no EBITDA";
     mensagem =
-      "O EBITDA atual caiu significativamente em relação ao histórico. Há risco direto de redução de caixa.";
+      "O EBITDA atual caiu significativamente em relação ao histórico. Há risco direto de pressão no caixa.";
     impacto_estimado = "Alto impacto negativo no fluxo de caixa";
     acao_recomendada =
       "Revisar custos variáveis, renegociar insumos e reavaliar lotes de menor desempenho.";
+    plano_recomendado = "profissional";
   }
 
   // 🟠 ALERTA MÉDIO — CUSTOS
   else if (custos > baseline_custos * 1.15) {
     prioridade = "media";
-    titulo = "Custos acima do padrão";
+    titulo = "Custos acima do padrão histórico";
     mensagem =
-      "Os custos operacionais estão acima do histórico esperado para este período.";
+      "Os custos operacionais estão acima do esperado para este período.";
     impacto_estimado = "Redução gradual da margem";
     acao_recomendada =
       "Analisar despesas recentes, consumo de insumos e eficiência por lote.";
+    plano_recomendado = "ultra";
   }
 
   // 🟢 EVOLUÇÃO POSITIVA
-  else if (tendencia === "alta") {
+  else if (tendencia === "alta" && margem_percentual >= 15) {
     prioridade = "baixa";
     titulo = "Evolução financeira positiva";
     mensagem =
-      "A operação apresenta crescimento consistente em relação ao histórico.";
+      "A operação apresenta crescimento consistente e margem saudável.";
     impacto_estimado = "Melhoria contínua da rentabilidade";
     acao_recomendada =
       "Avaliar reinvestimento estratégico e ampliação controlada da produção.";
+    plano_recomendado = "ultra";
+  }
+
+  // 🟣 OPERAÇÃO DE NÍVEL EMPRESARIAL
+  if (receita >= 100000 && margem_percentual >= 20) {
+    plano_recomendado = "empresarial";
+  }
+
+  if (receita >= 200000 && ebitda > 0) {
+    plano_recomendado = "premium_dominus";
   }
 
   // ===============================
-  // RESPOSTA FINAL DO CFO
+  // 3) RESPOSTA FINAL DO ULTRACFO
   // ===============================
   return NextResponse.json({
     titulo,
@@ -94,6 +112,14 @@ export async function GET() {
     prioridade,
     impacto_estimado,
     acao_recomendada,
+    plano_recomendado,
+    indicadores: {
+      receita,
+      custos,
+      ebitda,
+      margem_percentual,
+      tendencia,
+    },
     gerado_em: new Date().toISOString(),
   });
 }

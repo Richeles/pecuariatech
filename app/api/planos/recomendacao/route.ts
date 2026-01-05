@@ -1,85 +1,33 @@
 // CAMINHO: app/api/planos/recomendacao/route.ts
-// IA Recomendadora de Plano — PecuariaTech
-// Next.js 16 | Server-only
+// IA de Recomendação de Plano — integrada ao UltraCFO
+// Server-only
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-type RecomendacaoPlano = {
-  plano: "basico" | "profissional" | "ultra" | "empresarial" | "premium_dominus";
-  motivo: string;
-};
 
 export async function GET() {
-  const supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL}/api/financeiro/cfo/autonomo`,
+      { cache: "no-store" }
+    );
 
-  // ===============================
-  // DADOS REAIS DA OPERAÇÃO
-  // ===============================
-  const { data, error } = await supabase
-    .from("financeiro_indicadores_view")
-    .select(
-      `
-      receita,
-      custos,
-      ebitda,
-      margem_percentual
-    `
-    )
-    .single();
+    const cfo = await res.json();
 
-  // Fallback seguro
-  if (error || !data) {
-    return NextResponse.json<RecomendacaoPlano>({
-      plano: "basico",
-      motivo:
-        "Comece pelo Básico para estruturar sua fazenda e gerar histórico.",
+    if (!cfo?.plano_recomendado) {
+      throw new Error("CFO sem recomendação");
+    }
+
+    return NextResponse.json({
+      plano: cfo.plano_recomendado,
+      motivo: cfo.mensagem,
+      prioridade: cfo.prioridade,
+      impacto: cfo.impacto_estimado,
     });
-  }
-
-  const { receita, ebitda, margem_percentual } = data;
-
-  // ===============================
-  // MOTOR DE DECISÃO (IA EXPLICÁVEL)
-  // ===============================
-  if (receita < 50000) {
-    return NextResponse.json<RecomendacaoPlano>({
-      plano: "basico",
-      motivo:
-        "Sua operação ainda está em fase inicial. O Básico organiza e cria base sólida.",
-    });
-  }
-
-  if (receita >= 50000 && receita < 200000) {
-    return NextResponse.json<RecomendacaoPlano>({
+  } catch {
+    return NextResponse.json({
       plano: "profissional",
       motivo:
-        "Você já movimenta valores relevantes e precisa entender melhor seus números.",
+        "Estamos analisando seus dados financeiros. O plano Profissional é o mais indicado neste momento.",
     });
   }
-
-  if (ebitda > 0 && margem_percentual >= 15) {
-    return NextResponse.json<RecomendacaoPlano>({
-      plano: "ultra",
-      motivo:
-        "Sua operação já gera resultado. O plano Ultra ajuda a decidir melhor e crescer.",
-    });
-  }
-
-  if (receita >= 500000) {
-    return NextResponse.json<RecomendacaoPlano>({
-      plano: "empresarial",
-      motivo:
-        "Sua operação exige controle, padronização e escala.",
-    });
-  }
-
-  return NextResponse.json<RecomendacaoPlano>({
-    plano: "premium_dominus",
-    motivo:
-      "Perfil estratégico identificado. O Dominus entrega visão completa de gestão e investimento.",
-  });
 }
