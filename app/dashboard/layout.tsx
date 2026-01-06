@@ -1,7 +1,7 @@
 // CAMINHO: app/dashboard/layout.tsx
 // Layout do Dashboard — PecuariaTech
-// Padrão SaaS profissional (Triângulo 360)
-// Sidebar à esquerda | Sem topbar | Estável
+// Estilo: SaaS Premium Rural (Gradiente leve)
+// Triângulo 360 aplicado: UX + Produto + Tecnologia
 
 import Sidebar from "./components/Sidebar";
 
@@ -11,11 +11,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* SIDEBAR FIXA */}
+    <div className="min-h-screen flex bg-gradient-to-br from-[#f3f7f4] via-[#eef3ef] to-[#e8f0eb]">
+      {/* SIDEBAR */}
       <Sidebar />
 
-      {/* CONTEÚDO DO DASHBOARD */}
+      {/* CONTEÚDO */}
       <main className="flex-1 p-8 overflow-y-auto">
         {children}
       </main>
