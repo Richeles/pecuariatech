@@ -5,15 +5,15 @@ import { usePathname } from "next/navigation";
 import {
   FaChartLine,
   FaMoneyBillWave,
-  FaCow,
   FaMapMarkedAlt,
   FaClipboardList,
 } from "react-icons/fa";
+import { GiCow } from "react-icons/gi";
 
 const menu = [
   { href: "/dashboard", label: "Dashboard", icon: FaChartLine },
   { href: "/dashboard/financeiro", label: "Financeiro", icon: FaMoneyBillWave },
-  { href: "/dashboard/rebanho", label: "Rebanho", icon: FaCow }, // ✅ BOI
+  { href: "/dashboard/rebanho", label: "Rebanho", icon: GiCow }, // 🐂 BOI CORRETO
   { href: "/dashboard/pastagem", label: "Pastagem", icon: FaMapMarkedAlt },
   { href: "/planos", label: "Planos", icon: FaClipboardList },
 ];
@@ -33,7 +33,7 @@ export default function Sidebar() {
         </p>
       </div>
 
-      {/* MENU */}
+      {/* MENU À ESQUERDA */}
       <nav className="flex-1 space-y-1">
         {menu.map((item) => {
           const active =
@@ -59,7 +59,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* CTA */}
+      {/* CTA FIXO EMBAIXO */}
       <Link
         href="/checkout"
         className="mt-6 text-center bg-green-600 py-3 rounded-lg font-semibold hover:bg-green-500 transition"
