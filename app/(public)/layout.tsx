@@ -1,9 +1,8 @@
 // CAMINHO: app/(public)/layout.tsx
 // Layout Público — PecuariaTech
 // NÃO exibe menu superior no dashboard
-// Next.js App Router
 
-import "./globals.css";
+import "../globals.css";
 import Link from "next/link";
 import { headers } from "next/headers";
 
@@ -23,7 +22,6 @@ export default function PublicLayout({
   return (
     <html lang="pt-BR">
       <body className="bg-gray-50 text-gray-900">
-        {/* HEADER PÚBLICO — NÃO aparece no dashboard */}
         {!isDashboard && (
           <header className="bg-green-800 text-white">
             <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
