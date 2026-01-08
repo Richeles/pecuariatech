@@ -1,6 +1,6 @@
 // Paywall Oficial — PecuariaTech (Produção)
 // Next.js 16 | App Router
-// Fonte Y soberana: /api/assinaturas/status
+// Middleware BLOQUEADOR (não redireciona para vendas)
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -15,7 +15,7 @@ const ROTAS_PUBLICAS = [
 export async function middleware(req: NextRequest) {
   const { pathname, origin } = req.nextUrl;
 
-  // Liberar rotas públicas
+  // 1️⃣ Liberar rotas públicas
   if (
     ROTAS_PUBLICAS.some(
       (r) => pathname === r || pathname.startsWith(r + "/")
@@ -37,8 +37,17 @@ export async function middleware(req: NextRequest) {
 
     const data = await res.json();
 
+    // 🚫 NÃO REDIRECIONA PARA /planos
     if (!data?.ativo) {
-      return NextResponse.redirect(new URL("/planos", req.url));
+      return new NextResponse(
+        JSON.stringify({
+          error: "ASSINATURA_INATIVA",
+        }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
     return NextResponse.next();

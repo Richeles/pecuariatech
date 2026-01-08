@@ -1,9 +1,5 @@
+// app/layout.tsx
 import "./globals.css";
-
-export const metadata = {
-  title: "PecuariaTech",
-  description: "Gestão inteligente para fazendas modernas",
-};
 
 export default function RootLayout({
   children,
@@ -12,9 +8,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className="bg-[#eef5ee] text-gray-900 antialiased">
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

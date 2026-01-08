@@ -1,42 +1,9 @@
-/* Fonte Inter — nitidez máxima */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
-
-/* Tailwind */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Reset visual */
-html, body {
-  font-family: 'Inter', sans-serif;
-  background: #f8faf8; /* fallback caso a imagem não carregue */
-  color: #1a1a1a;
-  min-height: 100vh;
+html,
+body {
   margin: 0;
   padding: 0;
-}
-
-/* Container padrão sem fundo branco */
-.page-container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 20px;
-  background: none; /* <<< removemos o fundo branco */
-}
-
-/* Fundo PecuariaTech premium */
-body {
-  background-image: url("/pecuariatech.png");
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-
-  /* Ajuste leve — nitidez sem lavar imagem */
-  filter: brightness(1) contrast(1.02) saturation(1.1);
-}
-
-/* Leitura melhor sem apagar fundo */
-h1, h2, h3, h4, h5, h6, p, a {
-  text-shadow: 0 2px 4px rgba(0,0,0,0.55);
 }
