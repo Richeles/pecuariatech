@@ -30,6 +30,28 @@ export default function FinanceiroPage() {
         <AlertaCFO />
       </section>
 
+      {/* ACESSO AO DRE (SUBMÓDULO OFICIAL) */}
+      <section className="bg-white rounded-xl p-6 shadow-sm border">
+        <h3 className="text-lg font-semibold text-gray-800">
+          DRE — Demonstrativo de Resultado
+        </h3>
+
+        <p className="text-sm text-gray-600 mt-1">
+          Visualize o resultado econômico completo da fazenda, com
+          detalhamento de receitas, custos e lucro, analisado
+          automaticamente pelo CFO Autônomo.
+        </p>
+
+        <div className="mt-4">
+          <a
+            href="/dashboard/financeiro/dre"
+            className="inline-flex items-center px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition"
+          >
+            Ver DRE
+          </a>
+        </div>
+      </section>
+
       {/* VISÃO ESTRATÉGICA */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card titulo="Diagnóstico Financeiro">
@@ -58,7 +80,8 @@ export default function FinanceiroPage() {
         <p className="text-sm text-green-700 mt-2">
           À medida que você usar o sistema, o PecuariaTech aprenderá com
           suas decisões financeiras para oferecer recomendações cada vez
-          mais precisas — sempre de forma segura e anônima.
+          mais precisas — sempre de forma segura, anônima e sem expor
+          produtores de destaque.
         </p>
       </section>
     </main>
