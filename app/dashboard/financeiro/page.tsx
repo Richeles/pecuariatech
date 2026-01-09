@@ -3,6 +3,7 @@
 // Server Component | Next.js 16 App Router
 
 import { Suspense } from "react";
+import FinanceiroClient from "./FinanceiroClient";
 
 export default function FinanceiroPage() {
   return (
@@ -18,12 +19,10 @@ export default function FinanceiroPage() {
         </p>
       </header>
 
-      {/* KPIs PRINCIPAIS */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Kpi titulo="Receita" valor="—" descricao="Total do período" />
-        <Kpi titulo="Custos" valor="—" descricao="Custos operacionais" />
-        <Kpi titulo="Resultado" valor="—" descricao="Lucro ou prejuízo" />
-      </section>
+      {/* KPIs — DADOS REAIS (VIEW financeiro_resumo_view) */}
+      <Suspense fallback={<p className="text-sm text-gray-500">Carregando financeiro…</p>}>
+        <FinanceiroClient />
+      </Suspense>
 
       {/* ALERTA CFO */}
       <section>
@@ -88,25 +87,7 @@ export default function FinanceiroPage() {
   );
 }
 
-/* COMPONENTES INTERNOS SIMPLES */
-
-function Kpi({
-  titulo,
-  valor,
-  descricao,
-}: {
-  titulo: string;
-  valor: string;
-  descricao: string;
-}) {
-  return (
-    <div className="bg-white rounded-xl p-6 shadow-sm">
-      <p className="text-sm text-gray-500">{titulo}</p>
-      <p className="text-2xl font-bold text-green-700 mt-1">{valor}</p>
-      <p className="text-xs text-gray-400 mt-1">{descricao}</p>
-    </div>
-  );
-}
+/* COMPONENTES INTERNOS */
 
 function Card({
   titulo,
