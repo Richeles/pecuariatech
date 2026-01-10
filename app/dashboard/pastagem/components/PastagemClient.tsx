@@ -29,6 +29,26 @@ type ApiAlertasResponse = {
   error?: string;
 };
 
+async function safeJson<T>(res: Response, label: string): Promise<T> {
+  const text = await res.text();
+
+  let json: any = null;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    // Isso captura exatamente o erro do "<!DOCTYPE html>"
+    throw new Error(
+      `${label}: resposta inválida (não JSON). Início: ${text.slice(0, 80)}`
+    );
+  }
+
+  if (!res.ok || json?.ok === false) {
+    throw new Error(json?.error ?? `${label}: falha desconhecida`);
+  }
+
+  return json as T;
+}
+
 export default function PastagemClient() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -48,11 +68,9 @@ export default function PastagemClient() {
         fetch("/api/pastagem/alertas", { cache: "no-store" }),
       ]);
 
-      const j1 = (await r1.json()) as ApiPastagemResponse;
-      const j2 = (await r2.json()) as ApiAlertasResponse;
-
-      if (!j1.ok) throw new Error(j1.error || "Falha ao carregar Pastagem");
-      if (!j2.ok) throw new Error(j2.error || "Falha ao carregar Alertas");
+      // ✅ Blindagem total aqui:
+      const j1 = await safeJson<ApiPastagemResponse>(r1, "Pastagem");
+      const j2 = await safeJson<ApiAlertasResponse>(r2, "Alertas");
 
       setRows(j1.rows ?? []);
       setAlertas(j2.alertas ?? []);
@@ -70,11 +88,21 @@ export default function PastagemClient() {
   const kpis = useMemo(() => {
     const total = rows.length;
 
-    const disponivel = rows.filter((r) => (r.status ?? "").toLowerCase() === "disponivel").length;
+    const disponivel = rows.filter(
+      (r) => (r.status ?? "").toLowerCase() === "disponivel"
+    ).length;
+
     const ocupado = total - disponivel;
 
-    const areaTotal = rows.reduce((acc, r) => acc + (Number(r.area_ha) || 0), 0);
-    const capacidadeTotal = rows.reduce((acc, r) => acc + (Number(r.capacidade_ua) || 0), 0);
+    const areaTotal = rows.reduce(
+      (acc, r) => acc + (Number(r.area_ha) || 0),
+      0
+    );
+
+    const capacidadeTotal = rows.reduce(
+      (acc, r) => acc + (Number(r.capacidade_ua) || 0),
+      0
+    );
 
     return {
       total,
@@ -102,14 +130,15 @@ export default function PastagemClient() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold">Pastagem (Real)</h1>
         <p className="text-sm text-gray-600">
-          Monitoramento executivo do uso de piquetes + alertas operacionais (Pecuária Executiva).
+          Monitoramento executivo do uso de piquetes + alertas operacionais
+          (Pecuária Executiva).
         </p>
       </div>
 
       {erro ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <div className="font-semibold mb-1">Erro ao carregar Pastagem</div>
-          <div className="mb-3">{erro}</div>
+          <div className="mb-3 whitespace-pre-wrap">{erro}</div>
           <button
             onClick={load}
             className="rounded-md bg-red-600 px-3 py-2 text-white text-sm hover:bg-red-700"
@@ -124,7 +153,10 @@ export default function PastagemClient() {
         <KpiCard label="Disponíveis" value={kpis.disponivel} />
         <KpiCard label="Ocupados" value={kpis.ocupado} />
         <KpiCard label="Área total (ha)" value={kpis.areaTotal.toFixed(1)} />
-        <KpiCard label="Capacidade (UA)" value={kpis.capacidadeTotal.toFixed(1)} />
+        <KpiCard
+          label="Capacidade (UA)"
+          value={kpis.capacidadeTotal.toFixed(1)}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -136,19 +168,25 @@ export default function PastagemClient() {
                 <h2 className="font-semibold">Alertas</h2>
                 <p className="text-xs text-gray-500">Operacional (campo real)</p>
               </div>
-              <span className="text-xs rounded-full bg-gray-100 px-2 py-1">{kpis.alertas}</span>
+              <span className="text-xs rounded-full bg-gray-100 px-2 py-1">
+                {kpis.alertas}
+              </span>
             </div>
 
             <div className="p-4">
               {loading ? (
                 <div className="text-sm text-gray-500">Carregando alertas...</div>
               ) : alertas.length === 0 ? (
-                <div className="text-sm text-gray-500">Nenhum alerta no momento.</div>
+                <div className="text-sm text-gray-500">
+                  Nenhum alerta no momento.
+                </div>
               ) : (
                 <ul className="space-y-3">
                   {alertas.map((a, idx) => (
                     <li key={idx} className="rounded-lg border p-3">
-                      <div className="text-xs text-gray-500">{a.tipo.toUpperCase()}</div>
+                      <div className="text-xs text-gray-500">
+                        {a.tipo.toUpperCase()}
+                      </div>
                       <div className="font-medium">{a.piquete}</div>
                       <div className="text-sm text-gray-600">{a.mensagem}</div>
                     </li>
@@ -161,8 +199,9 @@ export default function PastagemClient() {
           <div className="mt-4 rounded-xl border bg-white shadow-sm p-4">
             <h3 className="font-semibold mb-1">Recomendação Executiva</h3>
             <p className="text-sm text-gray-600">
-              Se aproximar da seca e houver queda de disponibilidade, iniciar suplementação
-              antecipada (proteinado → proteico-energético) e ajustar lotação antes da perda de GMD.
+              Se aproximar da seca e houver queda de disponibilidade, iniciar
+              suplementação antecipada (proteinado → proteico-energético) e
+              ajustar lotação antes da perda de GMD.
             </p>
           </div>
         </div>
@@ -174,7 +213,8 @@ export default function PastagemClient() {
               <div>
                 <h2 className="font-semibold">Piquetes</h2>
                 <p className="text-xs text-gray-500">
-                  Fonte: <code className="text-gray-700">piquete_status_view</code>
+                  Fonte:{" "}
+                  <code className="text-gray-700">piquete_status_view</code>
                 </p>
               </div>
 
@@ -221,11 +261,15 @@ export default function PastagemClient() {
                     filtered.map((p, idx) => (
                       <tr key={idx} className="border-t">
                         <td className="px-4 py-3 font-medium">{p.nome ?? "-"}</td>
-                        <td className="px-4 py-3">{(Number(p.area_ha) || 0).toFixed(2)}</td>
+                        <td className="px-4 py-3">
+                          {(Number(p.area_ha) || 0).toFixed(2)}
+                        </td>
                         <td className="px-4 py-3">
                           <StatusBadge status={p.status ?? ""} />
                         </td>
-                        <td className="px-4 py-3">{(Number(p.capacidade_ua) || 0).toFixed(1)}</td>
+                        <td className="px-4 py-3">
+                          {(Number(p.capacidade_ua) || 0).toFixed(1)}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -234,7 +278,8 @@ export default function PastagemClient() {
             </div>
 
             <div className="p-4 border-t text-xs text-gray-500">
-              Decisão de campo: manter rotação, evitar superpastejo e antecipar suplementação na transição águas → seca.
+              Decisão de campo: manter rotação, evitar superpastejo e antecipar
+              suplementação na transição águas → seca.
             </div>
           </div>
         </div>
@@ -263,7 +308,9 @@ function StatusBadge({ status }: { status: string }) {
       : "bg-gray-100 text-gray-700 border-gray-200";
 
   return (
-    <span className={`inline-flex items-center rounded-full border px-2 py-1 text-xs ${classes}`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-2 py-1 text-xs ${classes}`}
+    >
       {status || "—"}
     </span>
   );
