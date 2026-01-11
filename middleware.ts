@@ -1,6 +1,6 @@
-// Paywall Oficial — PecuariaTech (Produção)
-// Next.js 16 | App Router
-// Middleware BLOQUEADOR (não redireciona para vendas)
+// middleware.ts
+// Paywall Oficial — PecuariaTech
+// Equação Y aplicada (API canônica liberada)
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -10,12 +10,16 @@ const ROTAS_PUBLICAS = [
   "/reset",
   "/planos",
   "/checkout",
+
+  // ✅ APIs CANÔNICAS (READ-ONLY)
+  "/api/pastagem",
+  "/api/rebanho",
 ];
 
 export async function middleware(req: NextRequest) {
   const { pathname, origin } = req.nextUrl;
 
-  // 1️⃣ Liberar rotas públicas
+  // ✅ 1) Libera rotas públicas e APIs canônicas
   if (
     ROTAS_PUBLICAS.some(
       (r) => pathname === r || pathname.startsWith(r + "/")
@@ -26,6 +30,7 @@ export async function middleware(req: NextRequest) {
   }
 
   try {
+    // ✅ 2) Paywall apenas para áreas financeiras / privadas
     const res = await fetch(`${origin}/api/assinaturas/status`, {
       credentials: "include",
       cache: "no-store",
@@ -37,16 +42,10 @@ export async function middleware(req: NextRequest) {
 
     const data = await res.json();
 
-    // 🚫 NÃO REDIRECIONA PARA /planos
     if (!data?.ativo) {
       return new NextResponse(
-        JSON.stringify({
-          error: "ASSINATURA_INATIVA",
-        }),
-        {
-          status: 403,
-          headers: { "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "ASSINATURA_INATIVA" }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
       );
     }
 
