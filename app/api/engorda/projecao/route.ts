@@ -1,6 +1,7 @@
 // app/api/engorda/projecao/route.ts
 // Engorda ULTRA — API read-only (Equação Y)
 // Fonte: view public.engorda_projecao_view
+// Nutrição Fase 2: view public.nutricao_custo_dia_view (K do Motor π)
 // Filtros: cenario, alerta, limit
 
 import { NextResponse } from "next/server";
@@ -19,6 +20,29 @@ function parseLimit(v: string | null) {
   const n = Number(v ?? "60");
   if (!Number.isFinite(n)) return 60;
   return Math.min(Math.max(n, 1), 200);
+}
+
+/**
+ * Nutrição Fase 2 — K (custo operacional)
+ * Fonte Equação Y:
+ * public.nutricao_custo_dia_view
+ *
+ * Observação:
+ * - Se a view não existir / não tiver permissão, retorna 0 sem quebrar Engorda.
+ */
+async function getNutricaoCustoDiaTotal(supabase: any) {
+  const { data, error } = await supabase
+    .from("nutricao_custo_dia_view")
+    .select("custo_nutricao_rs_dia")
+    .limit(5000);
+
+  if (error) return 0;
+
+  const total = (data || []).reduce((acc: number, row: any) => {
+    return acc + Number(row?.custo_nutricao_rs_dia || 0);
+  }, 0);
+
+  return total;
 }
 
 export async function GET(req: Request) {
@@ -50,7 +74,9 @@ export async function GET(req: Request) {
     });
 
     // 3) Validar token
-    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+    const { data: userData, error: userErr } =
+      await supabase.auth.getUser(token);
+
     if (userErr || !userData?.user) {
       return NextResponse.json(
         { error: "Unauthorized: invalid token" },
@@ -106,11 +132,57 @@ export async function GET(req: Request) {
       );
     }
 
+    // ✅ 6) Nutrição (K)
+    const custoNutricaoDiaTotal = await getNutricaoCustoDiaTotal(supabase);
+
+    /**
+     * ✅ 7) Motor π ajustado
+     * - Rateio simples por animal (Fase 2.0)
+     * - Futuro: custo por animal_id via join (Fase 2.1)
+     */
+    const totalAnimais = (data?.length || 1);
+
+    const projecao = (data ?? []).map((row: any) => {
+      const diasAteAlvo = Number(row?.dias_ate_alvo || 0);
+      const margem = Number(row?.margem_proj_rs || 0);
+      const piOriginal = Number(row?.pi_score || 0);
+
+      const custoNutricaoDiaAnimal =
+        totalAnimais > 0 ? custoNutricaoDiaTotal / totalAnimais : 0;
+
+      const custoTotalPeriodo = custoNutricaoDiaAnimal * diasAteAlvo;
+      const margemAjustada = margem - custoTotalPeriodo;
+
+      // Penalização suave no π-score com base no custo total
+      const piAjustado =
+        custoTotalPeriodo > 0
+          ? piOriginal / (1 + custoTotalPeriodo / 1000)
+          : piOriginal;
+
+      return {
+        ...row,
+
+        // ✅ Nutrição (K)
+        custo_nutricao_dia: Number(custoNutricaoDiaAnimal.toFixed(2)),
+        custo_nutricao_total_periodo: Number(custoTotalPeriodo.toFixed(2)),
+
+        // ✅ Resultado ajustado
+        margem_ajustada: Number(margemAjustada.toFixed(2)),
+        pi_score_ajustado: Number(piAjustado.toFixed(4)),
+      };
+    });
+
+    // ✅ 8) Retorno padronizado
     return NextResponse.json({
       ok: true,
       source: "engorda_projecao_view",
+      nutrição_k: {
+        source: "nutricao_custo_dia_view",
+        custo_total_rs_dia: Number(custoNutricaoDiaTotal.toFixed(2)),
+        rateio: "custo_total / total_animais_da_resposta",
+      },
       filters: { cenario, alerta, limit },
-      data: data ?? [],
+      data: projecao,
     });
   } catch (e: any) {
     return NextResponse.json(
