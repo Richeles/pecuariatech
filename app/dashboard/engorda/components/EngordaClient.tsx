@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/app/lib/supabase-browser";
 
 type ProjecaoRow = {
   animal_id: string;
@@ -57,18 +58,53 @@ function badgeColor(alerta?: string | null) {
   return "bg-muted text-muted-foreground border-border";
 }
 
-async function fetchJson(url: string) {
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || `HTTP ${res.status}`);
-  }
-  return res.json();
+/**
+ * ✅ Fetch autenticado: injeta Bearer token automaticamente.
+ * - Se token não existir: orienta login.
+ * - Se token expirar: tenta refresh e repete 1 vez.
+ */
+async function fetchJsonAuthed(url: string) {
+  const getToken = async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
+  };
+
+  let token = await getToken();
+  if (!token) throw new Error("Sessão não encontrada. Faça login para carregar a Engorda.");
+
+  const doFetch = async (bearer: string) => {
+    const res = await fetch(url, {
+      cache: "no-store",
+      headers: { Authorization: `Bearer ${bearer}` },
+    });
+
+    // se backend respondeu 401, pode ser token expirado
+    if (res.status === 401) return { res, bodyText: await res.text().catch(() => "") };
+    if (!res.ok) throw new Error((await res.text().catch(() => "")) || `HTTP ${res.status}`);
+    return { res, json: await res.json() };
+  };
+
+  // 1ª tentativa
+  const first = await doFetch(token);
+  if ((first.res as Response).ok) return (first as any).json;
+
+  // Se 401 → tenta refresh e repete 1 vez
+  await supabase.auth.refreshSession();
+  token = await getToken();
+  if (!token) throw new Error("Sessão expirou. Faça login novamente para carregar a Engorda.");
+
+  const second = await doFetch(token);
+  if ((second.res as Response).ok) return (second as any).json;
+
+  throw new Error(
+    (second as any).bodyText || "Não autorizado. Faça login novamente (token inválido)."
+  );
 }
 
 export default function EngordaClient() {
   const [cenario, setCenario] = useState<"OTIMO" | "SEGURO" | "RAPIDO">("RAPIDO");
   const [alerta, setAlerta] = useState<string>("");
+
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<ProjecaoRow[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +143,7 @@ export default function EngordaClient() {
       params.set("cenario", cenario);
       if (alerta.trim()) params.set("alerta", alerta.trim());
 
-      const json = await fetchJson(`/api/engorda/projecao?${params.toString()}`);
+      const json = await fetchJsonAuthed(`/api/engorda/projecao?${params.toString()}`);
       const data = (json?.data ?? []) as ProjecaoRow[];
       setRows(data);
     } catch (e: any) {
@@ -155,7 +191,10 @@ export default function EngordaClient() {
           </select>
         </div>
 
-        <button onClick={load} className="h-9 rounded-md border bg-background px-4 text-sm hover:bg-accent">
+        <button
+          onClick={load}
+          className="h-9 rounded-md border bg-background px-4 text-sm hover:bg-accent"
+        >
           Atualizar
         </button>
       </div>
@@ -172,9 +211,11 @@ export default function EngordaClient() {
       {error && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-4 text-sm text-red-700">
           {error}
-          <div className="mt-2 text-xs text-red-700/80">
-            Se aparecer 401, faça login e recarregue o Dashboard (token é exigido).
-          </div>
+          {error.toLowerCase().includes("sessão") && (
+            <div className="mt-2 text-xs text-red-700/80">
+              Abra: <span className="font-mono">/login</span> → faça login → volte para Engorda.
+            </div>
+          )}
         </div>
       )}
 
@@ -223,7 +264,12 @@ export default function EngordaClient() {
                     <td className="px-4 py-2">{formatBRL(r.margem_proj_rs)}</td>
                     <td className="px-4 py-2 font-semibold">{formatNum(r.pi_score, 4)}</td>
                     <td className="px-4 py-2">
-                      <span className={cn("inline-flex items-center rounded-full border px-2 py-1 text-xs", badgeColor(r.alerta_status))}>
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-full border px-2 py-1 text-xs",
+                          badgeColor(r.alerta_status)
+                        )}
+                      >
                         {r.alerta_status ?? "—"}
                       </span>
                     </td>
