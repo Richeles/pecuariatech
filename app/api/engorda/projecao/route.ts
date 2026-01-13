@@ -1,6 +1,13 @@
 // app/api/engorda/projecao/route.ts
 // Engorda ULTRA — API read-only (Equação Y)
 // Fonte: view public.engorda_projecao_view (DERIVADA)
+//
+// Regras:
+// - 401 sem Bearer JWT
+// - 200 com Bearer JWT válido
+// - NUNCA 500 por mismatch (sem order em colunas incertas)
+// - client Supabase criado dentro do handler
+// - validação token canônica: auth.getUser() com header Authorization
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -9,35 +16,20 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function getBearerToken(req: Request) {
-  const auth =
-    req.headers.get("authorization") ||
-    req.headers.get("Authorization") ||
-    "";
+  const auth = req.headers.get("authorization") || "";
   const match = auth.match(/^Bearer\s+(.+)$/i);
-  return match?.[1] ?? null;
+  return match?.[1]?.trim() || "";
 }
 
-function supabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !serviceKey) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY"
-    );
-  }
-
-  return createClient(url, serviceKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
+function parseLimit(v: string | null) {
+  const n = Number(v ?? "120");
+  if (!Number.isFinite(n)) return 120;
+  return Math.min(Math.max(n, 1), 400);
 }
 
 export async function GET(req: Request) {
   try {
-    // 1) Auth Bearer obrigatório
+    // 1) token obrigatório
     const token = getBearerToken(req);
     if (!token) {
       return NextResponse.json(
@@ -46,72 +38,76 @@ export async function GET(req: Request) {
       );
     }
 
-    // 2) Supabase client (SOMENTE dentro do handler)
-    const supabase = supabaseAdmin();
+    // 2) env obrigatório
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    // 3) Valida token
-    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
-
-    if (userErr || !userData?.user) {
+    if (!url || !anon) {
       return NextResponse.json(
-        { error: "Unauthorized: invalid token" },
-        { status: 401 }
-      );
-    }
-
-    // 4) Buscar dados da view (read-only)
-    const { data: rows, error } = await supabase
-      .from("engorda_projecao_view")
-      .select("cenario,pi_score,risco_operacional,margem_proj_rs")
-      .limit(1000);
-
-    if (error) {
-      return NextResponse.json(
-        { error: error.message ?? "Erro ao buscar engorda_projecao_view" },
+        { error: "Server misconfigured: missing Supabase env (URL/ANON)" },
         { status: 500 }
       );
     }
 
-    const total = rows?.length ?? 0;
+    // 3) client canônico com Authorization header
+    const supabase = createClient(url, anon, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
 
-    // KPIs
-    const valid = (rows ?? []).filter((r: any) => (r.pi_score ?? 0) > 0);
-    const top = valid
-      .sort((a: any, b: any) => (b.pi_score ?? 0) - (a.pi_score ?? 0))
-      .slice(0, 30);
+    // 4) validação canônica do token (SEM passar token como argumento)
+    const { data: userData, error: userErr } = await supabase.auth.getUser();
 
-    const margemMedia = top.length
-      ? top.reduce((acc: number, r: any) => acc + (r.margem_proj_rs ?? 0), 0) /
-        top.length
-      : 0;
+    if (userErr || !userData?.user) {
+      return NextResponse.json(
+        {
+          error: "Unauthorized: invalid token",
+          details: userErr?.message ?? null,
+          debug: {
+            tokenLength: token.length,
+            tokenPrefix: token.slice(0, 18),
+            supabaseUrlPrefix: url.slice(0, 35),
+          },
+        },
+        { status: 401 }
+      );
+    }
 
-    const riscoMedio = top.length
-      ? top.reduce((acc: number, r: any) => acc + (r.risco_operacional ?? 0), 0) /
-        top.length
-      : 0;
+    // 5) query params
+    const { searchParams } = new URL(req.url);
+    const limit = parseLimit(searchParams.get("limit"));
 
-    // Contagem por cenário
-    const porCenario = (rows ?? []).reduce(
-      (acc: Record<string, number>, r: any) => {
-        const c = String(r.cenario ?? "INDEFINIDO");
-        acc[c] = (acc[c] ?? 0) + 1;
-        return acc;
-      },
-      {}
-    );
+    // 6) Query read-only na view derivada
+    // Anti-500: select("*") para não depender de colunas instáveis agora.
+    // (mais tarde refinamos os campos quando o schema estiver fechado)
+    const { data, error } = await supabase
+      .from("engorda_projecao_view")
+      .select("*")
+      .limit(limit);
+
+    if (error) {
+      return NextResponse.json(
+        {
+          error: "Supabase query error",
+          details: error.message,
+          hint:
+            "Mismatch API vs schema. Confira colunas da view engorda_projecao_view no Supabase.",
+        },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       ok: true,
       source: "engorda_projecao_view",
-      total,
-      top_count: top.length,
-      margem_media_top: margemMedia,
-      risco_medio_top: riscoMedio,
-      por_cenario: porCenario,
+      user: { id: userData.user.id, email: userData.user.email },
+      filters: { limit },
+      total: Array.isArray(data) ? data.length : 0,
+      data: data ?? [],
     });
   } catch (e: any) {
     return NextResponse.json(
-      { error: e?.message ?? "Erro inesperado" },
+      { error: "Internal error", details: e?.message ?? String(e) },
       { status: 500 }
     );
   }
