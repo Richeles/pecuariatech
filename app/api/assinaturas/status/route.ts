@@ -1,7 +1,8 @@
 // app/api/assinaturas/status/route.ts
-// Âncora SaaS de Permissão — PecuariaTech
-// Equação Y: Supabase (assinaturas) → API → Middleware
-// Estável, read-only, sem crash e compatível com COOKIE e BEARER.
+// Âncora SaaS de Permissão — PecuariaTech (Equação Y)
+// Supabase (assinaturas) → API → Middleware
+// Proibido @supabase/ssr. Somente @supabase/supabase-js.
+// COOKIE FIRST (produção). Bearer opcional (debug).
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -27,25 +28,12 @@ function normalizeAtivo(status: any) {
   return v.includes("ativa") || v.includes("active") || v === "true";
 }
 
-// ✅ Plano real vem por plano_id (join com planos_legacy)
-// Se não tiver plano_id (caso legacy antigo), tenta proximo_plano
-function normalizePlanoByNivel(nivel: string | number | null | undefined) {
+function planoFromNivel(nivel: string | number | null | undefined) {
   const n = Number(nivel ?? 1);
-
   if (n >= 5) return { plano: "premium_dominus_360", nivel: 5 };
   if (n >= 4) return { plano: "empresarial", nivel: 4 };
   if (n >= 3) return { plano: "ultra", nivel: 3 };
   if (n >= 2) return { plano: "profissional", nivel: 2 };
-  return { plano: "basico", nivel: 1 };
-}
-
-function normalizePlanoFallback(row: any): { plano: string; nivel: number } {
-  const p = String(row?.proximo_plano ?? "").toLowerCase();
-
-  if (p.includes("premium")) return { plano: "premium_dominus_360", nivel: 5 };
-  if (p.includes("empres")) return { plano: "empresarial", nivel: 4 };
-  if (p.includes("ultra")) return { plano: "ultra", nivel: 3 };
-  if (p.includes("prof")) return { plano: "profissional", nivel: 2 };
   return { plano: "basico", nivel: 1 };
 }
 
@@ -58,10 +46,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ ativo: false }, { status: 200 });
     }
 
-    // ✅ Captura cookie da sessão (padrão)
+    // ✅ cookie da sessão (produção)
     const cookie = req.headers.get("cookie") ?? "";
 
-    // ✅ Captura bearer (fallback / debug)
+    // ✅ bearer opcional (debug/postman)
     const authHeader = req.headers.get("authorization") ?? "";
     const bearer =
       authHeader.toLowerCase().startsWith("bearer ")
@@ -78,7 +66,6 @@ export async function GET(req: Request) {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    // ✅ Se tem cookie válido OU bearer válido, isso retorna user
     const { data: userData } = await supabase.auth.getUser();
 
     if (!userData?.user) {
@@ -91,7 +78,6 @@ export async function GET(req: Request) {
       });
     }
 
-    // ✅ Busca assinatura mais recente
     const { data: assinaturas } = await supabase
       .from("assinaturas")
       .select("*")
@@ -111,7 +97,7 @@ export async function GET(req: Request) {
       });
     }
 
-    // ✅ Se plano_id existe → join em planos_legacy para extrair nível
+    // ✅ leitura real por plano_id -> planos_legacy (se existir)
     let plano = "basico";
     let nivel = 1;
 
@@ -122,11 +108,12 @@ export async function GET(req: Request) {
         .eq("id", ativa.plano_id)
         .maybeSingle();
 
-      const norm = normalizePlanoByNivel(planoLegacy?.nivel ?? 1);
+      const norm = planoFromNivel(planoLegacy?.nivel ?? 1);
       plano = norm.plano;
       nivel = norm.nivel;
     } else {
-      const norm = normalizePlanoFallback(ativa);
+      // fallback ultra-seguro
+      const norm = planoFromNivel(1);
       plano = norm.plano;
       nivel = norm.nivel;
     }
@@ -138,10 +125,15 @@ export async function GET(req: Request) {
       beneficios: buildBeneficios(nivel),
       expires_at: ativa.renovacao_em ?? ativa.fim_trial ?? null,
     });
-  } catch {
-    // ✅ sem crash no middleware
+  } catch (e) {
     return NextResponse.json(
-      { ativo: false, plano: "basico", nivel: 1, beneficios: buildBeneficios(1), expires_at: null },
+      {
+        ativo: false,
+        plano: "basico",
+        nivel: 1,
+        beneficios: buildBeneficios(1),
+        expires_at: null,
+      },
       { status: 200 }
     );
   }
