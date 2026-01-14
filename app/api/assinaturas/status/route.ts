@@ -1,7 +1,7 @@
 // app/api/assinaturas/status/route.ts
 // Âncora SaaS de Permissão — PecuariaTech
-// Equação Y: Supabase (assinaturas + planos_legacy) → API → Middleware
-// Read-only | runtime-only | sem SSR | sem client global
+// Equação Y: Supabase (assinaturas) → API → Middleware
+// Estável, read-only, sem crash e compatível com COOKIE e BEARER.
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -22,78 +22,66 @@ function buildBeneficios(nivel: number) {
   };
 }
 
-function getBearerToken(req: Request) {
-  const auth = req.headers.get("authorization") || "";
-  const [type, token] = auth.split(" ");
-  if (type?.toLowerCase() !== "bearer" || !token) return null;
-  return token;
+function normalizeAtivo(status: any) {
+  const v = String(status ?? "").toLowerCase();
+  return v.includes("ativa") || v.includes("active") || v === "true";
 }
 
-function normalizeNivelFromLegacy(nivel: any): number {
-  const n = String(nivel ?? "").toLowerCase();
-  if (n.includes("premium")) return 5;
-  if (n.includes("empres")) return 4;
-  if (n.includes("ultra")) return 3;
-  if (n.includes("prof")) return 2;
-  return 1;
+// ✅ Plano real vem por plano_id (join com planos_legacy)
+// Se não tiver plano_id (caso legacy antigo), tenta proximo_plano
+function normalizePlanoByNivel(nivel: string | number | null | undefined) {
+  const n = Number(nivel ?? 1);
+
+  if (n >= 5) return { plano: "premium_dominus_360", nivel: 5 };
+  if (n >= 4) return { plano: "empresarial", nivel: 4 };
+  if (n >= 3) return { plano: "ultra", nivel: 3 };
+  if (n >= 2) return { plano: "profissional", nivel: 2 };
+  return { plano: "basico", nivel: 1 };
+}
+
+function normalizePlanoFallback(row: any): { plano: string; nivel: number } {
+  const p = String(row?.proximo_plano ?? "").toLowerCase();
+
+  if (p.includes("premium")) return { plano: "premium_dominus_360", nivel: 5 };
+  if (p.includes("empres")) return { plano: "empresarial", nivel: 4 };
+  if (p.includes("ultra")) return { plano: "ultra", nivel: 3 };
+  if (p.includes("prof")) return { plano: "profissional", nivel: 2 };
+  return { plano: "basico", nivel: 1 };
 }
 
 export async function GET(req: Request) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || !serviceKey) {
-      return NextResponse.json(
-        { ativo: false, error: "missing env vars" },
-        { status: 500 }
-      );
+    if (!url || !anon) {
+      return NextResponse.json({ ativo: false }, { status: 200 });
     }
 
-    const token = getBearerToken(req);
-    if (!token) {
-      return NextResponse.json(
-        { ativo: false, error: "missing bearer token" },
-        { status: 401 }
-      );
-    }
+    // ✅ Captura cookie da sessão (padrão)
+    const cookie = req.headers.get("cookie") ?? "";
 
-    // Admin client (service role) — apenas dentro do handler
-    const supabaseAdmin = createClient(supabaseUrl, serviceKey, {
-      auth: { persistSession: false },
+    // ✅ Captura bearer (fallback / debug)
+    const authHeader = req.headers.get("authorization") ?? "";
+    const bearer =
+      authHeader.toLowerCase().startsWith("bearer ")
+        ? authHeader.slice(7).trim()
+        : "";
+
+    const supabase = createClient(url, anon, {
+      global: {
+        headers: {
+          cookie,
+          ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+        },
+      },
+      auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    // 1) validar token e obter user_id real
-    const { data: userData, error: userErr } =
-      await supabaseAdmin.auth.getUser(token);
+    // ✅ Se tem cookie válido OU bearer válido, isso retorna user
+    const { data: userData } = await supabase.auth.getUser();
 
-    if (userErr || !userData?.user?.id) {
-      return NextResponse.json(
-        { ativo: false, error: "invalid token" },
-        { status: 401 }
-      );
-    }
-
-    const userId = userData.user.id;
-
-    // 2) buscar assinatura ativa
-    const { data: assinatura, error: assErr } = await supabaseAdmin
-      .from("assinaturas")
-      .select("id, user_id, plano_id, status, criado_em, atualizado_em, fim_trial, renovacao_em")
-      .eq("user_id", userId)
-      .eq("status", "ativa")
-      .order("criado_em", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (assErr) {
-      return NextResponse.json(
-        { ativo: false, error: "db error (assinaturas)", details: assErr.message },
-        { status: 500 }
-      );
-    }
-
-    if (!assinatura?.id) {
+    if (!userData?.user) {
       return NextResponse.json({
         ativo: false,
         plano: "basico",
@@ -103,40 +91,58 @@ export async function GET(req: Request) {
       });
     }
 
-    // 3) buscar plano na tabela correta: planos_legacy (FK real)
-    let planoLegacy: any = null;
+    // ✅ Busca assinatura mais recente
+    const { data: assinaturas } = await supabase
+      .from("assinaturas")
+      .select("*")
+      .eq("user_id", userData.user.id)
+      .order("criado_em", { ascending: false })
+      .limit(10);
 
-    if (assinatura.plano_id) {
-      const { data: planoRow } = await supabaseAdmin
-        .from("planos_legacy")
-        .select("id, nome, nivel, periodicidade, preco")
-        .eq("id", assinatura.plano_id)
-        .maybeSingle();
+    const ativa = (assinaturas ?? []).find((r: any) => normalizeAtivo(r.status));
 
-      planoLegacy = planoRow ?? null;
+    if (!ativa) {
+      return NextResponse.json({
+        ativo: false,
+        plano: "basico",
+        nivel: 1,
+        beneficios: buildBeneficios(1),
+        expires_at: null,
+      });
     }
 
-    const nivel = normalizeNivelFromLegacy(planoLegacy?.nivel);
-    const plano = String(planoLegacy?.nivel ?? "basico");
+    // ✅ Se plano_id existe → join em planos_legacy para extrair nível
+    let plano = "basico";
+    let nivel = 1;
+
+    if (ativa.plano_id) {
+      const { data: planoLegacy } = await supabase
+        .from("planos_legacy")
+        .select("nivel")
+        .eq("id", ativa.plano_id)
+        .maybeSingle();
+
+      const norm = normalizePlanoByNivel(planoLegacy?.nivel ?? 1);
+      plano = norm.plano;
+      nivel = norm.nivel;
+    } else {
+      const norm = normalizePlanoFallback(ativa);
+      plano = norm.plano;
+      nivel = norm.nivel;
+    }
 
     return NextResponse.json({
       ativo: true,
       plano,
       nivel,
       beneficios: buildBeneficios(nivel),
-      expires_at: assinatura.renovacao_em ?? assinatura.fim_trial ?? null,
-      assinatura: {
-        id: assinatura.id,
-        plano_id: assinatura.plano_id,
-        criado_em: assinatura.criado_em,
-        atualizado_em: assinatura.atualizado_em,
-      },
-      plano_legacy: planoLegacy,
+      expires_at: ativa.renovacao_em ?? ativa.fim_trial ?? null,
     });
-  } catch (e: any) {
+  } catch {
+    // ✅ sem crash no middleware
     return NextResponse.json(
-      { ativo: false, error: "unhandled", details: e?.message ?? String(e) },
-      { status: 500 }
+      { ativo: false, plano: "basico", nivel: 1, beneficios: buildBeneficios(1), expires_at: null },
+      { status: 200 }
     );
   }
 }
