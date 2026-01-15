@@ -1,24 +1,31 @@
 // app/api/assinaturas/status-server/route.ts
-// SaaS por Plano — Status SERVER (cookie/session)
-// Equação Y: Supabase (assinaturas) → API canônica server → middleware
+// SaaS por Plano — Âncora de Permissão (Equação Y)
+// Server-friendly: usa cookie do Supabase (não Bearer)
+// Fonte: public.assinaturas (gravada pelo webhook Mercado Pago)
 //
-// ✅ Regras:
-// - NÃO usa Bearer token
-// - usa cookies do request (sessão Supabase)
+// Regras:
 // - read-only
-// - sempre retorna JSON estável
+// - anti-quebra: não depende de colunas inexistentes
+// - compatível com middleware
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function normalizePlano(raw: any): "basico" | "pro" | "premium" {
-  const v = String(raw ?? "").toLowerCase().trim();
-  if (!v) return "basico";
-  if (v.includes("premium") || v === "3") return "premium";
-  if (v.includes("ultra") || v.includes("prof") || v.includes("pro") || v === "2") return "pro";
+// Normaliza status vindo do banco
+function isAtiva(status: any): boolean {
+  const v = String(status ?? "").toLowerCase().trim();
+  return v === "ativa" || v.includes("ativa") || v === "active";
+}
+
+// Plano por ID (âncora)
+// Agora: como sua tabela só tem plano_id (uuid) e você ainda não mostrou
+// a tabela/view de planos com uuid -> slug, vamos derivar nível por fallback seguro.
+// Quando você confirmar o "mapa de plano_id", a gente fecha isso perfeito.
+function planoFromPlanoId(_planoId: any): "basico" | "pro" | "premium" {
+  // 🔒 fallback seguro até mapear os UUIDs reais
   return "basico";
 }
 
@@ -29,40 +36,64 @@ function planoToNivel(plano: "basico" | "pro" | "premium") {
 }
 
 function buildBeneficios(plano: "basico" | "pro" | "premium") {
-  if (plano === "premium") {
-    return { rebanho: true, pastagem: true, engorda: true, financeiro: true, cfo: true };
-  }
+  // Internacional / modular (fácil de evoluir sem quebrar middleware)
+  const base = {
+    rebanho: true,
+    pastagem: true,
+    engorda: false,
+    financeiro: false,
+    cfo: false,
+    esg: false,
+    multiusuario: false,
+  };
+
   if (plano === "pro") {
-    return { rebanho: true, pastagem: true, engorda: true, financeiro: true, cfo: false };
+    return {
+      ...base,
+      engorda: true,
+      financeiro: true,
+    };
   }
-  return { rebanho: true, pastagem: true, engorda: false, financeiro: false, cfo: false };
+
+  if (plano === "premium") {
+    return {
+      ...base,
+      engorda: true,
+      financeiro: true,
+      cfo: true,
+      esg: true,
+      multiusuario: true,
+    };
+  }
+
+  return base;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(req: Request) {
   try {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!url || !anon) {
       return NextResponse.json(
-        { error: "Server misconfigured: missing Supabase env (URL/ANON)" },
+        { error: "Server misconfigured: missing Supabase env" },
         { status: 500 }
       );
     }
 
-    // ✅ Client server-friendly: recebe cookies da requisição
-    const cookieHeader = req.headers.get("cookie") ?? "";
+    // ✅ Middleware envia cookies. Vamos repassar cookies para o Supabase.
+    const cookie = req.headers.get("cookie") ?? "";
 
     const supabase = createClient(url, anon, {
       global: {
         headers: {
-          cookie: cookieHeader,
+          cookie,
         },
       },
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    // ✅ Identifica usuário por sessão server-side
+    // 1) validar usuário por sessão (cookie)
     const { data: userData, error: userErr } = await supabase.auth.getUser();
 
     if (userErr || !userData?.user) {
@@ -74,13 +105,14 @@ export async function GET(req: NextRequest) {
 
     const userId = userData.user.id;
 
-    // ✅ Consulta assinatura
+    // 2) buscar última assinatura deste user_id
+    // Seu schema tem criado_em. Então ordenamos por criado_em DESC.
     const { data: rows, error } = await supabase
       .from("assinaturas")
-      .select("id,user_id,status,plano,plano_id,expires_at,updated_at,created_at")
+      .select("id,user_id,plano_id,status,renovacao_em,fim_trial,criado_em")
       .eq("user_id", userId)
-      .order("updated_at", { ascending: false })
-      .limit(5);
+      .order("criado_em", { ascending: false })
+      .limit(10);
 
     if (error) {
       return NextResponse.json(
@@ -90,25 +122,42 @@ export async function GET(req: NextRequest) {
     }
 
     const list = Array.isArray(rows) ? rows : [];
-    const active = list.find((r: any) => String(r?.status ?? "").toLowerCase().includes("ativa"));
+    const active = list.find((r) => isAtiva(r?.status));
 
+    // 3) sem assinatura ativa -> ativo false
     if (!active) {
       return NextResponse.json(
-        { ativo: false, plano: "basico", nivel: 1, expires_at: null, beneficios: buildBeneficios("basico") },
+        {
+          ativo: false,
+          plano: "basico",
+          nivel: 1,
+          expires_at: null,
+          beneficios: buildBeneficios("basico"),
+        },
         { status: 200 }
       );
     }
 
-    const plano = normalizePlano(active.plano ?? active.plano_id);
+    // 4) derivar plano e vencimento
+    const plano = planoFromPlanoId(active.plano_id);
     const nivel = planoToNivel(plano);
+
+    // expires_at: usamos renovacao_em primeiro, senão fim_trial
+    const expires_at = active.renovacao_em ?? active.fim_trial ?? null;
 
     return NextResponse.json(
       {
         ativo: true,
         plano,
         nivel,
-        expires_at: active.expires_at ?? null,
+        expires_at,
+        plano_id: active.plano_id ?? null,
         beneficios: buildBeneficios(plano),
+        assinatura: {
+          id: active.id ?? null,
+          status: active.status ?? null,
+          criado_em: active.criado_em ?? null,
+        },
       },
       { status: 200 }
     );

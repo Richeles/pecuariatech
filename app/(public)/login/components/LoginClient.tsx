@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/app/lib/supabase-browser";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const next = searchParams?.get("next") || "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,26 +20,27 @@ export default function LoginClient() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
+      // ✅ Login SSR (cookie) — cria sessão que o middleware enxerga
+      const r = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
       });
 
-      if (error) {
-        setErrorMsg(error.message);
+      const j = await r.json().catch(() => null);
+
+      if (!r.ok || !j?.ok) {
+        setErrorMsg(j?.error || "Falha no login. Verifique email e senha.");
         setLoading(false);
         return;
       }
 
-      // ✅ Garantia de sessão real
-      if (!data?.session?.access_token) {
-        setErrorMsg("Falha ao criar sessão. Tente novamente.");
-        setLoading(false);
-        return;
-      }
-
-      // ✅ Redirect canônico (não usar push)
-      router.replace("/dashboard");
+      // ✅ Redirecionamento canônico (SSR cookie já criado)
+      router.replace(next);
+      router.refresh();
     } catch (err: any) {
       setErrorMsg(err?.message || "Erro inesperado no login.");
     } finally {

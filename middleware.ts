@@ -1,6 +1,6 @@
 // middleware.ts
 // Paywall Oficial — PecuariaTech
-// Equação Y: Sessão (cookie) → Status assinatura (API) → Permissão
+// Equação Y: Sessão (cookie SSR) → Status assinatura (API) → Permissão
 // Objetivo: impedir loop "logou mas foi pro /planos"
 
 import { NextRequest, NextResponse } from "next/server";
@@ -11,7 +11,12 @@ const ROTAS_PUBLICAS = [
   "/reset",
   "/planos",
   "/checkout",
-  "/api/assinaturas/status",
+
+  // ✅ APIs públicas canônicas
+  "/api/auth/login",          // ✅ NOVO (login SSR)
+  "/api/assinaturas/status",  // status canônico
+
+  // APIs públicas operacionais
   "/api/pastagem",
   "/api/rebanho",
 ];
@@ -27,20 +32,19 @@ function isPublic(pathname: string) {
 
 // ✅ Detecta cookie SSR do Supabase
 function hasSupabaseSessionCookie(req: NextRequest) {
-  // Supabase costuma usar cookies com prefixo "sb-"
-  // Ex: sb-<project-ref>-auth-token, sb-access-token, etc.
-  // Aqui fazemos detecção "robusta": qualquer cookie que comece com "sb-"
+  // Supabase SSR normalmente grava cookies "sb-..."
+  // Ex: sb-<project-ref>-auth-token
   const all = req.cookies.getAll();
-  return all.some((c) => c.name.startsWith("sb-"));
+  return all.some((c) => c.name.startsWith("sb-") && Boolean(c.value));
 }
 
 export async function middleware(req: NextRequest) {
   const { pathname, origin } = req.nextUrl;
 
-  // 1) rotas públicas
+  // ✅ 1) rotas públicas
   if (isPublic(pathname)) return NextResponse.next();
 
-  // 2) protege somente áreas privadas
+  // ✅ 2) protege somente áreas privadas
   const isProtected =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/financeiro") ||
@@ -50,7 +54,7 @@ export async function middleware(req: NextRequest) {
 
   if (!isProtected) return NextResponse.next();
 
-  // ✅ 3) Gate de AUTH (não depende da API)
+  // ✅ 3) Gate de AUTH (cookie SSR do Supabase)
   if (!hasSupabaseSessionCookie(req)) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
@@ -67,17 +71,17 @@ export async function middleware(req: NextRequest) {
       },
     });
 
+    // ⚠️ status fora do ar = manda login (fallback seguro)
     if (!res.ok) {
-      // Falha do status: manda login (evita travar em planos indevidamente)
       const url = req.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("next", pathname);
       return NextResponse.redirect(url);
     }
 
-    const data = await res.json();
+    const data = await res.json().catch(() => null);
 
-    // ✅ assinatura inativa
+    // ✅ assinatura inativa = manda planos
     if (!data?.ativo) {
       const url = req.nextUrl.clone();
       url.pathname = "/planos";
