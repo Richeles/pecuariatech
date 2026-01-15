@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Suspense } from "react";
 import LoginClient from "./components/LoginClient";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +22,10 @@ export default function LoginPage() {
           Login · PecuariaTech
         </h1>
 
-        <LoginClient />
+        {/* ✅ OBRIGATÓRIO: Suspense envolvendo Client Component */}
+        <Suspense fallback={null}>
+          <LoginClient />
+        </Suspense>
 
         <div className="mt-4 text-center">
           <a
