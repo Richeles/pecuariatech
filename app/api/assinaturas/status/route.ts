@@ -1,7 +1,8 @@
 // CAMINHO: app/api/assinaturas/status/route.ts
 // Status canônico da assinatura — PecuariaTech
-// Fonte única: public.assinaturas (por user_id)
-// Equação Y: Cookie SSR → user_id → assinatura → middleware
+// Blindado com fallback automático:
+// 1) tenta view assinatura_ativa_view
+// 2) se view falhar, cai para tabela assinaturas (fonte real)
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
@@ -21,7 +22,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // ✅ Resposta que permite ler cookies do request
     const res = NextResponse.next();
 
     const supabase = createServerClient(url, anon, {
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // ✅ 1) pegar usuário da sessão (cookie SSR)
+    // 1) sessão via cookie SSR
     const { data: userData, error: userErr } = await supabase.auth.getUser();
 
     if (userErr || !userData?.user?.id) {
@@ -49,10 +49,62 @@ export async function GET(req: NextRequest) {
 
     const user_id = userData.user.id;
 
-    // ✅ 2) buscar assinatura por user_id
+    // ==========================================================
+    // 2) TENTATIVA 1 (PREFERIDA): VIEW CANÔNICA
+    // ==========================================================
+    try {
+      const { data: v, error: vErr } = await supabase
+        .from("assinatura_ativa_view")
+        .select("*")
+        .eq("user_id", user_id)
+        .limit(1)
+        .maybeSingle();
+
+      if (!vErr && v) {
+        const ativo = String(v.status).toLowerCase() === "ativa";
+
+        return NextResponse.json(
+          {
+            ativo,
+            status: v.status ?? null,
+            user_id,
+            plano_id: v.plano_id ?? null,
+            plano_codigo: v.plano_codigo ?? null,
+            plano_nome: v.plano_nome ?? null,
+            plano_nivel: v.plano_nivel ?? null,
+            metodo_pagamento: v.metodo_pagamento ?? null,
+            valor: v.valor ?? null,
+            inicio_trial: v.inicio_trial ?? null,
+            fim_trial: v.fim_trial ?? null,
+            renovacao_em: v.renovacao_em ?? null,
+            source: "view",
+          },
+          { status: 200 }
+        );
+      }
+
+      // Se view não retornou nada (sem erro):
+      if (!vErr && !v) {
+        return NextResponse.json(
+          { ativo: false, error: "no_subscription", user_id, source: "view" },
+          { status: 200 }
+        );
+      }
+
+      // Se view deu erro, cai no fallback:
+      // (não retorna aqui)
+    } catch (e: any) {
+      // caiu no fallback
+    }
+
+    // ==========================================================
+    // 3) FALLBACK DEFINITIVO: TABELA REAL public.assinaturas
+    // ==========================================================
     const { data: assinatura, error: subErr } = await supabase
       .from("assinaturas")
-      .select("id, user_id, plano_id, status, metodo_pagamento, valor")
+      .select(
+        "id, user_id, plano_id, status, metodo_pagamento, valor, inicio_trial, fim_trial, renovacao_em, criado_em, atualizado_em"
+      )
       .eq("user_id", user_id)
       .order("criado_em", { ascending: false })
       .limit(1)
@@ -67,7 +119,7 @@ export async function GET(req: NextRequest) {
 
     if (!assinatura) {
       return NextResponse.json(
-        { ativo: false, error: "no_subscription" },
+        { ativo: false, error: "no_subscription", user_id, source: "fallback" },
         { status: 200 }
       );
     }
@@ -81,7 +133,11 @@ export async function GET(req: NextRequest) {
         plano_id: assinatura.plano_id,
         metodo_pagamento: assinatura.metodo_pagamento,
         valor: assinatura.valor,
+        inicio_trial: assinatura.inicio_trial,
+        fim_trial: assinatura.fim_trial,
+        renovacao_em: assinatura.renovacao_em,
         user_id,
+        source: "fallback",
       },
       { status: 200 }
     );
