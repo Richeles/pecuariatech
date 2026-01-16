@@ -1,8 +1,11 @@
 // middleware.ts
-// Paywall Oficial — PecuariaTech Autônomo
-// Equação Y: Cookie SSR → API canônica /api/assinaturas/status → Permissão
+// Paywall Oficial — PecuariaTech (Blindagem SaaS)
+// Equação Y: Sessão (cookie SSR) → Status assinatura (API âncora) → Permissão
+// Objetivo: impedir loop "logou mas foi pro /planos" e impedir regressão por instabilidade API
 
 import { NextRequest, NextResponse } from "next/server";
+
+export const runtime = "nodejs";
 
 const ROTAS_PUBLICAS = [
   "/",
@@ -11,33 +14,28 @@ const ROTAS_PUBLICAS = [
   "/planos",
   "/checkout",
 
-  // ✅ APIs públicas canônicas
+  // APIs públicas canônicas
   "/api/auth/login",
   "/api/assinaturas/status",
 
-  // APIs públicas operacionais (read-only)
+  // módulos públicos operacionais (se existirem públicos)
   "/api/pastagem",
   "/api/rebanho",
   "/api/engorda",
 ];
 
 function isPublic(pathname: string) {
-  // arquivos internos Next + assets
-  if (pathname.startsWith("/_next")) return true;
-  if (pathname.startsWith("/favicon")) return true;
-  if (pathname.startsWith("/pecuariatech.png")) return true;
-  if (pathname.startsWith("/robots.txt")) return true;
-  if (pathname.startsWith("/sitemap")) return true;
-
-  return ROTAS_PUBLICAS.some(
-    (r) => pathname === r || pathname.startsWith(r + "/")
+  return (
+    ROTAS_PUBLICAS.some((r) => pathname === r || pathname.startsWith(r + "/")) ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon") ||
+    pathname.startsWith("/pecuariatech.png")
   );
 }
 
-// ✅ Detecta cookie SSR do Supabase
+// ✅ Detecta cookie SSR do Supabase (sb-...)
 function hasSupabaseSessionCookie(req: NextRequest) {
   const all = req.cookies.getAll();
-  // padrão: sb-<project-ref>-auth-token (ou variações)
   return all.some((c) => c.name.startsWith("sb-") && Boolean(c.value));
 }
 
@@ -48,20 +46,20 @@ function redirectLogin(req: NextRequest, pathname: string) {
   return NextResponse.redirect(url);
 }
 
-function redirectPlanos(req: NextRequest) {
+function redirectPlanos(req: NextRequest, reason: string) {
   const url = req.nextUrl.clone();
   url.pathname = "/planos";
-  url.searchParams.set("reason", "assinatura_inativa");
+  url.searchParams.set("reason", reason);
   return NextResponse.redirect(url);
 }
 
 export async function middleware(req: NextRequest) {
   const { pathname, origin } = req.nextUrl;
 
-  // ✅ 1) rotas públicas sempre liberadas
+  // 1) rotas públicas
   if (isPublic(pathname)) return NextResponse.next();
 
-  // ✅ 2) proteger só áreas privadas (NÃO inventar proteção fora disso)
+  // 2) proteger somente áreas privadas (HUB intocável)
   const isProtected =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/financeiro") ||
@@ -71,37 +69,44 @@ export async function middleware(req: NextRequest) {
 
   if (!isProtected) return NextResponse.next();
 
-  // ✅ 3) Gate AUTH (cookie SSR)
+  // 3) AUTH gate (cookie SSR)
   if (!hasSupabaseSessionCookie(req)) {
     return redirectLogin(req, pathname);
   }
 
-  // ✅ 4) Gate PAYWALL via API canônica (SEM acessar banco direto)
+  // 4) PAYWALL gate (assinatura via endpoint canônico âncora)
   try {
     const res = await fetch(`${origin}/api/assinaturas/status`, {
       cache: "no-store",
       headers: {
-        // IMPORTANTÍSSIMO: passar cookies da request, senão o endpoint não enxerga sessão SSR
+        // repassar cookie SSR para o endpoint
         cookie: req.headers.get("cookie") ?? "",
       },
     });
 
-    // se a API estiver fora do ar, fallback seguro: login (evita loop)
+    // ✅ Regra de ouro:
+    // Se o status endpoint falhar (instabilidade), NÃO mandar pro /planos.
+    // Mandar pro /login (fallback seguro). Isso evita o bug histórico.
     if (!res.ok) {
       return redirectLogin(req, pathname);
     }
 
     const data = await res.json().catch(() => null);
 
-    // assinatura inativa → planos
-    if (!data?.ativo) {
-      return redirectPlanos(req);
+    // Se vier payload inválido, tratar como instabilidade (fallback seguro)
+    if (!data || typeof data.ativo !== "boolean") {
+      return redirectLogin(req, pathname);
     }
 
-    // tudo certo
+    // ✅ Assinatura inativa = manda planos
+    if (!data.ativo) {
+      return redirectPlanos(req, "assinatura_inativa");
+    }
+
+    // ✅ Tudo ok: pode entrar
     return NextResponse.next();
   } catch {
-    // fallback seguro: login (evita loop /planos indevido)
+    // fallback seguro: nunca joga em /planos por erro interno
     return redirectLogin(req, pathname);
   }
 }
