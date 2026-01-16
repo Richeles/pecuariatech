@@ -1,3 +1,10 @@
+# ==========================================================
+# PECUARIATECH AUTÔNOMO — .gitignore OFICIAL (ULTRA BIOLÓGICA)
+# Equação Y + Triângulo 360 + Blindagem Anti-Reversão
+# Objetivo: Repo limpo, build estável, zero regressão e zero vazamento.
+# ==========================================================
+
+
 # =========================
 # DEPENDÊNCIAS
 # =========================
@@ -11,16 +18,18 @@
 !.yarn/versions
 
 # =========================
-# TESTES
+# TESTES / COVERAGE
 # =========================
 /coverage
 
 # =========================
-# NEXT.JS
+# NEXT.JS / BUILD OUTPUTS
 # =========================
 /.next/
 /out/
 /build
+/.turbo
+/.swc
 
 # =========================
 # VERCEL
@@ -33,6 +42,7 @@
 .env
 .env.*
 !.env.example
+*.local
 
 # =========================
 # LOGS LOCAIS (CRÍTICO)
@@ -40,6 +50,14 @@
 logs/
 *.log
 *.csv
+*.tsv
+*.jsonl
+
+# dumps e exportações
+*.dump
+*.sql
+*.sqlite
+*.db
 
 # =========================
 # DEBUG
@@ -55,9 +73,11 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 *.pem
+*.key
+*.crt
 
 # =========================
-# TYPESCRIPT
+# TYPESCRIPT / CACHE
 # =========================
 *.tsbuildinfo
 next-env.d.ts
@@ -72,3 +92,52 @@ next-env.d.ts
 # =========================
 backups/
 backups/*.zip
+backup_router/
+
+# =========================
+# BLOQUEIO DE ESTRUTURA ESPELHO (ANTI-QUEBRA)
+# =========================
+# Regra crítica PecuariaTech:
+# App Router oficial vive em /app.
+# Pastas espelho (src/app/...) causam rotas duplicadas e quebram build na Vercel.
+src/
+src/app/
+
+# =========================
+# ARQUIVOS DE RELATÓRIO / EXPORTS (IA/PLANILHA INTELIGENTE)
+# =========================
+# Mantemos apenas código no Git. Exportações são runtime/local.
+reports/
+exports/
+downloads/
+tmp/
+temp/
+.cache/
+
+# =========================
+# PYTHON / DATA SCIENCE (se existir)
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# =========================
+# NOTEBOOKS / DATASETS (se existir)
+# =========================
+*.ipynb
+datasets/
+data/
+
+# =========================
+# EDITORES / IDE
+# =========================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
