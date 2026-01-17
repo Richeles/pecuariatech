@@ -1,290 +1,425 @@
 "use client";
 
-// app/dashboard/cfo/CFOInsightsClient.tsx
-// CFO AUTÔNOMO — Client Component (hooks ficam aqui)
-// Equação Y: consumir somente /api/inteligencia/financeiro (read-only)
-// Triângulo 360: sinais devem vir com eixo (contabil/operacional/estrategico)
+import React, { useMemo, useState } from "react";
 
-import { useEffect, useMemo, useState } from "react";
+type Eixo360 = "contabil" | "operacional" | "estrategico";
 
-type CFOApiResponse = {
+type SinalCFO = {
+  eixo: Eixo360;
+  tipo: "alerta" | "info";
+  codigo: string;
+  severidade: "alta" | "media" | "baixa";
+  prioridade: 1 | 2 | 3 | 4 | 5;
+  mensagem: string;
+  acao_sugerida?: string;
+};
+
+type CFOResponse = {
   ok: boolean;
-  domain: string;
-  ts?: string;
-  degraded?: boolean;
-
-  kpis?: {
-    receita_total?: number;
-    custos_totais?: number;
-    resultado_operacional?: number;
-    margem_operacional_pct?: number;
-
-    // opcionais (se a API já enviar)
+  domain: "financeiro";
+  ts: string;
+  degraded: boolean;
+  kpis: {
+    receita_total: number;
+    custos_totais: number;
+    resultado_operacional: number;
+    margem_operacional_pct: number;
     saldo_caixa?: number;
     divida_total?: number;
     tendencia_3m?: string;
   };
-
-  sinais?: Array<{
-    eixo?: "contabil" | "operacional" | "estrategico" | string;
-    tipo: "alerta" | "info" | string;
-    codigo?: string;
-    mensagem?: string;
-    severidade?: "alta" | "media" | "baixa" | string;
-    acao_sugerida?: string;
+  sinais: SinalCFO[];
+  plano_acao: Array<{
+    prioridade: 1 | 2 | 3;
+    eixo: Eixo360;
+    titulo: string;
+    descricao: string;
+    impacto_estimado_brl?: number;
   }>;
-
-  resumo_executivo?: string;
+  resumo_executivo: string;
   error?: string;
 };
 
-function brl(v?: number) {
-  const n = typeof v === "number" ? v : 0;
-  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+function brl(v: number) {
+  try {
+    return (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  } catch {
+    return `R$ ${v ?? 0}`;
+  }
 }
 
-function pct(v?: number) {
-  const n = typeof v === "number" ? v : 0;
-  return `${n.toFixed(2)}%`;
+function pct(v: number) {
+  const x = Number(v || 0);
+  return `${x.toFixed(2)}%`;
+}
+
+function eixoLabel(e: Eixo360) {
+  if (e === "contabil") return "Contábil";
+  if (e === "operacional") return "Operacional";
+  return "Estratégico";
+}
+
+function severidadeTone(s: SinalCFO["severidade"]) {
+  if (s === "alta") return "bg-red-50 border-red-200 text-red-700";
+  if (s === "media") return "bg-amber-50 border-amber-200 text-amber-700";
+  return "bg-emerald-50 border-emerald-200 text-emerald-700";
+}
+
+function badgeTone(degraded: boolean, sinais: SinalCFO[]) {
+  if (degraded) return "bg-amber-100 text-amber-800 border-amber-200";
+  const hasHigh = sinais.some((x) => x.severidade === "alta" && x.tipo === "alerta");
+  if (hasHigh) return "bg-red-100 text-red-800 border-red-200";
+  const hasMed = sinais.some((x) => x.severidade === "media" && x.tipo === "alerta");
+  if (hasMed) return "bg-amber-100 text-amber-800 border-amber-200";
+  return "bg-emerald-100 text-emerald-800 border-emerald-200";
+}
+
+function statusText(degraded: boolean, sinais: SinalCFO[]) {
+  if (degraded) return "Modo seguro";
+  const hasHigh = sinais.some((x) => x.severidade === "alta" && x.tipo === "alerta");
+  if (hasHigh) return "Alerta alto";
+  const hasMed = sinais.some((x) => x.severidade === "media" && x.tipo === "alerta");
+  if (hasMed) return "Atenção";
+  return "Estável";
+}
+
+function riskScore(kpis: CFOResponse["kpis"]) {
+  // Score 0–100: heurística executiva para leitura rápida
+  const receita = Number(kpis.receita_total || 0);
+  const custos = Number(kpis.custos_totais || 0);
+  const resultado = Number(kpis.resultado_operacional || 0);
+  const margem = Number(kpis.margem_operacional_pct || 0);
+
+  let score = 15;
+  if (receita === 0 && custos > 0) score += 40;
+  if (resultado < 0) score += 30;
+  if (margem <= 5 && receita > 0) score += 15;
+  if (custos > receita && receita > 0) score += 15;
+
+  score = Math.max(0, Math.min(100, score));
+  return score;
+}
+
+function scoreTone(score: number) {
+  if (score >= 70) return "bg-red-600";
+  if (score >= 40) return "bg-amber-500";
+  return "bg-emerald-600";
+}
+
+async function fetchCFO(): Promise<CFOResponse> {
+  const r = await fetch("/api/inteligencia/financeiro?ts=" + Date.now(), {
+    method: "GET",
+    cache: "no-store",
+  });
+  if (!r.ok) throw new Error("Falha ao consultar /api/inteligencia/financeiro");
+  return r.json();
 }
 
 export default function CFOInsightsClient() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<CFOApiResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<CFOResponse | null>(null);
+  const [tab, setTab] = useState<"todos" | Eixo360>("todos");
   const [err, setErr] = useState<string | null>(null);
 
-  async function load() {
-    setLoading(true);
-    setErr(null);
+  const kpis = data?.kpis;
+  const sinais = data?.sinais ?? [];
+  const plano = data?.plano_acao ?? [];
+  const degraded = Boolean(data?.degraded);
 
+  const score = useMemo(() => (kpis ? riskScore(kpis) : 0), [kpis]);
+
+  const sinaisFiltrados = useMemo(() => {
+    if (tab === "todos") return sinais;
+    return sinais.filter((s) => s.eixo === tab);
+  }, [sinais, tab]);
+
+  const headerBadgeClass = badgeTone(degraded, sinais);
+  const headerBadgeText = statusText(degraded, sinais);
+
+  async function onRefresh() {
     try {
-      // Importante: rota protegida por cookie SSR/session
-      const res = await fetch("/api/inteligencia/financeiro", {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-store",
-      });
-
-      // Blindagem: sessão expirada
-      if (res.status === 401) {
-        throw new Error("Sessão expirada. Faça login novamente.");
-      }
-
-      // Blindagem: middleware pode redirecionar para /login (HTML)
-      const contentType = res.headers.get("content-type") || "";
-      if (!contentType.includes("application/json")) {
-        // UX correta: manda para login
-        window.location.href = "/login";
-        return;
-      }
-
-      const json = (await res.json()) as CFOApiResponse;
-
-      if (!json?.ok) {
-        throw new Error(json?.error || "Falha ao consultar inteligência.");
-      }
-
-      setData(json);
+      setErr(null);
+      setLoading(true);
+      const res = await fetchCFO();
+      setData(res);
     } catch (e: any) {
-      setErr(e?.message || "Erro inesperado no CFO.");
-      setData(null);
+      setErr(e?.message || "Erro ao carregar CFO");
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    load();
+  React.useEffect(() => {
+    onRefresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const severity = useMemo(() => {
-    const first = data?.sinais?.[0]?.severidade?.toLowerCase();
-    if (!first) return "baixa";
-    if (first.includes("alta")) return "alta";
-    if (first.includes("media")) return "media";
-    return "baixa";
-  }, [data]);
-
-  const badge = useMemo(() => {
-    if (data?.degraded)
-      return {
-        text: "MODO SEGURO",
-        cls: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      };
-
-    if (severity === "alta")
-      return { text: "ALERTA ALTO", cls: "bg-red-100 text-red-800 border-red-200" };
-
-    if (severity === "media")
-      return {
-        text: "ALERTA MÉDIO",
-        cls: "bg-orange-100 text-orange-800 border-orange-200",
-      };
-
-    return { text: "ESTÁVEL", cls: "bg-green-100 text-green-800 border-green-200" };
-  }, [data?.degraded, severity]);
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="h-5 w-72 bg-gray-100 rounded animate-pulse" />
-        <div className="h-4 w-full bg-gray-50 rounded animate-pulse" />
-        <div className="h-4 w-5/6 bg-gray-50 rounded animate-pulse" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
-          <div className="h-24 bg-gray-50 rounded-xl animate-pulse" />
-          <div className="h-24 bg-gray-50 rounded-xl animate-pulse" />
-          <div className="h-24 bg-gray-50 rounded-xl animate-pulse" />
-          <div className="h-24 bg-gray-50 rounded-xl animate-pulse" />
-        </div>
-      </div>
-    );
-  }
-
-  if (err) {
-    return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <span className="px-3 py-1 text-xs font-bold rounded-full border bg-red-50 text-red-700 border-red-200">
-            FALHA NO CFO
-          </span>
-        </div>
-
-        <p className="text-sm text-red-700">{err}</p>
-
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={load}
-            className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-gray-900 text-white font-semibold hover:bg-gray-800 transition"
-          >
-            Recarregar CFO
-          </button>
-
-          <a
-            href="/login"
-            className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 font-semibold hover:bg-gray-50 transition"
-          >
-            Ir para Login
-          </a>
-        </div>
-
-        <p className="text-xs text-gray-500">
-          Fonte esperada:{" "}
-          <code className="px-1 py-0.5 bg-gray-100 rounded">/api/inteligencia/financeiro</code>.
-        </p>
-      </div>
-    );
-  }
-
-  const k = data?.kpis || {};
-  const sinais = data?.sinais || [];
-
   return (
-    <div className="space-y-6">
-      {/* TOPO */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-xl font-bold text-gray-900">CFO Autônomo — Insights</h2>
-          <p className="text-sm text-gray-600">
-            KPIs (DRE) + sinais (Triângulo 360), gerados na API.
-          </p>
-        </div>
+    <div className="max-w-6xl mx-auto px-6 py-10">
+      {/* HERO EXECUTIVO */}
+      <div className="rounded-3xl border bg-white shadow-sm overflow-hidden">
+        <div className="px-7 py-6 border-b bg-gradient-to-r from-gray-50 to-white">
+          <div className="flex items-start justify-between gap-6">
+            <div>
+              <div className="text-xs uppercase tracking-widest text-gray-500 font-semibold">
+                CFO Autônomo • PecuariaTech Autônomo
+              </div>
+              <h1 className="mt-2 text-2xl font-extrabold text-gray-900">
+                Inteligência Financeira Executiva
+              </h1>
+              <p className="mt-2 text-sm text-gray-600 max-w-2xl">
+                Insights gerados por DRE (VIEW canônica) + Triângulo 360 (Contábil/Operacional/Estratégico),
+                no padrão Equação Y. Sem alteração de HUB, Router ou Banco — apenas leitura read-only.
+              </p>
+            </div>
 
-        <span className={`px-3 py-1 text-xs font-bold rounded-full border ${badge.cls}`}>
-          {badge.text}
-        </span>
-      </div>
+            <div className="flex items-center gap-3">
+              <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold ${headerBadgeClass}`}>
+                {headerBadgeText.toUpperCase()}
+                {degraded && <span className="opacity-80">• degraded</span>}
+              </span>
 
-      {/* RESUMO */}
-      <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
-        <p className="text-sm text-gray-700 font-semibold">Resumo Executivo</p>
-        <p className="text-gray-900 mt-2">{data?.resumo_executivo || "Sem resumo disponível."}</p>
-      </div>
-
-      {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-gray-200 rounded-2xl p-5">
-          <p className="text-xs text-gray-500">Receita total</p>
-          <p className="text-2xl font-bold text-gray-900 mt-2">{brl(k.receita_total)}</p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-2xl p-5">
-          <p className="text-xs text-gray-500">Custos totais</p>
-          <p className="text-2xl font-bold text-gray-900 mt-2">{brl(k.custos_totais)}</p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-2xl p-5">
-          <p className="text-xs text-gray-500">Resultado operacional</p>
-          <p className="text-2xl font-bold text-gray-900 mt-2">{brl(k.resultado_operacional)}</p>
-          <p className="text-xs text-gray-500 mt-1">
-            Margem: <span className="font-semibold">{pct(k.margem_operacional_pct)}</span>
-          </p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-2xl p-5">
-          <p className="text-xs text-gray-500">Tendência 3 meses</p>
-          <p className="text-2xl font-bold text-gray-900 mt-2">
-            {(k.tendencia_3m || "—").toString()}
-          </p>
-        </div>
-      </div>
-
-      {/* SINAIS (Triângulo 360) */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-gray-900">Sinais CFO (Triângulo 360)</h3>
-          <button
-            onClick={load}
-            className="px-4 py-2 rounded-xl bg-gray-900 text-white font-semibold hover:bg-gray-800 transition"
-          >
-            Atualizar
-          </button>
-        </div>
-
-        {sinais.length === 0 ? (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-5">
-            <p className="text-green-800 font-semibold">Nenhum alerta crítico no momento.</p>
-            <p className="text-green-700 text-sm mt-1">CFO indica estabilidade financeira.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {sinais.map((s, idx) => (
-              <div
-                key={`${s.codigo || "sinal"}-${idx}`}
-                className="bg-white border border-gray-200 rounded-2xl p-5"
+              <button
+                onClick={onRefresh}
+                disabled={loading}
+                className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-bold text-gray-900">
-                    {(s.tipo || "sinal").toUpperCase()}{" "}
-                    <span className="text-xs font-semibold text-gray-500">
-                      {s.eixo ? `• eixo: ${s.eixo}` : ""}
-                    </span>
-                  </p>
-                  <span className="text-xs px-3 py-1 rounded-full border bg-gray-50 text-gray-700 border-gray-200">
-                    Severidade: {s.severidade || "—"}
+                {loading ? "Atualizando..." : "Atualizar"}
+              </button>
+            </div>
+          </div>
+
+          {/* Barra de risco */}
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="rounded-2xl border bg-white p-5">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-semibold text-gray-900">Risco de Caixa (Score)</div>
+                <div className="text-xs text-gray-500">0–100</div>
+              </div>
+              <div className="mt-3 h-3 w-full rounded-full bg-gray-100 overflow-hidden">
+                <div className={`h-3 ${scoreTone(score)}`} style={{ width: `${score}%` }} />
+              </div>
+              <div className="mt-2 text-xs text-gray-600">
+                Score atual: <span className="font-bold text-gray-900">{score}</span>
+                {degraded ? " • (modo seguro)" : " • (heurística executiva)"}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border bg-white p-5">
+              <div className="text-sm font-semibold text-gray-900">Resumo Executivo</div>
+              <div className="mt-2 text-sm text-gray-700 leading-relaxed">
+                {data?.resumo_executivo || "Carregando resumo..."}
+              </div>
+              {data?.error && (
+                <div className="mt-2 text-xs text-amber-700">
+                  Motivo interno: <span className="font-mono">{data.error}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border bg-white p-5">
+              <div className="text-sm font-semibold text-gray-900">Fonte e Timestamp</div>
+              <div className="mt-2 text-xs text-gray-600">
+                <div>
+                  Fonte: <span className="font-mono">/api/inteligencia/financeiro</span> (read-only)
+                </div>
+                <div className="mt-1">
+                  Atualização:{" "}
+                  <span className="font-semibold text-gray-900">
+                    {data?.ts ? new Date(data.ts).toLocaleString("pt-BR") : "—"}
                   </span>
                 </div>
-
-                <p className="text-gray-700 mt-2">{s.mensagem || "Sem mensagem."}</p>
-
-                {s.acao_sugerida ? (
-                  <div className="mt-3 text-sm bg-gray-50 border border-gray-200 rounded-xl p-3">
-                    <p className="text-gray-600 font-semibold">Ação sugerida</p>
-                    <p className="text-gray-900 mt-1">{s.acao_sugerida}</p>
-                  </div>
-                ) : null}
               </div>
-            ))}
+              {err && <div className="mt-3 text-xs text-red-700">{err}</div>}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* RODAPÉ */}
-      <div className="text-xs text-gray-500">
-        Fonte:{" "}
-        <code className="px-1 py-0.5 bg-gray-100 rounded">/api/inteligencia/financeiro</code>{" "}
-        (read-only).
+        {/* KPIs */}
+        <div className="px-7 py-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <KPI title="Receita total" value={brl(kpis?.receita_total ?? 0)} subtitle="Mês corrente (DRE)" />
+            <KPI title="Custos totais" value={brl(kpis?.custos_totais ?? 0)} subtitle="Fixos + variáveis" />
+            <KPI
+              title="Resultado operacional"
+              value={brl(kpis?.resultado_operacional ?? 0)}
+              subtitle={`Margem: ${pct(kpis?.margem_operacional_pct ?? 0)}`}
+              emphasis={Number(kpis?.resultado_operacional ?? 0) < 0 ? "neg" : "pos"}
+            />
+            <KPI title="Tendência 3 meses" value={(kpis?.tendencia_3m ?? "misto").toString()} subtitle="Direção do negócio" />
+          </div>
+
+          {/* Plano de Ação */}
+          <div className="mt-8">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-extrabold text-gray-900">Plano de Ação do CFO (Top 3)</h2>
+                <p className="text-sm text-gray-600">
+                  Ações priorizadas por severidade + urgência (Triângulo 360).
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {plano.length === 0 ? (
+                <div className="lg:col-span-3 rounded-2xl border bg-gray-50 p-6 text-sm text-gray-700">
+                  Sem plano de ação disponível. {degraded ? "Em modo seguro o motor não recomenda ações." : "Sem ações críticas no momento."}
+                </div>
+              ) : (
+                plano.map((a) => (
+                  <div key={`${a.prioridade}-${a.eixo}`} className="rounded-2xl border bg-white p-5 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                        Prioridade {a.prioridade}
+                      </span>
+                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
+                        {eixoLabel(a.eixo)}
+                      </span>
+                    </div>
+                    <div className="mt-3 text-base font-extrabold text-gray-900">{a.titulo}</div>
+                    <div className="mt-2 text-sm text-gray-700 leading-relaxed">{a.descricao}</div>
+                    {typeof a.impacto_estimado_brl === "number" && (
+                      <div className="mt-4 rounded-xl border bg-gray-50 px-4 py-3 text-sm">
+                        <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">Impacto estimado</div>
+                        <div className="mt-1 text-lg font-extrabold text-gray-900">{brl(a.impacto_estimado_brl)}</div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Sinais */}
+          <div className="mt-10">
+            <div className="flex items-end justify-between gap-4 flex-wrap">
+              <div>
+                <h2 className="text-lg font-extrabold text-gray-900">Sinais CFO (Triângulo 360)</h2>
+                <p className="text-sm text-gray-600">
+                  Alertas e infos por eixo: Contábil, Operacional e Estratégico.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <TabButton active={tab === "todos"} onClick={() => setTab("todos")}>
+                  Todos
+                </TabButton>
+                <TabButton active={tab === "contabil"} onClick={() => setTab("contabil")}>
+                  Contábil
+                </TabButton>
+                <TabButton active={tab === "operacional"} onClick={() => setTab("operacional")}>
+                  Operacional
+                </TabButton>
+                <TabButton active={tab === "estrategico"} onClick={() => setTab("estrategico")}>
+                  Estratégico
+                </TabButton>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {sinaisFiltrados.length === 0 ? (
+                <div className="lg:col-span-2 rounded-2xl border bg-emerald-50 p-6 text-sm text-emerald-900">
+                  Nenhum sinal relevante nesse eixo no momento.
+                </div>
+              ) : (
+                sinaisFiltrados.map((s, idx) => (
+                  <div
+                    key={`${s.codigo}-${idx}`}
+                    className={`rounded-2xl border p-5 shadow-sm ${severidadeTone(s.severidade)}`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-widest opacity-80">
+                          {eixoLabel(s.eixo)} • {s.tipo === "alerta" ? "ALERTA" : "INFO"}
+                        </div>
+                        <div className="mt-2 text-base font-extrabold">
+                          {s.mensagem}
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="rounded-full border bg-white/70 px-3 py-1 text-xs font-bold">
+                          Severidade: {s.severidade}
+                        </div>
+                        <div className="mt-2 rounded-full border bg-white/70 px-3 py-1 text-xs font-bold">
+                          Prioridade: {s.prioridade}
+                        </div>
+                      </div>
+                    </div>
+
+                    {s.acao_sugerida && (
+                      <div className="mt-4 rounded-xl border bg-white/70 px-4 py-3 text-sm text-gray-900">
+                        <div className="text-xs font-bold text-gray-600 uppercase tracking-widest">Ação sugerida</div>
+                        <div className="mt-1">{s.acao_sugerida}</div>
+                      </div>
+                    )}
+
+                    <div className="mt-3 text-xs opacity-75 font-mono">{s.codigo}</div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="mt-8 rounded-2xl border bg-emerald-50 p-6 text-sm text-emerald-900">
+              <div className="font-extrabold">CFO isolado e blindado (Equação Y)</div>
+              <div className="mt-1">
+                Esta página não altera HUB, não altera Router, não altera banco.
+                Apenas consome a API read-only: <span className="font-mono">/api/inteligencia/financeiro</span>.
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+function KPI({
+  title,
+  value,
+  subtitle,
+  emphasis,
+}: {
+  title: string;
+  value: string;
+  subtitle?: string;
+  emphasis?: "neg" | "pos";
+}) {
+  const tone =
+    emphasis === "neg"
+      ? "border-red-200 bg-red-50"
+      : emphasis === "pos"
+      ? "border-emerald-200 bg-emerald-50"
+      : "border-gray-200 bg-white";
+
+  return (
+    <div className={`rounded-2xl border p-5 shadow-sm ${tone}`}>
+      <div className="text-xs font-bold uppercase tracking-widest text-gray-500">{title}</div>
+      <div className="mt-2 text-2xl font-extrabold text-gray-900">{value}</div>
+      {subtitle && <div className="mt-1 text-xs text-gray-600">{subtitle}</div>}
+    </div>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={
+        active
+          ? "rounded-xl bg-black px-4 py-2 text-xs font-bold text-white"
+          : "rounded-xl border bg-white px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50"
+      }
+    >
+      {children}
+    </button>
   );
 }
