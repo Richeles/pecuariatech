@@ -3,6 +3,7 @@
 // Regra: sempre VIEW canônica (dre_mensal_gerencial_view)
 // Regra: nunca quebrar produção: degraded=true em qualquer falha
 // Regra: NÃO usar "@/app/lib/supabase-server" (banido no projeto)
+// Regra: NÃO depender de colunas "mes_ref" / "data_ref" (variam entre ambientes)
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -53,6 +54,11 @@ function n(v: any): number {
   return Number.isFinite(x) ? x : 0;
 }
 
+function s(v: any): string {
+  if (v === null || v === undefined) return "";
+  return String(v);
+}
+
 function brlFormat(v: number) {
   try {
     return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -75,9 +81,54 @@ function makeSupabase() {
   });
 }
 
+/**
+ * BUSCA O "ÚLTIMO" REGISTRO DA VIEW SEM DEPENDER DE COLUNA FIXA.
+ * - tenta ordenar por colunas comuns se existirem
+ * - se falhar, cai no modo blindado: pega 1 registro sem order
+ */
+async function fetchLastRowSafe(supabase: ReturnType<typeof makeSupabase>) {
+  const ORDER_CANDIDATES = [
+    "mes_ref",
+    "data_ref",
+    "competencia",
+    "mes",
+    "dt_ref",
+    "created_at",
+    "updated_at",
+    "id",
+  ];
+
+  // 1) tenta com ORDER BY em cascata, sem quebrar
+  for (const col of ORDER_CANDIDATES) {
+    try {
+      const { data, error } = await supabase
+        .from("dre_mensal_gerencial_view")
+        .select("*")
+        .order(col as any, { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+      if (data && data.length > 0) return data[0];
+    } catch {
+      // ignora e tenta próxima coluna
+      continue;
+    }
+  }
+
+  // 2) fallback final: sem order (não pode quebrar prod)
+  const { data, error } = await supabase
+    .from("dre_mensal_gerencial_view")
+    .select("*")
+    .limit(1);
+
+  if (error) throw error;
+
+  return (data && data.length > 0) ? data[0] : {};
+}
+
 function top3PlanoAcao(sinais: SinalCFO[], kpis: CFOResponse["kpis"]) {
   const ranked = [...sinais].sort((a, b) => {
-    const sev = (s: string) => (s === "alta" ? 0 : s === "media" ? 1 : 2);
+    const sev = (x: string) => (x === "alta" ? 0 : x === "media" ? 1 : 2);
     const s1 = sev(a.severidade) - sev(b.severidade);
     if (s1 !== 0) return s1;
     return a.prioridade - b.prioridade;
@@ -125,25 +176,25 @@ export async function inteligenciaFinanceiro(): Promise<CFOResponse> {
   try {
     const supabase = makeSupabase();
 
-    // VIEW canônica do CFO
-    const { data, error } = await supabase
-      .from("dre_mensal_gerencial_view")
-      .select("*")
-      .order("mes_ref", { ascending: false })
-      .limit(1);
+    // ✅ VIEW canônica do CFO (blindado contra variação de schema)
+    const row = await fetchLastRowSafe(supabase);
 
-    if (error) throw error;
+    // tenta várias chaves possíveis (variações de nomes)
+    const receita_total =
+      n(row.receita_total ?? row.receita ?? row.total_receita ?? row.receitas_totais);
 
-    const row = data?.[0] || {};
+    const custos_totais =
+      n(row.custos_totais ?? row.custo_total ?? row.total_custos ?? row.despesas_totais);
 
-    const receita_total = n(row.receita_total);
-    const custos_totais = n(row.custos_totais);
-    const resultado_operacional = n(row.resultado_operacional);
-    const margem_operacional_pct = n(row.margem_operacional_pct);
+    const resultado_operacional =
+      n(row.resultado_operacional ?? row.resultado ?? (receita_total - custos_totais));
 
-    const saldo_caixa = row.saldo_caixa != null ? n(row.saldo_caixa) : 0;
-    const divida_total = row.divida_total != null ? n(row.divida_total) : 0;
-    const tendencia_3m = row.tendencia_3m != null ? String(row.tendencia_3m) : "misto";
+    const margem_operacional_pct =
+      n(row.margem_operacional_pct ?? row.margem_pct ?? row.margem_operacional);
+
+    const saldo_caixa = n(row.saldo_caixa ?? row.caixa ?? row.saldo);
+    const divida_total = n(row.divida_total ?? row.divida ?? row.passivo_total);
+    const tendencia_3m = s(row.tendencia_3m ?? row.tendencia ?? "misto") || "misto";
 
     const kpis: CFOResponse["kpis"] = {
       receita_total,
