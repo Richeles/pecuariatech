@@ -1,33 +1,30 @@
 // app/lib/planos/permissoes.ts
-// ÂNCORA CANÔNICA DE PERMISSÕES POR PLANO
-// Equação Y: Plano → Permissões (DERIVADO)
-// Triângulo 360: Operacional + Financeiro + Estratégico
+// ÂNCORA CANÔNICA — Equação Y
+// Nunca importar API aqui. Apenas regra pura.
 
-export type PlanoInterno = "basico" | "pro" | "premium";
+export type PlanoNivel =
+  | "basico"
+  | "profissional"
+  | "ultra"
+  | "empresarial"
+  | "premium_dominus";
 
-export type PermissoesPlano = {
-  // Módulos base
+export type Permissoes = {
   rebanho: boolean;
   pastagem: boolean;
 
-  // Engorda
   engorda_base: boolean;
   engorda_ultra: boolean;
 
-  // Financeiro
   financeiro: boolean;
   cfo: boolean;
 
-  // Estratégico
   esg: boolean;
-
-  // SaaS
   multiusuario: boolean;
 };
 
-// 🎯 FONTE ÚNICA DA VERDADE
-export function getPermissoes(plano: PlanoInterno): PermissoesPlano {
-  const base: PermissoesPlano = {
+export function permissoesDoPlano(plano: PlanoNivel): Permissoes {
+  const base: Permissoes = {
     rebanho: true,
     pastagem: true,
 
@@ -41,25 +38,44 @@ export function getPermissoes(plano: PlanoInterno): PermissoesPlano {
     multiusuario: false,
   };
 
-  if (plano === "pro") {
-    return {
-      ...base,
-      engorda_base: true,
-      financeiro: true,
-    };
-  }
+  switch (plano) {
+    case "profissional":
+      return {
+        ...base,
+        engorda_base: true,
+        financeiro: true,
+      };
 
-  if (plano === "premium") {
-    return {
-      ...base,
-      engorda_base: true,
-      engorda_ultra: true,
-      financeiro: true,
-      cfo: true,
-      esg: true,
-      multiusuario: true,
-    };
-  }
+    case "ultra":
+      return {
+        ...base,
+        engorda_base: true,
+        engorda_ultra: true,
+        financeiro: true,
+      };
 
-  return base;
+    case "empresarial":
+      return {
+        ...base,
+        engorda_base: true,
+        engorda_ultra: true,
+        financeiro: true,
+        cfo: true,
+        multiusuario: true,
+      };
+
+    case "premium_dominus":
+      return {
+        ...base,
+        engorda_base: true,
+        engorda_ultra: true,
+        financeiro: true,
+        cfo: true,
+        esg: true,
+        multiusuario: true,
+      };
+
+    default:
+      return base;
+  }
 }
