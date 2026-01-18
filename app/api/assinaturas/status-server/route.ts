@@ -11,7 +11,7 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { permissoesDoPlano } from "@/app/lib/planos/permissoes"; // ✅ DERIVADO canônico
+import { permissoesDoPlano, PlanoInterno } from "@/app/lib/planos/permissoes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,13 +25,10 @@ function isAtiva(status: any): boolean {
   return v === "ativa" || v === "active" || v.includes("ativa");
 }
 
-// ⚠️ Fallback SEGURO
+// ⚠️ Fallback seguro
 // Enquanto não houver mapa plano_id → plano_slug
-export type PlanoInterno = "basico" | "pro" | "premium";
-
 function planoFromPlanoId(_planoId: any): PlanoInterno {
-  // 🔒 fallback seguro (não quebra middleware nem UI)
-  // (quando mapear UUIDs reais, aqui vira lookup real)
+  // 🔒 SAFE DEFAULT
   return "basico";
 }
 
@@ -39,49 +36,6 @@ function planoToNivel(plano: PlanoInterno): number {
   if (plano === "premium") return 3;
   if (plano === "pro") return 2;
   return 1;
-}
-
-// -------------------------
-// Benefícios LEGADOS (fallback)
-// -------------------------
-// Mantidos APENAS para compatibilidade retroativa.
-// A fonte oficial é permissoesDoPlano(plano)
-function buildBeneficiosLegacy(plano: PlanoInterno) {
-  const base = {
-    rebanho: true,
-    pastagem: true,
-
-    engorda_base: false,
-    engorda_ultra: false,
-
-    financeiro: false,
-    cfo: false,
-
-    esg: false,
-    multiusuario: false,
-  };
-
-  if (plano === "pro") {
-    return {
-      ...base,
-      engorda_base: true,
-      financeiro: true,
-    };
-  }
-
-  if (plano === "premium") {
-    return {
-      ...base,
-      engorda_base: true,
-      engorda_ultra: true,
-      financeiro: true,
-      cfo: true,
-      esg: true,
-      multiusuario: true,
-    };
-  }
-
-  return base;
 }
 
 // -------------------------
@@ -100,7 +54,7 @@ export async function GET(req: Request) {
       );
     }
 
-    // ✅ Middleware envia cookie → repassamos ao Supabase
+    // ✅ Cookie SSR (middleware → API)
     const cookie = req.headers.get("cookie") ?? "";
 
     const supabase = createClient(url, anon, {
@@ -118,12 +72,7 @@ export async function GET(req: Request) {
           plano: "basico",
           nivel: 1,
           expires_at: null,
-
-          // ✅ Fonte oficial (Equação Y)
           beneficios: permissoesDoPlano("basico"),
-
-          // ⚠️ fallback compat
-          beneficios_legacy: buildBeneficiosLegacy("basico"),
         },
         { status: 200 }
       );
@@ -131,10 +80,10 @@ export async function GET(req: Request) {
 
     const userId = userData.user.id;
 
-    // 2) Buscar assinaturas do usuário (última primeiro)
+    // 2) Buscar última assinatura
     const { data: rows, error } = await supabase
       .from("assinaturas")
-      .select("id,user_id,plano_id,status,renovacao_em,fim_trial,criado_em")
+      .select("id, user_id, plano_id, status, renovacao_em, fim_trial, criado_em")
       .eq("user_id", userId)
       .order("criado_em", { ascending: false })
       .limit(10);
@@ -157,16 +106,13 @@ export async function GET(req: Request) {
           plano: "basico",
           nivel: 1,
           expires_at: null,
-
-          // ✅ Fonte oficial
           beneficios: permissoesDoPlano("basico"),
-          beneficios_legacy: buildBeneficiosLegacy("basico"),
         },
         { status: 200 }
       );
     }
 
-    // 4) Derivações (Equação Y)
+    // 4) Derivação canônica (Equação Y)
     const plano = planoFromPlanoId(active.plano_id);
     const nivel = planoToNivel(plano);
     const expires_at = active.renovacao_em ?? active.fim_trial ?? null;
@@ -178,13 +124,7 @@ export async function GET(req: Request) {
         nivel,
         expires_at,
         plano_id: active.plano_id ?? null,
-
-        // ✅ PERMISSÕES CANÔNICAS
         beneficios: permissoesDoPlano(plano),
-
-        // ⚠️ compat retroativa
-        beneficios_legacy: buildBeneficiosLegacy(plano),
-
         assinatura: {
           id: active.id ?? null,
           status: active.status ?? null,
