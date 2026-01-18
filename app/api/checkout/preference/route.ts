@@ -1,25 +1,19 @@
-// CAMINHO: app/api/checkout/preference/route.ts
-// Next.js 16 + TypeScript strict
+// app/api/checkout/preference/route.ts
+// Next.js 16 + TS strict
 // Checkout Mercado Pago — Equação Y preservada
+//
+// ✅ Regra anti-build-break:
+// - NUNCA validar env ou instanciar MercadoPagoConfig no topo do arquivo
+// - tudo dentro do handler (runtime only)
 
 import { NextRequest, NextResponse } from "next/server";
 import MercadoPagoConfig, { Preference } from "mercadopago";
 
-// ================================
-// CONFIGURAÇÃO MERCADO PAGO (SERVER)
-// ================================
-if (!process.env.MERCADOPAGO_ACCESS_TOKEN) {
-  throw new Error("MERCADOPAGO_ACCESS_TOKEN não configurado");
-}
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-const mp = new MercadoPagoConfig({
-  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
-});
-
-// ================================
-// PLANOS — FONTE SIMPLES (CHECKOUT)
-// A FONTE REAL CONTINUA NO WEBHOOK
-// ================================
+// PLANOS — Fonte simples (Checkout)
+// A fonte real continua no webhook (Equação Y)
 const PLANOS: Record<
   string,
   {
@@ -43,7 +37,6 @@ const PLANOS: Record<
     titulo: "Plano Empresarial",
     precos: { mensal: 159.19, trimestral: 397.98, anual: 1591.9 },
   },
-  // ✅ PADRÃO DEFINITIVO
   premium_dominus: {
     titulo: "Premium Dominus 360°",
     precos: { mensal: 318.49, trimestral: 796.23, anual: 3184.9 },
@@ -52,41 +45,47 @@ const PLANOS: Record<
 
 export async function POST(req: NextRequest) {
   try {
+    // ✅ env runtime only
+    const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    if (!MP_TOKEN) {
+      return NextResponse.json(
+        { error: "MERCADOPAGO_ACCESS_TOKEN não configurado (runtime)" },
+        { status: 500 }
+      );
+    }
+
     const { plano, user_id, periodo } = await req.json();
 
     // ================================
     // VALIDAÇÕES FORTES
     // ================================
     if (!plano || !PLANOS[plano]) {
-      return NextResponse.json(
-        { error: "Plano inválido" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
     }
 
     if (!user_id || typeof user_id !== "string") {
-      return NextResponse.json(
-        { error: "Usuário inválido" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Usuário inválido" }, { status: 400 });
     }
 
     if (!["mensal", "trimestral", "anual"].includes(periodo)) {
-      return NextResponse.json(
-        { error: "Período inválido" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Período inválido" }, { status: 400 });
     }
 
     const planoSelecionado = PLANOS[plano];
     const preco = planoSelecionado.precos[periodo];
 
-    // ================================
-    // EQUAÇÃO Y — REFERÊNCIA EXTERNA
-    // ================================
-    const externalReference = `${user_id}|${plano}|${periodo}`;
+    if (!Number.isFinite(Number(preco)) || Number(preco) <= 0) {
+      return NextResponse.json({ error: "Preço inválido" }, { status: 400 });
+    }
 
+    // ================================
+    // Mercado Pago runtime only
+    // ================================
+    const mp = new MercadoPagoConfig({ accessToken: MP_TOKEN });
     const preference = new Preference(mp);
+
+    // Equação Y — referência externa
+    const externalReference = `${user_id}|${plano}|${periodo}`;
 
     const result = await preference.create({
       items: [
@@ -95,7 +94,7 @@ export async function POST(req: NextRequest) {
           title: `${planoSelecionado.titulo} (${periodo})`,
           quantity: 1,
           currency_id: "BRL",
-          unit_price: preco,
+          unit_price: Number(preco),
         },
       ],
       external_reference: externalReference,
@@ -108,19 +107,17 @@ export async function POST(req: NextRequest) {
       statement_descriptor: "PECUARIATECH",
     });
 
-    if (!result.init_point) {
+    const init_point = (result as any)?.init_point;
+    if (!init_point) {
       throw new Error("Mercado Pago não retornou init_point");
     }
 
-    return NextResponse.json({ init_point: result.init_point });
+    return NextResponse.json({ init_point }, { status: 200 });
   } catch (err: any) {
     console.error("Erro Mercado Pago:", err);
 
     return NextResponse.json(
-      {
-        error: "Erro ao criar checkout",
-        detalhe: err?.message ?? err,
-      },
+      { error: "Erro ao criar checkout", detalhe: err?.message ?? String(err) },
       { status: 500 }
     );
   }
