@@ -1,10 +1,13 @@
 // middleware.ts
-// Paywall Oficial — PecuariaTech
-// Equação Y: Sessão (cookie SSR) → Status assinatura (API canônica) → Permissão
-// Blindagem: AUTH falha ≠ PAYWALL
+// Paywall Oficial — PecuariaTech (SaaS por Plano)
+// Equação Y: Cookie SSR → Status assinatura (API canônica status-server) → Permissões (beneficios)
+// Blindagem: AUTH falha ≠ PAYWALL (não manda logado para /planos por erro técnico)
 
 import { NextRequest, NextResponse } from "next/server";
 
+// ===============================
+// Rotas públicas (não passam no paywall)
+// ===============================
 const ROTAS_PUBLICAS = [
   "/",
   "/login",
@@ -12,12 +15,16 @@ const ROTAS_PUBLICAS = [
   "/reset-password",
   "/planos",
   "/checkout",
+  "/inicio",
+  "/sucesso",
+  "/erro",
 
   // APIs públicas canônicas
   "/api/auth/login",
-  "/api/assinaturas/status",
+  "/api/assinaturas/status-server", // ✅ âncora canônica SSR cookie-first
+  "/api/assinaturas/status", // mantém compat (se existir uso antigo)
 
-  // APIs públicas operacionais
+  // APIs públicas operacionais (se você quer manter acessível)
   "/api/pastagem",
   "/api/rebanho",
 ];
@@ -31,25 +38,83 @@ function isPublic(pathname: string) {
   );
 }
 
+// ===============================
+// Cookie SSR (Supabase)
+// ===============================
 function hasSupabaseSessionCookie(req: NextRequest) {
   const all = req.cookies.getAll();
   return all.some((c) => c.name.startsWith("sb-") && Boolean(c.value));
 }
 
+// ===============================
+// Permissão por rota (Triângulo 360)
+// ===============================
+type Beneficios = Record<string, any>;
+
+function canAccess(pathname: string, beneficios: Beneficios): boolean {
+  // Se não veio benefícios por algum motivo, assume mínimo (não quebra)
+  const b = beneficios ?? {};
+
+  // --- ENGORDA ---
+  // /dashboard/engorda (base)
+  if (pathname.startsWith("/dashboard/engorda")) {
+    // Nutrição é parte de engorda base (se quiser tratar como ultra, ajuste aqui)
+    const okBase = b.engorda_base === true || b.engorda === true;
+    return okBase;
+  }
+
+  // --- CFO ---
+  if (pathname.startsWith("/dashboard/cfo") || pathname.startsWith("/api/cfo")) {
+    return b.cfo === true;
+  }
+
+  // --- FINANCEIRO ---
+  if (
+    pathname.startsWith("/dashboard/financeiro") ||
+    pathname.startsWith("/financeiro") ||
+    pathname.startsWith("/api/financeiro") ||
+    pathname.startsWith("/api/inteligencia/financeiro")
+  ) {
+    return b.financeiro === true || b.cfo === true;
+  }
+
+  // --- ESG (quando virar rota real) ---
+  if (pathname.startsWith("/dashboard/esg") || pathname.startsWith("/api/esg")) {
+    return b.esg === true;
+  }
+
+  // --- REBANHO / PASTAGEM ---
+  // se você quiser travar por plano também, dá pra ativar aqui
+  if (pathname.startsWith("/dashboard/rebanho")) {
+    return b.rebanho !== false; // default true
+  }
+  if (pathname.startsWith("/dashboard/pastagem")) {
+    return b.pastagem !== false; // default true
+  }
+
+  // padrão: permite
+  return true;
+}
+
+// ===============================
+// Middleware principal
+// ===============================
 export async function middleware(req: NextRequest) {
   const { pathname, origin } = req.nextUrl;
 
   // 1) rotas públicas
   if (isPublic(pathname)) return NextResponse.next();
 
-  // 2) áreas protegidas
+  // 2) áreas protegidas (mantém seu padrão)
   const isProtected =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/financeiro") ||
     pathname.startsWith("/cfo") ||
     pathname.startsWith("/assinatura") ||
     pathname.startsWith("/api/financeiro") ||
-    pathname.startsWith("/api/inteligencia"); // ✅ futuro
+    pathname.startsWith("/api/inteligencia") ||
+    pathname.startsWith("/api/cfo") ||
+    pathname.startsWith("/api/engorda");
 
   if (!isProtected) return NextResponse.next();
 
@@ -61,9 +126,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 4) Gate PAYWALL
+  // 4) Gate PAYWALL (âncora canônica)
   try {
-    const res = await fetch(`${origin}/api/assinaturas/status`, {
+    const res = await fetch(`${origin}/api/assinaturas/status-server`, {
       method: "GET",
       cache: "no-store",
       headers: {
@@ -71,54 +136,58 @@ export async function middleware(req: NextRequest) {
       },
     });
 
+    // Se API falhar → é problema técnico/auth → manda login (NUNCA /planos)
     if (!res.ok) {
       const url = req.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("next", pathname);
+      url.searchParams.set("reason", "status_server_unavailable");
       return NextResponse.redirect(url);
     }
 
-    const data = await res.json().catch(() => null);
+    const data = (await res.json().catch(() => null)) as any;
 
-    const reason = String(data?.reason ?? "").toLowerCase().trim();
+    // Blindagem: shape estável esperado
+    const ativo = data?.ativo === true;
+    const beneficios = data?.beneficios ?? null;
 
-    // ✅ auth falha ≠ paywall
-    const isAuthProblem =
-      reason === "no_session" ||
-      reason === "missing_env" ||
-      reason === "internal_error" ||
-      reason === "missing_token"; // só por blindagem: agora route.ts não gera isso
-
-    if (isAuthProblem) {
-      const url = req.nextUrl.clone();
-      url.pathname = "/login";
-      url.searchParams.set("next", pathname);
-      return NextResponse.redirect(url);
-    }
-
-    // ✅ assinatura inativa REAL
-    if (data?.ativo !== true) {
+    // Se não ativo → paywall real → /planos
+    if (!ativo) {
       const url = req.nextUrl.clone();
       url.pathname = "/planos";
       url.searchParams.set("reason", "assinatura_inativa");
       return NextResponse.redirect(url);
     }
 
+    // ✅ Permissão por plano
+    if (!canAccess(pathname, beneficios)) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/dashboard/assinatura/plano";
+      url.searchParams.set("reason", "upgrade_required");
+      url.searchParams.set("next", pathname);
+      return NextResponse.redirect(url);
+    }
+
     return NextResponse.next();
   } catch {
+    // fallback técnico: manda login, não planos (blindagem anti-loop)
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
+    url.searchParams.set("reason", "middleware_exception");
     return NextResponse.redirect(url);
   }
 }
 
+// ✅ matcher: só onde precisa
 export const config = {
   matcher: [
     "/dashboard/:path*",
     "/financeiro/:path*",
     "/api/financeiro/:path*",
     "/api/inteligencia/:path*",
+    "/api/cfo/:path*",
+    "/api/engorda/:path*",
     "/cfo/:path*",
     "/assinatura/:path*",
   ],
