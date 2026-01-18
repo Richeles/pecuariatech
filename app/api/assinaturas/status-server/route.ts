@@ -1,48 +1,62 @@
 // app/api/assinaturas/status-server/route.ts
-// SaaS por Plano — Âncora de Permissão (Equação Y)
-// Server-friendly: usa cookie do Supabase (não Bearer)
+// SaaS por Plano — ÂNCORA DE PERMISSÃO (Equação Y)
+// Server-friendly: usa cookie do Supabase (SSR)
 // Fonte: public.assinaturas (gravada pelo webhook Mercado Pago)
 //
 // Regras:
 // - read-only
-// - anti-quebra: não depende de colunas inexistentes
+// - anti-quebra (não depende de colunas inexistentes)
 // - compatível com middleware
+// - shape de resposta estável
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { permissoesDoPlano } from "@/app/lib/planos/permissoes"; // ✅ DERIVADO canônico
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Normaliza status vindo do banco
+// -------------------------
+// Utils
+// -------------------------
+
 function isAtiva(status: any): boolean {
   const v = String(status ?? "").toLowerCase().trim();
-  return v === "ativa" || v.includes("ativa") || v === "active";
+  return v === "ativa" || v === "active" || v.includes("ativa");
 }
 
-// Plano por ID (âncora)
-// Agora: como sua tabela só tem plano_id (uuid) e você ainda não mostrou
-// a tabela/view de planos com uuid -> slug, vamos derivar nível por fallback seguro.
-// Quando você confirmar o "mapa de plano_id", a gente fecha isso perfeito.
-function planoFromPlanoId(_planoId: any): "basico" | "pro" | "premium" {
-  // 🔒 fallback seguro até mapear os UUIDs reais
+// ⚠️ Fallback SEGURO
+// Enquanto não houver mapa plano_id → plano_slug
+export type PlanoInterno = "basico" | "pro" | "premium";
+
+function planoFromPlanoId(_planoId: any): PlanoInterno {
+  // 🔒 fallback seguro (não quebra middleware nem UI)
+  // (quando mapear UUIDs reais, aqui vira lookup real)
   return "basico";
 }
 
-function planoToNivel(plano: "basico" | "pro" | "premium") {
+function planoToNivel(plano: PlanoInterno): number {
   if (plano === "premium") return 3;
   if (plano === "pro") return 2;
   return 1;
 }
 
-function buildBeneficios(plano: "basico" | "pro" | "premium") {
-  // Internacional / modular (fácil de evoluir sem quebrar middleware)
+// -------------------------
+// Benefícios LEGADOS (fallback)
+// -------------------------
+// Mantidos APENAS para compatibilidade retroativa.
+// A fonte oficial é permissoesDoPlano(plano)
+function buildBeneficiosLegacy(plano: PlanoInterno) {
   const base = {
     rebanho: true,
     pastagem: true,
-    engorda: false,
+
+    engorda_base: false,
+    engorda_ultra: false,
+
     financeiro: false,
     cfo: false,
+
     esg: false,
     multiusuario: false,
   };
@@ -50,7 +64,7 @@ function buildBeneficios(plano: "basico" | "pro" | "premium") {
   if (plano === "pro") {
     return {
       ...base,
-      engorda: true,
+      engorda_base: true,
       financeiro: true,
     };
   }
@@ -58,7 +72,8 @@ function buildBeneficios(plano: "basico" | "pro" | "premium") {
   if (plano === "premium") {
     return {
       ...base,
-      engorda: true,
+      engorda_base: true,
+      engorda_ultra: true,
       financeiro: true,
       cfo: true,
       esg: true,
@@ -68,6 +83,10 @@ function buildBeneficios(plano: "basico" | "pro" | "premium") {
 
   return base;
 }
+
+// -------------------------
+// Handler
+// -------------------------
 
 export async function GET(req: Request) {
   try {
@@ -81,32 +100,38 @@ export async function GET(req: Request) {
       );
     }
 
-    // ✅ Middleware envia cookies. Vamos repassar cookies para o Supabase.
+    // ✅ Middleware envia cookie → repassamos ao Supabase
     const cookie = req.headers.get("cookie") ?? "";
 
     const supabase = createClient(url, anon, {
-      global: {
-        headers: {
-          cookie,
-        },
-      },
+      global: { headers: { cookie } },
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    // 1) validar usuário por sessão (cookie)
+    // 1) Validar sessão
     const { data: userData, error: userErr } = await supabase.auth.getUser();
 
     if (userErr || !userData?.user) {
       return NextResponse.json(
-        { ativo: false, plano: "basico", nivel: 1, expires_at: null, beneficios: buildBeneficios("basico") },
+        {
+          ativo: false,
+          plano: "basico",
+          nivel: 1,
+          expires_at: null,
+
+          // ✅ Fonte oficial (Equação Y)
+          beneficios: permissoesDoPlano("basico"),
+
+          // ⚠️ fallback compat
+          beneficios_legacy: buildBeneficiosLegacy("basico"),
+        },
         { status: 200 }
       );
     }
 
     const userId = userData.user.id;
 
-    // 2) buscar última assinatura deste user_id
-    // Seu schema tem criado_em. Então ordenamos por criado_em DESC.
+    // 2) Buscar assinaturas do usuário (última primeiro)
     const { data: rows, error } = await supabase
       .from("assinaturas")
       .select("id,user_id,plano_id,status,renovacao_em,fim_trial,criado_em")
@@ -124,7 +149,7 @@ export async function GET(req: Request) {
     const list = Array.isArray(rows) ? rows : [];
     const active = list.find((r) => isAtiva(r?.status));
 
-    // 3) sem assinatura ativa -> ativo false
+    // 3) Sem assinatura ativa
     if (!active) {
       return NextResponse.json(
         {
@@ -132,17 +157,18 @@ export async function GET(req: Request) {
           plano: "basico",
           nivel: 1,
           expires_at: null,
-          beneficios: buildBeneficios("basico"),
+
+          // ✅ Fonte oficial
+          beneficios: permissoesDoPlano("basico"),
+          beneficios_legacy: buildBeneficiosLegacy("basico"),
         },
         { status: 200 }
       );
     }
 
-    // 4) derivar plano e vencimento
+    // 4) Derivações (Equação Y)
     const plano = planoFromPlanoId(active.plano_id);
     const nivel = planoToNivel(plano);
-
-    // expires_at: usamos renovacao_em primeiro, senão fim_trial
     const expires_at = active.renovacao_em ?? active.fim_trial ?? null;
 
     return NextResponse.json(
@@ -152,7 +178,13 @@ export async function GET(req: Request) {
         nivel,
         expires_at,
         plano_id: active.plano_id ?? null,
-        beneficios: buildBeneficios(plano),
+
+        // ✅ PERMISSÕES CANÔNICAS
+        beneficios: permissoesDoPlano(plano),
+
+        // ⚠️ compat retroativa
+        beneficios_legacy: buildBeneficiosLegacy(plano),
+
         assinatura: {
           id: active.id ?? null,
           status: active.status ?? null,
