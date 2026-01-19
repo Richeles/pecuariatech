@@ -2,6 +2,26 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+/**
+ * PecuariaTech Autônomo — Pastagem UltraBiológica (Client UI)
+ * ----------------------------------------------------------
+ * ✅ Equação Y:
+ * View/API (âncora Supabase) → rota read-only → UI segura (este componente)
+ *
+ * ✅ Triângulo 360:
+ * Operacional + Climático + Zootécnico (SEM prescrição/SEM laudo)
+ *
+ * ✅ BLINDAGEM INTERNACIONAL:
+ * - Nunca renderiza objetos (evita React #31 em produção)
+ * - Nunca assume array vindo do servidor (piquetes/alertas)
+ * - Nunca confia em shape de JSON (clima / LS / props)
+ * - Sem chaves unicode em objetos do TS (evita quebra minificada)
+ */
+
+/* -------------------------------------------------------------------------- */
+/* Types                                                                      */
+/* -------------------------------------------------------------------------- */
+
 type Alerta = {
   tipo: "critico" | "atencao" | "info";
   titulo: string;
@@ -34,30 +54,42 @@ type Piquete = {
   ultima_movimentacao_em?: string | null;
 };
 
+/**
+ * ⚠️ IMPORTANTE:
+ * Renomeado de "prós" → "pros" (sem acento) para evitar problemas em builds minificados.
+ */
 type Gram = {
   nome: string;
   indicacao: string;
-  prós: string[];
+  pros: string[];
   cuidados: string[];
   risco: "baixo" | "medio" | "alto";
 };
 
 type Geo = { lat: number; lon: number };
 
-/**
- * ✅ ULTRA BIOLÓGICO — Pastagem
- * - recomendação por clima + GPS
- * - motor determinístico (não quebra)
- * - preparado para futuro: alertas El Niño/La Niña via job externo
- *
- * IMPORTANTE:
- * - Não é prescrição
- * - Não é laudo
- * - Gestão técnica operacional (Triângulo 360)
- */
+/* -------------------------------------------------------------------------- */
+/* Utils (Safe)                                                               */
+/* -------------------------------------------------------------------------- */
 
 function norm(v: unknown) {
   return String(v ?? "").trim().toLowerCase();
+}
+
+function safeString(v: unknown, fallback = "-") {
+  if (v === null || v === undefined) return fallback;
+  if (typeof v === "object") return fallback; // ✅ blindagem anti React #31
+  return String(v);
+}
+
+function safeArray<T = any>(v: unknown): T[] {
+  return Array.isArray(v) ? (v as T[]) : [];
+}
+
+function safeNumber(v: unknown, fallback: number | null = null) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return fallback;
+  return n;
 }
 
 function badgeColorRisco(risco: string) {
@@ -73,35 +105,41 @@ function badgeColorMini(risco: "baixo" | "medio" | "alto") {
   return "bg-green-600";
 }
 
+/* -------------------------------------------------------------------------- */
+/* Motor determinístico (Safe)                                                */
+/* -------------------------------------------------------------------------- */
+
 /**
  * Motor seguro de recomendação de gramíneas.
  * Entrada: clima básico (temperatura média + condição)
- * Saída: lista de recomendações.
+ * Saída: recomendações determinísticas
  *
  * ✅ Robustez:
- * - se clima não existir: fallback genérico
+ * - Se clima não existir ou vier corrompido, fallback seguro.
  */
 function recomendarGramineas(clima: any): Gram[] {
-  const temp = Number(clima?.temperatura_c ?? clima?.temp_c ?? clima?.temp ?? 0);
+  const temp = safeNumber(clima?.temperatura_c ?? clima?.temp_c ?? clima?.temp, 0) ?? 0;
+
   const cond = norm(clima?.condicao ?? clima?.condition ?? clima?.descricao ?? "");
   const chuva = norm(clima?.chuva ?? clima?.rain ?? clima?.precipitacao ?? "");
+
   const umido = cond.includes("chuva") || cond.includes("storm") || chuva.includes("sim");
   const seco = cond.includes("seca") || cond.includes("dry");
 
-  // fallback (não quebra)
+  // fallback robusto (não quebra)
   if (!Number.isFinite(temp) || temp <= 0) {
     return [
       {
         nome: "Brachiaria (Marandu / Paiaguás)",
         indicacao: "Recomendação base (robusta) para grande parte do Brasil.",
-        prós: ["Boa adaptação", "Boa persistência", "Fácil manejo"],
+        pros: ["Boa adaptação", "Boa persistência", "Fácil manejo"],
         cuidados: ["Ajustar lotação na seca", "Rotação e descanso"],
         risco: "baixo",
       },
       {
         nome: "Mombaça / Tanzânia",
         indicacao: "Alta produção em sistemas mais intensivos.",
-        prós: ["Alta resposta", "Boa produção de MS"],
+        pros: ["Alta resposta", "Boa produção de MS"],
         cuidados: ["Exige manejo mais técnico", "Sensível a superpastejo"],
         risco: "medio",
       },
@@ -114,21 +152,21 @@ function recomendarGramineas(clima: any): Gram[] {
       {
         nome: "Mombaça (Panicum)",
         indicacao: "Quente/úmido: alta produção para intensificação.",
-        prós: ["Altíssima produtividade", "Ótimo potencial de GMD"],
+        pros: ["Altíssima produtividade", "Ótimo potencial de GMD"],
         cuidados: ["Rotação rigorosa", "Evitar pastejo muito baixo"],
         risco: "medio",
       },
       {
         nome: "Tanzânia (Panicum)",
         indicacao: "Quente/úmido: bom equilíbrio produtividade/manejo.",
-        prós: ["Boa produção", "Boa qualidade"],
+        pros: ["Boa produção", "Boa qualidade"],
         cuidados: ["Requer controle de entrada/saída", "Ajustar lotação"],
         risco: "medio",
       },
       {
         nome: "Brachiaria (Marandu)",
         indicacao: "Opção robusta para estabilidade do sistema.",
-        prós: ["Resistente", "Estável ao longo do ano"],
+        pros: ["Resistente", "Estável ao longo do ano"],
         cuidados: ["Monitorar na seca prolongada"],
         risco: "baixo",
       },
@@ -141,14 +179,14 @@ function recomendarGramineas(clima: any): Gram[] {
       {
         nome: "Brachiaria (Paiaguás / Marandu)",
         indicacao: "Quente com seca: foco em persistência e segurança.",
-        prós: ["Tolerância maior à seca", "Boa estabilidade"],
+        pros: ["Tolerância maior à seca", "Boa estabilidade"],
         cuidados: ["Descanso estratégico na seca", "Evitar pressão alta"],
         risco: "baixo",
       },
       {
         nome: "Andropogon (onde aplicável)",
         indicacao: "Sistemas extensivos e ambientes mais limitantes.",
-        prós: ["Muito rústico", "Baixa exigência"],
+        pros: ["Muito rústico", "Baixa exigência"],
         cuidados: ["Qualidade pode cair na seca", "Planejar suplementação"],
         risco: "medio",
       },
@@ -161,14 +199,14 @@ function recomendarGramineas(clima: any): Gram[] {
       {
         nome: "Tifton (Cynodon)",
         indicacao: "Ameno: muito bom para manejo intensivo/irrigação.",
-        prós: ["Alta resposta a manejo", "Excelente para pastejo rotacionado"],
+        pros: ["Alta resposta a manejo", "Excelente para pastejo rotacionado"],
         cuidados: ["Exige manejo", "Adubação e/ou irrigação aumentam retorno"],
         risco: "medio",
       },
       {
         nome: "Brachiaria (Marandu)",
         indicacao: "Base robusta para estabilidade.",
-        prós: ["Boa adaptação", "Boa persistência"],
+        pros: ["Boa adaptação", "Boa persistência"],
         cuidados: ["Rotação e descanso"],
         risco: "baixo",
       },
@@ -180,18 +218,17 @@ function recomendarGramineas(clima: any): Gram[] {
     {
       nome: "Brachiaria (Marandu / Paiaguás)",
       indicacao: "Recomendação segura padrão.",
-      prós: ["Estável", "Robusta"],
+      pros: ["Estável", "Robusta"],
       cuidados: ["Manejo de lotação na seca"],
       risco: "baixo",
     },
   ];
 }
 
-/**
- * Banco comunitário regional (safe).
- * Nesta etapa final, armazenamos no LocalStorage para NÃO arriscar quebra.
- * Depois evolui para Supabase (view âncora de recomendações regionais).
- */
+/* -------------------------------------------------------------------------- */
+/* Banco comunitário (LocalStorage Safe)                                      */
+/* -------------------------------------------------------------------------- */
+
 const LS_KEY = "pecuariatech_pastagem_variedades_v1";
 
 function loadLS(): any[] {
@@ -208,24 +245,33 @@ function saveLS(items: any[]) {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(items));
   } catch {
-    // se falhar não quebra o SaaS
+    // se falhar: não quebra o SaaS
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* Main Component                                                             */
+/* -------------------------------------------------------------------------- */
+
 export default function UltraBiologicoPastagem(props: {
   resumo: ResumoPastagem | null;
-  piquetes: Piquete[];
-  alertas: Alerta[];
+  piquetes?: Piquete[] | null;
+  alertas?: Alerta[] | null;
 }) {
-  const { resumo, piquetes, alertas } = props;
+  // ✅ BLINDAGEM: nunca confiar em shape vindo do server
+  const resumo = props.resumo ?? null;
+  const piquetes = safeArray<Piquete>(props.piquetes);
+  const alertas = safeArray<Alerta>(props.alertas);
 
   const risco = String(resumo?.risco_pastagem ?? "DESCONHECIDO").toUpperCase();
   const decisao = String(resumo?.decisao_recomendada ?? "").toUpperCase();
 
-  const ocupados = piquetes.filter((p) => {
-    const s = norm(p.status);
-    return s.includes("ocupado") || s.includes("em_uso");
-  }).length;
+  const ocupados = useMemo(() => {
+    return piquetes.filter((p) => {
+      const s = norm(p?.status);
+      return s.includes("ocupado") || s.includes("em_uso");
+    }).length;
+  }, [piquetes]);
 
   const total = piquetes.length;
   const taxa = total > 0 ? ocupados / total : 0;
@@ -247,8 +293,9 @@ export default function UltraBiologicoPastagem(props: {
     setBanco(loadLS());
   }, []);
 
-  const recomendadas = useMemo(() => {
-    return recomendarGramineas(clima);
+  const recomendadas: Gram[] = useMemo(() => {
+    const r = recomendarGramineas(clima);
+    return Array.isArray(r) ? r : [];
   }, [clima]);
 
   // especialistas
@@ -306,7 +353,7 @@ export default function UltraBiologicoPastagem(props: {
   async function captarLocalizacao() {
     setClimaErr(null);
 
-    if (!navigator.geolocation) {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
       setClimaErr("Geolocalização não suportada neste navegador.");
       return;
     }
@@ -329,7 +376,7 @@ export default function UltraBiologicoPastagem(props: {
       setLoadingClima(true);
       setClimaErr(null);
 
-      // ✅ usa API interna já existente (não dependemos de serviços externos diretamente)
+      // ✅ usa API interna já existente
       const url = `/api/clima?lat=${geo.lat}&lon=${geo.lon}&ts=${Date.now()}`;
       const res = await fetch(url, { cache: "no-store" });
 
@@ -338,7 +385,14 @@ export default function UltraBiologicoPastagem(props: {
         return;
       }
 
-      const json = await res.json();
+      const json = await res.json().catch(() => null);
+
+      // ✅ BLINDAGEM: só aceita objetos
+      if (!json || typeof json !== "object") {
+        setClimaErr("Clima indisponível (resposta inválida).");
+        return;
+      }
+
       setClima(json);
     } catch (e: any) {
       setClimaErr(e?.message ?? "Erro inesperado ao obter clima.");
@@ -463,21 +517,23 @@ export default function UltraBiologicoPastagem(props: {
                   risco {g.risco}
                 </span>
               </div>
+
               <p className="mt-2 text-xs text-gray-700">{g.indicacao}</p>
 
               <div className="mt-3 grid gap-2 md:grid-cols-2">
                 <div>
                   <div className="text-[11px] font-semibold text-gray-600">Prós</div>
                   <ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-gray-700">
-                    {g.prós.map((x) => (
+                    {safeArray(g.pros).map((x) => (
                       <li key={x}>{x}</li>
                     ))}
                   </ul>
                 </div>
+
                 <div>
                   <div className="text-[11px] font-semibold text-gray-600">Cuidados</div>
                   <ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-gray-700">
-                    {g.cuidados.map((x) => (
+                    {safeArray(g.cuidados).map((x) => (
                       <li key={x}>{x}</li>
                     ))}
                   </ul>
@@ -521,19 +577,22 @@ export default function UltraBiologicoPastagem(props: {
               <div key={x.id} className="rounded-xl border p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <b className="text-sm">{x.nome}</b>
-                    <div className="text-xs text-gray-600">Região: {x.regiao}</div>
+                    <b className="text-sm">{safeString(x.nome, "Variedade")}</b>
+                    <div className="text-xs text-gray-600">Região: {safeString(x.regiao, "-")}</div>
                   </div>
+
                   <button
                     onClick={() => votar(x.id)}
                     className="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white"
                   >
-                    👍 Útil ({x.votos ?? 0})
+                    👍 Útil ({safeString(x.votos, "0")})
                   </button>
                 </div>
-                {x.obs ? <div className="mt-2 text-xs text-gray-700">{x.obs}</div> : null}
+
+                {x.obs ? <div className="mt-2 text-xs text-gray-700">{safeString(x.obs, "")}</div> : null}
+
                 <div className="mt-2 text-[11px] text-gray-500">
-                  Cadastrado em: {String(x.criado_em ?? "").slice(0, 10)}
+                  Cadastrado em: {safeString(String(x.criado_em ?? "").slice(0, 10), "-")}
                 </div>
               </div>
             ))
@@ -550,14 +609,14 @@ export default function UltraBiologicoPastagem(props: {
           ))}
         </ul>
 
-        {alertas?.length ? (
+        {alertas.length ? (
           <div className="mt-4">
             <h4 className="text-sm font-semibold">Alertas do Motor</h4>
             <ul className="mt-2 space-y-2">
               {alertas.map((a, idx) => (
                 <li key={idx} className="rounded-lg border bg-white p-3 text-sm">
-                  <b className="block">{a.titulo}</b>
-                  <span className="text-gray-700">{a.detalhe}</span>
+                  <b className="block">{safeString(a.titulo, "Alerta")}</b>
+                  <span className="text-gray-700">{safeString(a.detalhe, "-")}</span>
                 </li>
               ))}
             </ul>
@@ -568,14 +627,16 @@ export default function UltraBiologicoPastagem(props: {
   );
 }
 
-/* UI helpers */
+/* -------------------------------------------------------------------------- */
+/* UI helpers                                                                 */
+/* -------------------------------------------------------------------------- */
 
 function Card(props: { titulo: string; itens: string[] }) {
   return (
     <div className="rounded-2xl border bg-white p-4 shadow-sm">
       <h3 className="text-sm font-semibold">{props.titulo}</h3>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-gray-700">
-        {props.itens.map((x) => (
+        {safeArray(props.itens).map((x) => (
           <li key={x}>{x}</li>
         ))}
       </ul>
@@ -587,7 +648,7 @@ function MiniInfo(props: { label: string; value: any }) {
   return (
     <div className="rounded-xl border bg-white p-3">
       <div className="text-[11px] font-semibold text-gray-600">{props.label}</div>
-      <div className="mt-1 text-sm font-semibold">{String(props.value ?? "-")}</div>
+      <div className="mt-1 text-sm font-semibold">{safeString(props.value, "-")}</div>
     </div>
   );
 }
