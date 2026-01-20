@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import RebanhoSanidadePainel from "./RebanhoSanidadePainel";
 
 type ApiRow = {
   animal_id: string;
@@ -60,9 +61,7 @@ export default function RebanhoClient() {
       }
     }
 
-    return Array.from(map.values()).sort((a, b) =>
-      a.brinco.localeCompare(b.brinco)
-    );
+    return Array.from(map.values()).sort((a, b) => a.brinco.localeCompare(b.brinco));
   }, [rows]);
 
   const filtered = useMemo(() => {
@@ -80,10 +79,52 @@ export default function RebanhoClient() {
     });
   }, [animals, q]);
 
+  // ✅ métricas tático/executivo (SuperVet)
+  const resumo = useMemo(() => {
+    const total = filtered.length;
+    let semLocalizacao = 0;
+    let semPeso = 0;
+    let machos = 0;
+    let femeas = 0;
+
+    const racas = new Map<string, number>();
+
+    for (const a of filtered) {
+      if (!a.ultima_localizacao || a.ultima_localizacao === "—") semLocalizacao++;
+      if (a.peso === null || a.peso === undefined) semPeso++;
+
+      const sx = (a.sexo ?? "").toLowerCase();
+      if (sx.includes("macho")) machos++;
+      if (sx.includes("fêmea") || sx.includes("femea")) femeas++;
+
+      const r = (a.raca ?? "—").trim();
+      racas.set(r, (racas.get(r) ?? 0) + 1);
+    }
+
+    const racasTop = Array.from(racas.entries())
+      .filter(([nome]) => nome && nome !== "—")
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([nome, qtd]) => ({ nome, qtd }));
+
+    return { total, semLocalizacao, semPeso, machos, femeas, racasTop };
+  }, [filtered]);
+
   if (loading) return <p className="text-gray-500">Carregando Rebanho real…</p>;
 
   return (
     <section className="space-y-4">
+      {/* ✅ Painel SuperVet (Tático/Executivo) */}
+      <RebanhoSanidadePainel
+        total={resumo.total}
+        semLocalizacao={resumo.semLocalizacao}
+        semPeso={resumo.semPeso}
+        machos={resumo.machos}
+        femeas={resumo.femeas}
+        racasTop={resumo.racasTop}
+      />
+
+      {/* Operacional */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm text-gray-600">Total de animais</p>
