@@ -19,11 +19,14 @@ const ROTAS_PUBLICAS = [
   "/sucesso",
   "/erro",
 
+  // ✅ Upgrade flow deve ser sempre acessível
+  "/dashboard/assinatura/plano",
+
   // APIs públicas canônicas
   "/api/auth/login",
-  "/api/assinaturas/status", // ✅ CANÔNICO ÚNICO (SSR cookie-first)
+  "/api/assinaturas/status",
 
-  // APIs públicas operacionais (se quiser manter)
+  // APIs públicas operacionais
   "/api/pastagem",
   "/api/rebanho",
 ];
@@ -54,9 +57,8 @@ function canAccess(pathname: string, beneficios: Beneficios): boolean {
   const b = beneficios ?? {};
 
   // --- ENGORDA ---
-  if (pathname.startsWith("/dashboard/engorda")) {
-    const okBase = b.engorda_base === true || b.engorda === true;
-    return okBase;
+  if (pathname.startsWith("/dashboard/engorda") || pathname.startsWith("/api/engorda")) {
+    return b.engorda_base === true || b.engorda === true;
   }
 
   // --- CFO ---
@@ -74,18 +76,9 @@ function canAccess(pathname: string, beneficios: Beneficios): boolean {
     return b.financeiro === true || b.cfo === true;
   }
 
-  // --- ESG ---
-  if (pathname.startsWith("/dashboard/esg") || pathname.startsWith("/api/esg")) {
-    return b.esg === true;
-  }
-
   // --- REBANHO / PASTAGEM ---
-  if (pathname.startsWith("/dashboard/rebanho")) {
-    return b.rebanho !== false;
-  }
-  if (pathname.startsWith("/dashboard/pastagem")) {
-    return b.pastagem !== false;
-  }
+  if (pathname.startsWith("/dashboard/rebanho")) return b.rebanho !== false;
+  if (pathname.startsWith("/dashboard/pastagem")) return b.pastagem !== false;
 
   return true;
 }
@@ -120,17 +113,20 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // ✅ Se já está no upgrade flow, não aplica gate de benefícios
+  if (pathname.startsWith("/dashboard/assinatura/plano")) {
+    return NextResponse.next();
+  }
+
   // 4) Gate PAYWALL (API canônica única)
   try {
     const res = await fetch(`${origin}/api/assinaturas/status`, {
       method: "GET",
       cache: "no-store",
-      headers: {
-        cookie: req.headers.get("cookie") ?? "",
-      },
+      headers: { cookie: req.headers.get("cookie") ?? "" },
     });
 
-    // ✅ Se API falhar: é problema técnico/auth -> LOGIN (NUNCA /planos)
+    // ✅ Se API falhar: LOGIN (problema técnico/auth)
     if (!res.ok) {
       const url = req.nextUrl.clone();
       url.pathname = "/login";
@@ -163,7 +159,7 @@ export async function middleware(req: NextRequest) {
 
     return NextResponse.next();
   } catch {
-    // ✅ fallback técnico: LOGIN (anti-loop)
+    // ✅ fallback técnico: LOGIN
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
