@@ -1,12 +1,18 @@
 // middleware.ts
-// Paywall Oficial — PecuariaTech (SaaS por Plano)
-// ✅ Equação Y: Cookie SSR → API canônica (/api/assinaturas/status) → Permissões (beneficios)
-// ✅ Blindagem: erro técnico/auth ≠ paywall (NUNCA manda logado para /planos por falha técnica)
+// PecuariaTech Autônomo — Middleware CANÔNICO
+//
+// PRINCÍPIOS:
+// ✅ Equação Y: Cookie SSR → /api/assinaturas/status → decisão
+// ✅ Triângulo 360:
+//    - AUTH: sessão válida
+//    - PAYWALL: assinatura ativa
+//    - NÍVEL: NUNCA no middleware (somente dentro dos módulos)
+// ✅ Regra Z: erro técnico/auth NUNCA manda para /planos
 
 import { NextRequest, NextResponse } from "next/server";
 
 // ===============================
-// Rotas públicas (não passam no paywall)
+// Rotas públicas (NÃO passam no paywall)
 // ===============================
 const ROTAS_PUBLICAS = [
   "/",
@@ -19,24 +25,26 @@ const ROTAS_PUBLICAS = [
   "/sucesso",
   "/erro",
 
-  // ✅ Upgrade flow deve ser sempre acessível
+  // Upgrade flow sempre acessível
   "/dashboard/assinatura/plano",
 
-  // APIs públicas canônicas
-  "/api/auth/login",
+  // API canônica de status (Fonte Y)
   "/api/assinaturas/status",
 
-  // APIs públicas operacionais
-  "/api/pastagem",
-  "/api/rebanho",
+  // Webhook financeiro
+  "/api/mercadopago/webhook",
 ];
 
 function isPublic(pathname: string) {
   return (
-    ROTAS_PUBLICAS.some((r) => pathname === r || pathname.startsWith(r + "/")) ||
+    ROTAS_PUBLICAS.some(
+      (r) => pathname === r || pathname.startsWith(r + "/")
+    ) ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
-    pathname.startsWith("/pecuariatech.png")
+    pathname.endsWith(".png") ||
+    pathname.endsWith(".jpg") ||
+    pathname.endsWith(".svg")
   );
 }
 
@@ -44,12 +52,14 @@ function isPublic(pathname: string) {
 // Cookie SSR (Supabase)
 // ===============================
 function hasSupabaseSessionCookie(req: NextRequest) {
-  const all = req.cookies.getAll();
-  return all.some((c) => c.name.startsWith("sb-") && Boolean(c.value));
+  return req.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && Boolean(c.value));
 }
 
 // ===============================
-// Permissão por rota (Triângulo 360)
+// Permissão por rota (NÍVEL / BENEFÍCIOS)
+// ⚠️ ATENÇÃO: Financeiro NÃO é bloqueado aqui
 // ===============================
 type Beneficios = Record<string, any>;
 
@@ -57,28 +67,50 @@ function canAccess(pathname: string, beneficios: Beneficios): boolean {
   const b = beneficios ?? {};
 
   // --- ENGORDA ---
-  if (pathname.startsWith("/dashboard/engorda") || pathname.startsWith("/api/engorda")) {
-    return b.engorda_base === true || b.engorda === true;
+  if (
+    pathname.startsWith("/dashboard/engorda") ||
+    pathname.startsWith("/api/engorda")
+  ) {
+    return b.engorda === true || b.engorda_base === true;
   }
 
-  // --- CFO ---
-  if (pathname.startsWith("/dashboard/cfo") || pathname.startsWith("/api/cfo")) {
+  // --- CFO (Premium-only) ---
+  if (
+    pathname.startsWith("/dashboard/cfo") ||
+    pathname.startsWith("/api/cfo")
+  ) {
     return b.cfo === true;
   }
 
-  // --- FINANCEIRO ---
+  // --- FINANCEIRO (PROGRESSIVO / TODOS OS PLANOS ATIVOS) ---
+  // Regra de produto:
+  // Financeiro existe em TODOS os planos ativos.
+  // Middleware NÃO decide profundidade.
+  // Gate fino acontece dentro do módulo / APIs.
+
   if (
-    pathname.startsWith("/dashboard/financeiro") ||
-    pathname.startsWith("/financeiro") ||
-    pathname.startsWith("/api/financeiro") ||
-    pathname.startsWith("/api/inteligencia/financeiro")
+    pathname === "/dashboard/financeiro" ||
+    pathname.startsWith("/dashboard/financeiro/")
   ) {
-    return b.financeiro === true || b.cfo === true;
+    return true;
+  }
+
+  if (pathname.startsWith("/api/financeiro")) {
+    return true;
+  }
+
+  if (pathname.startsWith("/api/inteligencia/financeiro")) {
+    return true;
   }
 
   // --- REBANHO / PASTAGEM ---
-  if (pathname.startsWith("/dashboard/rebanho")) return b.rebanho !== false;
-  if (pathname.startsWith("/dashboard/pastagem")) return b.pastagem !== false;
+  if (pathname.startsWith("/dashboard/rebanho")) {
+    return b.rebanho !== false;
+  }
+
+  if (pathname.startsWith("/dashboard/pastagem")) {
+    return b.pastagem !== false;
+  }
 
   return true;
 }
@@ -89,23 +121,24 @@ function canAccess(pathname: string, beneficios: Beneficios): boolean {
 export async function middleware(req: NextRequest) {
   const { pathname, origin } = req.nextUrl;
 
-  // 1) rotas públicas
-  if (isPublic(pathname)) return NextResponse.next();
+  // 1) Rotas públicas
+  if (isPublic(pathname)) {
+    return NextResponse.next();
+  }
 
-  // 2) áreas protegidas
+  // 2) Proteger apenas áreas privadas
   const isProtected =
     pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/financeiro") ||
-    pathname.startsWith("/cfo") ||
-    pathname.startsWith("/assinatura") ||
     pathname.startsWith("/api/financeiro") ||
-    pathname.startsWith("/api/inteligencia") ||
+    pathname.startsWith("/api/engorda") ||
     pathname.startsWith("/api/cfo") ||
-    pathname.startsWith("/api/engorda");
+    pathname.startsWith("/api/inteligencia");
 
-  if (!isProtected) return NextResponse.next();
+  if (!isProtected) {
+    return NextResponse.next();
+  }
 
-  // 3) Gate AUTH (cookie SSR)
+  // 3) AUTH — exige sessão
   if (!hasSupabaseSessionCookie(req)) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
@@ -113,21 +146,18 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // ✅ Se já está no upgrade flow, não aplica gate de benefícios
-  if (pathname.startsWith("/dashboard/assinatura/plano")) {
-    return NextResponse.next();
-  }
-
-  // 4) Gate PAYWALL (API canônica única)
+  // 4) PAYWALL — assinatura ativa (Fonte Única)
   try {
     const res = await fetch(`${origin}/api/assinaturas/status`, {
       method: "GET",
       cache: "no-store",
-      headers: { cookie: req.headers.get("cookie") ?? "" },
+      headers: {
+        cookie: req.headers.get("cookie") ?? "",
+      },
     });
 
-    // ✅ Se API falhar: LOGIN (problema técnico/auth)
     if (!res.ok) {
+      // Regra Z: erro técnico → login
       const url = req.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("next", pathname);
@@ -137,18 +167,24 @@ export async function middleware(req: NextRequest) {
 
     const data = (await res.json().catch(() => null)) as any;
 
-    const ativo = data?.ativo === true;
-    const beneficios = data?.beneficios ?? null;
+    // Sem sessão válida
+    if (data?.reason === "no_session" || data?.reason === "missing_token") {
+      const url = req.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", pathname);
+      return NextResponse.redirect(url);
+    }
 
-    // ✅ Só assinatura realmente inativa vai para /planos
-    if (!ativo) {
+    // Assinatura realmente inativa
+    if (data?.ativo === false) {
       const url = req.nextUrl.clone();
       url.pathname = "/planos";
       url.searchParams.set("reason", "assinatura_inativa");
       return NextResponse.redirect(url);
     }
 
-    // ✅ Gate por permissões/nível
+    // Gate por benefício (EXCETO FINANCEIRO)
+    const beneficios = data?.beneficios ?? {};
     if (!canAccess(pathname, beneficios)) {
       const url = req.nextUrl.clone();
       url.pathname = "/dashboard/assinatura/plano";
@@ -159,7 +195,7 @@ export async function middleware(req: NextRequest) {
 
     return NextResponse.next();
   } catch {
-    // ✅ fallback técnico: LOGIN
+    // Regra Z: exceção técnica → login
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
@@ -168,16 +204,15 @@ export async function middleware(req: NextRequest) {
   }
 }
 
-// ✅ matcher: só onde precisa
+// ===============================
+// Matcher focado (sem overhead)
+// ===============================
 export const config = {
   matcher: [
     "/dashboard/:path*",
-    "/financeiro/:path*",
     "/api/financeiro/:path*",
-    "/api/inteligencia/:path*",
-    "/api/cfo/:path*",
     "/api/engorda/:path*",
-    "/cfo/:path*",
-    "/assinatura/:path*",
+    "/api/cfo/:path*",
+    "/api/inteligencia/:path*",
   ],
 };
