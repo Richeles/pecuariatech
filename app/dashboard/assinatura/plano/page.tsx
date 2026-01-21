@@ -1,7 +1,8 @@
 // CAMINHO: app/dashboard/assinatura/plano/page.tsx
-// Server Component (Next.js 16)
-// ✅ Regra oficial: page.tsx SEM hooks client-side
-// ✅ Suspense -> Client Component separado
+// Plano Premium Internacional (SaaS)
+// ✅ Next.js 16: page.tsx SERVER + Suspense (anti build bailout)
+// ✅ Equação Y: UI consome APIs
+// ✅ Triângulo 360: Auth + Paywall + Dados
 
 import { Suspense } from "react";
 import PlanoClient from "./PlanoClient";

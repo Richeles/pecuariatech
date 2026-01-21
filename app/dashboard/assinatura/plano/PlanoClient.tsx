@@ -1,7 +1,7 @@
 // CAMINHO: app/dashboard/assinatura/plano/PlanoClient.tsx
-// Client Component (Next.js 16)
-// ✅ Equação Y: UI só consome APIs (status, alterar, planilha preview)
-// ✅ Triângulo 360: Auth cookie SSR + token, Paywall por benefícios, Dados por plano
+// UI Premium Internacional (SaaS)
+// ✅ Equação Y: UI só consome APIs (status, alterar, planilha)
+// ✅ Triângulo 360: Auth (SSR cookie + token) + Paywall + Dados
 
 "use client";
 
@@ -10,15 +10,56 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/app/lib/supabase-browser";
 
-const PLANOS = [
-  { id: "basico", nome: "Básico" },
-  { id: "profissional", nome: "Profissional" },
-  { id: "ultra", nome: "Ultra" },
-  { id: "empresarial", nome: "Empresarial" },
-  { id: "premium_dominus", nome: "Premium Dominus 360°" },
-] as const;
+type PlanoId =
+  | "basico"
+  | "profissional"
+  | "ultra"
+  | "empresarial"
+  | "premium_dominus";
 
-type PlanoId = (typeof PLANOS)[number]["id"];
+const PLANOS: Array<{
+  id: PlanoId;
+  nome: string;
+  tag: string;
+  destaque: string;
+  bullets: string[];
+}> = [
+  {
+    id: "basico",
+    nome: "Básico",
+    tag: "Essencial",
+    destaque: "Controle financeiro simples e rápido",
+    bullets: ["Receitas", "Despesas", "Fluxo de caixa"],
+  },
+  {
+    id: "profissional",
+    nome: "Profissional",
+    tag: "Pro",
+    destaque: "Gestão + indicadores e evolução",
+    bullets: ["Indicadores", "Categorias avançadas", "Sugestões táticas"],
+  },
+  {
+    id: "ultra",
+    nome: "Ultra",
+    tag: "Ultra",
+    destaque: "Visão completa + automações",
+    bullets: ["DRE/EBITDA", "Alertas", "CFO assistido"],
+  },
+  {
+    id: "empresarial",
+    nome: "Empresarial",
+    tag: "Empresa",
+    destaque: "Multi-unidade e governança",
+    bullets: ["Multi-fazenda", "Comparativos", "Compliance"],
+  },
+  {
+    id: "premium_dominus",
+    nome: "Premium Dominus 360°",
+    tag: "Dominus",
+    destaque: "SaaS internacional (máximo nível)",
+    bullets: ["CFO 360°", "Auditoria", "IA aplicada"],
+  },
+];
 
 type StatusAssinatura = {
   plano: string | null;
@@ -41,41 +82,39 @@ type PlanilhaPreview = {
 
 function extrairPlanoFromNext(nextValue: string | null): PlanoId | null {
   if (!nextValue) return null;
-
   const x = decodeURIComponent(nextValue).toLowerCase();
 
+  // fluxo financeiro por plano
   if (x.includes("/api/financeiro/ultra")) return "ultra";
   if (x.includes("/api/financeiro/profissional")) return "profissional";
   if (x.includes("/api/financeiro/basico")) return "basico";
 
-  // Quando middleware manda para /api/financeiro/planilha: feature, não plano
+  // quando vier /api/financeiro/planilha é feature e NÃO plano
   if (x.includes("/api/financeiro/planilha")) return null;
 
   return null;
 }
 
-// 🧠 helper: título premium por plano (fallback UX)
-function tituloPlano(plano: PlanoId) {
-  switch (plano) {
-    case "basico":
-      return "Planilha Financeira Essencial (Básico)";
-    case "profissional":
-      return "Planilha Financeira Profissional (DRE + KPIs)";
-    case "ultra":
-      return "Planilha Ultra (CFO 360 + Simulações)";
-    case "empresarial":
-      return "Planilha Empresarial (Gestão + Governança)";
-    case "premium_dominus":
-      return "Dominus 360° (Premium) — Inteligência Total";
-  }
+function badgeNivel(nivel?: PlanilhaPreview["nivel"]) {
+  const x = (nivel ?? "basico").toLowerCase();
+  if (x === "premium")
+    return "bg-purple-100 text-purple-800 border-purple-200";
+  if (x === "empresarial")
+    return "bg-slate-100 text-slate-800 border-slate-200";
+  if (x === "ultra") return "bg-green-100 text-green-800 border-green-200";
+  if (x === "profissional")
+    return "bg-blue-100 text-blue-800 border-blue-200";
+  return "bg-gray-100 text-gray-800 border-gray-200";
 }
 
-function secoesFallback(plano: PlanoId): string[] {
-  if (plano === "basico") return ["Receitas", "Despesas", "Fluxo de Caixa"];
-  if (plano === "profissional") return ["DRE", "Fluxo de Caixa", "Custos por Centro", "Indicadores"];
-  if (plano === "ultra") return ["CFO 360", "DRE", "EBITDA", "Alertas", "Cenários Ótimo/Seguro/Rápido"];
-  if (plano === "empresarial") return ["Multi-unidade", "Orçamento", "Metas", "Governança"];
-  return ["IA CFO", "Cenários", "Risco", "Governança", "Auditoria Inteligente"];
+function normalizePlanoLabel(plano: string | null | undefined) {
+  if (!plano) return "-";
+  const p = String(plano).toLowerCase();
+  if (p.includes("premium")) return "premium_dominus";
+  if (p.includes("empres")) return "empresarial";
+  if (p.includes("ultra")) return "ultra";
+  if (p.includes("prof")) return "profissional";
+  return "basico";
 }
 
 export default function PlanoClient() {
@@ -90,7 +129,7 @@ export default function PlanoClient() {
   const [preview, setPreview] = useState<PlanilhaPreview | null>(null);
 
   // ===============================
-  // Plano alvo solicitado pelo middleware (upgrade flow)
+  // plano alvo pedido pelo middleware
   // ===============================
   const planoDoNext = useMemo(() => {
     const next = searchParams.get("next");
@@ -98,7 +137,7 @@ export default function PlanoClient() {
   }, [searchParams]);
 
   // ===============================
-  // 1) Carregar status real (API canônica)
+  // carregar status assinatura
   // ===============================
   useEffect(() => {
     async function carregar() {
@@ -108,22 +147,14 @@ export default function PlanoClient() {
           cache: "no-store",
         });
 
-        if (!res.ok) throw new Error("status_failed");
+        if (!res.ok) throw new Error("status_error");
 
-        const data = (await res.json().catch(() => null)) as StatusAssinatura | null;
-        if (!data) throw new Error("invalid_json");
-
+        const data = (await res.json()) as StatusAssinatura;
         setStatus(data);
 
-        // prioridade SaaS:
-        // (1) plano solicitado pelo middleware (next)
-        // (2) plano atual real (data.plano)
-        // (3) fallback
-        const inicial =
-          (planoDoNext as PlanoId | null) ??
-          ((data?.plano as PlanoId | null) || null) ??
-          "basico";
+        const atual = normalizePlanoLabel(data?.plano) as PlanoId;
 
+        const inicial = (planoDoNext ?? atual ?? "basico") as PlanoId;
         setSelecionado(inicial);
       } catch {
         setMensagem("Não foi possível carregar sua assinatura.");
@@ -136,71 +167,34 @@ export default function PlanoClient() {
   }, [planoDoNext]);
 
   // ===============================
-  // 2) Preview de Planilha (premium)
-  // ✅ cada plano mostra uma planilha evoluída
-  // ✅ PREVIEW pode usar query ?plano= (simulação)
-  // ✅ mas o servidor segue soberano p/ acesso real
+  // preview canônico (/api/financeiro/planilha)
+  // servidor decide pelo plano real do usuário
   // ===============================
   useEffect(() => {
     async function carregarPreview() {
       if (!selecionado) return;
 
+      // preview premium faz sentido apenas para planos financeiros principais
+      if (
+        selecionado !== "basico" &&
+        selecionado !== "profissional" &&
+        selecionado !== "ultra"
+      ) {
+        setPreview(null);
+        return;
+      }
+
       setLoadingPreview(true);
-      setPreview(null);
-
       try {
-        // ✅ Preview premium por plano (simulação)
-        const url = `/api/financeiro/planilha?plano=${encodeURIComponent(selecionado)}`;
-
-        const res = await fetch(url, {
+        const res = await fetch("/api/financeiro/planilha", {
           credentials: "include",
           cache: "no-store",
         });
 
         const json = (await res.json().catch(() => null)) as PlanilhaPreview | null;
-
-        if (!res.ok) {
-          // blindagem: não quebra UI (paywall / erro técnico)
-          setPreview(
-            json ?? {
-              ok: false,
-              reason: "preview_unavailable",
-            }
-          );
-          return;
-        }
-
-        setPreview(
-          json ?? {
-            ok: true,
-            plano: selecionado,
-            nivel:
-              selecionado === "premium_dominus"
-                ? "premium"
-                : (selecionado as any),
-            titulo: tituloPlano(selecionado),
-            descricao: "Preview premium do módulo financeiro conforme o plano selecionado.",
-            preview: {
-              template: selecionado,
-              sections: secoesFallback(selecionado),
-            },
-          }
-        );
+        setPreview(json ?? { ok: false, reason: "invalid_response" });
       } catch {
-        setPreview({
-          ok: true,
-          plano: selecionado,
-          nivel:
-            selecionado === "premium_dominus"
-              ? "premium"
-              : (selecionado as any),
-          titulo: tituloPlano(selecionado),
-          descricao: "Preview em modo fallback (offline-safe).",
-          preview: {
-            template: selecionado,
-            sections: secoesFallback(selecionado),
-          },
-        });
+        setPreview({ ok: false, reason: "preview_unavailable" });
       } finally {
         setLoadingPreview(false);
       }
@@ -210,11 +204,10 @@ export default function PlanoClient() {
   }, [selecionado]);
 
   // ===============================
-  // Confirmar alteração (mantido)
+  // confirmar alterar plano
   // ===============================
   async function confirmar() {
     if (!selecionado) return;
-
     setMensagem(null);
 
     const {
@@ -232,28 +225,23 @@ export default function PlanoClient() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({
-        novo_plano: selecionado,
-      }),
+      body: JSON.stringify({ novo_plano: selecionado }),
     });
 
     const json = await res.json().catch(() => null);
 
     if (json?.sucesso) {
-      if (json.tipo === "upgrade") {
-        setMensagem("Upgrade realizado com sucesso.");
-      } else if (json.tipo === "downgrade_agendado") {
+      if (json.tipo === "upgrade") setMensagem("Upgrade realizado com sucesso.");
+      else if (json.tipo === "downgrade_agendado")
         setMensagem("Downgrade agendado para o próximo ciclo.");
-      } else {
-        setMensagem("Plano atualizado.");
-      }
+      else setMensagem("Plano atualizado.");
     } else {
       setMensagem(json?.erro || "Erro ao alterar plano.");
     }
   }
 
   // ===============================
-  // Estados de tela
+  // UI states
   // ===============================
   if (loading) return <p className="p-6">Carregando...</p>;
 
@@ -273,28 +261,46 @@ export default function PlanoClient() {
     );
   }
 
+  const planoAtual = normalizePlanoLabel(status.plano);
+  const planoSelecionadoMeta = PLANOS.find((p) => p.id === selecionado);
+
   return (
-    <main className="p-6 max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">Gerenciar Plano</h1>
-
-      <div className="bg-white rounded-xl shadow p-4 space-y-2">
-        <p>
-          <strong>Plano atual:</strong> {status.plano ?? "-"}
+    <main className="p-6 max-w-3xl space-y-6">
+      {/* Header premium */}
+      <header className="space-y-1">
+        <h1 className="text-2xl font-bold">Gerenciar Plano</h1>
+        <p className="text-sm text-gray-600">
+          Painel SaaS Premium • assinatura, upgrades e preview de recursos
         </p>
-        <p>
-          <strong>Status:</strong> Ativo
-        </p>
+      </header>
 
-        {planoDoNext && (
-          <p className="text-sm text-orange-700">
-            <strong>Upgrade necessário:</strong> tentativa de acesso a recurso do plano{" "}
-            <strong>{planoDoNext}</strong>.
+      {/* Status Card */}
+      <section className="bg-white rounded-xl shadow p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <p>
+            <strong>Plano atual:</strong>{" "}
+            <span className="capitalize">{planoAtual}</span>
           </p>
-        )}
-      </div>
 
-      <div className="space-y-2">
-        <label className="block font-medium">Escolha o novo plano</label>
+          <span className="text-xs px-2 py-1 rounded-full border bg-green-50 text-green-700">
+            Ativo
+          </span>
+        </div>
+
+        {planoDoNext ? (
+          <p className="text-sm text-orange-700">
+            <strong>Upgrade necessário:</strong> tentativa de acesso a recurso do{" "}
+            plano <strong>{planoDoNext}</strong>.
+          </p>
+        ) : null}
+      </section>
+
+      {/* Seletor Premium */}
+      <section className="bg-white rounded-xl shadow p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold">Escolha seu plano</h2>
+          <span className="text-xs text-gray-500">SaaS por Plano • Equação Y</span>
+        </div>
 
         <select
           value={selecionado}
@@ -307,54 +313,112 @@ export default function PlanoClient() {
             </option>
           ))}
         </select>
-      </div>
 
-      {/* ✅ Preview Premium: TODOS os planos têm “planilha” evoluída */}
-      <section className="bg-white rounded-xl shadow p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Preview da Planilha Financeira</h2>
-          <span className="text-xs text-gray-500">SaaS por Plano • Equação Y</span>
-        </div>
+        {/* Card do plano selecionado */}
+        {planoSelecionadoMeta ? (
+          <div className="border rounded-xl p-4 bg-gray-50">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <p className="font-semibold">
+                  {planoSelecionadoMeta.nome} •{" "}
+                  <span className="text-gray-600">{planoSelecionadoMeta.tag}</span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  {planoSelecionadoMeta.destaque}
+                </p>
+              </div>
 
-        {loadingPreview ? (
-          <p className="text-sm text-gray-600">Carregando preview...</p>
-        ) : preview?.ok ? (
-          <div className="space-y-3">
-            <div className="border rounded-lg p-3 space-y-1">
-              <p className="font-medium">{preview.titulo ?? tituloPlano(selecionado)}</p>
-              {preview.descricao ? (
-                <p className="text-sm text-gray-600">{preview.descricao}</p>
-              ) : null}
-
-              <p className="text-sm text-gray-700">
-                <strong>Nível:</strong> {preview.nivel ?? (selecionado === "premium_dominus" ? "premium" : selecionado)} •{" "}
-                <strong>Template:</strong> {preview.preview?.template ?? selecionado}
-              </p>
+              <span className="text-xs px-2 py-1 rounded-full border bg-white text-gray-700">
+                {selecionado === planoAtual ? "Atual" : "Selecionado"}
+              </span>
             </div>
 
-            <div className="border rounded-lg p-3">
-              <p className="text-sm font-medium mb-2">Seções disponíveis</p>
-
-              {(preview.preview?.sections?.length ?? 0) > 0 ? (
-                <ul className="list-disc pl-5 text-sm space-y-1">
-                  {preview.preview!.sections!.map((s, idx) => (
-                    <li key={idx}>{s}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-gray-600">
-                  Nenhuma seção disponível para este plano.
-                </p>
-              )}
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2">
+              {planoSelecionadoMeta.bullets.map((b) => (
+                <div
+                  key={b}
+                  className="text-sm border rounded-lg bg-white px-3 py-2"
+                >
+                  {b}
+                </div>
+              ))}
             </div>
           </div>
-        ) : (
-          <p className="text-sm text-gray-600">
-            Preview indisponível no momento ({preview?.reason ?? "unknown"}).
-          </p>
-        )}
+        ) : null}
       </section>
 
+      {/* Preview da planilha (Premium) */}
+      {(selecionado === "basico" ||
+        selecionado === "profissional" ||
+        selecionado === "ultra") && (
+        <section className="bg-white rounded-xl shadow p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">Preview da Planilha Financeira</h2>
+            <span className="text-xs text-gray-500">
+              Preview Real • por assinatura
+            </span>
+          </div>
+
+          {loadingPreview ? (
+            <p className="text-sm text-gray-600">Carregando preview...</p>
+          ) : preview?.ok ? (
+            <div className="space-y-3">
+              <div className="border rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-medium">
+                    {preview.titulo ?? "Planilha Financeira"}
+                  </p>
+
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full border ${badgeNivel(
+                      preview.nivel
+                    )}`}
+                  >
+                    {preview.nivel ?? "basico"}
+                  </span>
+                </div>
+
+                {preview.descricao ? (
+                  <p className="text-sm text-gray-600">{preview.descricao}</p>
+                ) : null}
+
+                <p className="text-xs text-gray-600">
+                  Template:{" "}
+                  <strong>{preview.preview?.template ?? "basico"}</strong>
+                </p>
+              </div>
+
+              <div className="border rounded-lg p-3">
+                <p className="text-sm font-medium mb-2">Seções disponíveis</p>
+
+                {preview.preview?.sections?.length ? (
+                  <ul className="list-disc pl-5 text-sm space-y-1">
+                    {preview.preview.sections.map((s, idx) => (
+                      <li key={idx}>{s}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-600">
+                    Nenhuma seção disponível para este plano.
+                  </p>
+                )}
+              </div>
+
+              {/* Mensagem estratégica premium */}
+              <div className="rounded-lg border bg-green-50 p-3 text-sm text-green-800">
+                <strong>Estratégia SaaS:</strong> o preview reflete seu plano real
+                ativo. Upgrades liberam novas seções, indicadores e automações.
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600">
+              Preview indisponível para este plano (ou requer upgrade).
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* Ação principal */}
       <button
         onClick={confirmar}
         className="w-full bg-green-600 text-white py-2 rounded hover:opacity-90"
@@ -362,7 +426,9 @@ export default function PlanoClient() {
         Confirmar alteração
       </button>
 
-      {mensagem && <p className="text-sm text-center text-gray-700">{mensagem}</p>}
+      {mensagem ? (
+        <p className="text-sm text-center text-gray-700">{mensagem}</p>
+      ) : null}
 
       <div className="pt-2 text-center">
         <Link
