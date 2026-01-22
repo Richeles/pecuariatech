@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { supabase } from "@/app/lib/supabase-browser";
 
 export default function LoginClient() {
   const router = useRouter();
@@ -20,29 +21,22 @@ export default function LoginClient() {
     setLoading(true);
 
     try {
-      // ✅ Login SSR (cookie) — cria sessão que o middleware enxerga
-      const r = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim(),
-          password,
-        }),
+      // ✅ LOGIN CANÔNICO — Supabase Client
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
       });
 
-      const j = await r.json().catch(() => null);
-
-      if (!r.ok || !j?.ok) {
-        setErrorMsg(j?.error || "Falha no login. Verifique email e senha.");
-        setLoading(false);
+      if (error || !data?.session) {
+        setErrorMsg("Falha no login. Verifique email e senha.");
         return;
       }
 
-      // ✅ Redirecionamento canônico (SSR cookie já criado)
+      // ✅ sessão criada → middleware reconhece via cookies
       router.replace(next);
       router.refresh();
     } catch (err: any) {
-      setErrorMsg(err?.message || "Erro inesperado no login.");
+      setErrorMsg("Erro inesperado no login.");
     } finally {
       setLoading(false);
     }
