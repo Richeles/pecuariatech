@@ -1,10 +1,11 @@
 // app/api/financeiro/planilha/route.ts
-// PecuariaTech — Financeiro Progressivo (Planilha por Plano)
+// PecuariaTech — Planilha Financeira (Progressiva por Plano)
 //
-// ✅ Equação Y: assinatura_ativa_view (âncora) -> fallback assinaturas -> payload progressivo
-// ✅ Triângulo 360: Auth SSR cookie-first + Paywall por assinatura ativa + Dados (preview degradável)
-// ✅ Regra Z: API sempre JSON. Erro técnico = degraded, nunca quebra UI.
-// ✅ NÃO usa "@/app/lib/supabase-ssr" (mata bug de build-time)
+// ✅ Equação Y: assinatura_ativa_view (âncora) -> fallback assinaturas
+// ✅ Dados REAIS: tabela âncora financeiro_lancamentos (NUNCA views por plano)
+// ✅ Financeiro progressivo: qualquer plano ATIVO => locked:false
+// ✅ Regra Z: sempre JSON (erro técnico vira degraded, não quebra UI)
+// ✅ SSR cookie-first (Next 16 + @supabase/ssr)
 
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
@@ -14,24 +15,35 @@ export const runtime = "nodejs";
 
 type NivelPlano = "basico" | "profissional" | "ultra" | "empresarial" | "premium";
 
+type PlanilhaRow = {
+  id: string;
+  data: string; // date
+  tipo: string;
+  valor: number;
+  categoria: string | null;
+  descricao: string | null;
+};
+
 type PlanilhaResponse = {
   ok: true;
   ativo: true;
   plano: string;
   nivel: NivelPlano;
 
-  // Financeiro progressivo (todos planos ativos)
+  // ✅ Financeiro progressivo: qualquer plano ATIVO entra
   locked: false;
+
   template: string;
   sections: string[];
   features: Record<string, boolean>;
 
-  // limites progressivos
   limit_rows: number;
   allow_export: boolean;
 
-  // preview degradável (não quebra se schema variar)
-  data_preview?: any[];
+  // ✅ DADOS REAIS
+  rows: PlanilhaRow[];
+
+  // ✅ modo degradado sem quebrar UI
   degraded?: boolean;
   reason?: string;
 
@@ -178,7 +190,6 @@ function planilhaModel(nivel: NivelPlano) {
 }
 
 async function buildSupabaseSSR() {
-  // ✅ Next.js 16: cookies() pode ser async
   const cookieStore = await cookies();
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -186,7 +197,6 @@ async function buildSupabaseSSR() {
 
   if (!url || !anon) throw new Error("missing_env");
 
-  // ✅ MODO MAIS COMPATÍVEL (evita cookies().getAll is not a function)
   return createServerClient(url, anon, {
     cookies: {
       get(name: string) {
@@ -214,8 +224,7 @@ async function getPlanoNivelByEquacaoY(
   supabase: any,
   userId: string
 ): Promise<{ plano: string; nivel: NivelPlano }> {
-  // ✅ 1) Fonte canônica: view assinatura_ativa_view
-  // OBS: não inventar colunas além do essencial
+  // ✅ 1) Fonte canônica
   const view = await supabase
     .from("assinatura_ativa_view")
     .select("status, plano, nivel")
@@ -232,7 +241,7 @@ async function getPlanoNivelByEquacaoY(
     return { plano, nivel };
   }
 
-  // ✅ 2) fallback: tabela assinaturas
+  // ✅ 2) fallback compatível
   const ass = await supabase
     .from("assinaturas")
     .select("status, plano, plano_nome, plano_nivel, atualizado_em")
@@ -252,59 +261,49 @@ async function getPlanoNivelByEquacaoY(
     (ass.data?.plano_nivel as string) ||
     "basico";
 
-  const nivel =
-    (ass.data?.plano_nivel as NivelPlano) || nivelFromPlano(plano);
+  const nivel = (ass.data?.plano_nivel as NivelPlano) || nivelFromPlano(plano);
 
   return { plano, nivel };
 }
 
-async function loadPreviewDataSafe(
+async function loadLancamentos(
   supabase: any,
   userId: string,
   limitRows: number
-): Promise<{ preview: any[]; degraded: boolean; reason?: string }> {
-  // ✅ Blindagem máxima:
-  // - tabela não existe -> degraded
-  // - colunas divergirem -> degraded
-  // - RLS negar -> degraded
-  // Sem quebrar UI.
+): Promise<{ rows: PlanilhaRow[]; degraded?: boolean; reason?: string }> {
+  // ✅ DADOS REAIS (âncora): financeiro_lancamentos
+  // ✅ Importante: NÃO usar views "financeiro_*_view"
 
   try {
-    // tentativa 1: colunas explícitas
-    const attempt1 = await supabase
+    const q = await supabase
       .from("financeiro_lancamentos")
-      .select("data,tipo,valor,categoria,descricao")
+      .select("id,data,tipo,valor,categoria,descricao,criado_em")
       .eq("user_id", userId)
-      .order("data", { ascending: false })
+      .order("criado_em", { ascending: false }) // ✅ coluna confirmada existente
       .limit(limitRows);
 
-    if (!attempt1.error) {
-      return { preview: attempt1.data ?? [], degraded: false };
+    if (q.error) {
+      return {
+        rows: [],
+        degraded: true,
+        reason: `financeiro_query_error: ${q.error.message}`,
+      };
     }
 
-    // tentativa 2: fallback "*"
-    const attempt2 = await supabase
-      .from("financeiro_lancamentos")
-      .select("*")
-      .eq("user_id", userId)
-      .limit(Math.min(limitRows, 200));
-
-    if (attempt2.error) {
-      return { preview: [], degraded: true, reason: "preview_query_error" };
-    }
-
+    // ✅ Se não tem lançamentos, isso NÃO é erro.
+    return { rows: (q.data ?? []) as PlanilhaRow[] };
+  } catch (e: any) {
     return {
-      preview: attempt2.data ?? [],
+      rows: [],
       degraded: true,
-      reason: "preview_degraded_columns",
+      reason: `financeiro_exception: ${String(e?.message ?? e)}`,
     };
-  } catch {
-    return { preview: [], degraded: true, reason: "preview_table_missing" };
   }
 }
 
 export async function GET() {
   try {
+    // sanity env
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       return jsonNoCache({ ok: false, reason: "missing_env" }, 500);
     }
@@ -319,7 +318,7 @@ export async function GET() {
 
     const userId = userData.user.id;
 
-    // 2) Equação Y (Plano/Nível) — view -> fallback
+    // 2) Equação Y (plano/nivel)
     let plano = "basico";
     let nivel: NivelPlano = "basico";
 
@@ -334,40 +333,37 @@ export async function GET() {
         return jsonNoCache({ ok: false, reason: "assinatura_inativa" }, 403);
       }
 
-      // Regra Z: erro técnico não vira upgrade
-      // degrada para básico sem quebrar
+      // Regra Z: erro técnico não vira "upgrade"
       plano = "basico";
       nivel = "basico";
     }
 
     const model = planilhaModel(nivel);
 
-    // 3) Preview seguro (degradável)
-    const previewLoad = await loadPreviewDataSafe(supabase, userId, model.limit_rows);
+    // 3) Dados reais
+    const data = await loadLancamentos(supabase, userId, model.limit_rows);
 
     const payload: PlanilhaResponse = {
       ok: true,
       ativo: true,
       plano,
       nivel,
-      locked: false, // ✅ Financeiro progressivo
+      locked: false,
       template: model.template,
       sections: model.sections,
       features: model.features,
       limit_rows: model.limit_rows,
       allow_export: model.allow_export,
-      data_preview: previewLoad.preview,
-      degraded: previewLoad.degraded || undefined,
-      reason: previewLoad.reason || undefined,
+      rows: data.rows,
+      degraded: data.degraded,
+      reason: data.reason,
       ts: new Date().toISOString(),
     };
 
     return jsonNoCache(payload, 200);
   } catch (e: any) {
     const msg = String(e?.message ?? e);
-    if (msg.includes("missing_env")) {
-      return jsonNoCache({ ok: false, reason: "missing_env" }, 500);
-    }
+    if (msg.includes("missing_env")) return jsonNoCache({ ok: false, reason: "missing_env" }, 500);
     return jsonNoCache({ ok: false, reason: "internal_error", message: msg }, 500);
   }
 }
