@@ -1,13 +1,9 @@
 // CAMINHO: app/dashboard/assinatura/plano/page.tsx
-// Plano Premium Internacional (SaaS)
-// ✅ Next.js 16: page.tsx SERVER + Suspense (anti build bailout)
-// ✅ Equação Y: UI consome APIs
-// ✅ Triângulo 360: Auth + Paywall + Dados
-
+// Page Server + Suspense (regra Next 16: evitar hook em page.tsx)
 import { Suspense } from "react";
 import PlanoClient from "./PlanoClient";
 
-export default function PlanoAssinaturaPage() {
+export default function Page() {
   return (
     <Suspense fallback={<p className="p-6">Carregando...</p>}>
       <PlanoClient />
