@@ -9,6 +9,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { cookies } from "next/headers";
+import { getServerAdmin } from "../../lib/server-admin"; // ✅ PASSO 2
 
 type Beneficios = {
   rebanho: boolean;
@@ -57,11 +58,14 @@ async function getStatusPlanoSSR(): Promise<StatusPlanoResp> {
         ? `https://${process.env.VERCEL_URL}`
         : "http://localhost:3333";
 
-    const res = await fetch(`${baseUrl}/api/assinaturas/status-server?ts=${Date.now()}`, {
-      method: "GET",
-      cache: "no-store",
-      headers: { cookie },
-    });
+    const res = await fetch(
+      `${baseUrl}/api/assinaturas/status-server?ts=${Date.now()}`,
+      {
+        method: "GET",
+        cache: "no-store",
+        headers: { cookie },
+      }
+    );
 
     if (!res.ok) {
       return {
@@ -73,7 +77,9 @@ async function getStatusPlanoSSR(): Promise<StatusPlanoResp> {
       };
     }
 
-    const data = (await res.json().catch(() => null)) as Partial<StatusPlanoResp> | null;
+    const data = (await res.json().catch(() => null)) as
+      | Partial<StatusPlanoResp>
+      | null;
 
     return {
       ativo: Boolean(data?.ativo),
@@ -103,6 +109,9 @@ export default async function DashboardLayout({
   const status = await getStatusPlanoSSR();
   const b = status?.beneficios ?? BENEFICIOS_FALLBACK;
 
+  // ✅ PASSO 2 — contexto admin (server-side)
+  const { isAdmin } = await getServerAdmin();
+
   // 🔒 Triângulo 360: aqui só controlamos exibição
   // Gate real continua no middleware/paywall.
   const canFinanceiro = Boolean(b.financeiro);
@@ -129,7 +138,9 @@ export default async function DashboardLayout({
 
             <div className="leading-tight">
               <h1 className="text-xl font-bold tracking-wide">PecuariaTech</h1>
-              <p className="text-[11px] text-white/80">Gestão inteligente no campo</p>
+              <p className="text-[11px] text-white/80">
+                Gestão inteligente no campo
+              </p>
             </div>
           </div>
 
@@ -144,13 +155,19 @@ export default async function DashboardLayout({
 
         {/* NAVEGAÇÃO */}
         <nav className="flex-1 px-4 py-6 space-y-2 text-sm">
-          <Link href="/dashboard" className="block rounded px-3 py-2 hover:bg-green-600">
+          <Link
+            href="/dashboard"
+            className="block rounded px-3 py-2 hover:bg-green-600"
+          >
             Visão Geral
           </Link>
 
           {/* Financeiro (por plano) */}
           {canFinanceiro ? (
-            <Link href="/dashboard/financeiro" className="block rounded px-3 py-2 hover:bg-green-600">
+            <Link
+              href="/dashboard/financeiro"
+              className="block rounded px-3 py-2 hover:bg-green-600"
+            >
               Financeiro
             </Link>
           ) : (
@@ -159,23 +176,33 @@ export default async function DashboardLayout({
               className="block rounded px-3 py-2 hover:bg-green-600/40 text-white/80"
               title="Disponível em planos superiores"
             >
-              Financeiro <span className="text-[10px] opacity-80">(Upgrade)</span>
+              Financeiro{" "}
+              <span className="text-[10px] opacity-80">(Upgrade)</span>
             </Link>
           )}
 
           {/* Rebanho */}
-          <Link href="/dashboard/rebanho" className="block rounded px-3 py-2 hover:bg-green-600">
+          <Link
+            href="/dashboard/rebanho"
+            className="block rounded px-3 py-2 hover:bg-green-600"
+          >
             Rebanho
           </Link>
 
           {/* Pastagem */}
-          <Link href="/dashboard/pastagem" className="block rounded px-3 py-2 hover:bg-green-600">
+          <Link
+            href="/dashboard/pastagem"
+            className="block rounded px-3 py-2 hover:bg-green-600"
+          >
             Pastagem
           </Link>
 
           {/* Engorda (por plano) */}
           {canEngorda ? (
-            <Link href="/dashboard/engorda" className="block rounded px-3 py-2 hover:bg-green-600">
+            <Link
+              href="/dashboard/engorda"
+              className="block rounded px-3 py-2 hover:bg-green-600"
+            >
               Engorda
             </Link>
           ) : (
@@ -184,13 +211,17 @@ export default async function DashboardLayout({
               className="block rounded px-3 py-2 hover:bg-green-600/40 text-white/80"
               title="Disponível em planos superiores"
             >
-              Engorda <span className="text-[10px] opacity-80">(Upgrade)</span>
+              Engorda{" "}
+              <span className="text-[10px] opacity-80">(Upgrade)</span>
             </Link>
           )}
 
-          {/* CFO (somente premium/pelos benefícios) */}
+          {/* CFO */}
           {canCFO ? (
-            <Link href="/dashboard/cfo" className="block rounded px-3 py-2 hover:bg-green-600">
+            <Link
+              href="/dashboard/cfo"
+              className="block rounded px-3 py-2 hover:bg-green-600"
+            >
               CFO 360°
             </Link>
           ) : (
@@ -199,12 +230,16 @@ export default async function DashboardLayout({
               className="block rounded px-3 py-2 hover:bg-green-600/40 text-white/80"
               title="Disponível em Premium Dominus 360°"
             >
-              CFO 360° <span className="text-[10px] opacity-80">(Premium)</span>
+              CFO 360°{" "}
+              <span className="text-[10px] opacity-80">(Premium)</span>
             </Link>
           )}
 
           {/* Planos */}
-          <Link href="/planos" className="block rounded px-3 py-2 hover:bg-green-600">
+          <Link
+            href="/planos"
+            className="block rounded px-3 py-2 hover:bg-green-600"
+          >
             Planos
           </Link>
 
