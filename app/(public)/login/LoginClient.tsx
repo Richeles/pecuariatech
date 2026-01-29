@@ -7,6 +7,7 @@ import { supabase } from "@/app/lib/supabase-browser";
 
 export default function LoginClient() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
@@ -19,6 +20,9 @@ export default function LoginClient() {
     setLoading(true);
     setErro(null);
 
+    // ===============================
+    // LOGIN
+    // ===============================
     const { error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password: senha.trim(),
@@ -30,60 +34,70 @@ export default function LoginClient() {
       return;
     }
 
-    router.replace("/dashboard");
+    // ===============================
+    // CONSULTA IDENTIDADE ADMIN (Y)
+    // ===============================
+    try {
+      const res = await fetch("/api/admin/me", {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      const data = await res.json();
+
+      if (data?.is_admin === true) {
+        router.replace("/dashboard/admin");
+      } else {
+        router.replace("/dashboard");
+      }
+    } catch {
+      // fallback seguro
+      router.replace("/dashboard");
+    }
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4">
-      <form
-        onSubmit={entrar}
-        className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm space-y-4"
+    <form onSubmit={entrar} className="space-y-4">
+      <input
+        type="email"
+        placeholder="Email"
+        className="w-full border rounded px-3 py-2"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+
+      <input
+        type="password"
+        placeholder="Senha"
+        className="w-full border rounded px-3 py-2"
+        value={senha}
+        onChange={(e) => setSenha(e.target.value)}
+        required
+      />
+
+      {erro && (
+        <p className="text-red-600 text-sm text-center">
+          {erro}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-green-600 text-white py-2 rounded hover:opacity-90 disabled:opacity-60"
       >
-        <h1 className="text-xl font-bold text-center">
-          Login · PecuariaTech
-        </h1>
+        {loading ? "Entrando..." : "Entrar"}
+      </button>
 
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full border rounded px-3 py-2"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-
-        <input
-          type="password"
-          placeholder="Senha"
-          className="w-full border rounded px-3 py-2"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          required
-        />
-
-        {erro && (
-          <p className="text-red-600 text-sm text-center">
-            {erro}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-green-600 text-white py-2 rounded hover:opacity-90 disabled:opacity-60"
+      <div className="text-center pt-2">
+        <Link
+          href="/reset-password"
+          className="text-sm text-green-700 hover:underline"
         >
-          {loading ? "Entrando..." : "Entrar"}
-        </button>
-
-        <div className="text-center pt-2">
-          <Link
-            href="/reset-password"
-            className="text-sm text-green-700 hover:underline"
-          >
-            Esqueci minha senha
-          </Link>
-        </div>
-      </form>
-    </main>
+          Esqueci minha senha
+        </Link>
+      </div>
+    </form>
   );
 }
