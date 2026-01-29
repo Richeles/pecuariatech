@@ -5,6 +5,9 @@ import { createServerClient } from "@supabase/ssr";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// ==========================
+// Helpers
+// ==========================
 function json(data: any) {
   return NextResponse.json(data, {
     headers: { "Cache-Control": "no-store" },
@@ -16,11 +19,12 @@ function isAtiva(status?: string | null) {
   return s === "ativa" || s === "ativo" || s === "active";
 }
 
+// ==========================
+// GET
+// ==========================
 export async function GET() {
   try {
-    // =========================
-    // 0) COOKIES + CLIENT
-    // =========================
+    // Cookies SSR
     const cookieStore = await cookies();
 
     const supabase = createServerClient(
@@ -62,7 +66,7 @@ export async function GET() {
     let plano_id = assinatura?.plano_id ?? null;
 
     // =========================
-    // 3) OVERRIDE ADMIN (DEV / MASTER)
+    // 3) OVERRIDE ADMIN (opcional)
     // =========================
     try {
       const base =
@@ -74,14 +78,12 @@ export async function GET() {
 
       if (res.ok) {
         const o = await res.json();
-        if (o?.plano) {
-          plano_id = o.plano;
+        if (o?.plano_id) {
+          plano_id = o.plano_id;
           ativo = true;
         }
       }
-    } catch {
-      // silencioso por design
-    }
+    } catch {}
 
     if (!ativo || !plano_id) {
       return json({
@@ -92,13 +94,12 @@ export async function GET() {
     }
 
     // =========================
-    // 4) PLANO (COLUNAS REAIS)
+    // 4) PLANO  (planos_legacy)
     // =========================
     const { data: plano } = await supabase
-      .from("planos")
-      .select("codigo, nome_exibicao, nivel_ordem")
+      .from("planos_legacy")
+      .select("id, nome, nivel")
       .eq("id", plano_id)
-      .eq("ativo", true)
       .single();
 
     if (!plano) {
@@ -110,24 +111,19 @@ export async function GET() {
     }
 
     // =========================
-    // 5) BENEFÍCIOS
+    // 5) BENEFÍCIOS (fallback)
     // =========================
-    const { data: beneficios } = await supabase
-      .from("planos_beneficios")
-      .select("*")
-      .eq("plano_codigo", plano.codigo)
-      .single();
+    const beneficios = {};
 
     // =========================
-    // 6) RESPOSTA CANÔNICA
+    // 6) RESPOSTA FINAL
     // =========================
     return json({
       ok: true,
       ativo: true,
-      plano: plano.codigo,
-      plano_nome: plano.nome_exibicao,
-      nivel: plano.nivel_ordem,
-      beneficios: beneficios || {},
+      plano: plano.nome,   // Ex: Ultra
+      nivel: plano.nivel, // Ex: 3
+      beneficios,
     });
   } catch (e: any) {
     return json({
