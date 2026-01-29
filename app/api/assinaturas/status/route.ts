@@ -18,6 +18,9 @@ function isAtiva(status?: string | null) {
 
 export async function GET() {
   try {
+    // =========================
+    // 0) COOKIES + CLIENT
+    // =========================
     const cookieStore = await cookies();
 
     const supabase = createServerClient(
@@ -59,7 +62,7 @@ export async function GET() {
     let plano_id = assinatura?.plano_id ?? null;
 
     // =========================
-    // 3) OVERRIDE ADMIN
+    // 3) OVERRIDE ADMIN (DEV / MASTER)
     // =========================
     try {
       const base =
@@ -76,7 +79,9 @@ export async function GET() {
           ativo = true;
         }
       }
-    } catch {}
+    } catch {
+      // silencioso por design
+    }
 
     if (!ativo || !plano_id) {
       return json({
@@ -87,12 +92,13 @@ export async function GET() {
     }
 
     // =========================
-    // 4) PLANO
+    // 4) PLANO (COLUNAS REAIS)
     // =========================
     const { data: plano } = await supabase
       .from("planos")
-      .select("codigo, nivel")
+      .select("codigo, nome_exibicao, nivel_ordem")
       .eq("id", plano_id)
+      .eq("ativo", true)
       .single();
 
     if (!plano) {
@@ -113,13 +119,14 @@ export async function GET() {
       .single();
 
     // =========================
-    // 6) RESPOSTA
+    // 6) RESPOSTA CANÔNICA
     // =========================
     return json({
       ok: true,
       ativo: true,
       plano: plano.codigo,
-      nivel: plano.nivel,
+      plano_nome: plano.nome_exibicao,
+      nivel: plano.nivel_ordem,
       beneficios: beneficios || {},
     });
   } catch (e: any) {
