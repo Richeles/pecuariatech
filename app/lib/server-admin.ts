@@ -1,10 +1,6 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
-/**
- * Verifica se o usuário autenticado é Admin Master.
- * Uso exclusivo em Server Components.
- */
 export async function getServerAdmin() {
   const cookieStore = await cookies();
 
@@ -17,31 +13,39 @@ export async function getServerAdmin() {
           return cookieStore.getAll();
         },
         setAll() {
-          /* noop - leitura apenas */
+          // leitura apenas (SSR)
         }
       }
     }
   );
 
+  // ============================
+  // 1) VALIDAR SESSÃO
+  // ============================
   const {
     data: { user },
-    error: userError
+    error
   } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return {
-      isAdmin: false
-    };
+  if (error || !user) {
+    return { is_admin: false };
   }
 
-  const { data: adminRow } = await supabase
+  // ============================
+  // 2) VERIFICAR ADMIN MASTER
+  // ============================
+  const { data: admin } = await supabase
     .from("admin_users")
-    .select("id")
+    .select("role, ativo")
     .eq("user_id", user.id)
     .eq("ativo", true)
     .maybeSingle();
 
+  if (!admin) {
+    return { is_admin: false };
+  }
+
   return {
-    isAdmin: Boolean(adminRow)
+    is_admin: String(admin.role).toLowerCase() === "master"
   };
 }
