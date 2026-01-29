@@ -1,4 +1,4 @@
-códigoimport { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
@@ -62,10 +62,12 @@ export async function GET() {
     // 3) OVERRIDE ADMIN
     // =========================
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SITE_URL || "http://127.0.0.1:3333"}/api/admin/override-plan`,
-        { cache: "no-store" }
-      );
+      const base =
+        process.env.NEXT_PUBLIC_SITE_URL || "http://127.0.0.1:3333";
+
+      const res = await fetch(`${base}/api/admin/override-plan`, {
+        cache: "no-store",
+      });
 
       if (res.ok) {
         const o = await res.json();
@@ -111,7 +113,7 @@ export async function GET() {
       .single();
 
     // =========================
-    // 6) RESPOSTA CANÔNICA
+    // 6) RESPOSTA
     // =========================
     return json({
       ok: true,
