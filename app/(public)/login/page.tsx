@@ -1,41 +1,40 @@
-import Image from "next/image";
-import { Suspense } from "react";
-import LoginClient from "./components/LoginClient";
+// app/(public)/login/page.tsx
+// Página pública de login — arquitetura canônica PecuariaTech
 
-export const dynamic = "force-dynamic";
+import LoginClient from "./LoginClient";
 
-export default function LoginPage() {
+export default function PublicLoginPage() {
   return (
-    <div className="relative min-h-screen flex items-center justify-center">
-      <Image
-        src="/pecuariatech.png"
-        alt="PecuariaTech - Campo e Rebanho"
-        fill
-        priority
-        className="object-cover"
+    <main
+      className="relative w-full flex justify-center px-4"
+      style={{ minHeight: "100vh" }}
+    >
+      {/* Background */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/pecuariatech.png')" }}
       />
-
       <div className="absolute inset-0 bg-black/40" />
 
-      <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-8 shadow-xl">
-        <h1 className="mb-6 text-center text-2xl font-bold">
-          Login · PecuariaTech
-        </h1>
+      {/* Card */}
+      <div className="relative z-10 w-full max-w-md mt-20">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
 
-        {/* ✅ OBRIGATÓRIO: Suspense envolvendo Client Component */}
-        <Suspense fallback={null}>
+          {/* Cabeçalho */}
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-green-700">
+              PecuariaTech
+            </h1>
+            <p className="text-gray-600 text-sm mt-1">
+              Acesse sua conta para continuar
+            </p>
+          </div>
+
+          {/* Formulário */}
           <LoginClient />
-        </Suspense>
 
-        <div className="mt-4 text-center">
-          <a
-            href="/reset-password"
-            className="text-sm text-green-700 hover:underline"
-          >
-            Esqueci minha senha
-          </a>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

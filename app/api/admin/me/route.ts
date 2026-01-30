@@ -19,15 +19,13 @@ export async function GET() {
       }
     );
 
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ is_admin: false });
     }
 
-    const { data } = await supabase
+    const { data: admin } = await supabase
       .from("admin_users")
       .select("role, ativo")
       .eq("user_id", user.id)
@@ -35,10 +33,11 @@ export async function GET() {
       .maybeSingle();
 
     return NextResponse.json({
-      is_admin: data?.role === "master"
+      is_admin: String(admin?.role ?? "").toLowerCase() === "master"
     });
 
-  } catch {
+  } catch (e) {
+    console.error("ADMIN_ME_ERROR", e);
     return NextResponse.json({ is_admin: false });
   }
 }
