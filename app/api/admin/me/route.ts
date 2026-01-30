@@ -24,31 +24,21 @@ export async function GET() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({
-        ativo: false,
-        reason: "no_session"
-      });
+      return NextResponse.json({ is_admin: false });
     }
 
     const { data } = await supabase
-      .from("assinatura_ativa_view")
-      .select("status")
+      .from("admin_users")
+      .select("role, ativo")
       .eq("user_id", user.id)
+      .eq("ativo", true)
       .maybeSingle();
 
-    if (data?.status === "ativa" || data?.status === "ativo") {
-      return NextResponse.json({ ativo: true });
-    }
-
     return NextResponse.json({
-      ativo: false,
-      reason: "no_subscription"
+      is_admin: data?.role === "master"
     });
 
   } catch {
-    return NextResponse.json({
-      ativo: false,
-      reason: "internal_error"
-    });
+    return NextResponse.json({ is_admin: false });
   }
 }
