@@ -19,38 +19,58 @@ export async function GET() {
       }
     );
 
-    // Sessão válida
-    const { data: { user } } = await supabase.auth.getUser();
+    // =========================
+    // Sessão
+    // =========================
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json({ error: "no_session" }, { status: 401 });
+    if (!user || !user.email) {
+      return NextResponse.json(
+        { error: "no_session" },
+        { status: 401 }
+      );
     }
 
-    // Verifica admin
+    // =========================
+    // Admin via EMAIL
+    // =========================
     const { data: admin } = await supabase
       .from("admin_users")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("email", user.email)
       .eq("ativo", true)
       .maybeSingle();
 
     if (!admin) {
-      return NextResponse.json({ error: "not_admin" }, { status: 403 });
+      return NextResponse.json(
+        { error: "not_admin" },
+        { status: 403 }
+      );
     }
 
-    // Busca planos
+    // =========================
+    // Buscar planos
+    // =========================
     const { data, error } = await supabase
       .from("planos")
       .select("id, nome, nivel, preco, ativo")
       .order("preco");
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(data);
 
   } catch {
-    return NextResponse.json({ error: "internal_error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "internal_error" },
+      { status: 500 }
+    );
   }
 }
