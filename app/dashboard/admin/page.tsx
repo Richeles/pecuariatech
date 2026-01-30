@@ -1,12 +1,29 @@
-// app/dashboard/admin/page.tsx
-import { notFound } from "next/navigation";
-import { getServerAdmin } from "@/app/lib/server-admin";
+import { cookies } from "next/headers";
 
 export default async function AdminPage() {
-  const { isAdmin } = await getServerAdmin();
+  const cookieStore = await cookies();
 
-  if (!isAdmin) {
-    notFound();
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SITE_URL || "http://127.0.0.1:3333"}/api/admin/me`,
+    {
+      headers: {
+        cookie: cookieStore
+          .getAll()
+          .map(c => `${c.name}=${c.value}`)
+          .join("; "),
+      },
+      cache: "no-store",
+    }
+  );
+
+  const data = await res.json();
+
+  if (!data?.is_admin) {
+    return (
+      <div className="p-8">
+        <h1>Acesso negado</h1>
+      </div>
+    );
   }
 
   return (
