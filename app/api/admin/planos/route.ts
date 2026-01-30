@@ -19,11 +19,9 @@ export async function GET() {
       }
     );
 
-    // =========================
-    // Sessão
-    // =========================
+    // 1) Sessão
     const {
-      data: { user },
+      data: { user }
     } = await supabase.auth.getUser();
 
     if (!user || !user.email) {
@@ -33,12 +31,10 @@ export async function GET() {
       );
     }
 
-    // =========================
-    // Admin via EMAIL
-    // =========================
+    // 2) Admin por EMAIL (schema real)
     const { data: admin } = await supabase
       .from("admin_users")
-      .select("id")
+      .select("id, email, ativo")
       .eq("email", user.email)
       .eq("ativo", true)
       .maybeSingle();
@@ -50,9 +46,7 @@ export async function GET() {
       );
     }
 
-    // =========================
-    // Buscar planos
-    // =========================
+    // 3) Planos
     const { data, error } = await supabase
       .from("planos")
       .select("id, nome, nivel, preco, ativo")
@@ -67,7 +61,7 @@ export async function GET() {
 
     return NextResponse.json(data);
 
-  } catch {
+  } catch (err) {
     return NextResponse.json(
       { error: "internal_error" },
       { status: 500 }
