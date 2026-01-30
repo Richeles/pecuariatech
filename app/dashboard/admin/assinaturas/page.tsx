@@ -1,6 +1,6 @@
 // app/dashboard/admin/assinaturas/page.tsx
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +14,16 @@ type Assinatura = {
 
 export default async function AdminAssinaturasPage() {
   const cookieStore = await cookies();
+  const headerStore = await headers();
 
-  const res = await fetch("/api/admin/assinaturas", {
+  const host = headerStore.get("host");
+  const protocol = host?.includes("localhost") || host?.includes("127.0.0.1")
+    ? "http"
+    : "https";
+
+  const url = `${protocol}://${host}/api/admin/assinaturas`;
+
+  const res = await fetch(url, {
     headers: {
       cookie: cookieStore
         .getAll()
