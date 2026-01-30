@@ -6,19 +6,11 @@ export default async function AdminPage() {
   try {
     const cookieStore = await cookies();
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      process.env.VERCEL_URL?.startsWith("http")
-        ? process.env.VERCEL_URL
-        : `https://${process.env.VERCEL_URL}`;
-
-    const url = `${baseUrl}/api/admin/me`;
-
-    const res = await fetch(url, {
+    const res = await fetch("/api/admin/me", {
       headers: {
         cookie: cookieStore
           .getAll()
-          .map((c) => `${c.name}=${c.value}`)
+          .map(c => `${c.name}=${c.value}`)
           .join("; "),
       },
       cache: "no-store",
@@ -49,7 +41,7 @@ export default async function AdminPage() {
         </p>
       </div>
     );
-  } catch (err) {
+  } catch {
     return (
       <div className="p-8">
         <h1>Erro ao carregar Admin</h1>
