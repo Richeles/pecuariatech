@@ -1,70 +1,53 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { NextResponse } from "next/server"
 
-export async function GET() {
-  try {
-    const cookieStore = await cookies();
+export async function GET(req: Request) {
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll() {}
+  // 🔑 1) ORÁCULO ÚNICO
+  const adminRes = await fetch(
+    `${process.env.NEXT_PUBLIC_SITE_URL}/api/admin/me`,
+    {
+      headers: {
+        cookie: req.headers.get("cookie") || ""
+      }
+    }
+  )
+
+  const adminData = await adminRes.json()
+
+  if (!adminData?.is_admin) {
+    return NextResponse.json(
+      { error: "not_admin" },
+      { status: 403 }
+    )
+  }
+
+  // 📦 2) ACESSO A DADOS
+  const { cookies } = await import("next/headers")
+  const { createServerClient } = await import("@supabase/ssr")
+
+  const cookieStore = await cookies()
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options)
+          })
         }
       }
-    );
-
-    // 1) Sessão
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-
-    if (!user || !user.email) {
-      return NextResponse.json(
-        { error: "no_session" },
-        { status: 401 }
-      );
     }
+  )
 
-    // 2) Admin por EMAIL (schema real)
-    const { data: admin } = await supabase
-      .from("admin_users")
-      .select("id, email, ativo")
-      .eq("email", user.email)
-      .eq("ativo", true)
-      .maybeSingle();
+  const { data } = await supabase
+    .from("planos")
+    .select("id, nome, nivel, preco, ativo")
+    .order("preco")
 
-    if (!admin) {
-      return NextResponse.json(
-        { error: "not_admin" },
-        { status: 403 }
-      );
-    }
-
-    // 3) Planos
-    const { data, error } = await supabase
-      .from("planos")
-      .select("id, nome, nivel, preco, ativo")
-      .order("preco");
-
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(data);
-
-  } catch (err) {
-    return NextResponse.json(
-      { error: "internal_error" },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(data || [])
 }
