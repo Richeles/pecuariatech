@@ -1,18 +1,7 @@
-import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
-import { isAdminMaster } from "../_lib/isAdmin"
 
-export async function GET() {
-
-  const isAdmin = await isAdminMaster()
-
-  if (!isAdmin) {
-    return NextResponse.json(
-      { error: "not_admin" },
-      { status: 403 }
-    )
-  }
+export async function isAdminMaster() {
 
   const cookieStore = await cookies()
 
@@ -33,10 +22,15 @@ export async function GET() {
     }
   )
 
-  const { data } = await supabase
-    .from("planos")
-    .select("id, nome, nivel, preco, ativo")
-    .order("preco")
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
 
-  return NextResponse.json(data || [])
+  const { data } = await supabase
+    .from("admin_users")
+    .select("role, ativo")
+    .eq("user_id", user.id)
+    .eq("ativo", true)
+    .maybeSingle()
+
+  return data?.role === "master"
 }
