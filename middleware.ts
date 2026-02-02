@@ -22,7 +22,7 @@ const PUBLIC = [
 function isPublic(pathname: string) {
   return (
     PUBLIC.some(p => pathname === p || pathname.startsWith(p + "/")) ||
-    pathname.startsWith("/api/admin") ||     // admin fora do middleware
+    pathname.startsWith("/api/admin") ||     // ADMIN FORA DO MIDDLEWARE
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     pathname.endsWith(".png") ||
