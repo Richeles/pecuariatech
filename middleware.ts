@@ -22,7 +22,7 @@ const PUBLIC = [
 function isPublic(pathname: string) {
   return (
     PUBLIC.some(p => pathname === p || pathname.startsWith(p + "/")) ||
-    pathname.startsWith("/api/admin") ||     // ADMIN FORA DO MIDDLEWARE
+    pathname.startsWith("/api/admin") || // ADMIN FORA DO MIDDLEWARE
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     pathname.endsWith(".png") ||
@@ -35,7 +35,6 @@ function isPublic(pathname: string) {
 // MIDDLEWARE
 // ===============================
 export async function middleware(req: NextRequest) {
-
   const pathname = req.nextUrl.pathname;
 
   // ----------------------------
@@ -53,9 +52,8 @@ export async function middleware(req: NextRequest) {
   }
 
   try {
-
     // ==========================
-    // STATUS ASSINATURA
+    // STATUS ASSINATURA (COOKIE FIRST)
     // ==========================
     const res = await fetch(
       `${req.nextUrl.origin}/api/assinaturas/status`,
@@ -74,9 +72,6 @@ export async function middleware(req: NextRequest) {
 
     const data = await res.json();
 
-    // --------------------------
-    // BLINDAGEM TOTAL
-    // --------------------------
     const ativo = data?.ativo === true;
     const reason = String(data?.reason ?? "").toLowerCase();
 
