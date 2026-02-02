@@ -22,6 +22,7 @@ const PUBLIC = [
 function isPublic(pathname: string) {
   return (
     PUBLIC.some(p => pathname === p || pathname.startsWith(p + "/")) ||
+    pathname.startsWith("/api/admin") ||     // ADMIN FORA DO MIDDLEWARE
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     pathname.endsWith(".png") ||
@@ -45,7 +46,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // ----------------------------
-  // PROTEGE SOMENTE DASHBOARD
+  // SOMENTE DASHBOARD
   // ----------------------------
   if (!pathname.startsWith("/dashboard")) {
     return NextResponse.next();
@@ -54,7 +55,7 @@ export async function middleware(req: NextRequest) {
   try {
 
     // ==========================
-    // CONSULTA STATUS
+    // STATUS ASSINATURA
     // ==========================
     const res = await fetch(
       `${req.nextUrl.origin}/api/assinaturas/status`,
@@ -73,6 +74,9 @@ export async function middleware(req: NextRequest) {
 
     const data = await res.json();
 
+    // --------------------------
+    // BLINDAGEM TOTAL
+    // --------------------------
     const ativo = data?.ativo === true;
     const reason = String(data?.reason ?? "").toLowerCase();
 
