@@ -1,4 +1,3 @@
-// app/dashboard/components/Sidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -22,13 +21,14 @@ export default function Sidebar() {
 
       {/* LOGO */}
       <div className="mb-12">
-        <h2 className="text-3xl font-extrabold tracking-tight">
+        <h2 className="text-3xl font-bold tracking-tight">
           PecuariaTech
         </h2>
       </div>
 
       {/* MENU */}
       <nav className="flex flex-col gap-3">
+
         {items.map((item) => {
           const active = pathname === item.href;
 
@@ -38,12 +38,12 @@ export default function Sidebar() {
               href={item.href}
               className={`
                 px-5 py-3 rounded-lg
-                text-base font-semibold
-                transition-all duration-200
+                text-[15px] font-medium
+                transition-colors duration-200
                 ${
                   active
-                    ? "bg-white text-green-700 shadow-sm"
-                    : "text-white hover:bg-green-600"
+                    ? "bg-white text-green-700"
+                    : "text-green-100 hover:bg-green-600 hover:text-white"
                 }
               `}
             >
@@ -51,7 +51,9 @@ export default function Sidebar() {
             </Link>
           );
         })}
+
       </nav>
+
     </aside>
   );
 }

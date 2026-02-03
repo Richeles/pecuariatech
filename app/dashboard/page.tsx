@@ -1,111 +1,117 @@
-// app/dashboard/page.tsx
-// DASHBOARD HOME PREMIUM - PECUARIATECH
-
-import Link from "next/link";
-
 export default function DashboardHome() {
   return (
-    <main className="p-8 space-y-10 max-w-7xl mx-auto">
+    <main className="p-10 max-w-7xl mx-auto space-y-16">
 
       {/* ================= HEADER ================= */}
-      <header>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Dashboard
+      <header className="space-y-2">
+        <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+          Dashboard PecuariaTech
         </h1>
-        <p className="text-gray-600 mt-1">
-          Visão geral da operação
+        <p className="text-gray-400">
+          Centro de controle da fazenda
         </p>
       </header>
 
       {/* ================= KPIs ================= */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-        <Kpi title="Rebanho" value="1.247 animais" />
-        <Kpi title="Financeiro" value="R$ 124.580" />
-        <Kpi title="Engorda" value="72% em meta" />
-        <Kpi title="Resultado" value="Positivo" />
+        {[
+          { label: "Animais", value: "1.247" },
+          { label: "Receita", value: "R$ 124.580" },
+          { label: "Produtividade", value: "87%" },
+        ].map((kpi) => (
+          <div
+            key={kpi.label}
+            className="
+              bg-white rounded-xl
+              border border-gray-200
+              p-8 min-h-[120px]
+              flex flex-col justify-between
+              hover:border-green-400
+              hover:bg-green-50/30
+              transition
+            "
+          >
+            <p className="text-sm text-gray-500">{kpi.label}</p>
+            <p className="text-4xl font-bold text-green-700">
+              {kpi.value}
+            </p>
+          </div>
+        ))}
 
       </section>
 
       {/* ================= MÓDULOS ================= */}
-      <section>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Módulos
+      <section className="space-y-6">
+
+        <h2 className="text-xl font-semibold text-gray-900">
+          Módulos do Sistema
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-          <Module
-            title="Financeiro"
-            desc="Custos, receitas, indicadores e DRE"
-            href="/dashboard/financeiro"
-          />
+          {[
+            {
+              title: "Financeiro",
+              desc: "Fluxo de caixa, custos, receitas e indicadores",
+            },
+            {
+              title: "Rebanho",
+              desc: "Controle de animais e desempenho produtivo",
+            },
+            {
+              title: "Pastagem",
+              desc: "Gestão de áreas, lotação e sustentabilidade",
+            },
+            {
+              title: "CFO Autônomo",
+              desc: "Análises estratégicas e inteligência financeira",
+            },
+          ].map((mod) => (
+            <div
+              key={mod.title}
+              className="
+                bg-white rounded-xl
+                border border-gray-200
+                p-8 min-h-[150px]
+                flex flex-col justify-between
+                hover:border-green-400
+                hover:bg-green-50/30
+                transition
+              "
+            >
+              <div>
+                <h3 className="font-semibold text-gray-900">
+                  {mod.title}
+                </h3>
+                <p className="text-sm text-gray-500 mt-2">
+                  {mod.desc}
+                </p>
+              </div>
 
-          <Module
-            title="Rebanho"
-            desc="Controle individual e desempenho"
-            href="/dashboard/rebanho"
-          />
-
-          <Module
-            title="Pastagem"
-            desc="Gestão de áreas e lotação"
-            href="/dashboard/pastagem"
-          />
-
-          <Module
-            title="Engorda"
-            desc="Projeções e cenários"
-            href="/dashboard/engorda"
-          />
+              <span className="text-sm text-green-700 font-medium">
+                Acessar →
+              </span>
+            </div>
+          ))}
 
         </div>
+
       </section>
 
       {/* ================= STATUS ================= */}
-      <section className="bg-green-50 border border-green-200 p-4 rounded-lg">
-        <p className="text-green-800 text-sm">
-          Sistema operacional • Dados sincronizados • Ambiente estável
+      <section className="bg-green-50 border border-green-200 rounded-xl p-8 space-y-2">
+
+        <p className="text-green-800 font-medium">
+          Sistema organizado e sob controle
         </p>
+
+        <p className="text-green-700 text-sm">
+          Todos os módulos estão centralizados neste painel. Nenhuma funcionalidade foi perdida.
+        </p>
+
       </section>
 
     </main>
-  );
-}
-
-/* ================= COMPONENTES LOCAIS ================= */
-
-function Kpi({ title, value }: { title: string; value: string }) {
-  return (
-    <div className="bg-white p-6 rounded-xl shadow-sm">
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className="text-2xl font-bold text-gray-900 mt-2">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function Module({
-  title,
-  desc,
-  href,
-}: {
-  title: string;
-  desc: string;
-  href: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition block"
-    >
-      <h3 className="text-lg font-semibold text-gray-900">
-        {title}
-      </h3>
-      <p className="text-gray-600 mt-1 text-sm">
-        {desc}
-      </p>
-    </Link>
   );
 }
