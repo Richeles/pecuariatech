@@ -3,36 +3,43 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const items = [
+const menu = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Financeiro", href: "/dashboard/financeiro" },
   { label: "Rebanho", href: "/dashboard/rebanho" },
   { label: "Pastagem", href: "/dashboard/pastagem" },
-  { label: "Planos", href: "/planos" },
-  { label: "Assinar", href: "/planos" },
+  { label: "CFO", href: "/dashboard/cfo" },
+  { label: "Engorda", href: "/dashboard/engorda" },
+  { label: "Assinatura", href: "/dashboard/assinatura/plano" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 min-h-screen bg-green-700 text-white flex flex-col">
-      <div className="px-6 py-5 text-xl font-bold border-b border-green-600">
+    <aside className="w-64 min-h-screen bg-green-800 text-white flex flex-col">
+
+      {/* LOGO */}
+      <div className="px-6 py-6 text-2xl font-extrabold tracking-wide">
         PecuariaTech
       </div>
 
-      <nav className="flex-1 px-4 py-4 space-y-2">
-        {items.map((item) => {
+      {/* MENU */}
+      <nav className="flex-1 px-4 space-y-2">
+
+        {menu.map((item) => {
           const active = pathname === item.href;
+
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`block rounded px-4 py-2 transition ${
-                active
-                  ? "bg-green-900 font-semibold"
-                  : "hover:bg-green-600"
-              }`}
+              className={`block px-4 py-3 rounded-lg text-lg font-medium transition
+                ${active
+                  ? "bg-white text-green-800"
+                  : "text-white hover:bg-green-700"
+                }
+              `}
             >
               {item.label}
             </Link>
