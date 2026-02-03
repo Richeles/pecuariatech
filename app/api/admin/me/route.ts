@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
@@ -11,40 +11,31 @@ export async function GET() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll() {}
-        }
+          get: (name) => cookieStore.get(name)?.value,
+        },
       }
     );
 
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json({ is_admin: false });
     }
 
-    const { data: admin, error: adminError } = await supabase
+    const { data } = await supabase
       .from("admin_users")
-      .select("role, ativo")
+      .select("role, active")
       .eq("user_id", user.id)
-      .single();
+      .eq("active", true)
+      .maybeSingle();
 
-    if (adminError || !admin || admin.ativo !== true) {
+    if (!data) {
       return NextResponse.json({ is_admin: false });
     }
 
-    return NextResponse.json({
-      is_admin: true,
-      role: admin.role
-    });
+    return NextResponse.json({ is_admin: true });
 
-  } catch (err) {
-    console.error("ADMIN_ME_ERROR", err);
+  } catch {
     return NextResponse.json({ is_admin: false });
   }
 }
