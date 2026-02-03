@@ -1,43 +1,49 @@
+// app/dashboard/components/Sidebar.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const menu = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Financeiro", href: "/dashboard/financeiro" },
-  { label: "Rebanho", href: "/dashboard/rebanho" },
-  { label: "Pastagem", href: "/dashboard/pastagem" },
-  { label: "CFO", href: "/dashboard/cfo" },
-  { label: "Engorda", href: "/dashboard/engorda" },
-  { label: "Assinatura", href: "/dashboard/assinatura/plano" },
-];
-
 export default function Sidebar() {
   const pathname = usePathname();
 
+  const items = [
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Financeiro", href: "/dashboard/financeiro" },
+    { label: "Rebanho", href: "/dashboard/rebanho" },
+    { label: "Pastagem", href: "/dashboard/pastagem" },
+    { label: "CFO", href: "/dashboard/cfo" },
+    { label: "Engorda", href: "/dashboard/engorda" },
+    { label: "Assinatura", href: "/dashboard/assinatura/plano" },
+  ];
+
   return (
-    <aside className="w-64 min-h-screen bg-green-800 text-white flex flex-col">
+    <aside className="w-72 min-h-screen bg-green-700 text-white px-6 py-8 flex flex-col">
 
       {/* LOGO */}
-      <div className="px-6 py-6 text-2xl font-extrabold tracking-wide">
-        PecuariaTech
+      <div className="mb-12">
+        <h2 className="text-3xl font-extrabold tracking-tight">
+          PecuariaTech
+        </h2>
       </div>
 
       {/* MENU */}
-      <nav className="flex-1 px-4 space-y-2">
-
-        {menu.map((item) => {
+      <nav className="flex flex-col gap-3">
+        {items.map((item) => {
           const active = pathname === item.href;
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`block px-4 py-3 rounded-lg text-lg font-medium transition
-                ${active
-                  ? "bg-white text-green-800"
-                  : "text-white hover:bg-green-700"
+              className={`
+                px-5 py-3 rounded-lg
+                text-base font-semibold
+                transition-all duration-200
+                ${
+                  active
+                    ? "bg-white text-green-700 shadow-sm"
+                    : "text-white hover:bg-green-600"
                 }
               `}
             >
