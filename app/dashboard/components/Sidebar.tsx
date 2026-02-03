@@ -21,14 +21,13 @@ export default function Sidebar() {
 
       {/* LOGO */}
       <div className="mb-12">
-        <h2 className="text-3xl font-bold tracking-tight">
+        <h2 className="text-3xl font-extrabold tracking-tight">
           PecuariaTech
         </h2>
       </div>
 
       {/* MENU */}
       <nav className="flex flex-col gap-3">
-
         {items.map((item) => {
           const active = pathname === item.href;
 
@@ -38,12 +37,12 @@ export default function Sidebar() {
               href={item.href}
               className={`
                 px-5 py-3 rounded-lg
-                text-[15px] font-medium
-                transition-colors duration-200
+                text-sm font-semibold
+                transition-all duration-200
                 ${
                   active
-                    ? "bg-white text-green-700"
-                    : "text-green-100 hover:bg-green-600 hover:text-white"
+                    ? "bg-white text-green-700 shadow-sm"
+                    : "text-white/90 hover:bg-green-600 hover:text-white"
                 }
               `}
             >
@@ -51,7 +50,6 @@ export default function Sidebar() {
             </Link>
           );
         })}
-
       </nav>
 
     </aside>

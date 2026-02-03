@@ -7,7 +7,7 @@ export default function DashboardHome() {
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
           Dashboard PecuariaTech
         </h1>
-        <p className="text-gray-400">
+        <p className="text-gray-500">
           Centro de controle da fazenda
         </p>
       </header>
@@ -27,6 +27,7 @@ export default function DashboardHome() {
               border border-gray-200
               p-8 min-h-[120px]
               flex flex-col justify-between
+              shadow-sm hover:shadow-md
               hover:border-green-400
               hover:bg-green-50/30
               transition
@@ -75,6 +76,7 @@ export default function DashboardHome() {
                 border border-gray-200
                 p-8 min-h-[150px]
                 flex flex-col justify-between
+                shadow-sm hover:shadow-md
                 hover:border-green-400
                 hover:bg-green-50/30
                 transition
