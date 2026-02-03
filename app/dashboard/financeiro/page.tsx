@@ -7,58 +7,71 @@ import FinanceiroClient from "./FinanceiroClient";
 
 export default function FinanceiroPage() {
   return (
-    <main className="space-y-8">
-      {/* CABEÇALHO */}
+    <main className="p-10 max-w-7xl mx-auto space-y-12">
+
+      {/* ================= HEADER ================= */}
       <header>
-        <h1 className="text-2xl font-bold text-gray-800">
+        <h1 className="text-3xl font-bold text-gray-900">
           Financeiro · Visão CFO
         </h1>
-        <p className="text-gray-600">
-          Controle financeiro, análise estratégica e base para decisões
-          inteligentes.
+        <p className="text-gray-500 mt-1">
+          Controle financeiro, análise estratégica e base para decisões inteligentes
         </p>
       </header>
 
-      {/* KPIs — DADOS REAIS (VIEW financeiro_resumo_view) */}
-      <Suspense fallback={<p className="text-sm text-gray-500">Carregando financeiro…</p>}>
-        <FinanceiroClient />
-      </Suspense>
+      {/* ================= KPIs ================= */}
+      <section>
+        <Suspense
+          fallback={
+            <p className="text-sm text-gray-500">
+              Carregando financeiro…
+            </p>
+          }
+        >
+          <FinanceiroClient />
+        </Suspense>
+      </section>
 
-      {/* ALERTA CFO */}
+      {/* ================= ALERTA CFO ================= */}
       <section>
         <AlertaCFO />
       </section>
 
-      {/* ACESSO AO DRE (SUBMÓDULO OFICIAL) */}
-      <section className="bg-white rounded-xl p-6 shadow-sm border">
-        <h3 className="text-lg font-semibold text-gray-800">
+      {/* ================= DRE ================= */}
+      <section className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900">
           DRE — Demonstrativo de Resultado
-        </h3>
+        </h2>
 
         <p className="text-sm text-gray-600 mt-1">
-          Visualize o resultado econômico completo da fazenda, com
-          detalhamento de receitas, custos e lucro, analisado
-          automaticamente pelo CFO Autônomo.
+          Visualize o resultado econômico completo da fazenda, com detalhamento
+          de receitas, custos e lucro, analisado automaticamente pelo CFO Autônomo.
         </p>
 
         <div className="mt-4">
           <a
             href="/dashboard/financeiro/dre"
-            className="inline-flex items-center px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition"
+            className="
+              inline-flex items-center
+              px-4 py-2 rounded-md
+              bg-green-600 text-white
+              text-sm font-medium
+              hover:bg-green-700 transition
+            "
           >
             Ver DRE
           </a>
         </div>
       </section>
 
-      {/* VISÃO ESTRATÉGICA */}
+      {/* ================= VISÃO ESTRATÉGICA ================= */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
         <Card titulo="Diagnóstico Financeiro">
           <p className="text-sm text-gray-600">
             Nenhum dado financeiro foi lançado ainda.
             <br />
-            Comece registrando receitas e custos para liberar análises
-            automáticas.
+            Comece registrando receitas e custos para liberar análises automáticas.
           </p>
         </Card>
 
@@ -69,25 +82,28 @@ export default function FinanceiroPage() {
             <li>Receber diagnósticos do CFO Autônomo</li>
           </ul>
         </Card>
+
       </section>
 
-      {/* IA — FUTURO PRÓXIMO */}
-      <section className="rounded-xl border border-green-300 bg-green-50 p-6">
+      {/* ================= IA ================= */}
+      <section className="rounded-xl border border-green-200 bg-green-50 p-6">
         <h3 className="font-semibold text-green-800">
           CFO Autônomo (em aprendizado)
         </h3>
+
         <p className="text-sm text-green-700 mt-2">
-          À medida que você usar o sistema, o PecuariaTech aprenderá com
-          suas decisões financeiras para oferecer recomendações cada vez
-          mais precisas — sempre de forma segura, anônima e sem expor
-          produtores de destaque.
+          À medida que você usar o sistema, o PecuariaTech aprenderá com suas
+          decisões financeiras para oferecer recomendações cada vez mais
+          precisas — sempre de forma segura, anônima e sem expor produtores
+          de destaque.
         </p>
       </section>
+
     </main>
   );
 }
 
-/* COMPONENTES INTERNOS */
+/* ================= COMPONENTES INTERNOS ================= */
 
 function Card({
   titulo,
@@ -97,8 +113,10 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm">
-      <h3 className="font-semibold text-gray-800 mb-2">{titulo}</h3>
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+      <h3 className="font-semibold text-gray-900 mb-2">
+        {titulo}
+      </h3>
       {children}
     </div>
   );
@@ -108,8 +126,8 @@ function AlertaCFO() {
   return (
     <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4">
       <p className="text-sm text-yellow-800">
-        ⚠️ O CFO Autônomo será ativado após os primeiros lançamentos
-        financeiros. Nenhuma análise é feita sem dados reais.
+        ⚠️ O CFO Autônomo será ativado após os primeiros lançamentos financeiros.
+        Nenhuma análise é feita sem dados reais.
       </p>
     </div>
   );
