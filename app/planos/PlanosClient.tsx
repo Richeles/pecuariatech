@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { supabase } from "@/app/lib/supabase-browser";
 
 type Periodo = "mensal" | "trimestral" | "anual";
 
@@ -89,11 +89,50 @@ const PLANOS = [
 
 export default function PlanosClient() {
   const [periodo, setPeriodo] = useState<Periodo>("mensal");
+  const [loading, setLoading] = useState(false);
+
   const searchParams = useSearchParams();
   const bloqueado = searchParams.get("bloqueado") === "1";
 
   const preco = (v: number) =>
     `R$ ${v.toFixed(2).replace(".", ",")}`;
+
+  async function iniciarCheckout(plano: string) {
+    try {
+      setLoading(true);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        alert("Faça login para continuar");
+        return;
+      }
+
+      const res = await fetch("/api/checkout/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plano,
+          periodo,
+          user_id: user.id,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data?.init_point) {
+        console.error(data);
+        alert("Erro ao iniciar pagamento");
+        return;
+      }
+
+      window.location.href = data.init_point;
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <>
@@ -105,6 +144,7 @@ export default function PlanosClient() {
         </div>
       )}
 
+      {/* PERÍODO */}
       <div className="flex justify-center gap-2 mt-6">
         {(["mensal", "trimestral", "anual"] as Periodo[]).map((p) => (
           <button
@@ -121,6 +161,7 @@ export default function PlanosClient() {
         ))}
       </div>
 
+      {/* PLANOS */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mt-10">
         {PLANOS.map((plano) => (
           <div
@@ -143,12 +184,13 @@ export default function PlanosClient() {
               ))}
             </ul>
 
-            <Link
-              href={`/checkout?plano=${plano.id}&periodo=${periodo}`}
-              className="block text-center bg-green-600 text-white py-2 rounded hover:opacity-90"
+            <button
+              disabled={loading}
+              onClick={() => iniciarCheckout(plano.id)}
+              className="w-full bg-green-600 text-white py-2 rounded hover:opacity-90 disabled:opacity-60"
             >
-              Assinar
-            </Link>
+              {loading ? "Processando..." : "Assinar"}
+            </button>
           </div>
         ))}
       </section>
