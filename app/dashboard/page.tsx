@@ -7,7 +7,7 @@ export default function DashboardHome() {
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
           Dashboard PecuariaTech
         </h1>
-        <p className="text-gray-500">
+        <p className="text-gray-400">
           Centro de controle da fazenda
         </p>
       </header>
@@ -16,26 +16,54 @@ export default function DashboardHome() {
       <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
         {[
-          { label: "Animais", value: "1.247" },
-          { label: "Receita", value: "R$ 124.580" },
-          { label: "Produtividade", value: "87%" },
+          {
+            label: "Animais",
+            value: "1.247",
+            hint: "Total rastreado",
+            active: true,
+          },
+          {
+            label: "Receita",
+            value: "R$ 124.580",
+            hint: "Mês corrente",
+          },
+          {
+            label: "Produtividade",
+            value: "87%",
+            hint: "Índice médio",
+          },
         ].map((kpi) => (
           <div
             key={kpi.label}
-            className="
-              bg-white rounded-xl
-              border border-gray-200
-              p-8 min-h-[120px]
+            className={`
+              relative overflow-hidden
+              bg-white rounded-2xl
+              border
+              p-8 min-h-[130px]
               flex flex-col justify-between
-              shadow-sm hover:shadow-md
-              hover:border-green-400
-              hover:bg-green-50/30
-              transition
-            "
+              transition-all
+              ${
+                kpi.active
+                  ? "border-green-400 shadow-[0_0_0_1px_rgba(34,197,94,0.2)] bg-green-50/40"
+                  : "border-gray-200 hover:border-green-300 hover:bg-green-50/20"
+              }
+            `}
           >
-            <p className="text-sm text-gray-500">{kpi.label}</p>
-            <p className="text-4xl font-bold text-green-700">
-              {kpi.value}
+            {/* Linha superior sutil */}
+            <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-green-500/60 to-green-300/20" />
+
+            <div>
+              <p className="text-sm text-gray-500">
+                {kpi.label}
+              </p>
+
+              <p className="mt-2 text-4xl font-bold tracking-tight text-green-700">
+                {kpi.value}
+              </p>
+            </div>
+
+            <p className="text-xs text-gray-400">
+              {kpi.hint}
             </p>
           </div>
         ))}
@@ -55,45 +83,84 @@ export default function DashboardHome() {
             {
               title: "Financeiro",
               desc: "Fluxo de caixa, custos, receitas e indicadores",
+              icon: "💰",
             },
             {
               title: "Rebanho",
               desc: "Controle de animais e desempenho produtivo",
+              icon: "🐄",
             },
             {
               title: "Pastagem",
               desc: "Gestão de áreas, lotação e sustentabilidade",
+              icon: "🌱",
             },
             {
               title: "CFO Autônomo",
               desc: "Análises estratégicas e inteligência financeira",
+              icon: "🧠",
             },
           ].map((mod) => (
             <div
               key={mod.title}
+              role="button"
+              tabIndex={0}
               className="
-                bg-white rounded-xl
+                group cursor-pointer
+                bg-white rounded-2xl
                 border border-gray-200
-                p-8 min-h-[150px]
+                p-8 min-h-[170px]
                 flex flex-col justify-between
-                shadow-sm hover:shadow-md
+                transition-all
                 hover:border-green-400
                 hover:bg-green-50/30
-                transition
+                hover:shadow-md
               "
             >
-              <div>
-                <h3 className="font-semibold text-gray-900">
+              <div className="space-y-3">
+
+                {/* Ícone */}
+                <div
+                  className="
+                    w-10 h-10
+                    rounded-lg
+                    bg-green-100
+                    text-green-700
+                    flex items-center justify-center
+                    text-lg
+                  "
+                >
+                  {mod.icon}
+                </div>
+
+                {/* Título */}
+                <h3 className="font-semibold text-gray-900 text-lg">
                   {mod.title}
                 </h3>
-                <p className="text-sm text-gray-500 mt-2">
+
+                {/* Descrição */}
+                <p className="text-sm text-gray-500">
                   {mod.desc}
                 </p>
+
               </div>
 
-              <span className="text-sm text-green-700 font-medium">
-                Acessar →
-              </span>
+              {/* CTA */}
+              <div>
+                <span
+                  className="
+                    inline-flex items-center gap-1
+                    text-sm font-medium
+                    text-green-700
+                    group-hover:translate-x-1
+                    transition-transform
+                  "
+                >
+                  Acessar
+                  <span>→</span>
+                </span>
+              </div>
+
             </div>
           ))}
 
