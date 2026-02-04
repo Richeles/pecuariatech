@@ -1,134 +1,106 @@
 // app/dashboard/financeiro/page.tsx
-// Financeiro PecuariaTech — Visão CFO
-// Server Component | Next.js 16 App Router
-
 import { Suspense } from "react";
-import FinanceiroClient from "./FinanceiroClient";
+import FinanceiroClient from "./components/FinanceiroClient";
+
+export const dynamic = "force-dynamic";
 
 export default function FinanceiroPage() {
   return (
     <main className="p-10 max-w-7xl mx-auto space-y-12">
 
       {/* ================= HEADER ================= */}
-      <header>
+      <header className="space-y-2">
         <h1 className="text-3xl font-bold text-gray-900">
           Financeiro · Visão CFO
         </h1>
-        <p className="text-gray-500 mt-1">
+        <p className="text-gray-500">
           Controle financeiro, análise estratégica e base para decisões inteligentes
         </p>
       </header>
 
-      {/* ================= KPIs ================= */}
-      <section>
-        <Suspense
-          fallback={
-            <p className="text-sm text-gray-500">
-              Carregando financeiro…
-            </p>
-          }
-        >
-          <FinanceiroClient />
-        </Suspense>
+      {/* ================= KPI PRINCIPAIS ================= */}
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+        {[
+          { label: "Receita", value: "—" },
+          { label: "Custos", value: "—" },
+          { label: "Resultado", value: "—", active: true },
+          { label: "Margem", value: "—" },
+        ].map((kpi) => (
+          <div
+            key={kpi.label}
+            className={`
+              bg-white rounded-2xl border p-6
+              flex flex-col gap-2
+              transition
+              ${
+                kpi.active
+                  ? "border-green-400 bg-green-50/40"
+                  : "border-gray-200 hover:border-green-300"
+              }
+            `}
+          >
+            <p className="text-sm text-gray-500">{kpi.label}</p>
+            <p className="text-2xl font-bold text-green-700">{kpi.value}</p>
+          </div>
+        ))}
+
       </section>
 
-      {/* ================= ALERTA CFO ================= */}
-      <section>
-        <AlertaCFO />
+      {/* ================= DIAGNÓSTICO CFO ================= */}
+      <section className="bg-white border border-gray-200 rounded-2xl p-8">
+
+        <h2 className="text-lg font-semibold text-gray-900">
+          Diagnóstico Financeiro (CFO)
+        </h2>
+
+        <p className="text-gray-500 mt-2">
+          Nenhum dado financeiro disponível ainda.
+          Registre receitas e custos para liberar análises automáticas.
+        </p>
+
+      </section>
+
+      {/* ================= ALERTA ATIVAÇÃO ================= */}
+      <section className="bg-yellow-50 border border-yellow-300 rounded-xl p-5">
+
+        <p className="text-yellow-800 text-sm">
+          ⚠ O CFO Autônomo será ativado após os primeiros lançamentos financeiros.
+          Nenhuma análise é feita sem dados reais.
+        </p>
+
       </section>
 
       {/* ================= DRE ================= */}
-      <section className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">
-          DRE — Demonstrativo de Resultado
-        </h2>
+      <section className="bg-white border border-gray-200 rounded-2xl p-8 flex items-center justify-between">
 
-        <p className="text-sm text-gray-600 mt-1">
-          Visualize o resultado econômico completo da fazenda, com detalhamento
-          de receitas, custos e lucro, analisado automaticamente pelo CFO Autônomo.
-        </p>
+        <div>
+          <h3 className="font-semibold text-gray-900">
+            DRE — Demonstrativo de Resultado
+          </h3>
 
-        <div className="mt-4">
-          <a
-            href="/dashboard/financeiro/dre"
-            className="
-              inline-flex items-center
-              px-4 py-2 rounded-md
-              bg-green-600 text-white
-              text-sm font-medium
-              hover:bg-green-700 transition
-            "
-          >
-            Ver DRE
-          </a>
-        </div>
-      </section>
-
-      {/* ================= VISÃO ESTRATÉGICA ================= */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        <Card titulo="Diagnóstico Financeiro">
-          <p className="text-sm text-gray-600">
-            Nenhum dado financeiro foi lançado ainda.
-            <br />
-            Comece registrando receitas e custos para liberar análises automáticas.
+          <p className="text-sm text-gray-500 mt-1">
+            Visualize o resultado econômico completo da fazenda.
           </p>
-        </Card>
+        </div>
 
-        <Card titulo="Próximos Passos">
-          <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
-            <li>Registrar receitas e custos</li>
-            <li>Acompanhar margem e fluxo de caixa</li>
-            <li>Receber diagnósticos do CFO Autônomo</li>
-          </ul>
-        </Card>
+        <button
+          className="
+            px-5 py-2.5 rounded-lg
+            bg-green-600 text-white text-sm font-medium
+            hover:bg-green-700 transition
+          "
+        >
+          Ver DRE
+        </button>
 
       </section>
 
-      {/* ================= IA ================= */}
-      <section className="rounded-xl border border-green-200 bg-green-50 p-6">
-        <h3 className="font-semibold text-green-800">
-          CFO Autônomo (em aprendizado)
-        </h3>
-
-        <p className="text-sm text-green-700 mt-2">
-          À medida que você usar o sistema, o PecuariaTech aprenderá com suas
-          decisões financeiras para oferecer recomendações cada vez mais
-          precisas — sempre de forma segura, anônima e sem expor produtores
-          de destaque.
-        </p>
-      </section>
+      {/* ================= CLIENT ================= */}
+      <Suspense fallback={null}>
+        <FinanceiroClient />
+      </Suspense>
 
     </main>
-  );
-}
-
-/* ================= COMPONENTES INTERNOS ================= */
-
-function Card({
-  titulo,
-  children,
-}: {
-  titulo: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-      <h3 className="font-semibold text-gray-900 mb-2">
-        {titulo}
-      </h3>
-      {children}
-    </div>
-  );
-}
-
-function AlertaCFO() {
-  return (
-    <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4">
-      <p className="text-sm text-yellow-800">
-        ⚠️ O CFO Autônomo será ativado após os primeiros lançamentos financeiros.
-        Nenhuma análise é feita sem dados reais.
-      </p>
-    </div>
   );
 }
