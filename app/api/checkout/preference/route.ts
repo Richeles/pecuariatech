@@ -1,5 +1,5 @@
 // app/api/checkout/preference/route.ts
-// Checkout Mercado Pago — FINAL CANÔNICO
+// Checkout Mercado Pago — Preference (ESTÁVEL + teste R$10)
 
 import { NextRequest, NextResponse } from "next/server";
 import MercadoPagoConfig, { Preference } from "mercadopago";
@@ -11,10 +11,21 @@ export const dynamic = "force-dynamic";
 // PLANOS
 // ================================
 
-const PLANOS: Record<string, any> = {
+const PLANOS: Record<
+  string,
+  {
+    titulo: string;
+    precos: {
+      mensal: number;
+      trimestral: number;
+      anual: number;
+    };
+  }
+> = {
   basico: {
     titulo: "Plano Básico",
-    precos: { mensal: 10, trimestral: 79.38, anual: 317.5 }, // ← teste R$1
+    // 🔴 AJUSTE ÚNICO: teste R$10
+    precos: { mensal: 10.0, trimestral: 79.38, anual: 317.5 },
   },
   profissional: {
     titulo: "Plano Profissional",
@@ -79,11 +90,10 @@ export async function POST(req: NextRequest) {
           currency_id: "BRL",
         },
       ],
-
+      // mantém compatibilidade com webhook
       external_reference: user_id
         ? `${user_id}|${plano}|${periodo}`
         : `${plano}|${periodo}`,
-
       back_urls: {
         success: `${origin}/dashboard`,
         failure: `${origin}/planos`,
