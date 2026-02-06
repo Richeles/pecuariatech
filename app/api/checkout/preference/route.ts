@@ -1,5 +1,5 @@
 // app/api/checkout/preference/route.ts
-// Checkout Mercado Pago — Preference (FINAL ESTÁVEL + external_reference)
+// Checkout Mercado Pago — FINAL CANÔNICO
 
 import { NextRequest, NextResponse } from "next/server";
 import MercadoPagoConfig, { Preference } from "mercadopago";
@@ -11,20 +11,10 @@ export const dynamic = "force-dynamic";
 // PLANOS
 // ================================
 
-const PLANOS: Record<
-  string,
-  {
-    titulo: string;
-    precos: {
-      mensal: number;
-      trimestral: number;
-      anual: number;
-    };
-  }
-> = {
+const PLANOS: Record<string, any> = {
   basico: {
     titulo: "Plano Básico",
-    precos: { mensal: 31.75, trimestral: 79.38, anual: 317.5 },
+    precos: { mensal: 10, trimestral: 79.38, anual: 317.5 }, // ← teste R$1
   },
   profissional: {
     titulo: "Plano Profissional",
@@ -72,7 +62,7 @@ export async function POST(req: NextRequest) {
     const preco = PLANOS[plano].precos[periodo];
 
     const origin =
-      req.headers.get("origin") || "https://www.pecuariatech.com";
+      req.headers.get("origin") || "http://127.0.0.1:3333";
 
     const mp = new MercadoPagoConfig({
       accessToken: MP_TOKEN,
@@ -90,8 +80,9 @@ export async function POST(req: NextRequest) {
         },
       ],
 
-      // ✅ AJUSTE MÍNIMO
-      external_reference: `${user_id}|${plano}|${periodo}`,
+      external_reference: user_id
+        ? `${user_id}|${plano}|${periodo}`
+        : `${plano}|${periodo}`,
 
       back_urls: {
         success: `${origin}/dashboard`,
