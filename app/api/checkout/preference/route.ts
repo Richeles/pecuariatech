@@ -8,9 +8,25 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // ================================
+// CORS — PRE-FLIGHT (CORREÇÃO CHAVE)
+// ================================
+export async function OPTIONS() {
+  return NextResponse.json(
+    {},
+    {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
+    }
+  );
+}
+
+// ================================
 // PLANOS
 // ================================
-
 const PLANOS: Record<
   string,
   {
@@ -24,8 +40,7 @@ const PLANOS: Record<
 > = {
   basico: {
     titulo: "Plano Básico",
-    // 🔴 AJUSTE ÚNICO: teste R$10
-    precos: { mensal: 10.0, trimestral: 79.38, anual: 317.5 },
+    precos: { mensal: 31.75, trimestral: 79.38, anual: 317.5 },
   },
   profissional: {
     titulo: "Plano Profissional",
@@ -48,7 +63,6 @@ const PLANOS: Record<
 // ================================
 // POST
 // ================================
-
 export async function POST(req: NextRequest) {
   try {
     const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
@@ -90,7 +104,6 @@ export async function POST(req: NextRequest) {
           currency_id: "BRL",
         },
       ],
-      // mantém compatibilidade com webhook
       external_reference: user_id
         ? `${user_id}|${plano}|${periodo}`
         : `${plano}|${periodo}`,
@@ -109,7 +122,14 @@ export async function POST(req: NextRequest) {
       throw new Error("init_point não retornado");
     }
 
-    return NextResponse.json({ init_point: result.init_point });
+    return NextResponse.json(
+      { init_point: result.init_point },
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
   } catch (err: any) {
     console.error("CHECKOUT ERROR:", err);
 
