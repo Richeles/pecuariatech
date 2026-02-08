@@ -1,5 +1,5 @@
 // app/api/checkout/preference/route.ts
-// Checkout Mercado Pago — Preference (ESTÁVEL + teste R$10)
+// Checkout Mercado Pago — PRODUÇÃO (ESTÁVEL / CANÔNICO)
 
 import { NextRequest, NextResponse } from "next/server";
 import MercadoPagoConfig, { Preference } from "mercadopago";
@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // ================================
-// CORS — PRE-FLIGHT (CORREÇÃO CHAVE)
+// CORS — PRE-FLIGHT
 // ================================
 export async function OPTIONS() {
   return NextResponse.json(
@@ -25,7 +25,7 @@ export async function OPTIONS() {
 }
 
 // ================================
-// PLANOS
+// PLANOS (PREÇOS REAIS)
 // ================================
 const PLANOS: Record<
   string,
@@ -61,11 +61,13 @@ const PLANOS: Record<
 };
 
 // ================================
-// POST
+// POST — CRIA PREFERENCE
 // ================================
 export async function POST(req: NextRequest) {
   try {
     const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    const SITE_URL =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://www.pecuariatech.com";
 
     if (!MP_TOKEN) {
       return NextResponse.json(
@@ -86,9 +88,6 @@ export async function POST(req: NextRequest) {
 
     const preco = PLANOS[plano].precos[periodo];
 
-    const origin =
-      req.headers.get("origin") || "http://127.0.0.1:3333";
-
     const mp = new MercadoPagoConfig({
       accessToken: MP_TOKEN,
     });
@@ -104,14 +103,18 @@ export async function POST(req: NextRequest) {
           currency_id: "BRL",
         },
       ],
-      external_reference: user_id
-        ? `${user_id}|${plano}|${periodo}`
-        : `${plano}|${periodo}`,
+
+      // 🔒 SEMPRE ESTÁVEL
+      external_reference: `${user_id ?? "anon"}|${plano}|${periodo}`,
+
       back_urls: {
-        success: `${origin}/dashboard`,
-        failure: `${origin}/planos`,
-        pending: `${origin}/planos`,
+        success: `${SITE_URL}/dashboard`,
+        failure: `${SITE_URL}/planos`,
+        pending: `${SITE_URL}/planos`,
       },
+
+      // 🔔 WEBHOOK OFICIAL
+      notification_url: `${SITE_URL}/api/mercadopago/webhook`,
     };
 
     const result = await preference.create({
@@ -119,7 +122,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!result?.init_point) {
-      throw new Error("init_point não retornado");
+      throw new Error("init_point não retornado pelo Mercado Pago");
     }
 
     return NextResponse.json(
