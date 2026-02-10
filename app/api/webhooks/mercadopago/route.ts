@@ -1,23 +1,18 @@
 // app/api/webhooks/mercadopago/route.ts
 // Next.js 16 + TypeScript strict
-// WEBHOOK DEFINITIVO — GOVERNANÇA FINANCEIRA
+// WEBHOOK DEFINITIVO — GOVERNANÇA FINANCEIRA (CANÔNICO)
 
 import { NextRequest, NextResponse } from "next/server";
-import MercadoPagoConfig, { Payment } from "mercadopago";
 import { createClient } from "@supabase/supabase-js";
 
-// ==============================
-// MERCADO PAGO (SERVER ONLY)
-// ==============================
-const mp = new MercadoPagoConfig({
-  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
-});
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 // ==============================
 // SUPABASE SERVICE ROLE (SERVER)
 // ==============================
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
   { auth: { persistSession: false } }
 );
@@ -29,32 +24,46 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Mercado Pago envia vários eventos inúteis → filtramos
-    if (!body?.type || !body?.data?.id) {
+    // Mercado Pago envia vários eventos — filtramos
+    if (body?.type !== "payment" || !body?.data?.id) {
       return NextResponse.json({ ok: true });
     }
 
-    if (body.type !== "payment") {
-      return NextResponse.json({ ok: true });
+    const paymentId = body.data.id;
+
+    // ==============================
+    // BUSCAR PAGAMENTO REAL (API REST)
+    // ==============================
+    const paymentRes = await fetch(
+      `https://api.mercadopago.com/v1/payments/${paymentId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!paymentRes.ok) {
+      throw new Error("Falha ao consultar pagamento no Mercado Pago");
     }
 
-    // ==============================
-    // BUSCAR PAGAMENTO REAL
-    // ==============================
-    const payment = await new Payment(mp).get({
-      id: body.data.id,
-    });
+    const payment = await paymentRes.json();
 
-    if (!payment || payment.status !== "approved") {
+    // ==============================
+    // VALIDAR STATUS
+    // ==============================
+    if (payment.status !== "approved") {
       return NextResponse.json({ ok: true });
     }
 
     // ==============================
     // DADOS GOVERNANTES (EQUAÇÃO Y)
     // ==============================
-    const externalRef = payment.external_reference;
+    const externalRef: string | null = payment.external_reference;
+
     if (!externalRef) {
-      throw new Error("Pagamento sem external_reference");
+      throw new Error("Pagamento aprovado sem external_reference");
     }
 
     /**
@@ -73,8 +82,8 @@ export async function POST(req: NextRequest) {
     const { data: jaProcessado } = await supabase
       .from("financeiro_logs")
       .select("id")
-      .eq("mercadopago_payment_id", payment.id)
-      .single();
+      .eq("mercadopago_payment_id", paymentId)
+      .maybeSingle();
 
     if (jaProcessado) {
       return NextResponse.json({ ok: true });
@@ -89,8 +98,9 @@ export async function POST(req: NextRequest) {
       periodo,
       valor: payment.transaction_amount,
       status: "aprovado",
-      mercadopago_payment_id: payment.id,
+      mercadopago_payment_id: paymentId,
       raw: payment,
+      criado_em: new Date().toISOString(),
     });
 
     // ==============================
@@ -108,6 +118,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("WEBHOOK MP ERRO:", err);
-    return NextResponse.json({ erro: "Webhook falhou" }, { status: 500 });
+    return NextResponse.json(
+      { erro: "Webhook falhou" },
+      { status: 500 }
+    );
   }
 }
