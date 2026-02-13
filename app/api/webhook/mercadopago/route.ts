@@ -56,7 +56,10 @@ export async function POST(req: NextRequest) {
     const payment = await paymentClient.get({ id: paymentId });
 
     if (!payment) {
-      return NextResponse.json({ ok: false, error: "payment_not_found" }, { status: 404 });
+      return NextResponse.json(
+        { ok: false, error: "payment_not_found" },
+        { status: 404 }
+      );
     }
 
     const status = payment.status; // approved, rejected, etc
@@ -65,7 +68,10 @@ export async function POST(req: NextRequest) {
     const parsed = parseExternalReference(externalRef);
 
     if (!parsed) {
-      return NextResponse.json({ ok: false, error: "invalid_external_reference" }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "invalid_external_reference" },
+        { status: 400 }
+      );
     }
 
     const { user_id, plano, periodo } = parsed;
@@ -85,17 +91,19 @@ export async function POST(req: NextRequest) {
     }
 
     // ===========================
-    // LOG FINANCEIRO
+    // LOG FINANCEIRO (SCHEMA REAL)
     // ===========================
 
     await supabase.from("financeiro_logs").insert({
       user_id,
-      payment_id: paymentId,
-      status,
       plano,
       periodo,
       valor: payment.transaction_amount,
-      raw_payload: payment,
+      moeda: payment.currency_id ?? "BRL",
+      origem: "mercadopago",
+      evento: status,
+      payment_id: paymentId,
+      external_reference: externalRef,
     });
 
     // ===========================
@@ -115,7 +123,6 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true });
-
   } catch (error: any) {
     console.error("Webhook error:", error);
 
