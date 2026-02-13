@@ -1,5 +1,5 @@
 // app/api/checkout/preference/route.ts
-// Checkout Mercado Pago — PRODUÇÃO (ESTÁVEL / CANÔNICO)
+// Checkout Mercado Pago — Preference (CANÔNICO ESTÁVEL / API-SAFE)
 
 import { NextRequest, NextResponse } from "next/server";
 import MercadoPagoConfig, { Preference } from "mercadopago";
@@ -8,24 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // ================================
-// CORS — PRE-FLIGHT
-// ================================
-export async function OPTIONS() {
-  return NextResponse.json(
-    {},
-    {
-      status: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
-    }
-  );
-}
-
-// ================================
-// PLANOS (PREÇOS REAIS)
+// PLANOS
 // ================================
 const PLANOS: Record<
   string,
@@ -61,13 +44,11 @@ const PLANOS: Record<
 };
 
 // ================================
-// POST — CRIA PREFERENCE
+// POST
 // ================================
 export async function POST(req: NextRequest) {
   try {
     const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
-    const SITE_URL =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://www.pecuariatech.com";
 
     if (!MP_TOKEN) {
       return NextResponse.json(
@@ -76,7 +57,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { plano, periodo, user_id } = await req.json();
+    const { plano, periodo, user_id, email } = await req.json();
 
     if (!plano || !PLANOS[plano]) {
       return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
@@ -86,7 +67,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Período inválido" }, { status: 400 });
     }
 
+    if (!user_id) {
+      return NextResponse.json(
+        { error: "user_id é obrigatório" },
+        { status: 400 }
+      );
+    }
+
     const preco = PLANOS[plano].precos[periodo];
+
+    // ✅ Origem absoluta garantida
+    const origin =
+      req.headers.get("origin") || "http://127.0.0.1:3333";
 
     const mp = new MercadoPagoConfig({
       accessToken: MP_TOKEN,
@@ -94,6 +86,9 @@ export async function POST(req: NextRequest) {
 
     const preference = new Preference(mp);
 
+    // ================================
+    // BODY FINAL (SEM auto_return)
+    // ================================
     const preferenceBody = {
       items: [
         {
@@ -104,17 +99,18 @@ export async function POST(req: NextRequest) {
         },
       ],
 
-      // 🔒 SEMPRE ESTÁVEL
-      external_reference: `${user_id ?? "anon"}|${plano}|${periodo}`,
-
-      back_urls: {
-        success: `${SITE_URL}/dashboard`,
-        failure: `${SITE_URL}/planos`,
-        pending: `${SITE_URL}/planos`,
+      payer: {
+        email: email || "comprador@pecuariatech.com",
       },
 
-      // 🔔 WEBHOOK OFICIAL
-      notification_url: `${SITE_URL}/api/mercadopago/webhook`,
+      // 🔑 FUNDAMENTAL PARA WEBHOOK
+      external_reference: `${user_id}|${plano}|${periodo}`,
+
+      back_urls: {
+        success: `${origin}/dashboard`,
+        failure: `${origin}/planos`,
+        pending: `${origin}/planos`,
+      },
     };
 
     const result = await preference.create({
@@ -122,23 +118,16 @@ export async function POST(req: NextRequest) {
     });
 
     if (!result?.init_point) {
-      throw new Error("init_point não retornado pelo Mercado Pago");
+      throw new Error("init_point não retornado");
     }
 
-    return NextResponse.json(
-      { init_point: result.init_point },
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    return NextResponse.json({ init_point: result.init_point });
   } catch (err: any) {
     console.error("CHECKOUT ERROR:", err);
 
     return NextResponse.json(
       {
-        error: "Erro ao criar checkout",
+        error: "Erro no checkout",
         detalhe: String(err?.message || err),
       },
       { status: 500 }
