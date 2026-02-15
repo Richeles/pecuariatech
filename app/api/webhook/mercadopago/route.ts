@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // ===============================
-// CONFIGS
+// CONFIGURAÇÕES
 // ===============================
 
 const mp = new MercadoPagoConfig({
@@ -16,12 +16,12 @@ const mp = new MercadoPagoConfig({
 const paymentClient = new Payment(mp);
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // obrigatório no webhook
+  process.env.SUPABASE_URL!, // ✅ server-safe
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // obrigatório em webhook
 );
 
 // ===============================
-// PLANOS (VALORES OFICIAIS)
+// PLANOS (FONTE DE VERDADE)
 // ===============================
 
 const PLANOS: Record<string, Record<string, number>> = {
@@ -63,15 +63,25 @@ function parseExternalReference(ref: string | null) {
 
   if (!user_id || !plano || !periodo) return null;
 
-  return { user_id, plano: plano.toLowerCase(), periodo: periodo.toLowerCase() };
+  return { user_id, plano, periodo };
 }
 
-function isValorValido(plano: string, periodo: string, valor: number) {
-  const esperado = PLANOS?.[plano]?.[periodo];
+function isValidValue(plano: string, periodo: string, valor: number) {
+  const esperado = PLANOS[plano]?.[periodo];
   if (!esperado) return false;
 
-  // margem anti-arredondamento
-  return Math.abs(esperado - valor) < 0.01;
+  const tolerancia = 0.05; // ✅ tolerância produção real
+  return Math.abs(valor - esperado) < tolerancia;
+}
+
+function calcularRenovacao(periodo: string) {
+  const renovacao = new Date();
+
+  if (periodo === "mensal") renovacao.setMonth(renovacao.getMonth() + 1);
+  if (periodo === "trimestral") renovacao.setMonth(renovacao.getMonth() + 3);
+  if (periodo === "anual") renovacao.setFullYear(renovacao.getFullYear() + 1);
+
+  return renovacao.toISOString();
 }
 
 // ===============================
@@ -122,12 +132,19 @@ export async function POST(req: NextRequest) {
     // VALIDAÇÃO CRUZADA
     // ===========================
 
-    if (!isValorValido(plano, periodo, valorPago)) {
+    if (!PLANOS[plano]?.[periodo]) {
+      return NextResponse.json(
+        { ok: false, error: "invalid_plan_or_period" },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidValue(plano, periodo, valorPago)) {
       return NextResponse.json(
         {
           ok: false,
-          error: "valor_invalido",
-          esperado: PLANOS?.[plano]?.[periodo],
+          error: "valor_mismatch",
+          esperado: PLANOS[plano][periodo],
           recebido: valorPago,
         },
         { status: 400 }
@@ -136,7 +153,7 @@ export async function POST(req: NextRequest) {
 
     if (moeda !== "BRL") {
       return NextResponse.json(
-        { ok: false, error: "currency_invalid", moeda },
+        { ok: false, error: "currency_mismatch", moeda },
         { status: 400 }
       );
     }
@@ -156,7 +173,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ===========================
-    // LOG FINANCEIRO (SCHEMA REAL)
+    // LOG FINANCEIRO
     // ===========================
 
     await supabase.from("financeiro_logs").insert({
@@ -169,6 +186,7 @@ export async function POST(req: NextRequest) {
       evento: status,
       payment_id: paymentId,
       external_reference: externalRef,
+      criado_em: new Date().toISOString(),
     });
 
     // ===========================
@@ -176,14 +194,40 @@ export async function POST(req: NextRequest) {
     // ===========================
 
     if (status === "approved") {
-      await supabase
+      const renovacao_em = calcularRenovacao(periodo);
+
+      const { data: assinatura } = await supabase
         .from("assinaturas")
-        .update({
-          status: "ativa",
+        .select("id")
+        .eq("user_id", user_id)
+        .maybeSingle();
+
+      if (assinatura) {
+        await supabase
+          .from("assinaturas")
+          .update({
+            status: "ativa",
+            plano,
+            periodo,
+            valor: valorPago,
+            metodo_pagamento: "mercadopago",
+            renovacao_em,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", assinatura.id);
+      } else {
+        await supabase.from("assinaturas").insert({
+          user_id,
           plano,
+          periodo,
+          status: "ativa",
+          valor: valorPago,
+          metodo_pagamento: "mercadopago",
+          renovacao_em,
+          criado_em: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user_id);
+        });
+      }
     }
 
     return NextResponse.json({ ok: true });
@@ -206,5 +250,6 @@ export async function GET() {
     ok: true,
     endpoint: "mercadopago_webhook",
     status: "alive",
+    env: process.env.VERCEL_ENV ?? "local",
   });
 }
