@@ -101,34 +101,42 @@ export default function PlanosClient() {
     try {
       setLoading(true);
 
+      // 🔐 Verifica sessão Supabase
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) {
         alert("Faça login para continuar");
+        window.location.href = "/login";
         return;
       }
 
-      const res = await fetch("/api/checkout/start", {
+      // ✅ Endpoint CANÔNICO
+      const res = await fetch("/api/checkout/preference", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           plano,
           periodo,
-          user_id: user.id,
         }),
       });
 
       const data = await res.json();
 
       if (!data?.init_point) {
-        console.error(data);
+        console.error("Erro checkout:", data);
         alert("Erro ao iniciar pagamento");
         return;
       }
 
+      // 🔁 Redirecionamento Mercado Pago
       window.location.href = data.init_point;
+    } catch (err) {
+      console.error("Erro inesperado:", err);
+      alert("Erro inesperado no checkout");
     } finally {
       setLoading(false);
     }
@@ -172,7 +180,9 @@ export default function PlanosClient() {
           >
             <h2 className="text-xl font-semibold">{plano.nome}</h2>
 
-            <p className="text-sm text-gray-700 italic">{plano.frase}</p>
+            <p className="text-sm text-gray-700 italic">
+              {plano.frase}
+            </p>
 
             <p className="text-3xl font-bold text-green-600">
               {preco(plano.precos[periodo])}
