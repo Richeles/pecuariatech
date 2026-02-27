@@ -3,18 +3,18 @@ import RegisterClient from "./RegisterClient";
 
 export default function RegisterPage() {
   return (
-    <main className="relative min-h-screen flex items-center justify-center">
+    <main className="relative min-h-screen flex items-center justify-center overflow-hidden">
 
-      {/* IMAGEM DE FUNDO */}
+      {/* BACKGROUND */}
       <div
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-cover bg-center scale-105"
         style={{ backgroundImage: "url('/pecuariatech.png')" }}
       />
 
-      {/* OVERLAY ESCURO */}
-      <div className="absolute inset-0 bg-black/60" />
+      {/* OVERLAY GRADIENT PREMIUM */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/60 to-black/80 backdrop-blur-sm" />
 
-      {/* CONTEÚDO CENTRAL */}
+      {/* CONTEÚDO */}
       <div className="relative z-10 w-full flex items-center justify-center p-6">
         <Suspense fallback={<div />}>
           <RegisterClient />

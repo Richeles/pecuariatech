@@ -1,149 +1,94 @@
-"use client";
+return (
+  <div className="w-full max-w-xl bg-white/90 backdrop-blur-xl p-10 rounded-3xl shadow-2xl border border-white/30">
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/app/lib/supabase-browser";
+    <h1 className="text-3xl font-bold mb-8 text-center text-gray-900">
+      Cadastro PecuariaTech
+    </h1>
 
-export default function RegisterClient() {
-  const router = useRouter();
+    <form onSubmit={handleRegister} className="space-y-5">
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pais, setPais] = useState("");
+      <input
+        name="nome"
+        required
+        placeholder="Nome completo"
+        className="w-full bg-white/80 border border-gray-300 focus:border-green-600 focus:ring-2 focus:ring-green-500/40 p-3 rounded-xl transition"
+      />
 
-  async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (loading) return;
+      <input
+        name="email"
+        required
+        type="email"
+        placeholder="Email"
+        className="w-full bg-white/80 border border-gray-300 focus:border-green-600 focus:ring-2 focus:ring-green-500/40 p-3 rounded-xl transition"
+      />
 
-    setLoading(true);
-    setError(null);
+      <input
+        name="senha"
+        required
+        type="password"
+        placeholder="Senha"
+        className="w-full bg-white/80 border border-gray-300 focus:border-green-600 focus:ring-2 focus:ring-green-500/40 p-3 rounded-xl transition"
+      />
 
-    const formData = new FormData(e.currentTarget);
+      <select
+        required
+        value={pais}
+        onChange={(e) => setPais(e.target.value)}
+        className="w-full bg-white/80 border border-gray-300 focus:border-green-600 focus:ring-2 focus:ring-green-500/40 p-3 rounded-xl transition"
+      >
+        <option value="">Selecione o País</option>
+        <option value="BR">Brasil</option>
+        <option value="US">Estados Unidos</option>
+        <option value="AR">Argentina</option>
+        <option value="MX">México</option>
+        <option value="CO">Colômbia</option>
+        <option value="UY">Uruguai</option>
+        <option value="CL">Chile</option>
+        <option value="PY">Paraguai</option>
+      </select>
 
-    const nome = formData.get("nome") as string;
-    const email = formData.get("email") as string;
-    const senha = formData.get("senha") as string;
-    const segmento = formData.get("segmento") as string;
-    const telefone = formData.get("telefone") as string;
-    const documento = formData.get("documento") as string;
+      <select
+        name="segmento"
+        required
+        className="w-full bg-white/80 border border-gray-300 focus:border-green-600 focus:ring-2 focus:ring-green-500/40 p-3 rounded-xl transition"
+      >
+        <option value="">Segmento Pecuário</option>
+        <option value="corte">Corte</option>
+        <option value="leite">Leite</option>
+        <option value="misto">Misto</option>
+        <option value="consultor">Consultor</option>
+        <option value="veterinario">Veterinário</option>
+      </select>
 
-    const { error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password: senha.trim(),
-      options: {
-        data: {
-          nome_completo: nome,
-          pais,
-          segmento_pecuario: segmento,
-          telefone: telefone || null,
-          documento: documento || null,
-        },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/login`,
-      },
-    });
+      <input
+        name="telefone"
+        placeholder="Telefone (com DDI)"
+        className="w-full bg-white/80 border border-gray-300 focus:border-green-600 focus:ring-2 focus:ring-green-500/40 p-3 rounded-xl transition"
+      />
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
-
-    router.push("/login?confirm=true");
-  }
-
-  return (
-    <div className="w-full max-w-xl bg-white p-10 rounded-2xl shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">
-        Cadastro Profissional Internacional
-      </h1>
-
-      <form onSubmit={handleRegister} className="space-y-4">
-
+      {pais === "BR" && (
         <input
-          name="nome"
+          name="documento"
           required
-          placeholder="Nome completo"
-          className="w-full border p-3 rounded-lg"
+          placeholder="CPF ou CNPJ"
+          className="w-full bg-white/80 border border-gray-300 focus:border-green-600 focus:ring-2 focus:ring-green-500/40 p-3 rounded-xl transition"
         />
+      )}
 
-        <input
-          name="email"
-          required
-          type="email"
-          placeholder="Email"
-          className="w-full border p-3 rounded-lg"
-        />
+      {error && (
+        <div className="text-red-600 text-sm text-center">
+          {error}
+        </div>
+      )}
 
-        <input
-          name="senha"
-          required
-          type="password"
-          placeholder="Senha"
-          className="w-full border p-3 rounded-lg"
-        />
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-gradient-to-r from-green-600 to-emerald-700 text-white py-3 rounded-xl font-semibold shadow-lg hover:scale-[1.02] transition disabled:opacity-60"
+      >
+        {loading ? "Criando conta..." : "Criar Conta"}
+      </button>
 
-        {/* País ISO */}
-        <select
-          required
-          value={pais}
-          onChange={(e) => setPais(e.target.value)}
-          className="w-full border p-3 rounded-lg"
-        >
-          <option value="">Selecione o País</option>
-          <option value="BR">Brasil</option>
-          <option value="US">Estados Unidos</option>
-          <option value="AR">Argentina</option>
-          <option value="MX">México</option>
-          <option value="CO">Colômbia</option>
-          <option value="UY">Uruguai</option>
-          <option value="CL">Chile</option>
-          <option value="PY">Paraguai</option>
-        </select>
-
-        <select
-          name="segmento"
-          required
-          className="w-full border p-3 rounded-lg"
-        >
-          <option value="">Segmento Pecuário</option>
-          <option value="corte">Corte</option>
-          <option value="leite">Leite</option>
-          <option value="misto">Misto</option>
-          <option value="consultor">Consultor</option>
-          <option value="veterinario">Veterinário</option>
-        </select>
-
-        <input
-          name="telefone"
-          placeholder="Telefone (com DDI)"
-          className="w-full border p-3 rounded-lg"
-        />
-
-        {/* Documento condicional (Brasil obrigatório) */}
-        {pais === "BR" && (
-          <input
-            name="documento"
-            required
-            placeholder="CPF ou CNPJ"
-            className="w-full border p-3 rounded-lg"
-          />
-        )}
-
-        {error && (
-          <div className="text-red-600 text-sm">
-            {error}
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-black text-white py-3 rounded-lg font-semibold"
-        >
-          {loading ? "Criando conta..." : "Criar Conta"}
-        </button>
-
-      </form>
-    </div>
-  );
-}
+    </form>
+  </div>
+);
