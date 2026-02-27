@@ -20,39 +20,59 @@ export default function LoginClient() {
     setLoading(true);
     setErro(null);
 
-    // ===============================
-    // LOGIN
-    // ===============================
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password: senha.trim(),
-    });
-
-    if (error) {
-      setErro(error.message);
-      setLoading(false);
-      return;
-    }
-
-    // ===============================
-    // CONSULTA IDENTIDADE ADMIN (Y)
-    // ===============================
     try {
-      const res = await fetch("/api/admin/me", {
-        method: "GET",
-        cache: "no-store",
+      // ===============================
+      // LOGIN
+      // ===============================
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: senha.trim(),
       });
 
-      const data = await res.json();
+      if (error) {
+        setErro(error.message);
+        setLoading(false);
+        return;
+      }
 
-      if (data?.is_admin === true) {
-        router.replace("/dashboard/admin");
-      } else {
+      // ✅ SINCRONIZAÇÃO CRÍTICA DA SESSÃO
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (!sessionData?.session) {
+        setErro("Falha ao estabelecer sessão. Tente novamente.");
+        setLoading(false);
+        return;
+      }
+
+      // ===============================
+      // CONSULTA IDENTIDADE ADMIN
+      // ===============================
+      try {
+        const res = await fetch("/api/admin/me", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          router.replace("/dashboard");
+          return;
+        }
+
+        const data = await res.json();
+
+        if (data?.is_admin === true) {
+          router.replace("/dashboard/admin");
+        } else {
+          router.replace("/dashboard");
+        }
+      } catch {
         router.replace("/dashboard");
       }
-    } catch {
-      // fallback seguro
-      router.replace("/dashboard");
+
+    } catch (err: any) {
+      console.error("LOGIN ERROR:", err);
+      setErro("Erro inesperado. Tente novamente.");
+      setLoading(false);
     }
   }
 
@@ -90,13 +110,23 @@ export default function LoginClient() {
         {loading ? "Entrando..." : "Entrar"}
       </button>
 
-      <div className="text-center pt-2">
+      {/* LINKS AUXILIARES */}
+      <div className="flex flex-col items-center gap-2 pt-3 text-sm">
+
+        <Link
+          href="/register"
+          className="text-green-700 hover:underline font-medium"
+        >
+          Criar conta
+        </Link>
+
         <Link
           href="/reset-password"
-          className="text-sm text-green-700 hover:underline"
+          className="text-green-700 hover:underline"
         >
           Esqueci minha senha
         </Link>
+
       </div>
     </form>
   );
