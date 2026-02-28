@@ -35,41 +35,42 @@ export default function LoginClient() {
         return;
       }
 
-      // ✅ SINCRONIZAÇÃO CRÍTICA DA SESSÃO
-      const { data: sessionData } = await supabase.auth.getSession();
-
-      if (!sessionData?.session) {
-        setErro("Falha ao estabelecer sessão. Tente novamente.");
-        setLoading(false);
-        return;
-      }
-
       // ===============================
-      // CONSULTA IDENTIDADE ADMIN
+      // VERIFICA ASSINATURA
       // ===============================
       try {
-        const res = await fetch("/api/admin/me", {
+        const res = await fetch("/api/assinaturas/status", {
           method: "GET",
           cache: "no-store",
         });
 
         if (!res.ok) {
-          router.replace("/dashboard");
+          router.replace("/login");
           return;
         }
 
         const data = await res.json();
 
-        if (data?.is_admin === true) {
+        // Admin override
+        if (data?.reason === "admin_override") {
           router.replace("/dashboard/admin");
-        } else {
-          router.replace("/dashboard");
+          return;
         }
+
+        // Assinatura ativa
+        if (data?.ativo === true) {
+          router.replace("/dashboard");
+          return;
+        }
+
+        // Usuário novo → escolher plano
+        router.replace("/planos");
+
       } catch {
-        router.replace("/dashboard");
+        router.replace("/login");
       }
 
-    } catch (err: any) {
+    } catch (err) {
       console.error("LOGIN ERROR:", err);
       setErro("Erro inesperado. Tente novamente.");
       setLoading(false);
@@ -78,6 +79,7 @@ export default function LoginClient() {
 
   return (
     <form onSubmit={entrar} className="space-y-4">
+
       <input
         type="email"
         placeholder="Email"
@@ -110,9 +112,7 @@ export default function LoginClient() {
         {loading ? "Entrando..." : "Entrar"}
       </button>
 
-      {/* LINKS AUXILIARES */}
       <div className="flex flex-col items-center gap-2 pt-3 text-sm">
-
         <Link
           href="/register"
           className="text-green-700 hover:underline font-medium"
@@ -126,8 +126,8 @@ export default function LoginClient() {
         >
           Esqueci minha senha
         </Link>
-
       </div>
+
     </form>
   );
 }
