@@ -4,10 +4,6 @@ import { createServerClient } from "@supabase/ssr";
 
 export const dynamic = "force-dynamic";
 
-/* ============================
-   FULL ACCESS (MASTER)
-============================ */
-
 const FULL_ACCESS = {
   rebanho: true,
   pastagem: true,
@@ -19,119 +15,104 @@ const FULL_ACCESS = {
   multiusuario: true,
 };
 
-/* ============================
-   HANDLER
-============================ */
-
 export async function GET() {
   console.log("🔥 /api/assinaturas/status EXECUTANDO");
 
-  const cookieStore = await cookies();
+  try {
+    const cookieStore = await cookies(); // ✅ Next 16 obrigatório
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: () => {},
-      },
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => cookieStore.getAll(), // ✅ SSR cookie-first
+          setAll: () => {}, // read-only
+        },
+      }
+    );
+
+    /* ============================
+       1) USER SESSION
+    ============================ */
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    // ✅ AJUSTE LIMPO (remove ruído de log)
+    if (authError && authError.name !== "AuthSessionMissingError") {
+      console.error("❌ AUTH ERROR:", authError);
     }
-  );
 
-  /* ============================
-     1) USER SESSION
-  ============================ */
+    if (!user) {
+      return NextResponse.json({
+        ativo: false,
+        reason: "no_session",
+      });
+    }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    console.log("👤 USER:", user.id);
 
-  if (!user) {
-    return NextResponse.json({
-      ativo: false,
-      reason: "no_session",
-    });
-  }
+    /* ============================
+       2) ADMIN MASTER
+    ============================ */
 
-  console.log("👤 USER:", user.id, user.email);
+    const { data: admin } = await supabase
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .eq("role", "master")
+      .eq("ativo", true)
+      .maybeSingle();
 
-  /* ============================
-     2) ADMIN MASTER OVERRIDE
-  ============================ */
+    if (admin) {
+      return NextResponse.json({
+        ativo: true,
+        plano: "master",
+        nivel: 999,
+        beneficios: FULL_ACCESS,
+        reason: "admin_override",
+      });
+    }
 
-  const { data: admin, error: adminError } = await supabase
-    .from("admin_users")
-    .select("user_id, role, ativo")
-    .eq("user_id", user.id)
-    .eq("role", "master")
-    .eq("ativo", true)
-    .maybeSingle();
+    /* ============================
+       3) ASSINATURA
+    ============================ */
 
-  console.log("🛂 ADMIN:", admin, adminError);
+    const { data: assinatura } = await supabase
+      .from("assinatura_ativa_view")
+      .select("plano_nome, plano_nivel")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-  if (admin) {
+    if (!assinatura) {
+      return NextResponse.json({
+        ativo: false,
+        reason: "no_subscription",
+      });
+    }
+
+    /* ============================
+       4) OK
+    ============================ */
+
     return NextResponse.json({
       ativo: true,
-      plano: "master",
-      nivel: 999,
-      expires_at: null,
+      plano: assinatura.plano_nome,
+      nivel: assinatura.plano_nivel,
       beneficios: FULL_ACCESS,
-      reason: "admin_override",
+      reason: "ok",
     });
-  }
 
-  /* ============================
-     3) ASSINATURA NORMAL
-  ============================ */
+  } catch (err) {
+    console.error("💥 ERRO CRÍTICO:", err);
 
-  const { data: assinatura, error: assinaturaError } = await supabase
-    .from("assinatura_ativa_view")
-    .select("plano_nome, plano_nivel")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  console.log("💳 ASSINATURA:", assinatura, assinaturaError);
-
-  if (!assinatura) {
+    // 🔴 REGRA Z → nunca mandar erro técnico para planos
     return NextResponse.json({
       ativo: false,
-      plano: "basico",
-      nivel: 1,
-      expires_at: null,
-      beneficios: {
-        rebanho: true,
-        pastagem: true,
-        engorda_base: false,
-        engorda_ultra: false,
-        financeiro: false,
-        cfo: false,
-        esg: false,
-        multiusuario: false,
-      },
-      reason: "no_subscription",
+      reason: "internal_error",
     });
   }
-
-  /* ============================
-     4) ASSINANTE ATIVO
-  ============================ */
-
-  return NextResponse.json({
-    ativo: true,
-    plano: assinatura.plano_nome,
-    nivel: assinatura.plano_nivel,
-    expires_at: null,
-    beneficios: {
-      rebanho: true,
-      pastagem: true,
-      engorda_base: true,
-      engorda_ultra: true,
-      financeiro: true,
-      cfo: true,
-      esg: true,
-      multiusuario: false,
-    },
-    reason: "ok",
-  });
 }

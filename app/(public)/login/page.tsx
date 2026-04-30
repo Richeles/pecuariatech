@@ -1,14 +1,29 @@
 // app/(public)/login/page.tsx
-// Página pública de login — arquitetura canônica PecuariaTech
+// Página pública de login — arquitetura canônica PecuariaTech + i18n global
 
 import LoginClient from "./LoginClient";
+import LanguageSwitcher from "@/app/components/i18n/LanguageSwitcher";
 
-export default function PublicLoginPage() {
+// 🔥 CORREÇÃO: importar do server
+import { getLangFromServer } from "@/app/lib/i18n-server";
+
+// 🔥 mantém t no core
+import { t } from "@/app/lib/i18n";
+
+export default async function PublicLoginPage() {
+  // 🔥 SSR correto (Next 16)
+  const lang = await getLangFromServer();
+
   return (
     <main
       className="relative w-full flex justify-center px-4"
       style={{ minHeight: "100vh" }}
     >
+      {/* 🌍 Seletor de idioma (GLOBAL) */}
+      <div className="absolute top-4 right-4 z-20">
+        <LanguageSwitcher />
+      </div>
+
       {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center"
@@ -23,10 +38,11 @@ export default function PublicLoginPage() {
           {/* Cabeçalho */}
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-green-700">
-              PecuariaTech
+              {t(lang, "dashboard.titulo")}
             </h1>
+
             <p className="text-gray-600 text-sm mt-1">
-              Acesse sua conta para continuar
+              {t(lang, "dashboard.subtitulo")}
             </p>
           </div>
 

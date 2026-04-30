@@ -10,7 +10,8 @@ type AdminMeResp = {
 
 async function getAdminMe(): Promise<AdminMeResp> {
   try {
-    const cookieStore = cookies();
+    // ✅ CORREÇÃO CANÔNICA (Next 16)
+    const cookieStore = await cookies();
     const cookie = cookieStore.toString();
 
     const res = await fetch(

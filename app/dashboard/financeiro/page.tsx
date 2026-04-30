@@ -1,6 +1,6 @@
-// app/dashboard/financeiro/page.tsx
 import { Suspense } from "react";
 import FinanceiroClient from "./components/FinanceiroClient";
+import T from "@/app/components/T";
 
 export const dynamic = "force-dynamic";
 
@@ -8,95 +8,74 @@ export default function FinanceiroPage() {
   return (
     <main className="p-10 max-w-7xl mx-auto space-y-12">
 
-      {/* ================= HEADER ================= */}
+      {/* HEADER */}
       <header className="space-y-2">
         <h1 className="text-3xl font-bold text-gray-900">
-          Financeiro · Visão CFO
+          <T k="dashboard.modulos.financeiro.titulo" /> · CFO
         </h1>
+
         <p className="text-gray-500">
-          Controle financeiro, análise estratégica e base para decisões inteligentes
+          <T k="dashboard.modulos.financeiro.desc" />
         </p>
       </header>
 
-      {/* ================= KPI PRINCIPAIS ================= */}
+      {/* KPIs */}
       <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
 
         {[
-          { label: "Receita", value: "—" },
-          { label: "Custos", value: "—" },
-          { label: "Resultado", value: "—", active: true },
-          { label: "Margem", value: "—" },
+          { label: "dashboard.cards.receita", value: "—" },
+          { label: "dashboard.cards.custos", value: "—" },
+          { label: "dashboard.cards.resultado", value: "—", active: true },
+          { label: "dashboard.cards.margem", value: "—" },
         ].map((kpi) => (
-          <div
-            key={kpi.label}
-            className={`
-              bg-white rounded-2xl border p-6
-              flex flex-col gap-2
-              transition
-              ${
-                kpi.active
-                  ? "border-green-400 bg-green-50/40"
-                  : "border-gray-200 hover:border-green-300"
-              }
-            `}
-          >
-            <p className="text-sm text-gray-500">{kpi.label}</p>
-            <p className="text-2xl font-bold text-green-700">{kpi.value}</p>
+          <div key={kpi.label} className="bg-white rounded-2xl border p-6">
+            <p className="text-sm text-gray-500">
+              <T k={kpi.label} />
+            </p>
+
+            <p className="text-2xl font-bold text-green-700">
+              {kpi.value}
+            </p>
           </div>
         ))}
 
       </section>
 
-      {/* ================= DIAGNÓSTICO CFO ================= */}
-      <section className="bg-white border border-gray-200 rounded-2xl p-8">
-
-        <h2 className="text-lg font-semibold text-gray-900">
-          Diagnóstico Financeiro (CFO)
+      {/* CFO */}
+      <section className="bg-white border rounded-2xl p-8">
+        <h2 className="text-lg font-semibold">
+          <T k="dashboard.modulos.cfo.titulo" />
         </h2>
 
         <p className="text-gray-500 mt-2">
-          Nenhum dado financeiro disponível ainda.
-          Registre receitas e custos para liberar análises automáticas.
+          <T k="financeiro.sem_dados" />
         </p>
-
       </section>
 
-      {/* ================= ALERTA ATIVAÇÃO ================= */}
-      <section className="bg-yellow-50 border border-yellow-300 rounded-xl p-5">
-
+      {/* ALERTA */}
+      <section className="bg-yellow-50 border rounded-xl p-5">
         <p className="text-yellow-800 text-sm">
-          ⚠ O CFO Autônomo será ativado após os primeiros lançamentos financeiros.
-          Nenhuma análise é feita sem dados reais.
+          <T k="financeiro.alerta_cfo" />
         </p>
-
       </section>
 
-      {/* ================= DRE ================= */}
-      <section className="bg-white border border-gray-200 rounded-2xl p-8 flex items-center justify-between">
-
+      {/* DRE */}
+      <section className="bg-white border rounded-2xl p-8 flex justify-between">
         <div>
-          <h3 className="font-semibold text-gray-900">
-            DRE — Demonstrativo de Resultado
+          <h3 className="font-semibold">
+            <T k="financeiro.dre.titulo" />
           </h3>
 
           <p className="text-sm text-gray-500 mt-1">
-            Visualize o resultado econômico completo da fazenda.
+            <T k="financeiro.dre.desc" />
           </p>
         </div>
 
-        <button
-          className="
-            px-5 py-2.5 rounded-lg
-            bg-green-600 text-white text-sm font-medium
-            hover:bg-green-700 transition
-          "
-        >
-          Ver DRE
+        <button className="px-5 py-2 bg-green-600 text-white rounded-lg">
+          <T k="financeiro.dre.acao" />
         </button>
-
       </section>
 
-      {/* ================= CLIENT ================= */}
       <Suspense fallback={null}>
         <FinanceiroClient />
       </Suspense>

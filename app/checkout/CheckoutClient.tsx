@@ -1,12 +1,14 @@
-// app/checkout/CheckoutClient.tsx
 "use client";
 
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { getLangFromClient, t } from "@/app/lib/i18n";
 
 export default function CheckoutClient() {
   const params = useSearchParams();
   const plano = params.get("plano");
+
+  const lang = getLangFromClient();
 
   useEffect(() => {
     if (!plano) return;
@@ -33,7 +35,7 @@ export default function CheckoutClient() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <p className="text-gray-600 text-lg">
-        Redirecionando para o pagamento seguro…
+        {t(lang, "processando")}
       </p>
     </div>
   );

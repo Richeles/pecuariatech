@@ -1,0 +1,24 @@
+{
+  "dashboard": "Panel",
+  "financeiro": "Financiero",
+  "rebanho": "Ganado",
+  "pastagem": "Pasturas",
+  "engorda": "Engorde",
+  "assinatura": "Suscripción",
+
+  "centro_controle": "Centro de control de la finca",
+  "animais": "Animales",
+  "receita": "Ingresos",
+  "produtividade": "Productividad",
+  "total_rastreado": "Total rastreado",
+  "mes_corrente": "Mes actual",
+  "indice_medio": "Índice medio",
+  "modulos_sistema": "Módulos del sistema",
+  "desc_financeiro": "Flujo de caja, costos, ingresos e indicadores",
+  "desc_rebanho": "Control de ganado y rendimiento productivo",
+  "desc_pastagem": "Gestión de áreas, carga y sostenibilidad",
+  "desc_cfo": "Análisis estratégicos e inteligencia financiera",
+  "acessar": "Acceder",
+  "sistema_ok": "Sistema organizado y bajo control",
+  "sistema_desc": "Todos los módulos están centralizados en este panel. Ninguna funcionalidad se ha perdido."
+}

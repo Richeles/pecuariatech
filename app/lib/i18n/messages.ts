@@ -1,0 +1,85 @@
+export type Lang = "pt" | "en" | "es";
+
+export const messages: Record<Lang, Record<string, string>> = {
+  pt: {
+    app_name: "PecuariaTech",
+    login_title: "Acesse sua conta para continuar",
+    email: "Email",
+    password: "Senha",
+    enter: "Entrar",
+    create_account: "Criar conta",
+    forgot_password: "Esqueci minha senha",
+
+    dashboard_title: "Dashboard PecuariaTech",
+    animals: "Animais",
+    revenue: "Receita",
+    productivity: "Produtividade",
+
+    financeiro: "Financeiro",
+    rebanho: "Rebanho",
+    pastagem: "Pastagem",
+    engorda: "Engorda",
+    assinatura: "Assinatura",
+
+    saude_financeira: "Saúde Financeira",
+    risco: "Risco",
+    recomendacao: "Recomendação",
+    manter_operacao: "Manter operação",
+    controlar_custos: "Controlar custos",
+    antecipar_receita: "Antecipar receita ou reduzir custos",
+  },
+  en: {
+    app_name: "PecuariaTech",
+    login_title: "Access your account",
+    email: "Email",
+    password: "Password",
+    enter: "Sign in",
+    create_account: "Create account",
+    forgot_password: "Forgot password",
+
+    dashboard_title: "PecuariaTech Dashboard",
+    animals: "Animals",
+    revenue: "Revenue",
+    productivity: "Productivity",
+
+    financeiro: "Finance",
+    rebanho: "Herd",
+    pastagem: "Pasture",
+    engorda: "Fattening",
+    assinatura: "Subscription",
+
+    saude_financeira: "Financial Health",
+    risco: "Risk",
+    recomendacao: "Recommendation",
+    manter_operacao: "Maintain operation",
+    controlar_custos: "Control costs",
+    antecipar_receita: "Advance revenue or reduce costs",
+  },
+  es: {
+    app_name: "PecuariaTech",
+    login_title: "Accede a tu cuenta",
+    email: "Correo",
+    password: "Contraseña",
+    enter: "Entrar",
+    create_account: "Crear cuenta",
+    forgot_password: "Olvidé mi contraseña",
+
+    dashboard_title: "Panel PecuariaTech",
+    animals: "Animales",
+    revenue: "Ingresos",
+    productivity: "Productividad",
+
+    financeiro: "Finanzas",
+    rebanho: "Rebaño",
+    pastagem: "Pastura",
+    engorda: "Engorde",
+    assinatura: "Suscripción",
+
+    saude_financeira: "Salud Financiera",
+    risco: "Riesgo",
+    recomendacao: "Recomendación",
+    manter_operacao: "Mantener operación",
+    controlar_custos: "Controlar costos",
+    antecipar_receita: "Anticipar ingresos o reducir costos",
+  },
+};

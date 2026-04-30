@@ -1,14 +1,24 @@
+import T from "@/app/components/T";
+import LanguageSwitcher from "@/app/components/LanguageSwitcher";
+import CFORealCard from "@/app/components/cfo/CFORealCard";
+
 export default function DashboardHome() {
   return (
     <main className="p-10 max-w-7xl mx-auto space-y-16">
 
+      {/* 🌍 IDIOMA */}
+      <div className="flex justify-end">
+        <LanguageSwitcher />
+      </div>
+
       {/* ================= HEADER ================= */}
       <header className="space-y-2">
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
-          Dashboard PecuariaTech
+          <T k="dashboard_titulo" /> PecuariaTech
         </h1>
+
         <p className="text-gray-400">
-          Centro de controle da fazenda
+          <T k="centro_controle" />
         </p>
       </header>
 
@@ -17,20 +27,20 @@ export default function DashboardHome() {
 
         {[
           {
-            label: "Animais",
+            label: "kpi_animais",
             value: "1.247",
-            hint: "Total rastreado",
+            hint: "kpi_total_rastreado",
             active: true,
           },
           {
-            label: "Receita",
+            label: "kpi_receita",
             value: "R$ 124.580",
-            hint: "Mês corrente",
+            hint: "kpi_mes_corrente",
           },
           {
-            label: "Produtividade",
+            label: "kpi_produtividade",
             value: "87%",
-            hint: "Índice médio",
+            hint: "kpi_indice_medio",
           },
         ].map((kpi) => (
           <div
@@ -49,12 +59,11 @@ export default function DashboardHome() {
               }
             `}
           >
-            {/* Linha superior sutil */}
             <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-green-500/60 to-green-300/20" />
 
             <div>
               <p className="text-sm text-gray-500">
-                {kpi.label}
+                <T k={kpi.label} />
               </p>
 
               <p className="mt-2 text-4xl font-bold tracking-tight text-green-700">
@@ -63,41 +72,46 @@ export default function DashboardHome() {
             </div>
 
             <p className="text-xs text-gray-400">
-              {kpi.hint}
+              <T k={kpi.hint} />
             </p>
           </div>
         ))}
 
       </section>
 
+      {/* ================= CFO ================= */}
+      <section className="space-y-4">
+        <CFORealCard />
+      </section>
+
       {/* ================= MÓDULOS ================= */}
       <section className="space-y-6">
 
         <h2 className="text-xl font-semibold text-gray-900">
-          Módulos do Sistema
+          <T k="modulos_sistema" />
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
           {[
             {
-              title: "Financeiro",
-              desc: "Fluxo de caixa, custos, receitas e indicadores",
+              title: "modulo_financeiro",
+              desc: "desc_financeiro",
               icon: "💰",
             },
             {
-              title: "Rebanho",
-              desc: "Controle de animais e desempenho produtivo",
+              title: "modulo_rebanho",
+              desc: "desc_rebanho",
               icon: "🐄",
             },
             {
-              title: "Pastagem",
-              desc: "Gestão de áreas, lotação e sustentabilidade",
+              title: "modulo_pastagem",
+              desc: "desc_pastagem",
               icon: "🌱",
             },
             {
-              title: "CFO Autônomo",
-              desc: "Análises estratégicas e inteligência financeira",
+              title: "modulo_cfo",
+              desc: "desc_cfo",
               icon: "🧠",
             },
           ].map((mod) => (
@@ -119,44 +133,23 @@ export default function DashboardHome() {
             >
               <div className="space-y-3">
 
-                {/* Ícone */}
-                <div
-                  className="
-                    w-10 h-10
-                    rounded-lg
-                    bg-green-100
-                    text-green-700
-                    flex items-center justify-center
-                    text-lg
-                  "
-                >
+                <div className="w-10 h-10 rounded-lg bg-green-100 text-green-700 flex items-center justify-center text-lg">
                   {mod.icon}
                 </div>
 
-                {/* Título */}
                 <h3 className="font-semibold text-gray-900 text-lg">
-                  {mod.title}
+                  <T k={mod.title} />
                 </h3>
 
-                {/* Descrição */}
                 <p className="text-sm text-gray-500">
-                  {mod.desc}
+                  <T k={mod.desc} />
                 </p>
 
               </div>
 
-              {/* CTA */}
               <div>
-                <span
-                  className="
-                    inline-flex items-center gap-1
-                    text-sm font-medium
-                    text-green-700
-                    group-hover:translate-x-1
-                    transition-transform
-                  "
-                >
-                  Acessar
+                <span className="inline-flex items-center gap-1 text-sm font-medium text-green-700 group-hover:translate-x-1 transition-transform">
+                  <T k="acessar" />
                   <span>→</span>
                 </span>
               </div>
@@ -172,11 +165,11 @@ export default function DashboardHome() {
       <section className="bg-green-50 border border-green-200 rounded-xl p-8 space-y-2">
 
         <p className="text-green-800 font-medium">
-          Sistema organizado e sob controle
+          <T k="sistema_ok" />
         </p>
 
         <p className="text-green-700 text-sm">
-          Todos os módulos estão centralizados neste painel. Nenhuma funcionalidade foi perdida.
+          <T k="sistema_desc" />
         </p>
 
       </section>
