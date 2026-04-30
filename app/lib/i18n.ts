@@ -1,6 +1,9 @@
 // app/lib/i18n.ts
 
-export type Lang = "pt" | "es";
+// ===============================
+// 🌍 TIPOS
+// ===============================
+export type Lang = "pt" | "es" | "en";
 
 // ===============================
 // 🌍 CLIENT (GLOBAL READY)
@@ -8,16 +11,29 @@ export type Lang = "pt" | "es";
 export function getLangFromClient(): Lang {
   if (typeof window === "undefined") return "pt";
 
-  // 1️⃣ localStorage (prioridade manual do usuário)
+  // 1️⃣ prioridade: escolha manual
   const saved = localStorage.getItem("lang");
-  if (saved === "es") return "es";
+  if (saved === "pt" || saved === "es" || saved === "en") {
+    return saved;
+  }
 
-  // 2️⃣ navegador (fallback inteligente global)
+  // 2️⃣ navegador
   const browser = navigator.language.toLowerCase();
+
   if (browser.startsWith("es")) return "es";
+  if (browser.startsWith("en")) return "en";
 
   // 3️⃣ default
   return "pt";
+}
+
+// ===============================
+// 🌍 SET (FIX BUILD ERROR)
+// ===============================
+export function setLangClient(lang: Lang) {
+  if (typeof window === "undefined") return;
+
+  localStorage.setItem("lang", lang);
 }
 
 // ===============================
@@ -41,7 +57,7 @@ export const dictionary = {
     assinar: "Assinar",
     processando: "Processando...",
 
-    bloqueado_msg: "Seu acesso está bloqueado. Escolha um plano.",
+    bloqueado_msg: "Seu acesso está bloqueado. Escolha um plano",
   },
 
   es: {
@@ -61,7 +77,27 @@ export const dictionary = {
     assinar: "Suscribirse",
     processando: "Procesando...",
 
-    bloqueado_msg: "Acceso bloqueado. Elige un plan.",
+    bloqueado_msg: "Acceso bloqueado. Elige un plan",
+  },
+
+  en: {
+    email: "Email",
+    password: "Password",
+    enter: "Sign in",
+    create_account: "Create account",
+    forgot_password: "Forgot password",
+
+    planos_titulo: "Plans",
+    planos_subtitulo: "Choose the best plan",
+
+    mensal: "Monthly",
+    trimestral: "Quarterly",
+    anual: "Yearly",
+
+    assinar: "Subscribe",
+    processando: "Processing...",
+
+    bloqueado_msg: "Access blocked. Choose a plan",
   },
 } as const;
 
@@ -82,8 +118,7 @@ const missing = new Set<string>();
 // ===============================
 // 🧠 FALLBACK (UX SAFE)
 // ===============================
-function fallbackNeutral(key: string): string {
-  // evita poluir UI com key técnica
+function fallbackNeutral(): string {
   return "";
 }
 
@@ -97,7 +132,7 @@ export function t(lang: Lang, key: string): string {
 
   if (typeof value === "string") return value;
 
-  // log inteligente (1x por chave)
+  // log apenas uma vez por chave
   if (!missing.has(key)) {
     missing.add(key);
 
@@ -106,6 +141,6 @@ export function t(lang: Lang, key: string): string {
     }
   }
 
-  // 🔒 REGRA Z → nunca quebrar UI
-  return fallbackNeutral(key);
+  // 🔒 REGRA Z
+  return fallbackNeutral();
 }

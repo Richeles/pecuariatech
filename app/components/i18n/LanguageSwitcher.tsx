@@ -1,6 +1,6 @@
 "use client";
 
-import { setLangClient, getLangFromClient } from "@/app/lib/i18n";
+import { getLangFromClient } from "@/app/lib/i18n";
 import { useEffect, useState } from "react";
 
 export default function LanguageSwitcher() {
@@ -10,12 +10,18 @@ export default function LanguageSwitcher() {
     setLang(getLangFromClient());
   }, []);
 
+  const handleChange = (value: string) => {
+    localStorage.setItem("lang", value);
+    setLang(value);
+
+    // força recarregar para aplicar idioma
+    window.location.reload();
+  };
+
   return (
     <select
       value={lang}
-      onChange={(e) => {
-        setLangClient(e.target.value as any);
-      }}
+      onChange={(e) => handleChange(e.target.value)}
       style={{
         position: "absolute",
         top: 20,
