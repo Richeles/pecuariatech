@@ -15,11 +15,29 @@ export default function LoginClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // idioma
   useEffect(() => {
     setLang(getLangFromClient());
   }, []);
 
-  const handleLogin = async (e: any) => {
+  // 🔒 helper: aguarda sessão realmente disponível (evita redirect prematuro)
+  const waitForSession = async (timeoutMs = 3000) => {
+    const start = Date.now();
+
+    while (Date.now() - start < timeoutMs) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session) return true;
+
+      await new Promise((r) => setTimeout(r, 150));
+    }
+
+    return false;
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setLoading(true);
@@ -31,28 +49,35 @@ export default function LoginClient() {
     });
 
     if (error) {
-      console.error("❌ LOGIN ERROR:", error);
-      setError("Erro ao fazer login");
+      console.error("LOGIN ERROR:", error);
+      setError(error.message || "Erro ao fazer login");
       setLoading(false);
       return;
     }
 
-    // 🔥 ESSENCIAL: dar tempo pro cookie SSR
-    setTimeout(() => {
-      router.push("/dashboard");
-      router.refresh();
-    }, 500);
+    // ⛳ garante que a sessão está disponível antes de navegar
+    const ok = await waitForSession();
+
+    if (!ok) {
+      setError("Sessão não consolidada. Tente novamente.");
+      setLoading(false);
+      return;
+    }
+
+    // 🔄 navegação pós-login
+    router.replace("/dashboard");
+    router.refresh();
   };
 
   return (
     <form onSubmit={handleLogin} className="space-y-4">
-
       <input
         type="email"
         placeholder={t(lang, "email")}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="w-full p-3 border rounded-lg"
+        required
       />
 
       <input
@@ -61,6 +86,7 @@ export default function LoginClient() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="w-full p-3 border rounded-lg"
+        required
       />
 
       {error && <p style={{ color: "red" }}>{error}</p>}
@@ -68,21 +94,20 @@ export default function LoginClient() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700"
+        className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
       >
         {loading ? "Entrando..." : t(lang, "enter")}
       </button>
 
       <div className="text-center text-sm mt-4 space-y-2">
-        <p className="text-green-600 cursor-pointer">
+        <a href="/register" className="text-green-600">
           {t(lang, "create_account")}
-        </p>
+        </a>
 
-        <p className="text-gray-500 cursor-pointer">
+        <a href="/reset-password" className="text-gray-500">
           {t(lang, "forgot_password")}
-        </p>
+        </a>
       </div>
-
     </form>
   );
 }
