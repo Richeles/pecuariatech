@@ -20,13 +20,38 @@ export default function LoginClient() {
     setLang(getLangFromClient());
   }, []);
 
-  // 🔥 DEBUG DE SESSÃO
+  // 🔥 DEBUG (mantido para você ver fluxo real)
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      console.log("AUTH EVENT:", event);
-      console.log("SESSION:", session);
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("AUTH EVENT:", event);
+        console.log("SESSION:", session);
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, [supabase]);
+
+  // 🔥 FUNÇÃO CRÍTICA → GARANTE COOKIE SSR
+  const waitForSession = async (timeout = 4000) => {
+    const start = Date.now();
+
+    while (Date.now() - start < timeout) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session) {
+        return true;
+      }
+
+      await new Promise((r) => setTimeout(r, 150));
+    }
+
+    return false;
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,23 +59,28 @@ export default function LoginClient() {
     setLoading(true);
     setError("");
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
       console.error("LOGIN ERROR:", error);
-      setError(error.message);
+      setError(error.message || "Erro ao fazer login");
       setLoading(false);
       return;
     }
 
-    console.log("LOGIN SUCCESS:", data);
+    // 🔥 ESPERA REAL DA SESSÃO (ESSA É A CORREÇÃO)
+    const ok = await waitForSession();
 
-    // 🔥 força persistência antes de navegar
-    await new Promise((r) => setTimeout(r, 800));
+    if (!ok) {
+      setError("Sessão não consolidada. Tente novamente.");
+      setLoading(false);
+      return;
+    }
 
+    // 🔥 NAVEGAÇÃO SEGURA (SSR READY)
     router.replace("/dashboard");
     router.refresh();
   };
@@ -80,7 +110,7 @@ export default function LoginClient() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-green-600 text-white py-3 rounded-lg"
+        className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
       >
         {loading ? "Entrando..." : t(lang, "enter")}
       </button>
