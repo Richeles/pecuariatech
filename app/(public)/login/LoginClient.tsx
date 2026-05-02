@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/app/lib/supabase-browser";
 import { getLangFromClient, t, Lang } from "@/app/lib/i18n";
 
 export default function LoginClient() {
-  const supabase = createClient();
+  const router = useRouter();
+
+  const [supabase] = useState(() => createClient());
 
   const [lang, setLang] = useState<Lang>("pt");
   const [email, setEmail] = useState("");
@@ -17,21 +20,13 @@ export default function LoginClient() {
     setLang(getLangFromClient());
   }, []);
 
-  const waitForSession = async (timeoutMs = 3000) => {
-    const start = Date.now();
-
-    while (Date.now() - start < timeoutMs) {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session) return true;
-
-      await new Promise((r) => setTimeout(r, 150));
-    }
-
-    return false;
-  };
+  // 🔥 DEBUG DE SESSÃO
+  useEffect(() => {
+    supabase.auth.onAuthStateChange((event, session) => {
+      console.log("AUTH EVENT:", event);
+      console.log("SESSION:", session);
+    });
+  }, [supabase]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,28 +34,25 @@ export default function LoginClient() {
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
       console.error("LOGIN ERROR:", error);
-      setError(error.message || "Erro ao fazer login");
+      setError(error.message);
       setLoading(false);
       return;
     }
 
-    const ok = await waitForSession();
+    console.log("LOGIN SUCCESS:", data);
 
-    if (!ok) {
-      setError("Sessão não consolidada. Tente novamente.");
-      setLoading(false);
-      return;
-    }
+    // 🔥 força persistência antes de navegar
+    await new Promise((r) => setTimeout(r, 800));
 
-    // 🔥 CORREÇÃO CRÍTICA
-    window.location.href = "/dashboard";
+    router.replace("/dashboard");
+    router.refresh();
   };
 
   return (
@@ -88,7 +80,7 @@ export default function LoginClient() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
+        className="w-full bg-green-600 text-white py-3 rounded-lg"
       >
         {loading ? "Entrando..." : t(lang, "enter")}
       </button>
