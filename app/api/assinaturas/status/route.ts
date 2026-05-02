@@ -1,4 +1,4 @@
-// TESTE GIT
+// app/api/assinaturas/status/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
@@ -20,23 +20,30 @@ export async function GET() {
   console.log("🔥 /api/assinaturas/status EXECUTANDO");
 
   try {
+    // 🔒 COOKIE SSR (Next 16)
     const cookieStore = await cookies();
 
+    // 🔒 Supabase SSR client (cookie-first)
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll: () => cookieStore.getAll(),
-          setAll: () => {},
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          getAll() {
+            return cookieStore.getAll();
+          },
+          // API route não precisa setar cookie aqui
+          setAll() {},
         },
       }
     );
 
     /* ============================
-       1) USER SESSION
+       1) USER SESSION (SSR)
     ============================ */
-
     const {
       data: { user },
       error: authError,
@@ -47,6 +54,7 @@ export async function GET() {
     }
 
     if (!user) {
+      console.log("⚠️ NO SESSION (cookie não encontrado)");
       return NextResponse.json({
         ativo: false,
         reason: "no_session",
@@ -59,7 +67,7 @@ export async function GET() {
        2) ADMIN MASTER (BLINDADO)
     ============================ */
 
-    // 🔥 fallback direto por email (NÃO DEPENDE DE TABELA)
+    // 🔥 override por email (independente de tabela)
     if (user.email === "pecuariatech2026@gmail.com") {
       return NextResponse.json({
         ativo: true,
@@ -71,7 +79,7 @@ export async function GET() {
       });
     }
 
-    // 🔥 validação por tabela (secundária)
+    // 🔥 fallback por tabela admin_users
     const { data: admin, error: adminError } = await supabase
       .from("admin_users")
       .select("user_id")
@@ -138,7 +146,6 @@ export async function GET() {
       is_admin: false,
       reason: "ok",
     });
-
   } catch (err) {
     console.error("💥 ERRO CRÍTICO:", err);
 
