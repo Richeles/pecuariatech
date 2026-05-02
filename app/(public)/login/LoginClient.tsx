@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/app/lib/supabase-browser";
 import { getLangFromClient, t, Lang } from "@/app/lib/i18n";
 
 export default function LoginClient() {
   const supabase = createClient();
-  const router = useRouter();
 
   const [lang, setLang] = useState<Lang>("pt");
   const [email, setEmail] = useState("");
@@ -15,12 +13,10 @@ export default function LoginClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // idioma
   useEffect(() => {
     setLang(getLangFromClient());
   }, []);
 
-  // 🔒 helper: aguarda sessão realmente disponível (evita redirect prematuro)
   const waitForSession = async (timeoutMs = 3000) => {
     const start = Date.now();
 
@@ -55,7 +51,6 @@ export default function LoginClient() {
       return;
     }
 
-    // ⛳ garante que a sessão está disponível antes de navegar
     const ok = await waitForSession();
 
     if (!ok) {
@@ -64,9 +59,8 @@ export default function LoginClient() {
       return;
     }
 
-    // 🔄 navegação pós-login
-    router.replace("/dashboard");
-    router.refresh();
+    // 🔥 CORREÇÃO CRÍTICA
+    window.location.href = "/dashboard";
   };
 
   return (
