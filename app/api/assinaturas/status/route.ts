@@ -1,4 +1,3 @@
-// app/api/assinaturas/status/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
@@ -20,10 +19,10 @@ export async function GET() {
   console.log("🔥 /api/assinaturas/status EXECUTANDO");
 
   try {
-    // 🔒 COOKIE SSR (Next 16)
+    // ✅ NEXT 16 — obrigatório await
     const cookieStore = await cookies();
 
-    // 🔒 Supabase SSR client (cookie-first)
+    // 🔥 CLIENT SSR CORRETO (FIX REAL AQUI)
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -33,16 +32,27 @@ export async function GET() {
             return cookieStore.get(name)?.value;
           },
           getAll() {
-            return cookieStore.getAll();
+            return cookieStore.getAll().map((c) => ({
+              name: c.name,
+              value: c.value,
+            }));
           },
-          // API route não precisa setar cookie aqui
-          setAll() {},
+          setAll(cookiesToSet) {
+            // ⚠️ necessário para manter consistência SSR
+            cookiesToSet.forEach(({ name, value, options }) => {
+              try {
+                cookieStore.set(name, value, options);
+              } catch (e) {
+                // Em route handler pode falhar silenciosamente
+              }
+            });
+          },
         },
       }
     );
 
     /* ============================
-       1) USER SESSION (SSR)
+       1) SESSION (SSR REAL)
     ============================ */
     const {
       data: { user },
@@ -54,7 +64,7 @@ export async function GET() {
     }
 
     if (!user) {
-      console.log("⚠️ NO SESSION (cookie não encontrado)");
+      console.log("⚠️ NO SESSION (cookie não chegou no SSR)");
       return NextResponse.json({
         ativo: false,
         reason: "no_session",
@@ -64,10 +74,9 @@ export async function GET() {
     console.log("👤 USER:", user.id, user.email);
 
     /* ============================
-       2) ADMIN MASTER (BLINDADO)
+       2) ADMIN MASTER
     ============================ */
 
-    // 🔥 override por email (independente de tabela)
     if (user.email === "pecuariatech2026@gmail.com") {
       return NextResponse.json({
         ativo: true,
@@ -79,7 +88,6 @@ export async function GET() {
       });
     }
 
-    // 🔥 fallback por tabela admin_users
     const { data: admin, error: adminError } = await supabase
       .from("admin_users")
       .select("user_id")
@@ -113,10 +121,9 @@ export async function GET() {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    // 🔴 REGRA Z → erro técnico nunca vira bloqueio
+    // 🔴 REGRA Z
     if (subError) {
       console.error("❌ ERRO ASSINATURA:", subError);
-
       return NextResponse.json({
         ativo: false,
         reason: "internal_error",
@@ -149,7 +156,6 @@ export async function GET() {
   } catch (err) {
     console.error("💥 ERRO CRÍTICO:", err);
 
-    // 🔴 REGRA Z
     return NextResponse.json({
       ativo: false,
       reason: "internal_error",
