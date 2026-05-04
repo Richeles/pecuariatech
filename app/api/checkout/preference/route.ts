@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // ================================
-// PLANOS (NÃO ALTERAR)
+// PLANOS (FONTE ÚNICA - ATUALIZADA)
 // ================================
 const PLANOS: Record<
   string,
@@ -20,26 +20,29 @@ const PLANOS: Record<
 > = {
   basico: {
     titulo: "Plano Básico",
-    precos: { mensal: 31.75, trimestral: 79.38, anual: 317.5 },
+    precos: { mensal: 79.9, trimestral: 214.9, anual: 759.9 },
   },
   profissional: {
     titulo: "Plano Profissional",
-    precos: { mensal: 52.99, trimestral: 132.48, anual: 529.9 },
+    precos: { mensal: 132.9, trimestral: 357.9, anual: 1269.9 },
   },
   ultra: {
     titulo: "Plano Ultra",
-    precos: { mensal: 106.09, trimestral: 265.23, anual: 1060.9 },
+    precos: { mensal: 265.9, trimestral: 716.9, anual: 2539.9 },
   },
   empresarial: {
     titulo: "Plano Empresarial",
-    precos: { mensal: 159.19, trimestral: 397.98, anual: 1591.9 },
+    precos: { mensal: 397.9, trimestral: 1074.9, anual: 3819.9 },
   },
   premium_dominus: {
     titulo: "Premium Dominus 360°",
-    precos: { mensal: 318.49, trimestral: 796.23, anual: 3184.9 },
+    precos: { mensal: 796.9, trimestral: 2149.9, anual: 7639.9 },
   },
 };
 
+// ================================
+// POST
+// ================================
 export async function POST(req: NextRequest) {
   try {
     const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
@@ -51,14 +54,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { plano, periodo, user_id, email } = await req.json();
+    const body = await req.json();
+    const { plano, periodo, user_id, email } = body;
 
+    // ================================
+    // VALIDAÇÕES
+    // ================================
     if (!plano || !PLANOS[plano]) {
-      return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Plano inválido", recebido: plano },
+        { status: 400 }
+      );
     }
 
     if (!["mensal", "trimestral", "anual"].includes(periodo)) {
-      return NextResponse.json({ error: "Período inválido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Período inválido", recebido: periodo },
+        { status: 400 }
+      );
     }
 
     if (!user_id) {
@@ -68,14 +81,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 🔥 AGORA O EMAIL É OBRIGATÓRIO (CORRETO EM PRODUÇÃO)
+    if (!email || typeof email !== "string") {
+      return NextResponse.json(
+        { error: "email do usuário é obrigatório para checkout" },
+        { status: 400 }
+      );
+    }
+
     const preco = PLANOS[plano].precos[periodo];
 
-    // 🔥 ORIGIN CORRETO (PRODUÇÃO + LOCAL)
+    if (!preco || isNaN(preco)) {
+      return NextResponse.json(
+        { error: "Preço inválido", plano, periodo },
+        { status: 500 }
+      );
+    }
+
+    // ================================
+    // ORIGIN (PRODUÇÃO + LOCAL)
+    // ================================
     const origin =
       process.env.NEXT_PUBLIC_SITE_URL ||
       req.headers.get("origin") ||
       "http://127.0.0.1:3333";
 
+    // ================================
+    // MERCADO PAGO
+    // ================================
     const mp = new MercadoPagoConfig({
       accessToken: MP_TOKEN,
     });
@@ -93,9 +126,10 @@ export async function POST(req: NextRequest) {
       ],
 
       payer: {
-        email: email || "comprador@pecuariatech.com",
+        email: email, // ✅ SEM fallback
       },
 
+      // 🔑 FUNDAMENTAL (webhook + rastreabilidade)
       external_reference: `${user_id}|${plano}|${periodo}`,
 
       back_urls: {
@@ -104,10 +138,13 @@ export async function POST(req: NextRequest) {
         pending: `${origin}/planos`,
       },
 
-      // 🔥 ESSENCIAL PARA WEBHOOK FUNCIONAR
+      // 🔥 WEBHOOK
       notification_url: `${origin}/api/webhook/mercadopago`,
     };
 
+    // ================================
+    // CRIA PREFERÊNCIA
+    // ================================
     const result = await preference.create({
       body: preferenceBody,
     });
@@ -116,7 +153,9 @@ export async function POST(req: NextRequest) {
       throw new Error("init_point não retornado pelo Mercado Pago");
     }
 
-    return NextResponse.json({ init_point: result.init_point });
+    return NextResponse.json({
+      init_point: result.init_point,
+    });
 
   } catch (err: any) {
     console.error("CHECKOUT ERROR FULL:", {
