@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/app/lib/supabase-browser";
+import { createClient } from "@/app/lib/supabase-browser";`nconst supabase = createClient();
 
 type DreLinha = {
   mes_referencia: string;
@@ -82,3 +82,4 @@ export default function DreClient() {
     </div>
   );
 }
+

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/app/lib/supabase-browser";
+import { createClient } from "@/app/lib/supabase-browser";`nconst supabase = createClient();
 
 export default function LoginClient() {
   const router = useRouter();
@@ -78,3 +78,4 @@ export default function LoginClient() {
     </form>
   );
 }
+

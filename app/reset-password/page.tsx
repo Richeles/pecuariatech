@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 // ✅ CLIENTE CORRETO PARA BROWSER
-import { supabase } from "@/app/lib/supabase-browser";
+import { createClient } from "@/app/lib/supabase-browser";`nconst supabase = createClient();
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -86,3 +86,4 @@ export default function ResetPasswordPage() {
     </div>
   );
 }
+

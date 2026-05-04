@@ -14,11 +14,11 @@ export default function DashboardHome() {
       {/* ================= HEADER ================= */}
       <header className="space-y-2">
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
-          <T k="dashboard_titulo" /> PecuariaTech
+          PecuariaTech
         </h1>
 
         <p className="text-gray-400">
-          <T k="centro_controle" />
+          Plataforma de gestão inteligente do seu rebanho
         </p>
       </header>
 
@@ -88,7 +88,7 @@ export default function DashboardHome() {
       <section className="space-y-6">
 
         <h2 className="text-xl font-semibold text-gray-900">
-          <T k="modulos_sistema" />
+          Módulos do sistema
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -117,43 +117,15 @@ export default function DashboardHome() {
           ].map((mod) => (
             <div
               key={mod.title}
-              role="button"
-              tabIndex={0}
-              className="
-                group cursor-pointer
-                bg-white rounded-2xl
-                border border-gray-200
-                p-8 min-h-[170px]
-                flex flex-col justify-between
-                transition-all
-                hover:border-green-400
-                hover:bg-green-50/30
-                hover:shadow-md
-              "
+              className="bg-white rounded-2xl border p-8"
             >
-              <div className="space-y-3">
+              <h3 className="font-semibold text-gray-900 text-lg">
+                <T k={mod.title} />
+              </h3>
 
-                <div className="w-10 h-10 rounded-lg bg-green-100 text-green-700 flex items-center justify-center text-lg">
-                  {mod.icon}
-                </div>
-
-                <h3 className="font-semibold text-gray-900 text-lg">
-                  <T k={mod.title} />
-                </h3>
-
-                <p className="text-sm text-gray-500">
-                  <T k={mod.desc} />
-                </p>
-
-              </div>
-
-              <div>
-                <span className="inline-flex items-center gap-1 text-sm font-medium text-green-700 group-hover:translate-x-1 transition-transform">
-                  <T k="acessar" />
-                  <span>→</span>
-                </span>
-              </div>
-
+              <p className="text-sm text-gray-500 mt-2">
+                <T k={mod.desc} />
+              </p>
             </div>
           ))}
 
@@ -165,11 +137,11 @@ export default function DashboardHome() {
       <section className="bg-green-50 border border-green-200 rounded-xl p-8 space-y-2">
 
         <p className="text-green-800 font-medium">
-          <T k="sistema_ok" />
+          Sistema operacional
         </p>
 
         <p className="text-green-700 text-sm">
-          <T k="sistema_desc" />
+          Todos os módulos estão ativos e funcionando corretamente.
         </p>
 
       </section>

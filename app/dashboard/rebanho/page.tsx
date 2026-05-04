@@ -8,10 +8,11 @@ export default function RebanhoPage() {
       {/* ================= HEADER ================= */}
       <header>
         <h1 className="text-3xl font-bold text-gray-900">
-          Rebanho (Real)
+          Rebanho
         </h1>
+
         <p className="text-gray-500 mt-1">
-          Visão consolidada do rebanho via rastreabilidade canônica (view)
+          Visão consolidada do rebanho via rastreabilidade inteligente
         </p>
       </header>
 

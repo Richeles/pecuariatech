@@ -11,33 +11,29 @@ export type Lang = "pt" | "es" | "en";
 export function getLangFromClient(): Lang {
   if (typeof window === "undefined") return "pt";
 
-  // 1️⃣ prioridade: escolha manual
   const saved = localStorage.getItem("lang");
   if (saved === "pt" || saved === "es" || saved === "en") {
     return saved;
   }
 
-  // 2️⃣ navegador
   const browser = navigator.language.toLowerCase();
 
   if (browser.startsWith("es")) return "es";
   if (browser.startsWith("en")) return "en";
 
-  // 3️⃣ default
   return "pt";
 }
 
 // ===============================
-// 🌍 SET (FIX BUILD ERROR)
+// 🌍 SET
 // ===============================
 export function setLangClient(lang: Lang) {
   if (typeof window === "undefined") return;
-
   localStorage.setItem("lang", lang);
 }
 
 // ===============================
-// 🧠 DICIONÁRIO (Y)
+// 🧠 DICIONÁRIO (EXPANDIDO)
 // ===============================
 export const dictionary = {
   pt: {
@@ -58,6 +54,47 @@ export const dictionary = {
     processando: "Processando...",
 
     bloqueado_msg: "Seu acesso está bloqueado. Escolha um plano",
+
+    // 🔥 NOVO — MENU
+    menu_dashboard: "Dashboard",
+    menu_financeiro: "Financeiro",
+    menu_rebanho: "Rebanho",
+    menu_pastagem: "Pastagem",
+    menu_cfo: "CFO Autônomo",
+    menu_engorda: "Engorda",
+    menu_assinatura: "Planos",
+
+    // 🔥 NOVO — DASHBOARD
+    dashboard: {
+      modulos: {
+        financeiro: {
+          titulo: "Financeiro",
+          desc: "Gestão financeira completa",
+        },
+        cfo: {
+          titulo: "CFO Autônomo",
+        },
+      },
+      cards: {
+        receita: "Receita",
+        custos: "Custos",
+        resultado: "Resultado",
+        margem: "Margem",
+      },
+    },
+
+    // 🔥 NOVO — FINANCEIRO
+    financeiro: {
+      sem_dados: "Nenhum dado financeiro disponível",
+      alerta_cfo:
+        "O CFO Autônomo analisa seus dados automaticamente",
+
+      dre: {
+        titulo: "DRE",
+        desc: "Demonstrativo de resultado",
+        acao: "Ver DRE",
+      },
+    },
   },
 
   es: {
@@ -102,24 +139,28 @@ export const dictionary = {
 } as const;
 
 // ===============================
-// 🔍 GET (SAFE)
+// 🔍 GET NESTED (FIX CRÍTICO)
 // ===============================
-function getNested(obj: unknown, key: string): unknown {
-  if (typeof obj !== "object" || obj === null) return undefined;
+function getNested(obj: unknown, path: string): unknown {
+  if (!obj || typeof obj !== "object") return undefined;
 
-  return (obj as Record<string, unknown>)[key];
+  return path.split(".").reduce((acc: any, key) => {
+    return acc?.[key];
+  }, obj as any);
 }
 
 // ===============================
-// 🧠 CACHE (Z)
+// 🧠 CACHE
 // ===============================
 const missing = new Set<string>();
 
 // ===============================
-// 🧠 FALLBACK (UX SAFE)
+// 🧠 FALLBACK (MELHORADO)
 // ===============================
-function fallbackNeutral(): string {
-  return "";
+function fallbackNeutral(key: string): string {
+  // mostra última parte da chave → melhora UX
+  const parts = key.split(".");
+  return parts[parts.length - 1] || "";
 }
 
 // ===============================
@@ -132,7 +173,6 @@ export function t(lang: Lang, key: string): string {
 
   if (typeof value === "string") return value;
 
-  // log apenas uma vez por chave
   if (!missing.has(key)) {
     missing.add(key);
 
@@ -141,6 +181,5 @@ export function t(lang: Lang, key: string): string {
     }
   }
 
-  // 🔒 REGRA Z
-  return fallbackNeutral();
+  return fallbackNeutral(key);
 }

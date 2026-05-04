@@ -1,10 +1,36 @@
-import { Suspense } from "react";
 import FinanceiroClient from "./components/FinanceiroClient";
 import T from "@/app/components/T";
 
 export const dynamic = "force-dynamic";
 
-export default function FinanceiroPage() {
+/* 🔥 FETCH SERVER-SIDE (EQUAÇÃO Y) */
+async function getData() {
+  try {
+    const res = await fetch(
+      "http://127.0.0.1:3333/api/financeiro/indicadores-avancados",
+      {
+        cache: "no-store",
+      }
+    );
+
+    if (!res.ok) {
+      console.error("Erro ao buscar financeiro:", res.status);
+      return null;
+    }
+
+    const json = await res.json();
+    console.log("DATA SERVER:", json);
+
+    return json;
+  } catch (err) {
+    console.error("Erro fetch financeiro:", err);
+    return null;
+  }
+}
+
+export default async function FinanceiroPage() {
+  const resumo = await getData();
+
   return (
     <main className="p-10 max-w-7xl mx-auto space-y-12">
 
@@ -19,9 +45,8 @@ export default function FinanceiroPage() {
         </p>
       </header>
 
-      {/* KPIs */}
+      {/* KPIs ESTÁTICOS (mantidos) */}
       <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
-
         {[
           { label: "dashboard.cards.receita", value: "—" },
           { label: "dashboard.cards.custos", value: "—" },
@@ -38,7 +63,6 @@ export default function FinanceiroPage() {
             </p>
           </div>
         ))}
-
       </section>
 
       {/* CFO */}
@@ -76,9 +100,8 @@ export default function FinanceiroPage() {
         </button>
       </section>
 
-      <Suspense fallback={null}>
-        <FinanceiroClient />
-      </Suspense>
+      {/* 🔥 CLIENT AGORA RECEBE DADOS */}
+      <FinanceiroClient resumo={resumo} />
 
     </main>
   );

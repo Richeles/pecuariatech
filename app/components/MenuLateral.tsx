@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { createClient } from "@/app/lib/supabase-browser";`nconst supabase = createClient();
 import Paywall from "../components/Paywall";
 
 export default function UltraBiologicaPage() {
@@ -55,3 +55,4 @@ export default function UltraBiologicaPage() {
     </main>
   );
 }
+

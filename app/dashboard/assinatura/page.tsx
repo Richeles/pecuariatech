@@ -5,7 +5,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/app/lib/supabase-browser";
+import { createClient } from "@/app/lib/supabase-browser";`nconst supabase = createClient();
 
 type Assinatura = {
   possui_assinatura: boolean;
@@ -98,3 +98,4 @@ export default function AssinaturaPage() {
     </main>
   );
 }
+
