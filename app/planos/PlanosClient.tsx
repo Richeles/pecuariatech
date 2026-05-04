@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/app/lib/supabase-browser";
-import { getLangFromClient, t } from "@/app/lib/i18n";
+import { getLangFromClient, setLangClient, t } from "@/app/lib/i18n";
 
 const supabase = createClient();
 
 type Periodo = "mensal" | "trimestral" | "anual";
-type Lang = "pt" | "es";
+type Lang = "pt" | "es" | "en";
 
 export default function PlanosClient() {
   const [periodo, setPeriodo] = useState<Periodo>("mensal");
@@ -25,20 +25,21 @@ export default function PlanosClient() {
   const preco = (v: number) =>
     `R$ ${v.toFixed(2).replace(".", ",")}`;
 
+  // 🔥 PREÇOS ATUALIZADOS (ALINHADO COM BACKEND)
   const PLANOS = [
     {
       id: "basico",
       nome: "Básico",
       frase: "Controle essencial da fazenda",
       descricao: ["Gestão básica", "Controle inicial"],
-      precos: { mensal: 31.75, trimestral: 79.38, anual: 317.5 },
+      precos: { mensal: 79.9, trimestral: 214.9, anual: 759.9 },
     },
     {
       id: "profissional",
       nome: "Profissional",
       frase: "Gestão avançada com indicadores",
       descricao: ["Indicadores", "Relatórios"],
-      precos: { mensal: 52.99, trimestral: 132.48, anual: 529.9 },
+      precos: { mensal: 132.9, trimestral: 357.9, anual: 1269.9 },
     },
     {
       id: "ultra",
@@ -46,10 +47,13 @@ export default function PlanosClient() {
       frase: "IA + CFO + decisão estratégica",
       destaque: true,
       descricao: ["CFO", "IA", "Análise avançada"],
-      precos: { mensal: 106.09, trimestral: 265.23, anual: 1060.9 },
+      precos: { mensal: 265.9, trimestral: 716.9, anual: 2539.9 },
     },
   ];
 
+  // ================================
+  // CHECKOUT (CORRIGIDO)
+  // ================================
   async function iniciarCheckout(plano: string) {
     if (loading) return;
 
@@ -60,9 +64,14 @@ export default function PlanosClient() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      // 🔐 REGRA Z (não quebra UX)
       if (!user) {
         window.location.href = "/login?next=/planos";
+        return;
+      }
+
+      // 🔥 VALIDAÇÃO CRÍTICA
+      if (!user.email) {
+        alert("Erro: usuário sem email válido");
         return;
       }
 
@@ -74,12 +83,14 @@ export default function PlanosClient() {
         body: JSON.stringify({
           plano,
           periodo,
+          user_id: user.id,      // ✅ ESSENCIAL
+          email: user.email,     // ✅ ESSENCIAL
         }),
       });
 
       const data = await res.json();
 
-      if (!data?.init_point) {
+      if (!res.ok || !data?.init_point) {
         console.error("Erro checkout:", data);
         alert("Erro ao iniciar pagamento");
         return;
@@ -95,8 +106,32 @@ export default function PlanosClient() {
     }
   }
 
+  // ================================
+  // LANGUAGE SWITCHER (GLOBAL FIX)
+  // ================================
+  function trocarIdioma(novo: Lang) {
+    setLang(novo);
+    setLangClient(novo);
+
+    // 🔥 força atualização global
+    window.location.reload();
+  }
+
   return (
     <>
+      {/* 🌍 IDIOMA (AGORA FUNCIONA FORA DO DASHBOARD) */}
+      <div className="fixed top-4 right-4 z-50">
+        <select
+          value={lang}
+          onChange={(e) => trocarIdioma(e.target.value as Lang)}
+          className="border rounded px-2 py-1 bg-white"
+        >
+          <option value="pt">BR</option>
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+        </select>
+      </div>
+
       {/* ALERTA BLOQUEIO */}
       {bloqueado && (
         <div className="mx-auto max-w-3xl bg-yellow-50 border border-yellow-400 p-4 text-center rounded mt-4">
