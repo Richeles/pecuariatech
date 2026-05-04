@@ -1,6 +1,3 @@
-// app/api/checkout/preference/route.ts
-// Checkout Mercado Pago — Preference (CANÔNICO ESTÁVEL / API-SAFE)
-
 import { NextRequest, NextResponse } from "next/server";
 import MercadoPagoConfig, { Preference } from "mercadopago";
 
@@ -8,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // ================================
-// PLANOS
+// PLANOS (NÃO ALTERAR)
 // ================================
 const PLANOS: Record<
   string,
@@ -43,9 +40,6 @@ const PLANOS: Record<
   },
 };
 
-// ================================
-// POST
-// ================================
 export async function POST(req: NextRequest) {
   try {
     const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
@@ -76,9 +70,11 @@ export async function POST(req: NextRequest) {
 
     const preco = PLANOS[plano].precos[periodo];
 
-    // ✅ Origem absoluta garantida
+    // 🔥 ORIGIN CORRETO (PRODUÇÃO + LOCAL)
     const origin =
-      req.headers.get("origin") || "http://127.0.0.1:3333";
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      req.headers.get("origin") ||
+      "http://127.0.0.1:3333";
 
     const mp = new MercadoPagoConfig({
       accessToken: MP_TOKEN,
@@ -86,9 +82,6 @@ export async function POST(req: NextRequest) {
 
     const preference = new Preference(mp);
 
-    // ================================
-    // BODY FINAL (SEM auto_return)
-    // ================================
     const preferenceBody = {
       items: [
         {
@@ -103,7 +96,6 @@ export async function POST(req: NextRequest) {
         email: email || "comprador@pecuariatech.com",
       },
 
-      // 🔑 FUNDAMENTAL PARA WEBHOOK
       external_reference: `${user_id}|${plano}|${periodo}`,
 
       back_urls: {
@@ -111,6 +103,9 @@ export async function POST(req: NextRequest) {
         failure: `${origin}/planos`,
         pending: `${origin}/planos`,
       },
+
+      // 🔥 ESSENCIAL PARA WEBHOOK FUNCIONAR
+      notification_url: `${origin}/api/webhook/mercadopago`,
     };
 
     const result = await preference.create({
@@ -118,12 +113,17 @@ export async function POST(req: NextRequest) {
     });
 
     if (!result?.init_point) {
-      throw new Error("init_point não retornado");
+      throw new Error("init_point não retornado pelo Mercado Pago");
     }
 
     return NextResponse.json({ init_point: result.init_point });
+
   } catch (err: any) {
-    console.error("CHECKOUT ERROR:", err);
+    console.error("CHECKOUT ERROR FULL:", {
+      message: err?.message,
+      cause: err?.cause,
+      stack: err?.stack,
+    });
 
     return NextResponse.json(
       {
