@@ -1,77 +1,153 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { createClient } from "@/app/lib/supabase-browser";
-import { getLangFromClient, setLangClient, t } from "@/app/lib/i18n";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  getLangFromClient,
+  setLangClient,
+  t,
+  type Lang,
+} from "@/app/lib/i18n";
 
-const supabase = createClient();
+// 🔥 NOVO (SUPABASE REAL)
+import { createClient } from "@/app/lib/supabase-browser";
 
 type Periodo = "mensal" | "trimestral" | "anual";
-type Lang = "pt" | "es" | "en";
 
 export default function PlanosClient() {
-  const [periodo, setPeriodo] = useState<Periodo>("mensal");
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
   const [lang, setLang] = useState<Lang>("pt");
+  const [periodo, setPeriodo] = useState<Periodo>("mensal");
+  const [loadingPlano, setLoadingPlano] = useState<string | null>(null);
 
-  const searchParams = useSearchParams();
-  const bloqueado = searchParams.get("bloqueado") === "1";
-
+  // =========================
+  // INIT LANG
+  // =========================
   useEffect(() => {
-    setLang(getLangFromClient());
+    const l = getLangFromClient();
+    setLang(l);
   }, []);
 
-  const preco = (v: number) =>
-    `R$ ${v.toFixed(2).replace(".", ",")}`;
+  // =========================
+  // TROCAR IDIOMA (FIX BUG)
+  // =========================
+  function handleLangChange(newLang: Lang) {
+    setLangClient(newLang);
+    setLang(newLang);
 
-  // 🔥 PREÇOS ATUALIZADOS (ALINHADO COM BACKEND)
-  const PLANOS = [
+    // 🔥 CORREÇÃO: evita undefined
+    window.location.href = `/${newLang}/planos`;
+  }
+
+  // =========================
+  // CALCULO PREÇO
+  // =========================
+  function calcularPreco(valorMensal: number, periodo: Periodo) {
+    if (periodo === "mensal") return valorMensal;
+    if (periodo === "trimestral") return valorMensal * 3 * 0.95;
+    if (periodo === "anual") return valorMensal * 12 * 0.8;
+    return valorMensal;
+  }
+
+  // =========================
+  // PLANOS (FONTE ÚNICA)
+  // =========================
+  const planos = [
     {
       id: "basico",
       nome: "Básico",
-      frase: "Controle essencial da fazenda",
-      descricao: ["Gestão básica", "Controle inicial"],
-      precos: { mensal: 79.9, trimestral: 214.9, anual: 759.9 },
+      descricao:
+        "Para quem quer sair do caderno, organizar a fazenda e ter clareza do dia a dia.",
+      mensal: 149.9,
+      features: [
+        "Dashboard simples e intuitivo",
+        "Controle básico de rebanho",
+        "Controle essencial de pastagem",
+        "Relatório mensal automático",
+        "Indicadores operacionais iniciais",
+        "Base sólida para começar a gestão digital",
+      ],
     },
     {
       id: "profissional",
       nome: "Profissional",
-      frase: "Gestão avançada com indicadores",
-      descricao: ["Indicadores", "Relatórios"],
-      precos: { mensal: 132.9, trimestral: 357.9, anual: 1269.9 },
+      descricao:
+        "Para o produtor que já se organiza, mas precisa entender melhor os números.",
+      mensal: 247.9,
+      features: [
+        "Tudo do plano Básico",
+        "Relatórios mensais avançados",
+        "Exportação de dados (Excel)",
+        "Indicadores financeiros iniciais",
+        "Planilhas profissionais automatizadas",
+        "Alertas operacionais inteligentes",
+      ],
     },
     {
       id: "ultra",
       nome: "Ultra",
-      frase: "IA + CFO + decisão estratégica",
       destaque: true,
-      descricao: ["CFO", "IA", "Análise avançada"],
-      precos: { mensal: 265.9, trimestral: 716.9, anual: 2539.9 },
+      descricao:
+        "Para quem quer parar de reagir e começar a decidir com apoio de IA.",
+      mensal: 452.9,
+      features: [
+        "Tudo do plano Profissional",
+        "Relatórios premium automatizados",
+        "Análises financeiras avançadas",
+        "Diagnóstico mensal por IA",
+        "Alertas de decisão",
+        "Plano mais escolhido por produtores",
+      ],
+    },
+    {
+      id: "empresarial",
+      nome: "Empresarial",
+      descricao:
+        "Para operações maiores que exigem controle, padrão e escala.",
+      mensal: 627.9,
+      features: [
+        "Tudo do plano Ultra",
+        "Multi-fazendas e multi-usuários",
+        "Gestão de equipes",
+        "Relatórios personalizados",
+        "Alertas automáticos avançados",
+      ],
+    },
+    {
+      id: "premium_dominus",
+      nome: "Premium Dominus 360°",
+      descricao:
+        "Para quem pensa como dono ou investidor e precisa enxergar a fazenda como empresa.",
+      mensal: 789.9,
+      features: [
+        "Tudo do plano Empresarial",
+        "CFO Autônomo integrado",
+        "IA preditiva e diagnóstica",
+        "EBITDA e EBIT automáticos",
+        "Valuation e simulações financeiras",
+        "Suporte Ultra VIP",
+      ],
     },
   ];
 
-  // ================================
-  // CHECKOUT (CORRIGIDO)
-  // ================================
-  async function iniciarCheckout(plano: string) {
-    if (loading) return;
-
+  // =========================
+  // CHECKOUT REAL (FIX)
+  // =========================
+  async function handleCheckout(planoId: string) {
     try {
-      setLoading(true);
+      setLoadingPlano(planoId);
+
+      const supabase = createClient();
 
       const {
         data: { user },
+        error,
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        window.location.href = "/login?next=/planos";
-        return;
-      }
-
-      // 🔥 VALIDAÇÃO CRÍTICA
-      if (!user.email) {
-        alert("Erro: usuário sem email válido");
+      if (error || !user) {
+        alert("Sessão inválida. Faça login.");
+        window.location.href = "/login";
         return;
       }
 
@@ -81,82 +157,61 @@ export default function PlanosClient() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          plano,
+          plano: planoId,
           periodo,
-          user_id: user.id,      // ✅ ESSENCIAL
-          email: user.email,     // ✅ ESSENCIAL
+          user_id: user.id,
+          email: user.email,
         }),
       });
 
       const data = await res.json();
 
-      if (!res.ok || !data?.init_point) {
-        console.error("Erro checkout:", data);
-        alert("Erro ao iniciar pagamento");
-        return;
+      if (!data?.init_point) {
+        throw new Error("Checkout inválido");
       }
 
       window.location.href = data.init_point;
 
     } catch (err) {
-      console.error("Erro:", err);
-      alert("Erro inesperado");
+      console.error("CHECKOUT ERROR:", err);
+      alert("Erro ao iniciar checkout");
     } finally {
-      setLoading(false);
+      setLoadingPlano(null);
     }
   }
 
-  // ================================
-  // LANGUAGE SWITCHER (GLOBAL FIX)
-  // ================================
-  function trocarIdioma(novo: Lang) {
-    setLang(novo);
-    setLangClient(novo);
-
-    // 🔥 força atualização global
-    window.location.reload();
-  }
-
+  // =========================
+  // UI
+  // =========================
   return (
-    <>
-      {/* 🌍 IDIOMA (AGORA FUNCIONA FORA DO DASHBOARD) */}
-      <div className="fixed top-4 right-4 z-50">
-        <select
-          value={lang}
-          onChange={(e) => trocarIdioma(e.target.value as Lang)}
-          className="border rounded px-2 py-1 bg-white"
-        >
-          <option value="pt">BR</option>
-          <option value="en">EN</option>
-          <option value="es">ES</option>
-        </select>
+    <div className="mt-10 px-4">
+
+      {/* IDIOMA */}
+      <div className="flex justify-end gap-2 mb-4">
+        <button onClick={() => handleLangChange("pt")}>BR Português</button>
+        <button onClick={() => handleLangChange("es")}>ES Español</button>
+        <button onClick={() => handleLangChange("en")}>EN English</button>
       </div>
 
-      {/* ALERTA BLOQUEIO */}
-      {bloqueado && (
-        <div className="mx-auto max-w-3xl bg-yellow-50 border border-yellow-400 p-4 text-center rounded mt-4">
-          {t(lang, "bloqueado_msg")}
-        </div>
-      )}
+      {/* HEADER */}
+      <h2 className="text-3xl font-bold text-center">
+        {t(lang, "planos_titulo")}
+      </h2>
 
-      {/* TÍTULO */}
-      <div className="text-center mt-6">
-        <h1 className="text-3xl font-bold">
-          {t(lang, "planos_titulo")}
-        </h1>
-        <p className="text-gray-600 mt-2">
-          {t(lang, "planos_subtitulo")}
-        </p>
-      </div>
+      <p className="text-center text-gray-600 mt-2">
+        {t(lang, "planos_subtitulo")}
+      </p>
 
-      {/* PERÍODO */}
+      {/* TOGGLE */}
       <div className="flex justify-center gap-2 mt-6">
         {(["mensal", "trimestral", "anual"] as Periodo[]).map((p) => (
           <button
             key={p}
             onClick={() => setPeriodo(p)}
             className={`px-4 py-2 rounded ${
-              periodo === p ? "bg-green-600 text-white" : "border"
+              periodo === p
+                ? "bg-green-600 text-white"
+                : "bg-gray-200"
             }`}
           >
             {t(lang, p)}
@@ -164,38 +219,51 @@ export default function PlanosClient() {
         ))}
       </div>
 
-      {/* PLANOS */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-        {PLANOS.map((plano) => (
-          <div
-            key={plano.id}
-            className={`bg-white p-6 rounded-xl shadow ${
-              plano.destaque ? "border-2 border-green-600" : ""
-            }`}
-          >
-            <h2 className="text-xl font-bold">{plano.nome}</h2>
-            <p className="text-sm italic">{plano.frase}</p>
+      {/* CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-10">
+        {planos.map((plano) => {
+          const preco = calcularPreco(plano.mensal, periodo);
 
-            <p className="text-2xl text-green-600 mt-2">
-              {preco(plano.precos[periodo])}
-            </p>
-
-            <ul className="text-sm mt-3 space-y-1">
-              {plano.descricao.map((d) => (
-                <li key={d}>✓ {d}</li>
-              ))}
-            </ul>
-
-            <button
-              onClick={() => iniciarCheckout(plano.id)}
-              disabled={loading}
-              className="w-full bg-green-600 text-white mt-4 py-2 rounded"
+          return (
+            <div
+              key={plano.id}
+              className={`rounded-xl border p-6 shadow ${
+                plano.destaque
+                  ? "border-green-600 scale-105"
+                  : ""
+              }`}
             >
-              {loading ? t(lang, "processando") : t(lang, "assinar")}
-            </button>
-          </div>
-        ))}
-      </section>
-    </>
+              <h3 className="text-xl font-semibold">
+                {plano.nome}
+              </h3>
+
+              <p className="text-gray-500 text-sm mt-1">
+                {plano.descricao}
+              </p>
+
+              <p className="text-3xl font-bold text-green-600 mt-4">
+                R$ {preco.toFixed(2)}
+              </p>
+
+              <ul className="mt-4 space-y-2 text-sm">
+                {plano.features.map((f, i) => (
+                  <li key={i}>✓ {f}</li>
+                ))}
+              </ul>
+
+              <button
+                onClick={() => handleCheckout(plano.id)}
+                disabled={loadingPlano === plano.id}
+                className="mt-6 w-full bg-green-600 text-white py-2 rounded"
+              >
+                {loadingPlano === plano.id
+                  ? t(lang, "processando")
+                  : t(lang, "assinar")}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

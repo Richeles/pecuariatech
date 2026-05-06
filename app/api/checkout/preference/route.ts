@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // ================================
-// PLANOS (FONTE ÚNICA - ATUALIZADA)
+// PLANOS (FALLBACK LOCAL)
 // ================================
 const PLANOS: Record<
   string,
@@ -58,6 +58,16 @@ export async function POST(req: NextRequest) {
     const { plano, periodo, user_id, email } = body;
 
     // ================================
+    // 🔥 ADMIN BYPASS (SEM PAGAMENTO)
+    // ================================
+    if (email === "pecuariatech2026@gmail.com") {
+      return NextResponse.json({
+        init_point: "/dashboard",
+        admin: true,
+      });
+    }
+
+    // ================================
     // VALIDAÇÕES
     // ================================
     if (!plano || !PLANOS[plano]) {
@@ -81,15 +91,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 🔥 AGORA O EMAIL É OBRIGATÓRIO (CORRETO EM PRODUÇÃO)
     if (!email || typeof email !== "string") {
       return NextResponse.json(
-        { error: "email do usuário é obrigatório para checkout" },
+        { error: "email do usuário é obrigatório" },
         { status: 400 }
       );
     }
 
-    const preco = PLANOS[plano].precos[periodo];
+    // ================================
+    // 🔥 PREÇO DINÂMICO (PYTHON)
+    // ================================
+    let preco = PLANOS[plano].precos[periodo]; // fallback
+
+    try {
+      const pricingRes = await fetch(
+        process.env.PYTHON_API_URL || "http://127.0.0.1:8000/pricing",
+        { cache: "no-store" }
+      );
+
+      if (pricingRes.ok) {
+        const pricing = await pricingRes.json();
+
+        const precoPython = pricing?.[plano]?.[periodo];
+
+        if (precoPython && !isNaN(precoPython)) {
+          preco = precoPython;
+        }
+      }
+    } catch (err) {
+      console.warn("⚠️ Python pricing indisponível, usando fallback local");
+    }
 
     if (!preco || isNaN(preco)) {
       return NextResponse.json(
@@ -99,7 +130,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ================================
-    // ORIGIN (PRODUÇÃO + LOCAL)
+    // ORIGIN
     // ================================
     const origin =
       process.env.NEXT_PUBLIC_SITE_URL ||
@@ -126,10 +157,9 @@ export async function POST(req: NextRequest) {
       ],
 
       payer: {
-        email: email, // ✅ SEM fallback
+        email: email,
       },
 
-      // 🔑 FUNDAMENTAL (webhook + rastreabilidade)
       external_reference: `${user_id}|${plano}|${periodo}`,
 
       back_urls: {
@@ -138,19 +168,15 @@ export async function POST(req: NextRequest) {
         pending: `${origin}/planos`,
       },
 
-      // 🔥 WEBHOOK
       notification_url: `${origin}/api/webhook/mercadopago`,
     };
 
-    // ================================
-    // CRIA PREFERÊNCIA
-    // ================================
     const result = await preference.create({
       body: preferenceBody,
     });
 
     if (!result?.init_point) {
-      throw new Error("init_point não retornado pelo Mercado Pago");
+      throw new Error("init_point não retornado");
     }
 
     return NextResponse.json({
@@ -158,11 +184,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (err: any) {
-    console.error("CHECKOUT ERROR FULL:", {
-      message: err?.message,
-      cause: err?.cause,
-      stack: err?.stack,
-    });
+    console.error("CHECKOUT ERROR:", err);
 
     return NextResponse.json(
       {

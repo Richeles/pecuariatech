@@ -6,17 +6,45 @@
 export type Lang = "pt" | "es" | "en";
 
 // ===============================
-// 🌍 CLIENT (GLOBAL READY)
+// 🔒 SAFE COOKIE PARSER
+// ===============================
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(name + "="));
+
+  if (!match) return null;
+
+  const value = match.split("=")[1];
+
+  if (!value) return null;
+
+  return value;
+}
+
+// ===============================
+// 🌍 CLIENT (PADRÃO FINAL)
 // ===============================
 export function getLangFromClient(): Lang {
   if (typeof window === "undefined") return "pt";
 
+  // 🔥 PRIORIDADE 1: COOKIE (SSR FIRST)
+  const cookieLang = getCookie("lang");
+
+  if (cookieLang === "pt" || cookieLang === "es" || cookieLang === "en") {
+    return cookieLang;
+  }
+
+  // 🔥 PRIORIDADE 2: LOCAL STORAGE
   const saved = localStorage.getItem("lang");
   if (saved === "pt" || saved === "es" || saved === "en") {
     return saved;
   }
 
-  const browser = navigator.language.toLowerCase();
+  // 🔥 PRIORIDADE 3: BROWSER
+  const browser = navigator.language?.toLowerCase?.() || "";
 
   if (browser.startsWith("es")) return "es";
   if (browser.startsWith("en")) return "en";
@@ -25,26 +53,31 @@ export function getLangFromClient(): Lang {
 }
 
 // ===============================
-// 🌍 SET
-// ===============================
 export function setLangClient(lang: Lang) {
   if (typeof window === "undefined") return;
+
+  // 🔥 salva nos dois (cookie + localStorage)
   localStorage.setItem("lang", lang);
+
+  document.cookie = `lang=${lang}; path=/; max-age=31536000; SameSite=Lax`;
 }
 
 // ===============================
-// 🧠 DICIONÁRIO (EXPANDIDO)
+// 🧠 DICIONÁRIO GLOBAL
 // ===============================
 export const dictionary = {
   pt: {
+    login_titulo: "PecuariaTech",
+    login_subtitulo: "Centro de controle da fazenda",
+
     email: "E-mail",
     password: "Senha",
     enter: "Entrar",
     create_account: "Criar conta",
     forgot_password: "Esqueci minha senha",
 
-    planos_titulo: "Planos",
-    planos_subtitulo: "Escolha o melhor plano",
+    planos_titulo: "Planos PecuariaTech",
+    planos_subtitulo: "Escolha o melhor plano para sua operação",
 
     mensal: "Mensal",
     trimestral: "Trimestral",
@@ -55,7 +88,11 @@ export const dictionary = {
 
     bloqueado_msg: "Seu acesso está bloqueado. Escolha um plano",
 
-    // 🔥 NOVO — MENU
+    dashboard: {
+      titulo: "PecuariaTech",
+      subtitulo: "Centro de controle da fazenda",
+    },
+
     menu_dashboard: "Dashboard",
     menu_financeiro: "Financeiro",
     menu_rebanho: "Rebanho",
@@ -63,49 +100,20 @@ export const dictionary = {
     menu_cfo: "CFO Autônomo",
     menu_engorda: "Engorda",
     menu_assinatura: "Planos",
-
-    // 🔥 NOVO — DASHBOARD
-    dashboard: {
-      modulos: {
-        financeiro: {
-          titulo: "Financeiro",
-          desc: "Gestão financeira completa",
-        },
-        cfo: {
-          titulo: "CFO Autônomo",
-        },
-      },
-      cards: {
-        receita: "Receita",
-        custos: "Custos",
-        resultado: "Resultado",
-        margem: "Margem",
-      },
-    },
-
-    // 🔥 NOVO — FINANCEIRO
-    financeiro: {
-      sem_dados: "Nenhum dado financeiro disponível",
-      alerta_cfo:
-        "O CFO Autônomo analisa seus dados automaticamente",
-
-      dre: {
-        titulo: "DRE",
-        desc: "Demonstrativo de resultado",
-        acao: "Ver DRE",
-      },
-    },
   },
 
   es: {
+    login_titulo: "PecuariaTech",
+    login_subtitulo: "Centro de control de la finca",
+
     email: "Correo electrónico",
     password: "Contraseña",
     enter: "Ingresar",
     create_account: "Crear cuenta",
     forgot_password: "Olvidé mi contraseña",
 
-    planos_titulo: "Planes",
-    planos_subtitulo: "Elige el mejor plan",
+    planos_titulo: "Planes PecuariaTech",
+    planos_subtitulo: "Elige el mejor plan para tu operación",
 
     mensal: "Mensual",
     trimestral: "Trimestral",
@@ -115,17 +123,33 @@ export const dictionary = {
     processando: "Procesando...",
 
     bloqueado_msg: "Acceso bloqueado. Elige un plan",
+
+    dashboard: {
+      titulo: "PecuariaTech",
+      subtitulo: "Centro de control de la finca",
+    },
+
+    menu_dashboard: "Panel",
+    menu_financeiro: "Finanzas",
+    menu_rebanho: "Ganado",
+    menu_pastagem: "Pastura",
+    menu_cfo: "CFO Autónomo",
+    menu_engorda: "Engorde",
+    menu_assinatura: "Planes",
   },
 
   en: {
+    login_titulo: "PecuariaTech",
+    login_subtitulo: "Farm control center",
+
     email: "Email",
     password: "Password",
     enter: "Sign in",
     create_account: "Create account",
     forgot_password: "Forgot password",
 
-    planos_titulo: "Plans",
-    planos_subtitulo: "Choose the best plan",
+    planos_titulo: "PecuariaTech Plans",
+    planos_subtitulo: "Choose the best plan for your operation",
 
     mensal: "Monthly",
     trimestral: "Quarterly",
@@ -135,36 +159,39 @@ export const dictionary = {
     processando: "Processing...",
 
     bloqueado_msg: "Access blocked. Choose a plan",
+
+    dashboard: {
+      titulo: "PecuariaTech",
+      subtitulo: "Farm control center",
+    },
+
+    menu_dashboard: "Dashboard",
+    menu_financeiro: "Finance",
+    menu_rebanho: "Herd",
+    menu_pastagem: "Pasture",
+    menu_cfo: "Autonomous CFO",
+    menu_engorda: "Fattening",
+    menu_assinatura: "Plans",
   },
 } as const;
 
 // ===============================
-// 🔍 GET NESTED (FIX CRÍTICO)
+// 🔍 RESOLVER NESTED KEYS
 // ===============================
-function getNested(obj: unknown, path: string): unknown {
-  if (!obj || typeof obj !== "object") return undefined;
-
-  return path.split(".").reduce((acc: any, key) => {
-    return acc?.[key];
-  }, obj as any);
+function getNested(obj: any, path: string) {
+  return path.split(".").reduce((acc, key) => acc?.[key], obj);
 }
 
-// ===============================
-// 🧠 CACHE
 // ===============================
 const missing = new Set<string>();
 
 // ===============================
-// 🧠 FALLBACK (MELHORADO)
-// ===============================
-function fallbackNeutral(key: string): string {
-  // mostra última parte da chave → melhora UX
-  const parts = key.split(".");
-  return parts[parts.length - 1] || "";
+function fallbackNeutral(key: string) {
+  return key.split(".").pop() || "";
 }
 
 // ===============================
-// 🧠 FUNÇÃO PRINCIPAL
+// 🌍 FUNÇÃO GLOBAL DE TRADUÇÃO
 // ===============================
 export function t(lang: Lang, key: string): string {
   const safeLang: Lang = lang in dictionary ? lang : "pt";
@@ -173,6 +200,7 @@ export function t(lang: Lang, key: string): string {
 
   if (typeof value === "string") return value;
 
+  // 🔥 log apenas em dev
   if (!missing.has(key)) {
     missing.add(key);
 

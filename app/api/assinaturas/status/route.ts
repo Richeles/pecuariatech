@@ -4,33 +4,32 @@ import { createServerClient } from "@supabase/ssr";
 
 export const dynamic = "force-dynamic";
 
-const FULL_ACCESS = {
-  rebanho: true,
-  pastagem: true,
-  engorda_base: true,
-  engorda_ultra: true,
-  financeiro: true,
-  cfo: true,
-  esg: true,
-  multiusuario: true,
-};
+// 🔥 MATRIZ DE BENEFÍCIOS BASEADA EM NÍVEL (Z)
+function getBeneficios(nivel: number) {
+  if (nivel >= 999) return { all: true };
+
+  return {
+    rebanho: true,
+    pastagem: true,
+    financeiro: nivel >= 2,
+    cfo: nivel >= 3,
+    engorda_ultra: nivel >= 3,
+    multiusuario: nivel >= 4,
+    esg: nivel >= 3,
+  };
+}
 
 export async function GET() {
   console.log("🔥 /api/assinaturas/status EXECUTANDO");
 
   try {
-    // ✅ NEXT 16 — obrigatório await
     const cookieStore = await cookies();
 
-    // 🔥 CLIENT SSR CORRETO (FIX REAL AQUI)
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
           getAll() {
             return cookieStore.getAll().map((c) => ({
               name: c.name,
@@ -38,13 +37,10 @@ export async function GET() {
             }));
           },
           setAll(cookiesToSet) {
-            // ⚠️ necessário para manter consistência SSR
             cookiesToSet.forEach(({ name, value, options }) => {
               try {
                 cookieStore.set(name, value, options);
-              } catch (e) {
-                // Em route handler pode falhar silenciosamente
-              }
+              } catch {}
             });
           },
         },
@@ -52,43 +48,35 @@ export async function GET() {
     );
 
     /* ============================
-       1) SESSION (SSR REAL)
+       1) SESSION
     ============================ */
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError && authError.name !== "AuthSessionMissingError") {
-      console.error("❌ AUTH ERROR:", authError);
-    }
-
     if (!user) {
-      console.log("⚠️ NO SESSION (cookie não chegou no SSR)");
       return NextResponse.json({
         ativo: false,
         reason: "no_session",
       });
     }
 
-    console.log("👤 USER:", user.id, user.email);
-
     /* ============================
        2) ADMIN MASTER
     ============================ */
-
     if (user.email === "pecuariatech2026@gmail.com") {
       return NextResponse.json({
         ativo: true,
         plano: "master",
         nivel: 999,
-        beneficios: FULL_ACCESS,
+        beneficios: { all: true },
         is_admin: true,
+        expires_at: null,
         reason: "admin_email_override",
       });
     }
 
-    const { data: admin, error: adminError } = await supabase
+    const { data: admin } = await supabase
       .from("admin_users")
       .select("user_id")
       .eq("user_id", user.id)
@@ -96,34 +84,31 @@ export async function GET() {
       .eq("ativo", true)
       .maybeSingle();
 
-    if (adminError) {
-      console.warn("⚠️ ADMIN CHECK ERROR:", adminError);
-    }
-
     if (admin) {
       return NextResponse.json({
         ativo: true,
         plano: "master",
         nivel: 999,
-        beneficios: FULL_ACCESS,
+        beneficios: { all: true },
         is_admin: true,
+        expires_at: null,
         reason: "admin_override",
       });
     }
 
     /* ============================
-       3) ASSINATURA
+       3) ASSINATURA (SEM VIEW)
     ============================ */
-
-    const { data: assinatura, error: subError } = await supabase
-      .from("assinatura_ativa_view")
-      .select("plano_nome, plano_nivel, status")
+    const { data: assinatura, error } = await supabase
+      .from("assinaturas")
+      .select("plano, nivel, status, expires_at")
       .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    // 🔴 REGRA Z
-    if (subError) {
-      console.error("❌ ERRO ASSINATURA:", subError);
+    if (error) {
+      console.error("❌ ERRO ASSINATURA:", error);
       return NextResponse.json({
         ativo: false,
         reason: "internal_error",
@@ -142,17 +127,24 @@ export async function GET() {
     }
 
     /* ============================
-       4) OK
+       4) BENEFÍCIOS (Z)
     ============================ */
+    const nivel = Number(assinatura.nivel || 0);
+    const beneficios = getBeneficios(nivel);
 
+    /* ============================
+       5) OK FINAL
+    ============================ */
     return NextResponse.json({
       ativo: true,
-      plano: assinatura.plano_nome,
-      nivel: assinatura.plano_nivel,
-      beneficios: FULL_ACCESS,
+      plano: assinatura.plano,
+      nivel,
+      beneficios,
       is_admin: false,
+      expires_at: assinatura.expires_at ?? null,
       reason: "ok",
     });
+
   } catch (err) {
     console.error("💥 ERRO CRÍTICO:", err);
 

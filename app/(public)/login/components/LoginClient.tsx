@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/app/lib/supabase-browser";`nconst supabase = createClient();
+import { createClient } from "@/app/lib/supabase-browser";
+import { getLangFromClient, t, Lang } from "@/app/lib/i18n";
+
+const supabase = createClient();
 
 export default function LoginClient() {
   const router = useRouter();
@@ -14,6 +17,12 @@ export default function LoginClient() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [lang, setLang] = useState<Lang>("pt");
+
+  // 🌍 carregar idioma
+  useEffect(() => {
+    setLang(getLangFromClient());
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,7 +30,6 @@ export default function LoginClient() {
     setLoading(true);
 
     try {
-      // ✅ LOGIN CANÔNICO — Supabase Client
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -32,10 +40,10 @@ export default function LoginClient() {
         return;
       }
 
-      // ✅ sessão criada → middleware reconhece via cookies
       router.replace(next);
       router.refresh();
-    } catch (err: any) {
+
+    } catch (err) {
       setErrorMsg("Erro inesperado no login.");
     } finally {
       setLoading(false);
@@ -43,39 +51,69 @@ export default function LoginClient() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full rounded border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-        required
-      />
+    <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8">
 
-      <input
-        type="password"
-        placeholder="Senha"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full rounded border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-        required
-      />
+      {/* 🔥 TÍTULO SAAS */}
+      <h1 className="text-2xl font-bold text-green-700 text-center">
+        {t(lang, "login_titulo")}
+      </h1>
 
-      {errorMsg && (
-        <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {errorMsg}
-        </div>
-      )}
+      <p className="text-sm text-gray-500 text-center mt-1 mb-6">
+        {t(lang, "login_subtitulo")}
+      </p>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded bg-green-600 py-2 font-semibold text-white hover:bg-green-700 disabled:opacity-70"
-      >
-        {loading ? "Entrando..." : "Entrar"}
-      </button>
-    </form>
+      <form onSubmit={handleSubmit} className="space-y-4">
+
+        {/* EMAIL */}
+        <input
+          type="email"
+          placeholder={t(lang, "email")}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full rounded-lg border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+          required
+        />
+
+        {/* SENHA */}
+        <input
+          type="password"
+          placeholder={t(lang, "password")}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full rounded-lg border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+          required
+        />
+
+        {/* ERRO */}
+        {errorMsg && (
+          <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {errorMsg}
+          </div>
+        )}
+
+        {/* BOTÃO */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-lg bg-green-600 py-2 font-semibold text-white hover:bg-green-700 disabled:opacity-70 transition"
+        >
+          {loading ? t(lang, "processando") : t(lang, "enter")}
+        </button>
+
+      </form>
+
+      {/* 🔥 LINKS PREMIUM (CORRIGIDO) */}
+      <div className="flex justify-between text-sm mt-5 text-gray-600">
+
+        <a href="/register" className="hover:underline">
+          {t(lang, "create_account")}
+        </a>
+
+        <a href="/reset-password" className="hover:underline">
+          {t(lang, "forgot_password")}
+        </a>
+
+      </div>
+    </div>
   );
 }
-

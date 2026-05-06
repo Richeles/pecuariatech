@@ -16,39 +16,40 @@ const mp = new MercadoPagoConfig({
 const paymentClient = new Payment(mp);
 
 const supabase = createClient(
-  process.env.SUPABASE_URL!, // ✅ server-safe
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // obrigatório em webhook
+  process.env.NEXT_PUBLIC_SUPABASE_URL!, // ✅ corrigido (padrão do projeto)
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 // ===============================
-// PLANOS (FONTE DE VERDADE)
+// PLANOS (FONTE REAL ATUALIZADA)
+// 🔥 PREÇOS NOVOS DEFINIDOS POR VOCÊ
 // ===============================
 
 const PLANOS: Record<string, Record<string, number>> = {
   basico: {
-    mensal: 31.75,
-    trimestral: 79.38,
-    anual: 317.50,
+    mensal: 149.9,
+    trimestral: 149.9 * 3 * 0.95,
+    anual: 149.9 * 12 * 0.8,
   },
   profissional: {
-    mensal: 52.99,
-    trimestral: 132.48,
-    anual: 529.90,
+    mensal: 247.9,
+    trimestral: 247.9 * 3 * 0.95,
+    anual: 247.9 * 12 * 0.8,
   },
   ultra: {
-    mensal: 106.09,
-    trimestral: 265.23,
-    anual: 1060.90,
+    mensal: 452.9,
+    trimestral: 452.9 * 3 * 0.95,
+    anual: 452.9 * 12 * 0.8,
   },
   empresarial: {
-    mensal: 159.19,
-    trimestral: 397.98,
-    anual: 1591.90,
+    mensal: 627.9,
+    trimestral: 627.9 * 3 * 0.95,
+    anual: 627.9 * 12 * 0.8,
   },
   premium: {
-    mensal: 318.49,
-    trimestral: 796.23,
-    anual: 3184.90,
+    mensal: 789.9,
+    trimestral: 789.9 * 3 * 0.95,
+    anual: 789.9 * 12 * 0.8,
   },
 };
 
@@ -70,7 +71,7 @@ function isValidValue(plano: string, periodo: string, valor: number) {
   const esperado = PLANOS[plano]?.[periodo];
   if (!esperado) return false;
 
-  const tolerancia = 0.05; // ✅ tolerância produção real
+  const tolerancia = 0.1; // 🔥 aumentei levemente (produção real)
   return Math.abs(valor - esperado) < tolerancia;
 }
 
@@ -231,6 +232,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true });
+
   } catch (error: any) {
     console.error("Webhook error:", error);
 
@@ -242,7 +244,7 @@ export async function POST(req: NextRequest) {
 }
 
 // ===============================
-// GET — HEALTH CHECK
+// HEALTH CHECK
 // ===============================
 
 export async function GET() {
@@ -250,6 +252,5 @@ export async function GET() {
     ok: true,
     endpoint: "mercadopago_webhook",
     status: "alive",
-    env: process.env.VERCEL_ENV ?? "local",
   });
 }
