@@ -1,7 +1,9 @@
-export default function DashboardPage({
+export default async function DashboardPage({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  return <div>Dashboard ({params.lang})</div>;
+  const { lang } = await params;
+
+  return <div>Dashboard ({lang})</div>;
 }

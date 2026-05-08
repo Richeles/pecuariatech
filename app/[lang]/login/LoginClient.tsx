@@ -1,28 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { createClient } from "@/app/lib/supabase-browser";
-import { getLangFromClient, t, Lang, setLangClient } from "@/app/lib/i18n";
+import { getLangFromClient, t, Lang } from "@/app/lib/i18n";
 
 const supabase = createClient();
 
 export default function LoginClient() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams();
 
-  const next = searchParams?.get("next") || "/dashboard";
+  const lang = (params?.lang as Lang) || "pt";
+
+  const next =
+    searchParams?.get("next") || `/${lang}/dashboard`;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [lang, setLang] = useState<Lang>("pt");
-
-  // 🔥 ALINHAMENTO SSR + CLIENT
-  useEffect(() => {
-    const detected = getLangFromClient();
-    setLang(detected);
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,15 +34,15 @@ export default function LoginClient() {
       });
 
       if (error || !data?.session) {
-        setErrorMsg("Falha no login. Verifique email e senha.");
+        setErrorMsg("Falha no login.");
         return;
       }
 
-      // 🔥 GARANTE COOKIE + SSR
+      // 🔥 CRÍTICO: força SSR cookie sync
       window.location.href = next;
 
     } catch {
-      setErrorMsg("Erro inesperado no login.");
+      setErrorMsg("Erro inesperado.");
     } finally {
       setLoading(false);
     }
@@ -58,7 +56,7 @@ export default function LoginClient() {
         placeholder={t(lang, "email")}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full rounded border px-4 py-2 focus:ring-2 focus:ring-green-600"
+        className="w-full rounded border px-4 py-2"
         required
       />
 
@@ -67,7 +65,7 @@ export default function LoginClient() {
         placeholder={t(lang, "password")}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="w-full rounded border px-4 py-2 focus:ring-2 focus:ring-green-600"
+        className="w-full rounded border px-4 py-2"
         required
       />
 
@@ -83,21 +81,14 @@ export default function LoginClient() {
         {loading ? t(lang, "processando") : t(lang, "enter")}
       </button>
 
-      {/* 🌍 SWITCH DE IDIOMA (CORRIGIDO) */}
-      <div className="flex gap-2 justify-center mt-3 text-sm">
-
-        <button onClick={() => { setLang("pt"); setLangClient("pt"); }}>
-          🇧🇷 PT
-        </button>
-
-        <button onClick={() => { setLang("es"); setLangClient("es"); }}>
-          🇪🇸 ES
-        </button>
-
-        <button onClick={() => { setLang("en"); setLangClient("en"); }}>
-          🇺🇸 EN
-        </button>
-
+      <div className="text-center text-sm mt-3 space-y-1">
+        <a href={`/${lang}/register`} className="text-green-700">
+          {t(lang, "create_account")}
+        </a>
+        <br />
+        <a href={`/${lang}/forgot-password`} className="text-gray-500">
+          {t(lang, "forgot_password")}
+        </a>
       </div>
 
     </form>

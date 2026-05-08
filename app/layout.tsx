@@ -8,25 +8,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR">
-      <body>
-        <LanguageProvider>
+    <>
+      <LanguageProvider>
 
-          <div
-            style={{
-              position: "fixed",
-              top: 20,
-              right: 20,
-              zIndex: 9999,
-            }}
-          >
-            <LanguageSwitcher />
-          </div>
+        <div
+          style={{
+            position: "fixed",
+            top: 20,
+            right: 20,
+            zIndex: 9999,
+          }}
+        >
+          <LanguageSwitcher />
+        </div>
 
-          {children}
+        {children}
 
-        </LanguageProvider>
-      </body>
-    </html>
+      </LanguageProvider>
+    </>
   );
 }

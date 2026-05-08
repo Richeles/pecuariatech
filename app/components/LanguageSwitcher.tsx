@@ -1,72 +1,101 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 type Lang = "pt" | "es";
 
 export default function LanguageSwitcher() {
-  const [lang, setLang] = useState<Lang>("pt");
+  const pathname = usePathname();
+  const router = useRouter();
 
-  // 🔹 sincroniza idioma ao carregar
-  useEffect(() => {
-    const saved = localStorage.getItem("lang") as Lang | null;
-    if (saved === "es") setLang("es");
-    else setLang("pt");
-  }, []);
+  // idioma atual
+  const currentLang: Lang =
+    pathname.startsWith("/es")
+      ? "es"
+      : "pt";
 
-  async function changeLang(newLang: Lang) {
-    try {
-      // 🔹 local (rápido)
-      localStorage.setItem("lang", newLang);
-      setLang(newLang);
+  async function changeLanguage(lang: Lang) {
+    if (lang === currentLang) return;
 
-      // 🔹 server (cookie SSR)
-      await fetch("/api/lang", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ lang: newLang }),
-      });
-    } catch {
-      // 🔒 Regra Z → nunca quebrar UX
+    const segments = pathname.split("/").filter(Boolean);
+
+    // remove locale atual
+    if (segments[0] === "pt" || segments[0] === "es") {
+      segments.shift();
     }
 
-    // 🔹 força re-render SSR
-    window.location.reload();
+    // mantém rota atual
+    const cleanPath = segments.join("/");
+
+    const newPath = cleanPath
+      ? `/${lang}/${cleanPath}`
+      : `/${lang}`;
+
+    // sincroniza cookie SSR
+    await fetch("/api/lang", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ lang }),
+    });
+
+    // navegação SPA
+    router.push(newPath);
+
+    // sincroniza SSR
+    router.refresh();
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      {/* 🔹 Label profissional */}
-      <span className="text-xs text-gray-500 font-medium">
-        Idioma
-      </span>
+    <div
+      className="
+        flex items-center gap-1
+        rounded-full
+        border border-neutral-200
+        bg-white/95
+        px-1 py-1
+        shadow-xl
+        backdrop-blur-md
+      "
+    >
+      {/* PT */}
+      <button
+        onClick={() => changeLanguage("pt")}
+        className={`
+          rounded-full
+          px-3 py-1.5
+          text-xs font-semibold
+          tracking-wide
+          transition-all duration-200
+          ${
+            currentLang === "pt"
+              ? "bg-green-600 text-white shadow-md"
+              : "text-neutral-600 hover:bg-neutral-100"
+          }
+        `}
+      >
+        🇧🇷 PT
+      </button>
 
-      {/* 🔹 Toggle SaaS */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
-        <button
-          onClick={() => changeLang("pt")}
-          className={`px-3 py-1 rounded-lg text-sm transition ${
-            lang === "pt"
-              ? "bg-white shadow font-semibold"
-              : "opacity-60 hover:opacity-100"
-          }`}
-        >
-          🇧🇷 Português
-        </button>
-
-        <button
-          onClick={() => changeLang("es")}
-          className={`px-3 py-1 rounded-lg text-sm transition ${
-            lang === "es"
-              ? "bg-white shadow font-semibold"
-              : "opacity-60 hover:opacity-100"
-          }`}
-        >
-          🇪🇸 Español
-        </button>
-      </div>
+      {/* ES */}
+      <button
+        onClick={() => changeLanguage("es")}
+        className={`
+          rounded-full
+          px-3 py-1.5
+          text-xs font-semibold
+          tracking-wide
+          transition-all duration-200
+          ${
+            currentLang === "es"
+              ? "bg-green-600 text-white shadow-md"
+              : "text-neutral-600 hover:bg-neutral-100"
+          }
+        `}
+      >
+        🇪🇸 ES
+      </button>
     </div>
   );
 }

@@ -4,12 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   getLangFromClient,
-  setLangClient,
   t,
   type Lang,
 } from "@/app/lib/i18n";
 
-// 🔥 NOVO (SUPABASE REAL)
 import { createClient } from "@/app/lib/supabase-browser";
 
 type Periodo = "mensal" | "trimestral" | "anual";
@@ -18,8 +16,11 @@ export default function PlanosClient() {
   const router = useRouter();
 
   const [lang, setLang] = useState<Lang>("pt");
-  const [periodo, setPeriodo] = useState<Periodo>("mensal");
-  const [loadingPlano, setLoadingPlano] = useState<string | null>(null);
+  const [periodo, setPeriodo] =
+    useState<Periodo>("mensal");
+
+  const [loadingPlano, setLoadingPlano] =
+    useState<string | null>(null);
 
   // =========================
   // INIT LANG
@@ -30,28 +31,29 @@ export default function PlanosClient() {
   }, []);
 
   // =========================
-  // TROCAR IDIOMA (FIX BUG)
-  // =========================
-  function handleLangChange(newLang: Lang) {
-    setLangClient(newLang);
-    setLang(newLang);
-
-    // 🔥 CORREÇÃO: evita undefined
-    window.location.href = `/${newLang}/planos`;
-  }
-
-  // =========================
   // CALCULO PREÇO
   // =========================
-  function calcularPreco(valorMensal: number, periodo: Periodo) {
-    if (periodo === "mensal") return valorMensal;
-    if (periodo === "trimestral") return valorMensal * 3 * 0.95;
-    if (periodo === "anual") return valorMensal * 12 * 0.8;
+  function calcularPreco(
+    valorMensal: number,
+    periodo: Periodo
+  ) {
+    if (periodo === "mensal") {
+      return valorMensal;
+    }
+
+    if (periodo === "trimestral") {
+      return valorMensal * 3 * 0.95;
+    }
+
+    if (periodo === "anual") {
+      return valorMensal * 12 * 0.8;
+    }
+
     return valorMensal;
   }
 
   // =========================
-  // PLANOS (FONTE ÚNICA)
+  // PLANOS
   // =========================
   const planos = [
     {
@@ -60,6 +62,7 @@ export default function PlanosClient() {
       descricao:
         "Para quem quer sair do caderno, organizar a fazenda e ter clareza do dia a dia.",
       mensal: 149.9,
+
       features: [
         "Dashboard simples e intuitivo",
         "Controle básico de rebanho",
@@ -69,12 +72,14 @@ export default function PlanosClient() {
         "Base sólida para começar a gestão digital",
       ],
     },
+
     {
       id: "profissional",
       nome: "Profissional",
       descricao:
         "Para o produtor que já se organiza, mas precisa entender melhor os números.",
       mensal: 247.9,
+
       features: [
         "Tudo do plano Básico",
         "Relatórios mensais avançados",
@@ -84,13 +89,17 @@ export default function PlanosClient() {
         "Alertas operacionais inteligentes",
       ],
     },
+
     {
       id: "ultra",
       nome: "Ultra",
       destaque: true,
+
       descricao:
         "Para quem quer parar de reagir e começar a decidir com apoio de IA.",
+
       mensal: 452.9,
+
       features: [
         "Tudo do plano Profissional",
         "Relatórios premium automatizados",
@@ -100,12 +109,16 @@ export default function PlanosClient() {
         "Plano mais escolhido por produtores",
       ],
     },
+
     {
       id: "empresarial",
       nome: "Empresarial",
+
       descricao:
         "Para operações maiores que exigem controle, padrão e escala.",
+
       mensal: 627.9,
+
       features: [
         "Tudo do plano Ultra",
         "Multi-fazendas e multi-usuários",
@@ -114,12 +127,17 @@ export default function PlanosClient() {
         "Alertas automáticos avançados",
       ],
     },
+
     {
       id: "premium_dominus",
+
       nome: "Premium Dominus 360°",
+
       descricao:
         "Para quem pensa como dono ou investidor e precisa enxergar a fazenda como empresa.",
+
       mensal: 789.9,
+
       features: [
         "Tudo do plano Empresarial",
         "CFO Autônomo integrado",
@@ -132,7 +150,7 @@ export default function PlanosClient() {
   ];
 
   // =========================
-  // CHECKOUT REAL (FIX)
+  // CHECKOUT REAL
   // =========================
   async function handleCheckout(planoId: string) {
     try {
@@ -147,22 +165,29 @@ export default function PlanosClient() {
 
       if (error || !user) {
         alert("Sessão inválida. Faça login.");
-        window.location.href = "/login";
+
+        window.location.href = `/${lang}/login`;
+
         return;
       }
 
-      const res = await fetch("/api/checkout/preference", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          plano: planoId,
-          periodo,
-          user_id: user.id,
-          email: user.email,
-        }),
-      });
+      const res = await fetch(
+        "/api/checkout/preference",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            plano: planoId,
+            periodo,
+            user_id: user.id,
+            email: user.email,
+          }),
+        }
+      );
 
       const data = await res.json();
 
@@ -174,7 +199,9 @@ export default function PlanosClient() {
 
     } catch (err) {
       console.error("CHECKOUT ERROR:", err);
+
       alert("Erro ao iniciar checkout");
+
     } finally {
       setLoadingPlano(null);
     }
@@ -186,33 +213,49 @@ export default function PlanosClient() {
   return (
     <div className="mt-10 px-4">
 
-      {/* IDIOMA */}
-      <div className="flex justify-end gap-2 mb-4">
-        <button onClick={() => handleLangChange("pt")}>BR Português</button>
-        <button onClick={() => handleLangChange("es")}>ES Español</button>
-        <button onClick={() => handleLangChange("en")}>EN English</button>
-      </div>
-
       {/* HEADER */}
-      <h2 className="text-3xl font-bold text-center">
+      <h2
+        className="
+          text-4xl
+          font-black
+          tracking-tight
+          text-center
+          text-neutral-900
+        "
+      >
         {t(lang, "planos_titulo")}
       </h2>
 
-      <p className="text-center text-gray-600 mt-2">
+      <p
+        className="
+          text-center
+          text-neutral-500
+          mt-3
+          text-lg
+        "
+      >
         {t(lang, "planos_subtitulo")}
       </p>
 
       {/* TOGGLE */}
-      <div className="flex justify-center gap-2 mt-6">
-        {(["mensal", "trimestral", "anual"] as Periodo[]).map((p) => (
+      <div className="flex justify-center gap-3 mt-8">
+        {(
+          ["mensal", "trimestral", "anual"] as Periodo[]
+        ).map((p) => (
           <button
             key={p}
             onClick={() => setPeriodo(p)}
-            className={`px-4 py-2 rounded ${
-              periodo === p
-                ? "bg-green-600 text-white"
-                : "bg-gray-200"
-            }`}
+            className={`
+              rounded-full
+              px-5 py-2.5
+              text-sm font-semibold
+              transition-all
+              ${
+                periodo === p
+                  ? "bg-green-600 text-white shadow-lg"
+                  : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+              }
+            `}
           >
             {t(lang, p)}
           </button>
@@ -220,41 +263,122 @@ export default function PlanosClient() {
       </div>
 
       {/* CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-10">
+      <div
+        className="
+          grid grid-cols-1
+          md:grid-cols-2
+          xl:grid-cols-5
+          gap-6
+          mt-12
+        "
+      >
         {planos.map((plano) => {
-          const preco = calcularPreco(plano.mensal, periodo);
+          const preco = calcularPreco(
+            plano.mensal,
+            periodo
+          );
 
           return (
             <div
               key={plano.id}
-              className={`rounded-xl border p-6 shadow ${
-                plano.destaque
-                  ? "border-green-600 scale-105"
-                  : ""
-              }`}
+              className={`
+                rounded-3xl
+                border
+                bg-white
+                p-7
+                shadow-sm
+                transition-all
+                hover:shadow-xl
+                ${
+                  plano.destaque
+                    ? "border-green-600 scale-[1.02]"
+                    : "border-neutral-200"
+                }
+              `}
             >
-              <h3 className="text-xl font-semibold">
+              <h3
+                className="
+                  text-2xl
+                  font-bold
+                  text-neutral-900
+                "
+              >
                 {plano.nome}
               </h3>
 
-              <p className="text-gray-500 text-sm mt-1">
+              <p
+                className="
+                  text-neutral-500
+                  text-sm
+                  mt-2
+                  leading-relaxed
+                "
+              >
                 {plano.descricao}
               </p>
 
-              <p className="text-3xl font-bold text-green-600 mt-4">
-                R$ {preco.toFixed(2)}
-              </p>
+              <div className="mt-6">
+                <p
+                  className="
+                    text-4xl
+                    font-black
+                    text-green-600
+                  "
+                >
+                  R$ {preco.toFixed(2)}
+                </p>
 
-              <ul className="mt-4 space-y-2 text-sm">
+                <span
+                  className="
+                    text-xs
+                    text-neutral-400
+                  "
+                >
+                  /{t(lang, periodo)}
+                </span>
+              </div>
+
+              <ul
+                className="
+                  mt-6
+                  space-y-3
+                  text-sm
+                  text-neutral-700
+                "
+              >
                 {plano.features.map((f, i) => (
-                  <li key={i}>✓ {f}</li>
+                  <li
+                    key={i}
+                    className="flex gap-2"
+                  >
+                    <span className="text-green-600">
+                      ✓
+                    </span>
+
+                    <span>{f}</span>
+                  </li>
                 ))}
               </ul>
 
               <button
-                onClick={() => handleCheckout(plano.id)}
-                disabled={loadingPlano === plano.id}
-                className="mt-6 w-full bg-green-600 text-white py-2 rounded"
+                onClick={() =>
+                  handleCheckout(plano.id)
+                }
+                disabled={
+                  loadingPlano === plano.id
+                }
+                className="
+                  mt-8
+                  w-full
+                  rounded-2xl
+                  bg-green-600
+                  py-3
+                  font-semibold
+                  text-white
+                  transition-all
+                  hover:bg-green-700
+                  disabled:opacity-70
+                "
               >
                 {loadingPlano === plano.id
                   ? t(lang, "processando")

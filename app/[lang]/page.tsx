@@ -1,16 +1,11 @@
-export default function HomeLangPage({
+import { redirect } from "next/navigation";
+
+export default async function Page({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  // Redireciona para home real
-  return (
-    <div>
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `window.location.href = '/${params.lang}/planos'`,
-        }}
-      />
-    </div>
-  );
+  const { lang } = await params;
+
+  redirect(`/${lang}/planos`);
 }
