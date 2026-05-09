@@ -2,69 +2,171 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { getLangFromClient, t } from "@/app/lib/i18n";
 
-export default function Sidebar() {
+const items = [
+  {
+    labelPT: "Dashboard",
+    labelES: "Panel",
+    href: "",
+    icon: "🏠",
+  },
+  {
+    labelPT: "Financeiro",
+    labelES: "Finanzas",
+    href: "/financeiro",
+    icon: "💰",
+  },
+  {
+    labelPT: "Rebanho",
+    labelES: "Ganado",
+    href: "/rebanho",
+    icon: "🐄",
+  },
+  {
+    labelPT: "Pastagem",
+    labelES: "Pastura",
+    href: "/pastagem",
+    icon: "🌱",
+  },
+  {
+    labelPT: "CFO Inteligente",
+    labelES: "CFO Inteligente",
+    href: "/cfo",
+    icon: "🧠",
+  },
+  {
+    labelPT: "Engorda",
+    labelES: "Engorde",
+    href: "/engorda",
+    icon: "⚡",
+  },
+  {
+    labelPT: "Planos",
+    labelES: "Planes",
+    href: "/assinatura/plano",
+    icon: "🔒",
+  },
+];
+
+export default function Sidebar({
+  lang = "pt",
+}: {
+  lang?: "pt" | "es";
+}) {
   const pathname = usePathname();
-  const lang = getLangFromClient();
-
-  const items = [
-    { key: "menu_dashboard", href: "/dashboard", icon: "🏠" },
-    { key: "menu_financeiro", href: "/dashboard/financeiro", icon: "💰" },
-    { key: "menu_rebanho", href: "/dashboard/rebanho", icon: "🐄" },
-    { key: "menu_pastagem", href: "/dashboard/pastagem", icon: "🌱" },
-    { key: "menu_cfo", href: "/dashboard/cfo", icon: "🧠" },
-    { key: "menu_engorda", href: "/dashboard/engorda", icon: "⚡" },
-    { key: "menu_assinatura", href: "/dashboard/assinatura/plano", icon: "🔒" },
-  ];
 
   return (
-    <aside className="w-72 min-h-screen bg-green-700 text-white flex flex-col">
-
+    <aside
+      className="
+        hidden lg:flex
+        w-[250px]
+        flex-col
+        border-r border-[#406454]
+        bg-gradient-to-b
+        from-[#0b2418]
+        via-[#123524]
+        to-[#0d2b1d]
+        text-white
+      "
+    >
       {/* LOGO */}
-      <div className="px-6 py-8 border-b border-green-600">
-        <h2 className="text-2xl font-bold tracking-tight">
+      <div className="border-b border-[#355845] p-6">
+
+        <h1 className="text-[24px] font-black tracking-tight text-white">
           PecuariaTech
-        </h2>
-        <p className="text-xs text-green-200 mt-1">
-          Plataforma de Gestão Rural
+        </h1>
+
+        <p className="mt-1 text-sm text-green-100/70">
+          Sistema Operacional Rural
         </p>
+
+      </div>
+
+      {/* STATUS */}
+      <div className="p-4">
+
+        <div
+          className="
+            rounded-2xl
+            border border-[#4d7c63]
+            bg-[#214734]
+            p-4
+            shadow-lg
+          "
+        >
+          <div className="flex items-center gap-2">
+
+            <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+
+            <span className="text-sm font-medium text-green-100">
+              IA operacional ativa
+            </span>
+
+          </div>
+
+          <p className="mt-3 text-sm leading-relaxed text-green-100/70">
+            Plataforma analítica estabilizada
+          </p>
+
+        </div>
+
       </div>
 
       {/* MENU */}
-      <nav className="flex-1 px-4 py-6 space-y-1">
+      <nav className="flex-1 px-4 py-6">
 
-        {items.map((item) => {
-          const active =
-            pathname === item.href ||
-            pathname.startsWith(item.href + "/");
+        <div className="space-y-2">
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`
-                flex items-center gap-3
-                px-4 py-3 rounded-xl
-                text-sm font-medium
-                transition-all duration-200
-                ${
-                  active
-                    ? "bg-white text-green-700 shadow-sm"
-                    : "text-green-100 hover:bg-green-600 hover:text-white"
-                }
-              `}
-            >
-              <span className="text-lg">{item.icon}</span>
+          {items.map((item) => {
 
-              <span>{t(lang, item.key)}</span>
+            const fullHref =
+              `/${lang}/dashboard${item.href}`;
 
-              {active && (
-                <span className="ml-auto w-1.5 h-5 rounded-full bg-green-500" />
-              )}
-            </Link>
-          );
-        })}
+            const active =
+              pathname === fullHref;
+
+            return (
+              <Link
+                key={item.href}
+                href={fullHref}
+                prefetch={false}
+                className={`
+                  flex items-center gap-4
+                  rounded-2xl
+                  px-4 py-3
+                  transition-all duration-200
+                  border border-transparent
+                  ${
+                    active
+                      ? `
+                        bg-[#6bbd88]
+                        text-white
+                        shadow-xl
+                        border-[#95d5ab]
+                      `
+                      : `
+                        text-green-100/85
+                        hover:bg-[#2f5f47]
+                        hover:border-[#4d7c63]
+                      `
+                  }
+                `}
+              >
+                <span className="text-lg">
+                  {item.icon}
+                </span>
+
+                <span className="font-medium">
+                  {lang === "es"
+                    ? item.labelES
+                    : item.labelPT}
+                </span>
+
+              </Link>
+            );
+          })}
+
+        </div>
 
       </nav>
 
