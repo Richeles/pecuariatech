@@ -1,48 +1,190 @@
 // app/api/assinaturas/status-server/route.ts
-import { NextResponse } from "next/server";
+
+import { NextRequest, NextResponse } from "next/server";
 
 /**
- * ✅ Rota de compatibilidade (LEGADO)
- * Motivo:
- * - Algum client ainda chama /api/assinaturas/status-server
- * - Endpoint foi aposentado e agora gera 404 no log
+ * ============================================================================
+ * PecuariaTech — Legacy Compatibility Route
+ * ============================================================================
  *
- * Solução:
- * - Repassa 100% para o endpoint canônico /api/assinaturas/status
- * - Mantém cookies SSR first
- * - Evita ruído e regressão
+ * Objetivo:
+ * ---------------------------------------------------------------------------
+ * Compatibilizar clients antigos que ainda consomem:
+ *
+ *   /api/assinaturas/status-server
+ *
+ * Endpoint oficial/canônico:
+ *
+ *   /api/assinaturas/status
+ *
+ * Estratégia:
+ * ---------------------------------------------------------------------------
+ * - Proxy transparente
+ * - SSR cookie-first
+ * - Zero lógica de assinatura aqui
+ * - Zero leitura Supabase
+ * - Zero divergência arquitetural
+ *
+ * Benefícios:
+ * ---------------------------------------------------------------------------
+ * ✅ Elimina 404 legado
+ * ✅ Preserva middleware/paywall
+ * ✅ Mantém compatibilidade retroativa
+ * ✅ Evita drift entre endpoints
+ * ✅ Centraliza regra de negócio
+ *
+ * Arquitetura:
+ * ---------------------------------------------------------------------------
+ * Regra canônica PecuariaTech:
+ *
+ *   assinatura/status = única fonte de verdade
+ *
+ * Este endpoint existe APENAS como camada de compatibilidade.
+ * ============================================================================
  */
 
-export async function GET(req: Request) {
-  const url = new URL(req.url);
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-  // Mantém querystring (ts=...)
-  const qs = url.search ? url.search : "";
+export async function GET(req: NextRequest) {
+  try {
+    /**
+     * ------------------------------------------------------------------------
+     * URL atual
+     * ------------------------------------------------------------------------
+     */
+    const currentUrl = new URL(req.url);
 
-  // Repassa para endpoint canônico na mesma origem
-  const target = new URL(`/api/assinaturas/status${qs}`, url.origin);
+    /**
+     * ------------------------------------------------------------------------
+     * Mantém querystring
+     * Ex:
+     *   ?ts=...
+     * ------------------------------------------------------------------------
+     */
+    const qs = currentUrl.search ?? "";
 
-  // Forward headers (cookies são essenciais aqui)
-  const headers = new Headers();
-  const cookie = req.headers.get("cookie");
-  if (cookie) headers.set("cookie", cookie);
+    /**
+     * ------------------------------------------------------------------------
+     * Endpoint canônico
+     * ------------------------------------------------------------------------
+     */
+    const target = new URL(
+      `/api/assinaturas/status${qs}`,
+      currentUrl.origin
+    );
 
-  const auth = req.headers.get("authorization");
-  if (auth) headers.set("authorization", auth);
+    /**
+     * ------------------------------------------------------------------------
+     * Forward headers
+     * ------------------------------------------------------------------------
+     * SSR COOKIE FIRST
+     * ------------------------------------------------------------------------
+     */
+    const headers = new Headers();
 
-  const res = await fetch(target.toString(), {
-    method: "GET",
-    headers,
-    cache: "no-store",
-  });
+    /**
+     * Cookies SSR
+     */
+    const cookie = req.headers.get("cookie");
 
-  // Retorna exatamente o payload do endpoint canônico
-  const text = await res.text();
-  return new NextResponse(text, {
-    status: res.status,
-    headers: {
-      "content-type": res.headers.get("content-type") ?? "application/json",
-      "cache-control": "no-store",
-    },
-  });
+    if (cookie) {
+      headers.set("cookie", cookie);
+    }
+
+    /**
+     * Bearer token / mobile / fallback auth
+     */
+    const authorization = req.headers.get("authorization");
+
+    if (authorization) {
+      headers.set("authorization", authorization);
+    }
+
+    /**
+     * User-Agent opcional (observabilidade)
+     */
+    const userAgent = req.headers.get("user-agent");
+
+    if (userAgent) {
+      headers.set("user-agent", userAgent);
+    }
+
+    /**
+     * ------------------------------------------------------------------------
+     * Request proxy
+     * ------------------------------------------------------------------------
+     */
+    const response = await fetch(target.toString(), {
+      method: "GET",
+      headers,
+      cache: "no-store",
+      redirect: "follow",
+    });
+
+    /**
+     * ------------------------------------------------------------------------
+     * Payload RAW
+     * ------------------------------------------------------------------------
+     * Mantém compatibilidade total:
+     * - JSON
+     * - text
+     * - html
+     * - edge cases
+     * ------------------------------------------------------------------------
+     */
+    const body = await response.text();
+
+    /**
+     * ------------------------------------------------------------------------
+     * Response final
+     * ------------------------------------------------------------------------
+     */
+    return new NextResponse(body, {
+      status: response.status,
+      headers: {
+        "content-type":
+          response.headers.get("content-type") ??
+          "application/json; charset=utf-8",
+
+        "cache-control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
+
+        pragma: "no-cache",
+        expires: "0",
+
+        /**
+         * Observabilidade
+         */
+        "x-pecuariatech-legacy-route": "status-server",
+        "x-pecuariatech-forwarded-to": "/api/assinaturas/status",
+      },
+    });
+  } catch (error) {
+    /**
+     * ------------------------------------------------------------------------
+     * Fail-safe
+     * ------------------------------------------------------------------------
+     * Nunca quebrar middleware/paywall por exceção não tratada.
+     * ------------------------------------------------------------------------
+     */
+    console.error(
+      "[PECUARIATECH][STATUS-SERVER][LEGACY_PROXY_ERROR]",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        ativo: false,
+        error: "legacy_proxy_error",
+        reason: "compatibility_route_failure",
+      },
+      {
+        status: 500,
+        headers: {
+          "cache-control": "no-store",
+        },
+      }
+    );
+  }
 }
