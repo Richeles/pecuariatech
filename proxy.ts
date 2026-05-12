@@ -1,67 +1,189 @@
-import { NextRequest, NextResponse } from "next/server";
+// proxy.ts
+// PecuariaTech Enterprise Runtime
+// Runtime SaaS estabilizado
+// Sem locale routing
 
-const PUBLIC_FILE = /\.(.*)$/;
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
-// ✅ SOMENTE PT E ES
-const SUPPORTED_LOCALES = ["pt", "es"];
+/* =====================================================
+   PUBLIC
+===================================================== */
 
-const DEFAULT_LOCALE = "pt";
+const PUBLIC_FILE =
+  /\.(.*)$/;
 
-export function proxy(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+/* =====================================================
+   PROXY
+===================================================== */
 
-  // ===============================
-  // 🔒 NUNCA TOCAR API
-  // ===============================
-  if (pathname.startsWith("/api")) {
-    return NextResponse.next();
-  }
+export function proxy(
+  req: NextRequest
+) {
 
-  // ===============================
-  // 🔒 ARQUIVOS ESTÁTICOS
-  // ===============================
+  const {
+    pathname,
+  } = req.nextUrl;
+
+  /* ==========================================
+     IGNORAR
+  ========================================== */
+
   if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon") ||
-    PUBLIC_FILE.test(pathname)
+
+    pathname.startsWith(
+      "/_next"
+    ) ||
+
+    pathname.startsWith(
+      "/api"
+    ) ||
+
+    pathname.startsWith(
+      "/favicon"
+    ) ||
+
+    PUBLIC_FILE.test(
+      pathname
+    )
   ) {
+
     return NextResponse.next();
   }
 
-  // ===============================
-  // 🌍 JÁ POSSUI LOCALE?
-  // ===============================
-  const pathnameHasLocale = SUPPORTED_LOCALES.some(
-    (locale) =>
-      pathname === `/${locale}` ||
-      pathname.startsWith(`/${locale}/`)
-  );
+  /* ==========================================
+     LIMPEZA LOCALE ANTIGO
+  ========================================== */
 
-  if (pathnameHasLocale) {
-    return NextResponse.next();
+  if (
+
+    pathname === "/pt" ||
+    pathname === "/es"
+  ) {
+
+    const url =
+      req.nextUrl.clone();
+
+    url.pathname =
+      "/planos";
+
+    return NextResponse.redirect(
+      url
+    );
   }
 
-  // ===============================
-  // 🌍 DETECTAR IDIOMA
-  // ===============================
-  const cookieLang = req.cookies.get("lang")?.value;
+  if (
 
-  let locale = DEFAULT_LOCALE;
+    pathname.startsWith("/pt/") ||
+    pathname.startsWith("/es/")
+  ) {
 
-  if (cookieLang === "es") {
-    locale = "es";
+    const cleanPath =
+      pathname
+        .replace("/pt", "")
+        .replace("/es", "");
+
+    const url =
+      req.nextUrl.clone();
+
+    url.pathname =
+      cleanPath || "/";
+
+    return NextResponse.redirect(
+      url
+    );
   }
 
-  // ===============================
-  // 🔁 REDIRECIONAR
-  // ===============================
-  const url = req.nextUrl.clone();
+  /* ==========================================
+     AUTH
+  ========================================== */
 
-  url.pathname = `/${locale}${pathname}`;
+  const accessToken =
+    req.cookies.get(
+      "sb-access-token"
+    )?.value;
 
-  return NextResponse.redirect(url);
+  const hasSession =
+    Boolean(
+      accessToken
+    );
+
+  /* ==========================================
+     ROTAS
+  ========================================== */
+
+  const isLogin =
+    pathname ===
+    "/login";
+
+  const isCadastro =
+    pathname ===
+    "/cadastro";
+
+  const isDashboard =
+    pathname.startsWith(
+      "/dashboard"
+    );
+
+  /* ==========================================
+     REGRA Z
+  ========================================== */
+
+  if (
+    !hasSession &&
+    isDashboard
+  ) {
+
+    const url =
+      req.nextUrl.clone();
+
+    url.pathname =
+      "/login";
+
+    return NextResponse.redirect(
+      url
+    );
+  }
+
+  /* ==========================================
+     LOGIN/CADASTRO
+  ========================================== */
+
+  if (
+    hasSession &&
+    (
+      isLogin ||
+      isCadastro
+    )
+  ) {
+
+    const url =
+      req.nextUrl.clone();
+
+    url.pathname =
+      "/dashboard";
+
+    return NextResponse.redirect(
+      url
+    );
+  }
+
+  /* ==========================================
+     NEXT
+  ========================================== */
+
+  return NextResponse.next();
 }
 
+/* =====================================================
+   MATCHER
+===================================================== */
+
 export const config = {
-  matcher: ["/((?!_next|favicon.ico).*)"],
+
+  matcher: [
+    "/((?!_next|favicon.ico).*)",
+  ],
 };

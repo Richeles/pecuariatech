@@ -1,337 +1,666 @@
 // app/lib/inteligencia/engine.ts
-// CFO EXECUTIVO REAL — Motor de Inteligência (Equação Y + Triângulo 360)
-// Regra: sempre VIEW canônica (dre_mensal_gerencial_view)
-// Regra: nunca quebrar produção: degraded=true em qualquer falha
-// Regra: NÃO usar "@/app/lib/supabase-server" (banido no projeto)
-// Regra: NÃO depender de colunas "mes_ref" / "data_ref" (variam entre ambientes)
+// CFO EXECUTIVO REAL — Motor Cognitivo Financeiro
+// Equação Y + Equação Z + Triângulo 360
+// Runtime Cognitivo Premium Internacional
+// Regra:
+// - engine NÃO acessa Supabase diretamente
+// - engine NÃO usa fetch interno
+// - engine NÃO usa HTTP localhost
+// - engine recebe snapshot limpo via service layer
+// - fail-safe obrigatório (degraded mode)
 
-import { createClient } from "@supabase/supabase-js";
+import {
+  getFinanceiroSnapshot,
+} from "@/app/services/financeiro/getFinanceiroSnapshot";
 
-type Eixo360 = "contabil" | "operacional" | "estrategico";
+/* =====================================================
+   TYPES
+===================================================== */
+
+type Eixo360 =
+  | "contabil"
+  | "operacional"
+  | "estrategico";
 
 type SinalCFO = {
   eixo: Eixo360;
-  tipo: "alerta" | "info";
+
+  tipo:
+    | "alerta"
+    | "info";
+
   codigo: string;
-  severidade: "alta" | "media" | "baixa";
-  prioridade: 1 | 2 | 3 | 4 | 5;
+
+  severidade:
+    | "alta"
+    | "media"
+    | "baixa";
+
+  prioridade:
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5;
+
   mensagem: string;
+
   acao_sugerida?: string;
 };
 
 type CFOResponse = {
   ok: boolean;
+
   domain: "financeiro";
+
   ts: string;
+
   degraded: boolean;
+
   kpis: {
     receita_total: number;
+
     custos_totais: number;
+
     resultado_operacional: number;
+
     margem_operacional_pct: number;
+
     saldo_caixa?: number;
+
     divida_total?: number;
+
     tendencia_3m?: string;
   };
+
   sinais: SinalCFO[];
+
   plano_acao: Array<{
-    prioridade: 1 | 2 | 3;
+    prioridade:
+      | 1
+      | 2
+      | 3;
+
     eixo: Eixo360;
+
     titulo: string;
+
     descricao: string;
+
     impacto_estimado_brl?: number;
   }>;
+
   resumo_executivo: string;
+
+  metadata?: {
+    runtime?: string;
+
+    analytics_ready?: boolean;
+
+    python_ready?: boolean;
+  };
+
   error?: string;
 };
 
+/* =====================================================
+   HELPERS
+===================================================== */
+
 function nowIso() {
-  return new Date().toISOString();
+
+  return new Date()
+    .toISOString();
 }
 
 function n(v: any): number {
-  const x = Number(v);
-  return Number.isFinite(x) ? x : 0;
-}
 
-function s(v: any): string {
-  if (v === null || v === undefined) return "";
-  return String(v);
+  const x = Number(v);
+
+  return Number.isFinite(x)
+    ? x
+    : 0;
 }
 
 function brlFormat(v: number) {
+
   try {
-    return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    return v.toLocaleString(
+      "pt-BR",
+      {
+        style: "currency",
+        currency: "BRL",
+      }
+    );
+
   } catch {
+
     return `R$ ${v}`;
+
   }
 }
 
-function makeSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const service = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+/* =====================================================
+   SCORE ENGINE
+===================================================== */
 
-  if (!url || !service) {
-    throw new Error("missing_env_supabase_url_or_service_role");
+function riscoOperacionalScore(
+  receita_total: number,
+  custos_totais: number,
+  resultado_operacional: number,
+  saldo_caixa: number,
+  divida_total: number
+) {
+
+  let score = 0;
+
+  if (
+    resultado_operacional < 0
+  ) {
+    score += 35;
   }
 
-  // Service Role apenas para leitura canônica de VIEW (read-only)
-  return createClient(url, service, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
-/**
- * BUSCA O "ÚLTIMO" REGISTRO DA VIEW SEM DEPENDER DE COLUNA FIXA.
- * - tenta ordenar por colunas comuns se existirem
- * - se falhar, cai no modo blindado: pega 1 registro sem order
- */
-async function fetchLastRowSafe(supabase: ReturnType<typeof makeSupabase>) {
-  const ORDER_CANDIDATES = [
-    "mes_ref",
-    "data_ref",
-    "competencia",
-    "mes",
-    "dt_ref",
-    "created_at",
-    "updated_at",
-    "id",
-  ];
-
-  // 1) tenta com ORDER BY em cascata, sem quebrar
-  for (const col of ORDER_CANDIDATES) {
-    try {
-      const { data, error } = await supabase
-        .from("dre_mensal_gerencial_view")
-        .select("*")
-        .order(col as any, { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-      if (data && data.length > 0) return data[0];
-    } catch {
-      // ignora e tenta próxima coluna
-      continue;
-    }
+  if (
+    custos_totais >
+    receita_total
+  ) {
+    score += 25;
   }
 
-  // 2) fallback final: sem order (não pode quebrar prod)
-  const { data, error } = await supabase
-    .from("dre_mensal_gerencial_view")
-    .select("*")
-    .limit(1);
+  if (
+    saldo_caixa <= 0
+  ) {
+    score += 20;
+  }
 
-  if (error) throw error;
+  if (
+    divida_total >
+    saldo_caixa
+  ) {
+    score += 20;
+  }
 
-  return (data && data.length > 0) ? data[0] : {};
+  return Math.min(
+    score,
+    100
+  );
 }
 
-function top3PlanoAcao(sinais: SinalCFO[], kpis: CFOResponse["kpis"]) {
-  const ranked = [...sinais].sort((a, b) => {
-    const sev = (x: string) => (x === "alta" ? 0 : x === "media" ? 1 : 2);
-    const s1 = sev(a.severidade) - sev(b.severidade);
-    if (s1 !== 0) return s1;
-    return a.prioridade - b.prioridade;
-  });
+/* =====================================================
+   PLANO AÇÃO
+===================================================== */
 
-  const actions: CFOResponse["plano_acao"] = [];
+function top3PlanoAcao(
+  sinais: SinalCFO[],
+  kpis: CFOResponse["kpis"]
+) {
+
+  const ranked =
+    [...sinais].sort(
+      (a, b) => {
+
+        const sev = (
+          x: string
+        ) =>
+          x === "alta"
+            ? 0
+            : x === "media"
+            ? 1
+            : 2;
+
+        const s1 =
+          sev(a.severidade) -
+          sev(b.severidade);
+
+        if (s1 !== 0) {
+          return s1;
+        }
+
+        return (
+          a.prioridade -
+          b.prioridade
+        );
+      }
+    );
+
+  const actions:
+    CFOResponse["plano_acao"] =
+      [];
 
   for (const s of ranked) {
-    if (actions.length >= 3) break;
-    if (!s.acao_sugerida) continue;
+
+    if (
+      actions.length >= 3
+    ) {
+      break;
+    }
+
+    if (
+      !s.acao_sugerida
+    ) {
+      continue;
+    }
 
     const titulo =
       s.eixo === "contabil"
-        ? "Ajuste contábil/gerencial imediato"
-        : s.eixo === "operacional"
+        ? "Ajuste contábil imediato"
+        : s.eixo ===
+          "operacional"
         ? "Eficiência operacional"
-        : "Decisão estratégica do CFO";
+        : "Decisão estratégica";
 
     actions.push({
-      prioridade: (actions.length + 1) as 1 | 2 | 3,
+
+      prioridade:
+        (
+          actions.length + 1
+        ) as 1 | 2 | 3,
+
       eixo: s.eixo,
+
       titulo,
-      descricao: s.acao_sugerida,
+
+      descricao:
+        s.acao_sugerida,
+
       impacto_estimado_brl:
-        s.codigo === "resultado_negativo"
-          ? Math.max(0, n(kpis.custos_totais) * 0.15)
+        s.codigo ===
+        "resultado_negativo"
+          ? Math.max(
+              0,
+              n(
+                kpis.custos_totais
+              ) * 0.15
+            )
           : undefined,
     });
   }
 
-  if (actions.length === 0) {
+  if (
+    actions.length === 0
+  ) {
+
     actions.push({
       prioridade: 1,
+
       eixo: "estrategico",
-      titulo: "Conferir consistência financeira",
+
+      titulo:
+        "Conferir consistência financeira",
+
       descricao:
-        "Revisar lançamentos e categorias do mês (custos e receitas) e garantir classificação correta no plano de contas.",
+        "Revisar lançamentos financeiros e garantir classificação correta de custos e receitas.",
     });
   }
 
   return actions;
 }
 
-export async function inteligenciaFinanceiro(): Promise<CFOResponse> {
+/* =====================================================
+   ENGINE
+===================================================== */
+
+export async function inteligenciaFinanceiro():
+Promise<CFOResponse> {
+
   try {
-    const supabase = makeSupabase();
 
-    // ✅ VIEW canônica do CFO (blindado contra variação de schema)
-    const row = await fetchLastRowSafe(supabase);
+    /* =====================================================
+       SNAPSHOT
+    ===================================================== */
 
-    // tenta várias chaves possíveis (variações de nomes)
-    const receita_total =
-      n(row.receita_total ?? row.receita ?? row.total_receita ?? row.receitas_totais);
+    const snapshot =
+      await getFinanceiroSnapshot();
 
-    const custos_totais =
-      n(row.custos_totais ?? row.custo_total ?? row.total_custos ?? row.despesas_totais);
+    const {
 
-    const resultado_operacional =
-      n(row.resultado_operacional ?? row.resultado ?? (receita_total - custos_totais));
-
-    const margem_operacional_pct =
-      n(row.margem_operacional_pct ?? row.margem_pct ?? row.margem_operacional);
-
-    const saldo_caixa = n(row.saldo_caixa ?? row.caixa ?? row.saldo);
-    const divida_total = n(row.divida_total ?? row.divida ?? row.passivo_total);
-    const tendencia_3m = s(row.tendencia_3m ?? row.tendencia ?? "misto") || "misto";
-
-    const kpis: CFOResponse["kpis"] = {
       receita_total,
+
       custos_totais,
+
       resultado_operacional,
+
       margem_operacional_pct,
+
       saldo_caixa,
+
       divida_total,
+
+      tendencia_3m,
+
+    } = snapshot;
+
+    /* =====================================================
+       KPIS
+    ===================================================== */
+
+    const kpis:
+      CFOResponse["kpis"] = {
+
+      receita_total,
+
+      custos_totais,
+
+      resultado_operacional,
+
+      margem_operacional_pct,
+
+      saldo_caixa,
+
+      divida_total,
+
       tendencia_3m,
     };
 
-    const sinais: SinalCFO[] = [];
+    /* =====================================================
+       SCORE
+    ===================================================== */
 
-    // ✅ CONTÁBIL
-    if (resultado_operacional < 0) {
+    const riscoScore =
+      riscoOperacionalScore(
+        receita_total,
+        custos_totais,
+        resultado_operacional,
+        saldo_caixa,
+        divida_total
+      );
+
+    /* =====================================================
+       SINAIS
+    ===================================================== */
+
+    const sinais:
+      SinalCFO[] = [];
+
+    /* ==========================================
+       CONTÁBIL
+    ========================================== */
+
+    if (
+      resultado_operacional < 0
+    ) {
+
       sinais.push({
+
         eixo: "contabil",
+
         tipo: "alerta",
-        codigo: "resultado_negativo",
+
+        codigo:
+          "resultado_negativo",
+
         severidade: "alta",
+
         prioridade: 1,
+
         mensagem:
-          "Resultado operacional negativo no mês. Rever DRE e estrutura de custos imediatamente.",
+          "Resultado operacional negativo detectado. Necessário revisar estrutura de custos imediatamente.",
+
         acao_sugerida:
-          `Cortar 10%–20% dos custos fixos/operacionais nos próximos 7 dias. Meta: reduzir ~${brlFormat(Math.max(0, custos_totais * 0.15))}.`,
+          `Reduzir custos operacionais em 10%–20%. Potencial estimado: ${brlFormat(
+            Math.max(
+              0,
+              custos_totais * 0.15
+            )
+          )}.`,
       });
     }
 
-    if (margem_operacional_pct <= 5 && receita_total > 0) {
+    if (
+      margem_operacional_pct <= 5 &&
+      receita_total > 0
+    ) {
+
       sinais.push({
+
         eixo: "contabil",
+
         tipo: "alerta",
-        codigo: "margem_baixa",
+
+        codigo:
+          "margem_critica",
+
         severidade: "media",
+
         prioridade: 2,
+
         mensagem:
-          "Margem operacional muito baixa. O negócio está operando próximo do ponto de equilíbrio.",
+          "Margem operacional extremamente baixa.",
+
         acao_sugerida:
-          "Revisar categorias de maior custo, renegociar insumos/serviços e criar teto de custo por cabeça e por hectare.",
+          "Renegociar insumos, revisar despesas recorrentes e estabelecer teto operacional por hectare e por cabeça.",
       });
     }
 
-    // ✅ OPERACIONAL
-    if (custos_totais > receita_total && receita_total > 0) {
+    /* ==========================================
+       OPERACIONAL
+    ========================================== */
+
+    if (
+      custos_totais >
+      receita_total
+    ) {
+
       sinais.push({
+
         eixo: "operacional",
+
         tipo: "alerta",
-        codigo: "custo_acima_receita",
+
+        codigo:
+          "custo_acima_receita",
+
         severidade: "alta",
+
         prioridade: 2,
+
         mensagem:
-          "Custos totais acima da receita do mês. Há desequilíbrio operacional.",
+          "Custos operacionais acima da capacidade de geração de receita.",
+
         acao_sugerida:
-          "Pente-fino em despesas recorrentes (diesel, manutenção, terceiros, energia). Travar compras não essenciais por 14 dias.",
+          "Executar pente-fino em diesel, manutenção, energia, terceiros e compras recorrentes.",
       });
     }
 
-    if (receita_total === 0 && custos_totais > 0) {
+    if (
+      receita_total === 0 &&
+      custos_totais > 0
+    ) {
+
       sinais.push({
+
         eixo: "operacional",
+
         tipo: "alerta",
-        codigo: "sem_receita_com_custos",
+
+        codigo:
+          "sem_receita",
+
         severidade: "alta",
+
         prioridade: 1,
+
         mensagem:
-          "Existem custos no mês, mas receita total zerada. Pode faltar lançamento ou houve período sem venda.",
+          "Custos presentes sem geração de receita.",
+
         acao_sugerida:
-          "Conferir lançamentos de receita. Se não houve venda, ativar plano de caixa: reduzir gastos e planejar entrada de receita no próximo ciclo.",
+          "Conferir lançamentos e ativar plano emergencial de caixa.",
       });
     }
 
-    // ✅ ESTRATÉGICO
-    if (divida_total > 0 && saldo_caixa === 0) {
+    /* ==========================================
+       ESTRATÉGICO
+    ========================================== */
+
+    if (
+      divida_total > 0 &&
+      saldo_caixa <= 0
+    ) {
+
       sinais.push({
+
         eixo: "estrategico",
+
         tipo: "alerta",
-        codigo: "divida_sem_caixa",
+
+        codigo:
+          "liquidez_critica",
+
         severidade: "media",
+
         prioridade: 3,
+
         mensagem:
-          "Há dívida registrada e o saldo de caixa está zerado. Atenção ao risco de liquidez.",
+          "Estrutura financeira apresenta risco de liquidez.",
+
         acao_sugerida:
-          "Renegociar prazos (alongamento), priorizar itens críticos e criar cronograma semanal de caixa.",
+          "Renegociar prazos e priorizar despesas críticas.",
       });
     }
 
-    if (sinais.length === 0) {
+    /* ==========================================
+       INFO SAFE
+    ========================================== */
+
+    if (
+      sinais.length === 0
+    ) {
+
       sinais.push({
+
         eixo: "estrategico",
+
         tipo: "info",
-        codigo: "estavel",
+
+        codigo:
+          "runtime_estavel",
+
         severidade: "baixa",
+
         prioridade: 5,
+
         mensagem:
-          "Sem alertas críticos. Recomenda-se manter disciplina de custos e revisão semanal de KPIs.",
+          "Nenhum alerta crítico detectado.",
+
         acao_sugerida:
-          "Manter rotina: revisar DRE semanalmente e garantir lançamentos consistentes.",
+          "Manter revisão semanal de KPIs financeiros.",
       });
     }
 
-    const plano_acao = top3PlanoAcao(sinais, kpis);
+    /* =====================================================
+       PLANO
+    ===================================================== */
+
+    const plano_acao =
+      top3PlanoAcao(
+        sinais,
+        kpis
+      );
+
+    /* =====================================================
+       RESUMO
+    ===================================================== */
 
     const resumo_executivo =
-      resultado_operacional < 0
-        ? "Financeiro em alerta: resultado operacional negativo. Prioridade máxima em corte de desperdícios e revisão de despesas fixas."
-        : "Financeiro estável: manter disciplina de custos, registrar receitas e acompanhar KPIs semanalmente.";
+      riscoScore >= 70
+        ? "Financeiro em estado crítico. Prioridade máxima em redução de desperdícios, proteção de caixa e estabilização operacional."
+        : riscoScore >= 40
+        ? "Sistema em atenção operacional. Recomendável revisar despesas recorrentes e eficiência de conversão."
+        : "Sistema financeiramente estável. Manter disciplina operacional e monitoramento contínuo.";
+
+    /* =====================================================
+       RESPONSE
+    ===================================================== */
 
     return {
+
       ok: true,
+
       domain: "financeiro",
+
       ts: nowIso(),
+
       degraded: false,
+
       kpis,
+
       sinais,
+
       plano_acao,
+
       resumo_executivo,
+
+      metadata: {
+
+        runtime:
+          "pecuariatech-cfo-ultra-runtime",
+
+        analytics_ready: true,
+
+        python_ready: true,
+      },
     };
+
   } catch (err: any) {
-    console.error("[CFO][engine] error:", err);
+
+    console.error(
+      "[CFO][ENGINE] ERROR:",
+      err
+    );
+
+    /* =====================================================
+       DEGRADED MODE
+    ===================================================== */
 
     return {
+
       ok: true,
+
       domain: "financeiro",
+
       ts: nowIso(),
+
       degraded: true,
+
       kpis: {
+
         receita_total: 0,
+
         custos_totais: 0,
+
         resultado_operacional: 0,
+
         margem_operacional_pct: 0,
-        tendencia_3m: "misto",
+
+        saldo_caixa: 0,
+
+        divida_total: 0,
+
+        tendencia_3m:
+          "misto",
       },
+
       sinais: [],
+
       plano_acao: [],
+
       resumo_executivo:
-        "Modo seguro: erro interno na coleta. Nenhuma decisão deve ser tomada com este retorno.",
-      error: err?.message || "internal_error",
+        "Modo seguro ativado. Runtime financeiro operando em contingência.",
+
+      metadata: {
+
+        runtime:
+          "pecuariatech-cfo-ultra-runtime",
+
+        analytics_ready: true,
+
+        python_ready: true,
+      },
+
+      error:
+        err?.message ||
+        "internal_error",
     };
   }
 }

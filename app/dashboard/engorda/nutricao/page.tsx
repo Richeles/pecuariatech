@@ -1,275 +1,992 @@
 // app/dashboard/engorda/nutricao/page.tsx
-// Dashboard Nutrição – Fase 2 (Visual)
-// Next.js 16 | App Router | Server Component
-// Equação Y: Views → APIs → Dashboard
+// PecuariaTech — Nutrição Runtime ULTRA
+// Fase 2 — Runtime Cognitivo Nutricional
+// Equação Y + Equação Z + Triângulo 360
+// SSR Seguro | Sem localhost | Sem loop interno
+// Engine Ready | Python Ready
 
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 
-// resolve baseURL de forma segura em DEV e PROD
-async function getBaseUrl() {
-  const h = await headers();
+export const dynamic =
+  "force-dynamic";
 
-  const host =
-    h.get("x-forwarded-host") ||
-    h.get("host") ||
-    "localhost:3333";
+export const runtime =
+  "nodejs";
 
-  const proto =
-    h.get("x-forwarded-proto") ||
-    (host.includes("localhost") ? "http" : "https");
+/* =====================================================
+   TYPES
+===================================================== */
 
-  return `${proto}://${host}`;
+type NutricaoItem = {
+  id: string;
+
+  nome: string;
+
+  tipo: string;
+
+  custo_dia?: number;
+};
+
+type NutricaoAplicacao = {
+  id: string;
+
+  item_nome: string;
+
+  animal_id?: string;
+
+  piquete_id?: string;
+
+  data_inicio?: string;
+
+  data_fim?: string;
+};
+
+type NutricaoResumo = {
+  total: number;
+};
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function brl(v: number) {
+
+  return v.toLocaleString(
+    "pt-BR",
+    {
+      style: "currency",
+      currency: "BRL",
+    }
+  );
 }
 
-async function fetchAPI(path: string) {
-  // ✅ Next 16: cookies() é Promise
-  const store = await cookies();
+function formatDate(
+  value?: string
+) {
 
-  // token do Supabase (padrão)
+  if (!value) {
+    return "—";
+  }
+
+  try {
+
+    return new Date(
+      value
+    ).toLocaleDateString(
+      "pt-BR"
+    );
+
+  } catch {
+
+    return "—";
+
+  }
+}
+
+function riscoNutricional(
+  custo: number,
+  itens: number
+) {
+
+  if (
+    custo > 5000
+  ) {
+    return {
+      nivel:
+        "alto",
+
+      cor:
+        "text-red-600",
+
+      bg:
+        "bg-red-50",
+
+      texto:
+        "Pressão nutricional elevada detectada.",
+    };
+  }
+
+  if (
+    custo > 2000
+  ) {
+
+    return {
+      nivel:
+        "moderado",
+
+      cor:
+        "text-yellow-700",
+
+      bg:
+        "bg-yellow-50",
+
+      texto:
+        "Estrutura nutricional em atenção.",
+    };
+  }
+
+  if (
+    itens <= 1
+  ) {
+
+    return {
+      nivel:
+        "baixo",
+
+      cor:
+        "text-blue-700",
+
+      bg:
+        "bg-blue-50",
+
+      texto:
+        "Baixa diversidade nutricional detectada.",
+    };
+  }
+
+  return {
+
+    nivel:
+      "estável",
+
+    cor:
+      "text-green-700",
+
+    bg:
+      "bg-green-50",
+
+    texto:
+      "Estrutura nutricional estável.",
+  };
+}
+
+/* =====================================================
+   AUTH
+===================================================== */
+
+async function getToken() {
+
+  const store =
+    await cookies();
+
+  return (
+    store.get(
+      "sb-access-token"
+    )?.value ||
+
+    store.get(
+      "supabase-access-token"
+    )?.value ||
+
+    ""
+  );
+}
+
+/* =====================================================
+   FETCH API
+===================================================== */
+
+async function fetchRuntime<T>(
+  path: string
+): Promise<T> {
+
   const token =
-    store.get("sb-access-token")?.value ||
-    store.get("supabase-access-token")?.value ||
-    "";
+    await getToken();
 
-  // ✅ base url correto (DEV/PROD)
-  const baseUrl = await getBaseUrl();
+  const origin =
+    process.env
+      .NEXT_PUBLIC_SITE_URL ||
+    "https://www.pecuariatech.com";
 
-  const res = await fetch(`${baseUrl}${path}`, {
-    method: "GET",
-    headers: token
-      ? { Authorization: `Bearer ${token}` }
-      : {},
-    cache: "no-store",
-  });
+  const response =
+    await fetch(
+      `${origin}${path}`,
+      {
+        method: "GET",
 
-  if (!res.ok) {
-    let err: any = {};
+        cache: "no-store",
+
+        headers: token
+          ? {
+              Authorization:
+                `Bearer ${token}`,
+            }
+          : {},
+      }
+    );
+
+  if (
+    !response.ok
+  ) {
+
+    let err: any =
+      {};
+
     try {
-      err = await res.json();
-    } catch {
-      // ignore
-    }
+
+      err =
+        await response.json();
+
+    } catch {}
 
     throw new Error(
       err?.error ||
-        `Erro ao carregar ${path} (HTTP ${res.status})`
+        `runtime_error_${response.status}`
     );
   }
 
-  return res.json();
+  return response.json();
 }
 
+/* =====================================================
+   PAGE
+===================================================== */
+
 export default async function NutricaoDashboard() {
-  let itens: any[] = [];
-  let aplicacoes: any[] = [];
-  let custoDia: any = { total: 0 };
+
+  let itens:
+    NutricaoItem[] = [];
+
+  let aplicacoes:
+    NutricaoAplicacao[] = [];
+
+  let custoDia:
+    NutricaoResumo = {
+      total: 0,
+    };
 
   try {
-    [itens, aplicacoes, custoDia] = await Promise.all([
-      fetchAPI("/api/nutricao/itens"),
-      fetchAPI("/api/nutricao/aplicacoes"),
-      fetchAPI("/api/nutricao/custo-dia"),
+
+    [
+      itens,
+      aplicacoes,
+      custoDia,
+    ] = await Promise.all([
+
+      fetchRuntime<
+        NutricaoItem[]
+      >(
+        "/api/nutricao/itens"
+      ),
+
+      fetchRuntime<
+        NutricaoAplicacao[]
+      >(
+        "/api/nutricao/aplicacoes"
+      ),
+
+      fetchRuntime<
+        NutricaoResumo
+      >(
+        "/api/nutricao/custo-dia"
+      ),
     ]);
+
   } catch (e: any) {
+
     return (
-      <div className="space-y-4">
-        <header>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Nutrição – Visão Geral
+
+      <main
+        className="
+          mx-auto
+          max-w-7xl
+          space-y-6
+          px-8
+          py-10
+        "
+      >
+
+        <section
+          className="
+            rounded-3xl
+            border border-red-200
+            bg-red-50
+            p-8
+          "
+        >
+
+          <h1
+            className="
+              text-2xl
+              font-black
+              text-red-700
+            "
+          >
+            Runtime Nutricional indisponível
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Controle operacional e impacto econômico da nutrição
-          </p>
-        </header>
 
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">
-          <p className="font-semibold">Erro ao carregar Nutrição</p>
-          <p className="mt-1">
-            {e?.message || "Falha desconhecida"}
+          <p
+            className="
+              mt-4
+              text-sm
+              text-red-600
+            "
+          >
+            {
+              e?.message ||
+              "Falha operacional"
+            }
           </p>
 
-          <p className="mt-2 text-xs text-red-600">
-            Observação: as APIs exigem autenticação (Bearer Token). Se você
-            estiver fora do login, a resposta será 401.
-          </p>
-        </div>
-      </div>
+          <div
+            className="
+              mt-6
+              rounded-2xl
+              bg-white/70
+              p-5
+              text-xs
+              leading-relaxed
+              text-red-700
+            "
+          >
+            O runtime nutricional
+            exige autenticação
+            válida e APIs
+            operacionais online.
+          </div>
+
+        </section>
+
+      </main>
     );
   }
 
-  const totalItens = Array.isArray(itens) ? itens.length : 0;
-  const totalAplicacoes = Array.isArray(aplicacoes)
-    ? aplicacoes.length
-    : 0;
+  /* =====================================================
+     KPIS
+  ===================================================== */
 
-  const totalCustoDia = Number(custoDia?.total || 0);
+  const totalItens =
+    itens.length;
+
+  const totalAplicacoes =
+    aplicacoes.length;
+
+  const totalCustoDia =
+    Number(
+      custoDia?.total || 0
+    );
+
+  const risco =
+    riscoNutricional(
+      totalCustoDia,
+      totalItens
+    );
+
+  /* =====================================================
+     PAGE
+  ===================================================== */
 
   return (
-    <div className="space-y-8">
-      {/* TÍTULO */}
-      <header>
-        <h1 className="text-2xl font-bold text-gray-800">
-          Nutrição – Visão Geral
-        </h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Controle operacional e impacto econômico da nutrição animal
-        </p>
-      </header>
 
-      {/* KPIs */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg p-5 shadow">
-          <p className="text-sm text-gray-500">
-            Itens Nutricionais Ativos
-          </p>
-          <p className="text-2xl font-bold text-green-700">
-            {totalItens}
-          </p>
+    <main
+      className="
+        mx-auto
+        max-w-7xl
+        space-y-8
+        px-8
+        py-10
+      "
+    >
+
+      {/* =====================================================
+          HERO
+      ===================================================== */}
+
+      <section
+        className="
+          overflow-hidden
+          rounded-3xl
+          border border-[#dbe7de]
+          bg-white
+          shadow-sm
+        "
+      >
+
+        <div
+          className="
+            bg-gradient-to-r
+            from-[#173222]
+            via-[#204631]
+            to-[#28553b]
+            px-10
+            py-10
+            text-white
+          "
+        >
+
+          <div
+            className="
+              flex flex-col
+              gap-8
+              lg:flex-row
+              lg:items-center
+              lg:justify-between
+            "
+          >
+
+            <div>
+
+              <div
+                className="
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-full
+                  border border-white/20
+                  bg-white/10
+                  px-4 py-2
+                  text-xs
+                  font-black
+                  uppercase
+                  tracking-[0.2em]
+                "
+              >
+                🧠 Nutrição Runtime ULTRA
+              </div>
+
+              <h1
+                className="
+                  mt-5
+                  text-4xl
+                  font-black
+                  tracking-tight
+                "
+              >
+                Nutrição Estratégica
+              </h1>
+
+              <p
+                className="
+                  mt-4
+                  max-w-3xl
+                  text-sm
+                  leading-relaxed
+                  text-green-100/80
+                "
+              >
+                Monitoramento nutricional,
+                impacto econômico,
+                eficiência operacional
+                e suporte ao runtime
+                Engorda ULTRA.
+              </p>
+
+            </div>
+
+            <div
+              className={`
+                rounded-3xl
+                border border-white/10
+                p-6
+                backdrop-blur-xl
+                ${risco.bg}
+              `}
+            >
+
+              <div
+                className="
+                  text-xs
+                  uppercase
+                  tracking-wider
+                  text-black/60
+                "
+              >
+                Risco Nutricional
+              </div>
+
+              <div
+                className={`
+                  mt-2
+                  text-3xl
+                  font-black
+                  ${risco.cor}
+                `}
+              >
+                {risco.nivel}
+              </div>
+
+              <div
+                className="
+                  mt-3
+                  text-sm
+                  text-black/70
+                "
+              >
+                {risco.texto}
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
 
-        <div className="bg-white rounded-lg p-5 shadow">
-          <p className="text-sm text-gray-500">
-            Aplicações Ativas
-          </p>
-          <p className="text-2xl font-bold text-green-700">
-            {totalAplicacoes}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-lg p-5 shadow">
-          <p className="text-sm text-gray-500">
-            Custo Diário Total (R$)
-          </p>
-          <p className="text-2xl font-bold text-green-700">
-            R$ {totalCustoDia.toFixed(2)}
-          </p>
-        </div>
       </section>
 
-      {/* ITENS */}
-      <section className="bg-white rounded-lg p-6 shadow">
-        <h2 className="text-lg font-semibold mb-4">
-          Catálogo de Itens Nutricionais
-        </h2>
+      {/* =====================================================
+          KPIs
+      ===================================================== */}
 
-        <div className="overflow-auto">
-          <table className="w-full text-sm">
+      <section
+        className="
+          grid gap-6
+          md:grid-cols-3
+        "
+      >
+
+        <KpiCard
+          title="
+            Itens Nutricionais
+          "
+          value={
+            totalItens
+          }
+          insight="
+            Estrutura nutricional
+            cadastrada no runtime.
+          "
+        />
+
+        <KpiCard
+          title="
+            Aplicações Ativas
+          "
+          value={
+            totalAplicacoes
+          }
+          insight="
+            Programas nutricionais
+            em execução.
+          "
+        />
+
+        <KpiCard
+          title="
+            Custo Diário
+          "
+          value={brl(
+            totalCustoDia
+          )}
+          insight="
+            Impacto econômico
+            nutricional diário.
+          "
+        />
+
+      </section>
+
+      {/* =====================================================
+          ITENS
+      ===================================================== */}
+
+      <section
+        className="
+          rounded-3xl
+          border border-[#dbe7de]
+          bg-white
+          p-8
+          shadow-sm
+        "
+      >
+
+        <div
+          className="
+            flex items-center
+            justify-between
+          "
+        >
+
+          <div>
+
+            <h2
+              className="
+                text-xl
+                font-black
+                text-[#173222]
+              "
+            >
+              Catálogo Nutricional
+            </h2>
+
+            <p
+              className="
+                mt-2
+                text-sm
+                text-[#557564]
+              "
+            >
+              Estrutura alimentar
+              operacional ativa.
+            </p>
+
+          </div>
+
+          <div
+            className="
+              rounded-2xl
+              bg-[#173222]
+              px-5 py-3
+              text-sm
+              font-bold
+              text-white
+            "
+          >
+            Engine Ready
+          </div>
+
+        </div>
+
+        <div
+          className="
+            mt-8
+            overflow-auto
+          "
+        >
+
+          <table
+            className="
+              w-full
+              text-sm
+            "
+          >
+
             <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">
+
+              <tr
+                className="
+                  border-b
+                "
+              >
+
+                <th
+                  className="
+                    py-3
+                    text-left
+                  "
+                >
                   Nome
                 </th>
-                <th className="text-left py-2">
+
+                <th
+                  className="
+                    py-3
+                    text-left
+                  "
+                >
                   Tipo
                 </th>
-                <th className="text-right py-2">
-                  Custo/dia (R$)
+
+                <th
+                  className="
+                    py-3
+                    text-right
+                  "
+                >
+                  Custo/dia
                 </th>
+
               </tr>
+
             </thead>
 
             <tbody>
-              {itens?.map((i: any) => (
+
+              {itens.map(
+                (i) => (
+
                 <tr
                   key={i.id}
-                  className="border-b last:border-0"
+                  className="
+                    border-b
+                    last:border-0
+                  "
                 >
-                  <td className="py-2">
+
+                  <td
+                    className="
+                      py-3
+                    "
+                  >
                     {i.nome}
                   </td>
-                  <td className="py-2 capitalize">
+
+                  <td
+                    className="
+                      py-3
+                      capitalize
+                    "
+                  >
                     {i.tipo}
                   </td>
-                  <td className="py-2 text-right">
-                    {Number(i.custo_dia || 0).toFixed(2)}
+
+                  <td
+                    className="
+                      py-3
+                      text-right
+                      font-semibold
+                    "
+                  >
+                    {brl(
+                      Number(
+                        i.custo_dia || 0
+                      )
+                    )}
                   </td>
+
                 </tr>
+
               ))}
-              {!itens?.length && (
+
+              {!itens.length && (
+
                 <tr>
+
                   <td
                     colSpan={3}
-                    className="py-3 text-gray-500"
+                    className="
+                      py-5
+                      text-center
+                      text-gray-500
+                    "
                   >
                     Nenhum item encontrado.
                   </td>
+
                 </tr>
+
               )}
+
             </tbody>
+
           </table>
+
         </div>
+
       </section>
 
-      {/* APLICAÇÕES */}
-      <section className="bg-white rounded-lg p-6 shadow">
-        <h2 className="text-lg font-semibold mb-4">
+      {/* =====================================================
+          APLICAÇÕES
+      ===================================================== */}
+
+      <section
+        className="
+          rounded-3xl
+          border border-[#dbe7de]
+          bg-white
+          p-8
+          shadow-sm
+        "
+      >
+
+        <h2
+          className="
+            text-xl
+            font-black
+            text-[#173222]
+          "
+        >
           Aplicações Ativas
         </h2>
 
-        <div className="overflow-auto">
-          <table className="w-full text-sm">
+        <div
+          className="
+            mt-8
+            overflow-auto
+          "
+        >
+
+          <table
+            className="
+              w-full
+              text-sm
+            "
+          >
+
             <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">
+
+              <tr
+                className="
+                  border-b
+                "
+              >
+
+                <th className="py-3 text-left">
                   Item
                 </th>
-                <th className="text-left py-2">
+
+                <th className="py-3 text-left">
                   Alvo
                 </th>
-                <th className="text-left py-2">
+
+                <th className="py-3 text-left">
                   Início
                 </th>
-                <th className="text-left py-2">
+
+                <th className="py-3 text-left">
                   Fim
                 </th>
+
               </tr>
+
             </thead>
 
             <tbody>
-              {aplicacoes?.map((a: any) => (
+
+              {aplicacoes.map(
+                (a) => (
+
                 <tr
                   key={a.id}
-                  className="border-b last:border-0"
+                  className="
+                    border-b
+                    last:border-0
+                  "
                 >
-                  <td className="py-2">
+
+                  <td className="py-3">
                     {a.item_nome}
                   </td>
-                  <td className="py-2">
-                    {a.animal_id ? "Animal" : "Piquete"}
+
+                  <td className="py-3">
+                    {a.animal_id
+                      ? "Animal"
+                      : "Piquete"}
                   </td>
-                  <td className="py-2">
-                    {a.data_inicio
-                      ? new Date(a.data_inicio).toLocaleDateString()
-                      : "-"}
+
+                  <td className="py-3">
+                    {formatDate(
+                      a.data_inicio
+                    )}
                   </td>
-                  <td className="py-2">
+
+                  <td className="py-3">
                     {a.data_fim
-                      ? new Date(a.data_fim).toLocaleDateString()
+                      ? formatDate(
+                          a.data_fim
+                        )
                       : "Em andamento"}
                   </td>
+
                 </tr>
+
               ))}
-              {!aplicacoes?.length && (
+
+              {!aplicacoes.length && (
+
                 <tr>
+
                   <td
                     colSpan={4}
-                    className="py-3 text-gray-500"
+                    className="
+                      py-5
+                      text-center
+                      text-gray-500
+                    "
                   >
-                    Nenhuma aplicação ativa encontrada.
+                    Nenhuma aplicação ativa.
                   </td>
+
                 </tr>
+
               )}
+
             </tbody>
+
           </table>
+
         </div>
+
       </section>
 
-      {/* AVISO DE RESPONSABILIDADE */}
-      <footer className="text-xs text-gray-500">
-        Nutrição registrada pelo produtor. O PecuariaTech entrega
-        gestão e análise econômica (CFO/Engorda), não prescrição
-        zootécnica/veterinária.
+      {/* =====================================================
+          DISCLAIMER
+      ===================================================== */}
+
+      <footer
+        className="
+          rounded-3xl
+          border border-[#dbe7de]
+          bg-white
+          p-6
+          text-xs
+          leading-relaxed
+          text-[#557564]
+          shadow-sm
+        "
+      >
+        O PecuariaTech entrega
+        gestão operacional,
+        inteligência econômica
+        e inferência estratégica.
+        Não substitui prescrição
+        veterinária ou zootécnica.
       </footer>
+
+    </main>
+  );
+}
+
+/* =====================================================
+   KPI CARD
+===================================================== */
+
+function KpiCard({
+  title,
+  value,
+  insight,
+}: {
+  title: string;
+
+  value:
+    | string
+    | number;
+
+  insight: string;
+}) {
+
+  return (
+
+    <div
+      className="
+        rounded-3xl
+        border border-[#dbe7de]
+        bg-white
+        p-7
+        shadow-sm
+      "
+    >
+
+      <div
+        className="
+          text-sm
+          text-[#557564]
+        "
+      >
+        {title}
+      </div>
+
+      <div
+        className="
+          mt-4
+          text-3xl
+          font-black
+          text-[#173222]
+        "
+      >
+        {value}
+      </div>
+
+      <p
+        className="
+          mt-4
+          text-sm
+          leading-relaxed
+          text-[#557564]
+        "
+      >
+        {insight}
+      </p>
+
     </div>
   );
 }

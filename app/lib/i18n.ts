@@ -1,176 +1,414 @@
-// ===============================
-// 🌍 TIPOS
-// ===============================
-export type Lang = "pt" | "es";
+// app/lib/i18n.ts
+// PecuariaTech International Runtime
+// Arquitetura canônica i18n
+// PT + ES estabilizado
+// Compatível com Equação Y + Regra Z
+// Sem locale routing
+// Persistência cognitiva SaaS
 
-// ===============================
-// 🌍 CLIENT
-// ===============================
-export function getLangFromClient(): Lang {
-  if (typeof window === "undefined") {
-    return "pt";
-  }
+export type Lang =
+  | "pt"
+  | "es";
 
-  const path = window.location.pathname;
-  const urlLang = path.split("/")[1];
+/* =====================================================
+   STORAGE
+===================================================== */
 
-  if (urlLang === "es") return "es";
+const LANG_KEY =
+  "pecuariatech_lang";
 
-  return "pt";
+/* =====================================================
+   DEFAULT
+===================================================== */
+
+export const DEFAULT_LANG: Lang =
+  "pt";
+
+/* =====================================================
+   SUPPORTED
+===================================================== */
+
+export const SUPPORTED_LANGS: Lang[] = [
+  "pt",
+  "es",
+];
+
+/* =====================================================
+   VALIDATOR
+===================================================== */
+
+export function isValidLang(
+  value?: string | null
+): value is Lang {
+
+  return (
+    value === "pt" ||
+    value === "es"
+  );
 }
 
-// ===============================
-// 🔁 SET LANG
-// ===============================
-export function setLangClient(lang: Lang) {
-  if (typeof window === "undefined") return;
+/* =====================================================
+   GET LANG CLIENT
+===================================================== */
 
-  localStorage.setItem("lang", lang);
+export function getLangFromClient(): Lang {
 
-  document.cookie =
-    `lang=${lang}; path=/; max-age=31536000; SameSite=Lax`;
+  if (
+    typeof window ===
+    "undefined"
+  ) {
 
-  const segments = window.location.pathname
-    .split("/")
-    .slice(2);
+    return DEFAULT_LANG;
+  }
 
-  const currentPath = segments.join("/");
+  try {
 
-  if (!currentPath) {
-    window.location.href = `/${lang}`;
+    const stored =
+      window.localStorage.getItem(
+        LANG_KEY
+      );
+
+    if (
+      isValidLang(stored)
+    ) {
+
+      return stored;
+    }
+
+    const browserLang =
+      navigator.language
+        ?.toLowerCase()
+        ?.slice(0, 2);
+
+    if (
+      browserLang === "es"
+    ) {
+
+      return "es";
+    }
+
+    return DEFAULT_LANG;
+
+  } catch {
+
+    return DEFAULT_LANG;
+  }
+}
+
+/* =====================================================
+   SET LANG CLIENT
+===================================================== */
+
+export function setLangClient(
+  lang: Lang
+) {
+
+  if (
+    typeof window ===
+    "undefined"
+  ) {
+
     return;
   }
 
-  window.location.href = `/${lang}/${currentPath}`;
+  try {
+
+    window.localStorage.setItem(
+      LANG_KEY,
+      lang
+    );
+
+    document.cookie =
+      `lang=${lang}; path=/; max-age=31536000; SameSite=Lax`;
+
+  } catch {
+
+    // noop
+  }
 }
 
-// ===============================
-// 🧠 DICIONÁRIO
-// ===============================
-export const dictionary = {
+/* =====================================================
+   TRANSLATIONS
+===================================================== */
+
+const translations = {
+
   pt: {
 
-    // LOGIN
-    login_titulo: "PecuariaTech",
-    login_subtitulo: "Centro de controle da fazenda",
+    /* =====================================
+       GERAL
+    ===================================== */
 
-    email: "E-mail",
-    password: "Senha",
-    enter: "Entrar",
-    create_account: "Criar conta",
-    forgot_password: "Esqueci minha senha",
+    mensal:
+      "MENSAL",
 
-    // PLANOS
-    planos_titulo: "Planos PecuariaTech",
-    planos_subtitulo:
-      "Escolha o melhor plano para sua operação",
+    trimestral:
+      "TRIMESTRAL",
 
-    mensal: "Mensal",
-    trimestral: "Trimestral",
-    anual: "Anual",
+    anual:
+      "ANUAL",
 
-    assinar: "Assinar",
-    processando: "Processando...",
+    assinar:
+      "ASSINAR",
 
-    // MENU
-    menu_dashboard: "Dashboard",
-    menu_financeiro: "Financeiro",
-    menu_rebanho: "Rebanho",
-    menu_pastagem: "Pastagem",
-    menu_cfo: "CFO Inteligente",
-    menu_engorda: "Engorda",
-    menu_assinatura: "Planos",
+    processando:
+      "PROCESSANDO...",
 
-    // DASHBOARD
-    dashboard_titulo: "Dashboard Executivo",
+    enter:
+      "ENTRAR",
 
-    dashboard_subtitulo:
-      "Plataforma operacional analítica do PecuariaTech com inteligência financeira, operacional e estratégica em tempo real.",
+    email:
+      "Email",
 
-    insight_financeiro: "Inteligência Financeira",
-    insight_operacional: "IA Operacional",
+    password:
+      "Senha",
 
-    producao_estabilizada: "Produção estabilizada",
+    nome:
+      "Nome completo",
 
-    sistema_ativo: "Sistema operacional ativo",
+    telefone:
+      "Telefone",
+
+    pais:
+      "País",
+
+    idioma:
+      "Idioma",
+
+    continuar:
+      "CONTINUAR",
+
+    criar_conta:
+      "CRIAR CONTA",
+
+    iniciar:
+      "INICIAR",
+
+    voltar:
+      "VOLTAR",
+
+    /* =====================================
+       LOGIN
+    ===================================== */
+
+    login_title:
+      "PecuariaTech",
+
+    login_subtitle:
+      "Infraestrutura operacional pecuária inteligente",
+
+    login_error:
+      "Falha no login. Verifique email e senha.",
+
+    login_unexpected:
+      "Erro inesperado no login.",
+
+    login_loading:
+      "ENTRANDO...",
+
+    /* =====================================
+       CADASTRO
+    ===================================== */
+
+    register_title:
+      "Cadastro PecuariaTech",
+
+    register_subtitle:
+      "Governança operacional, inteligência financeira e gestão pecuária em uma única plataforma.",
+
+    register_error:
+      "Erro interno ao criar conta.",
+
+    register_success:
+      "Conta criada com sucesso.",
+
+    /* =====================================
+       PLANOS
+    ===================================== */
+
+    planos_title:
+      "Planos PecuariaTech",
+
+    planos_subtitle:
+      "Cada plano foi pensado para uma realidade diferente no campo.",
+
+    /* =====================================
+       DASHBOARD
+    ===================================== */
+
+    "dashboard.titulo":
+      "PecuariaTech",
+
+    "dashboard.subtitulo":
+      "Inteligência operacional pecuária",
+
+    /* =====================================
+       CHECKOUT
+    ===================================== */
+
+    checkout_loading:
+      "Redirecionando para checkout...",
+
+    checkout_error:
+      "Erro ao iniciar checkout.",
   },
 
   es: {
 
-    // LOGIN
-    login_titulo: "PecuariaTech",
-    login_subtitulo:
-      "Centro de control de la finca",
+    /* =====================================
+       GERAL
+    ===================================== */
 
-    email: "Correo electrónico",
-    password: "Contraseña",
-    enter: "Ingresar",
-    create_account: "Crear cuenta",
-    forgot_password: "Olvidé mi contraseña",
+    mensal:
+      "MENSUAL",
 
-    // PLANOS
-    planos_titulo: "Planes PecuariaTech",
-    planos_subtitulo:
-      "Elige el mejor plan para tu operación",
+    trimestral:
+      "TRIMESTRAL",
 
-    mensal: "Mensual",
-    trimestral: "Trimestral",
-    anual: "Anual",
+    anual:
+      "ANUAL",
 
-    assinar: "Suscribirse",
-    processando: "Procesando...",
+    assinar:
+      "SUSCRIBIRSE",
 
-    // MENU
-    menu_dashboard: "Panel",
-    menu_financeiro: "Finanzas",
-    menu_rebanho: "Ganado",
-    menu_pastagem: "Pastura",
-    menu_cfo: "CFO Inteligente",
-    menu_engorda: "Engorde",
-    menu_assinatura: "Planes",
+    processando:
+      "PROCESANDO...",
 
-    // DASHBOARD
-    dashboard_titulo: "Panel Ejecutivo",
+    enter:
+      "INGRESAR",
 
-    dashboard_subtitulo:
-      "Plataforma operativa analítica de PecuariaTech con inteligencia financiera, operativa y estratégica en tiempo real.",
+    email:
+      "Correo",
 
-    insight_financeiro: "Inteligencia Financiera",
-    insight_operacional: "IA Operacional",
+    password:
+      "Contraseña",
 
-    producao_estabilizada: "Producción estabilizada",
+    nome:
+      "Nombre completo",
 
-    sistema_ativo: "Sistema operacional activo",
+    telefone:
+      "Teléfono",
+
+    pais:
+      "País",
+
+    idioma:
+      "Idioma",
+
+    continuar:
+      "CONTINUAR",
+
+    criar_conta:
+      "CREAR CUENTA",
+
+    iniciar:
+      "INICIAR",
+
+    voltar:
+      "VOLVER",
+
+    /* =====================================
+       LOGIN
+    ===================================== */
+
+    login_title:
+      "PecuariaTech",
+
+    login_subtitle:
+      "Infraestructura operacional pecuaria inteligente",
+
+    login_error:
+      "Error de autenticación.",
+
+    login_unexpected:
+      "Error inesperado.",
+
+    login_loading:
+      "INGRESANDO...",
+
+    /* =====================================
+       CADASTRO
+    ===================================== */
+
+    register_title:
+      "Registro PecuariaTech",
+
+    register_subtitle:
+      "Gobernanza operacional, inteligencia financiera y gestión pecuaria en una sola plataforma.",
+
+    register_error:
+      "Error interno al crear cuenta.",
+
+    register_success:
+      "Cuenta creada correctamente.",
+
+    /* =====================================
+       PLANOS
+    ===================================== */
+
+    planos_title:
+      "Planes PecuariaTech",
+
+    planos_subtitle:
+      "Cada plan fue diseñado para diferentes realidades del campo.",
+
+    /* =====================================
+       DASHBOARD
+    ===================================== */
+
+    "dashboard.titulo":
+      "PecuariaTech",
+
+    "dashboard.subtitulo":
+      "Inteligencia operacional pecuaria",
+
+    /* =====================================
+       CHECKOUT
+    ===================================== */
+
+    checkout_loading:
+      "Redireccionando al checkout...",
+
+    checkout_error:
+      "Error al iniciar checkout.",
   },
 } as const;
 
-// ===============================
-// 🔍 NESTED KEYS
-// ===============================
-function getNested(obj: any, path: string) {
-  return path
-    .split(".")
-    .reduce((acc, key) => acc?.[key], obj);
-}
+/* =====================================================
+   TRANSLATION TYPE
+===================================================== */
 
-// ===============================
-// 🌍 TRANSLATE
-// ===============================
+type TranslationKey =
+  keyof typeof translations.pt;
+
+/* =====================================================
+   TRANSLATE
+===================================================== */
+
 export function t(
   lang: Lang,
-  key: string
+  key: TranslationKey | string
 ): string {
-  const safeLang: Lang =
-    lang === "es" ? "es" : "pt";
 
-  const value = getNested(
-    dictionary[safeLang],
-    key
-  );
+  const safeLang =
+    isValidLang(lang)
+      ? lang
+      : DEFAULT_LANG;
 
-  if (typeof value === "string") {
+  const value =
+    translations?.[
+      safeLang
+    ]?.[
+      key as TranslationKey
+    ];
+
+  if (
+    typeof value ===
+    "string"
+  ) {
+
     return value;
   }
 
-  return key.split(".").pop() || "";
+  return String(key);
 }

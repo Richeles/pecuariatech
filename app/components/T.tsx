@@ -1,28 +1,85 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getLangFromClient, t } from "@/app/lib/i18n";
+import {
+  useEffect,
+  useState,
+} from "react";
 
-type Lang = "pt" | "es";
+import {
+  getLangFromClient,
+  t,
+} from "@/app/lib/i18n";
 
-export default function T({ k }: { k: string }) {
-  const [lang, setLang] = useState<Lang>("pt");
+type Lang =
+  | "pt"
+  | "es";
+
+export default function T({
+  k,
+}: {
+  k: string;
+}) {
+
+  const [
+    lang,
+    setLang,
+  ] =
+    useState<Lang>(
+      "pt"
+    );
+
+  /* ==========================================
+     CLIENT LOCALE
+  ========================================== */
 
   useEffect(() => {
-    setLang(getLangFromClient());
+
+    const current =
+      getLangFromClient();
+
+    if (
+      current === "es"
+    ) {
+
+      setLang("es");
+
+    } else {
+
+      setLang("pt");
+
+    }
+
   }, []);
 
-  // 🔥 GARANTIA: sempre retorna string
+  /* ==========================================
+     TRANSLATION
+  ========================================== */
+
   let value: any;
 
   try {
-    value = t(lang, k as any);
+
+    value =
+      t(
+        lang,
+        k as any
+      );
+
   } catch {
+
     value = k;
+
   }
 
-  // 🚨 BLOQUEIO CRÍTICO
-  if (typeof value !== "string") {
+  /* ==========================================
+     SAFE RETURN
+  ========================================== */
+
+  if (
+    typeof value !==
+    "string"
+  ) {
+
     return <>{k}</>;
   }
 

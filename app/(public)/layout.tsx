@@ -1,16 +1,11 @@
 // app/(public)/layout.tsx
-// Layout público neutro (sem estilo visual)
+// Layout público PecuariaTech
 
 export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html lang="pt-BR">
-      <body>
-        {children}
-      </body>
-    </html>
-  );
+
+  return children;
 }
