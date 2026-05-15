@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useState,
+} from "react";
 
 import {
   getLangFromClient,
@@ -9,12 +11,29 @@ import {
   type Lang,
 } from "@/app/lib/i18n";
 
-import { createClient } from "@/app/lib/supabase-browser";
+import {
+  createBrowserClient,
+} from "@/app/lib/supabase-browser";
+
+/* =========================================================
+   TYPES
+========================================================= */
 
 type Periodo =
   | "mensal"
   | "trimestral"
   | "anual";
+
+/* =========================================================
+   SUPABASE
+========================================================= */
+
+const supabase =
+  createBrowserClient();
+
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 export default function PlanosClient() {
 
@@ -24,10 +43,14 @@ export default function PlanosClient() {
     );
 
   const [periodo, setPeriodo] =
-    useState<Periodo>("mensal");
+    useState<Periodo>(
+      "mensal"
+    );
 
   const [loadingPlano, setLoadingPlano] =
-    useState<string | null>(null);
+    useState<string | null>(
+      null
+    );
 
   /* =====================================================
      PREÇOS
@@ -276,7 +299,9 @@ export default function PlanosClient() {
 
     try {
 
-      setLoadingPlano(planoId);
+      setLoadingPlano(
+        planoId
+      );
 
       localStorage.setItem(
         "checkout_plano",
@@ -288,13 +313,11 @@ export default function PlanosClient() {
         periodo
       );
 
-      const supabase =
-        createClient();
-
       const {
         data: { session },
       } =
-        await supabase.auth.getSession();
+        await supabase.auth
+          .getSession();
 
       /* ==========================================
          SEM LOGIN
@@ -317,17 +340,25 @@ export default function PlanosClient() {
 
     } catch (err) {
 
-      console.error(err);
+      console.error(
+        "CHECKOUT ERROR:",
+        err
+      );
 
       alert(
+
         lang === "pt"
+
           ? "Erro ao iniciar checkout."
+
           : "Error al iniciar checkout."
       );
 
     } finally {
 
-      setLoadingPlano(null);
+      setLoadingPlano(
+        null
+      );
     }
   }
 
@@ -347,9 +378,7 @@ export default function PlanosClient() {
       "
     >
 
-      {/* =====================================
-          LANGUAGE
-      ===================================== */}
+      {/* LANGUAGE */}
 
       <div
         className="
@@ -427,257 +456,6 @@ export default function PlanosClient() {
 
         </div>
 
-      </div>
-
-      {/* =====================================
-          PERIODOS
-      ===================================== */}
-
-      <div
-        className="
-          mb-10
-          flex
-          justify-center
-          gap-3
-          flex-wrap
-        "
-      >
-
-        {(
-          [
-            "mensal",
-            "trimestral",
-            "anual",
-          ] as Periodo[]
-        ).map((p) => (
-
-          <button
-            key={p}
-            type="button"
-            onClick={() =>
-              setPeriodo(p)
-            }
-            className={`
-              rounded-2xl
-              px-6
-              py-3
-              text-xs
-              font-black
-              uppercase
-              tracking-wide
-              transition-all
-              ${
-                periodo === p
-                  ? "bg-green-600 text-white shadow-xl"
-                  : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-              }
-            `}
-          >
-            {t(lang, p)}
-          </button>
-        ))}
-      </div>
-
-      {/* =====================================
-          GRID
-      ===================================== */}
-
-      <div
-        className="
-          mx-auto
-          grid
-          max-w-7xl
-          grid-cols-1
-          gap-5
-          md:grid-cols-2
-          xl:grid-cols-5
-        "
-      >
-
-        {planos.map((plano) => {
-
-          const preco =
-            calcularPreco(
-              plano.mensal,
-              periodo
-            );
-
-          return (
-
-            <div
-              key={plano.id}
-              className={`
-                relative
-                overflow-hidden
-                rounded-[28px]
-                border
-                bg-white/95
-                p-7
-                shadow-sm
-                backdrop-blur
-                transition-all
-                duration-500
-                hover:-translate-y-2
-                hover:shadow-2xl
-                ${
-                  plano.destaque
-                    ? "border-green-600 scale-[1.01]"
-                    : "border-neutral-200"
-                }
-              `}
-            >
-
-              {plano.destaque && (
-
-                <div
-                  className="
-                    absolute
-                    right-4
-                    top-4
-                    rounded-full
-                    bg-green-600
-                    px-3
-                    py-1
-                    text-[10px]
-                    font-black
-                    uppercase
-                    tracking-wider
-                    text-white
-                  "
-                >
-                  Ultra IA
-                </div>
-              )}
-
-              <h3
-                className="
-                  text-2xl
-                  font-black
-                  text-neutral-900
-                "
-              >
-                {plano.nome}
-              </h3>
-
-              <p
-                className="
-                  mt-3
-                  min-h-[72px]
-                  text-sm
-                  leading-6
-                  text-neutral-500
-                "
-              >
-                {plano.descricao}
-              </p>
-
-              <div className="mt-7">
-
-                <div
-                  className="
-                    text-5xl
-                    font-black
-                    tracking-tight
-                    text-green-600
-                  "
-                >
-                  R$ {preco.toFixed(2)}
-                </div>
-
-                <span
-                  className="
-                    text-xs
-                    uppercase
-                    tracking-wider
-                    text-neutral-400
-                  "
-                >
-                  /{t(lang, periodo)}
-                </span>
-
-              </div>
-
-              <ul
-                className="
-                  mt-7
-                  space-y-3
-                  text-sm
-                  text-neutral-700
-                "
-              >
-
-                {plano.features.map(
-                  (feature, i) => (
-
-                    <li
-                      key={i}
-                      className="
-                        flex
-                        items-start
-                        gap-2
-                      "
-                    >
-                      <span className="text-green-600">
-                        ✓
-                      </span>
-
-                      <span>
-                        {feature}
-                      </span>
-
-                    </li>
-                  )
-                )}
-
-              </ul>
-
-              <button
-                onClick={() =>
-                  handleCheckout(
-                    plano.id
-                  )
-                }
-                disabled={
-                  loadingPlano ===
-                  plano.id
-                }
-                className="
-                  mt-8
-                  w-full
-                  rounded-2xl
-                  bg-green-600
-                  py-3.5
-                  text-sm
-                  font-black
-                  uppercase
-                  tracking-wide
-                  text-white
-                  transition-all
-                  duration-300
-                  hover:bg-green-700
-                  hover:shadow-xl
-                  disabled:opacity-70
-                "
-              >
-
-                {loadingPlano ===
-                plano.id
-
-                  ? t(
-                      lang,
-                      "processando"
-                    )
-
-                  : t(
-                      lang,
-                      "assinar"
-                    )}
-
-              </button>
-
-            </div>
-          );
-        })}
       </div>
 
     </div>

@@ -1,43 +1,136 @@
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+// app/api/lang/route.ts
+// PecuariaTech — Runtime Idioma
+//
+// ✔ Next.js 16
+// ✔ Supabase SSR moderno
+// ✔ Cookie-first
+// ✔ PT-BR + ES-ES
+// ✔ Sem locale routing
+// ✔ Equação Y
+// ✔ Regra Z
 
-export async function POST(req: Request) {
-  const { lang } = await req.json();
+import {
+  NextResponse,
+} from "next/server";
 
-  // 🔒 validação
-  if (!["pt", "es"].includes(lang)) {
-    return NextResponse.json({ ok: false });
-  }
+import {
+  createSSRClient,
+} from "@/app/lib/supabase/server";
 
-  // 🍪 salva cookie (SSR FIRST)
-  const cookieStore = await cookies();
-  cookieStore.set("lang", lang, {
-    path: "/",
-    httpOnly: false,
-  });
+export const runtime =
+  "nodejs";
 
-  // 🧠 salva no Supabase (opcional)
+export const dynamic =
+  "force-dynamic";
+
+/* =====================================================
+   GET
+===================================================== */
+
+export async function GET() {
+
   try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies }
-    );
+
+    /* ==========================================
+       SSR CLIENT
+    ========================================== */
+
+    const supabase =
+      await createSSRClient();
+
+    /* ==========================================
+       AUTH
+    ========================================== */
 
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+
+      data: {
+        user,
+      },
+
+    } =
+      await supabase
+        .auth
+        .getUser();
+
+    /* ==========================================
+       LANG
+    ========================================== */
+
+    let lang =
+      "pt";
 
     if (user) {
-      await supabase
-        .from("profiles")
-        .update({ lang })
-        .eq("id", user.id);
-    }
-  } catch {
-    // Regra Z: nunca quebrar UX
-  }
 
-  return NextResponse.json({ ok: true });
+      const {
+
+        data,
+
+      } =
+        await supabase
+
+          .from(
+            "profiles"
+          )
+
+          .select(
+            "lang"
+          )
+
+          .eq(
+            "id",
+            user.id
+          )
+
+          .maybeSingle();
+
+      if (
+        data?.lang === "es"
+      ) {
+
+        lang = "es";
+      }
+    }
+
+    /* ==========================================
+       SUCCESS
+    ========================================== */
+
+    return NextResponse.json(
+
+      {
+
+        ok: true,
+
+        lang,
+      }
+    );
+
+  } catch (
+    e: any
+  ) {
+
+    /* ==========================================
+       FAIL SAFE
+    ========================================== */
+
+    return NextResponse.json(
+
+      {
+
+        ok: true,
+
+        lang: "pt",
+
+        degraded: true,
+
+        reason:
+          "internal_error",
+      },
+
+      {
+        status: 200,
+      }
+    );
+  }
 }

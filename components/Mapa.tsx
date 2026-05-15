@@ -1,36 +1,52 @@
-"use client";
+'use client'
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
+import dynamic from 'next/dynamic'
 
-const center: [number, number] = [-15.7801, -47.9292];
+const MapNoSSR = dynamic(
+  async () => {
+    const { MapContainer, TileLayer, Marker, Popup } =
+      await import('react-leaflet')
 
-const cowIcon = new L.Icon({
-  iconUrl: "/cow-marker.png",
-  iconSize: [45, 45],
-  iconAnchor: [22, 44],
-  popupAnchor: [0, -40],
-});
+    return function Map() {
+      return (
+        <MapContainer
+          center={[-15.7801, -47.9292]}
+          zoom={6}
+          style={{
+            height: '500px',
+            width: '100%',
+            borderRadius: '12px',
+          }}
+        >
+          <TileLayer
+            attribution="&copy; OpenStreetMap"
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          <Marker position={[-15.7801, -47.9292]}>
+            <Popup>
+              PecuariaTech
+            </Popup>
+          </Marker>
+        </MapContainer>
+      )
+    }
+  },
+  {
+    ssr: false,
+  }
+)
 
 export default function Mapa() {
   return (
-    <div className=" min-h-[100vh] flex flex-col" style={{ minHeight: "300px" }}>
-      <h2 className=" min-h-[100vh] flex flex-col">🌾 Mapa das Pastagens</h2>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-4">
+        🌾 Mapa das Pastagens
+      </h2>
 
-      <MapContainer center={center} zoom={6} style={{ height: "400px", width: "100%" }}>
-        <TileLayer
-          attribution="&copy; OpenStreetMap"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        <Marker position={center} icon={cowIcon}>
-          <Popup>PecuariaTech — Centro de Operações</Popup>
-        </Marker>
-      </MapContainer>
+      <div className="overflow-hidden rounded-xl border">
+        <MapNoSSR />
+      </div>
     </div>
-  );
+  )
 }
-
-
-
-

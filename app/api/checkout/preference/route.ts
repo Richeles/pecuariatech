@@ -261,7 +261,6 @@ export async function POST(
 
     /* ==========================================
        ADMIN MASTER
-       NÃO DESTRUIR CHECKOUT
     ========================================== */
 
     const isMaster =
@@ -445,51 +444,57 @@ export async function POST(
        PREFERENCE BODY
     ========================================== */
 
-    const preferenceBody =
-      {
+    const preferenceBody = {
 
-        items: [
+      items: [
 
-          {
-            title:
-              `${PLANOS[plano].titulo} - ${periodo}`,
+        {
 
-            quantity: 1,
+          id:
+            `${plano}_${periodo}`,
 
-            unit_price:
-              Number(preco),
+          title:
+            `${PLANOS[plano].titulo} - ${periodo}`,
 
-            currency_id:
-              "BRL",
-          },
-        ],
+          description:
+            `Assinatura ${PLANOS[plano].titulo}`,
 
-        payer: {
+          quantity: 1,
 
-          email,
+          currency_id:
+            "BRL",
+
+          unit_price:
+            Number(preco),
         },
+      ],
 
-        external_reference:
-          `${user_id}|${plano}|${periodo}`,
+      payer: {
 
-        back_urls: {
+        email,
+      },
 
-          success:
-            successUrl,
+      external_reference:
+        `${user_id}|${plano}|${periodo}`,
 
-          failure:
-            failureUrl,
+      back_urls: {
 
-          pending:
-            pendingUrl,
-        },
+        success:
+          successUrl,
 
-        auto_return:
-          "approved",
+        failure:
+          failureUrl,
 
-        notification_url:
-          webhookUrl,
-      };
+        pending:
+          pendingUrl,
+      },
+
+      auto_return:
+        "approved",
+
+      notification_url:
+        webhookUrl,
+    };
 
     /* ==========================================
        CREATE

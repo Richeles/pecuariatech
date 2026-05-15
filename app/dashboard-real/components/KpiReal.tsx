@@ -1,23 +1,94 @@
 "use client";
 
-type Props = {
-  title: string;
-  value: number | string;
-};
+import React from "react";
 
-export function KpiReal({ title, value }: Props) {
+/* =====================================================
+   TYPES
+===================================================== */
+
+interface KpiProps {
+
+  title: string;
+
+  value: number | string;
+
+  subtitulo?: string;
+}
+
+/* =====================================================
+   COMPONENT
+===================================================== */
+
+export function KpiReal({
+  title,
+  value,
+  subtitulo,
+}: KpiProps) {
+
   return (
+
     <div
-      style={{
-        background: "#145a32",
-        borderRadius: 16,
-        padding: 24,
-        minWidth: 220,
-        boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
-      }}
+      className="
+        min-w-[220px]
+        rounded-3xl
+        border
+        border-emerald-100
+        bg-white/90
+        p-6
+        shadow-xl
+        backdrop-blur-xl
+      "
     >
-      <p style={{ fontSize: 14, opacity: 0.85 }}>{title}</p>
-      <strong style={{ fontSize: 28 }}>{value}</strong>
+
+      {/* =====================================
+          TITLE
+      ===================================== */}
+
+      <div
+        className="
+          text-xs
+          font-black
+          uppercase
+          tracking-[0.2em]
+          text-emerald-700
+        "
+      >
+        {title}
+      </div>
+
+      {/* =====================================
+          VALUE
+      ===================================== */}
+
+      <div
+        className="
+          mt-4
+          text-4xl
+          font-black
+          tracking-tight
+          text-emerald-950
+        "
+      >
+        {value}
+      </div>
+
+      {/* =====================================
+          SUBTITLE
+      ===================================== */}
+
+      {subtitulo && (
+
+        <div
+          className="
+            mt-3
+            text-sm
+            text-neutral-500
+          "
+        >
+          {subtitulo}
+        </div>
+      )}
+
     </div>
   );
 }

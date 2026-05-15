@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  useState,
   useEffect,
+  useState,
 } from "react";
 
 import {
@@ -10,18 +10,25 @@ import {
 } from "next/navigation";
 
 import {
-  createClient,
+  createBrowserClient,
 } from "@/app/lib/supabase-browser";
 
 import {
   getLangFromClient,
-  t,
   Lang,
   setLangClient,
 } from "@/app/lib/i18n";
 
+/* =========================================================
+   SUPABASE
+========================================================= */
+
 const supabase =
-  createClient();
+  createBrowserClient();
+
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 export default function LoginClient() {
 
@@ -29,12 +36,12 @@ export default function LoginClient() {
     useSearchParams();
 
   /* =====================================================
-     NEXT
+     NEXT ROUTE
   ===================================================== */
 
   const next =
-    searchParams?.get("next") ||
-    "/dashboard";
+    searchParams?.get("next")
+    || "/dashboard";
 
   /* =====================================================
      STATES
@@ -49,27 +56,33 @@ export default function LoginClient() {
   const [loading, setLoading] =
     useState(false);
 
+  const [mounted, setMounted] =
+    useState(false);
+
   const [errorMsg, setErrorMsg] =
-    useState<string | null>(null);
+    useState<string | null>(
+      null
+    );
 
   const [lang, setLang] =
     useState<Lang>("pt");
 
-  const [mounted, setMounted] =
-    useState(false);
-
   /* =====================================================
-     ONBOARDING CONTEXT
+     CONTEXTO CHECKOUT
   ===================================================== */
 
   const [plano, setPlano] =
-    useState<string | null>(null);
+    useState<string | null>(
+      null
+    );
 
   const [periodo, setPeriodo] =
-    useState<string | null>(null);
+    useState<string | null>(
+      null
+    );
 
   /* =====================================================
-     LANG + CONTEXTO
+     INIT
   ===================================================== */
 
   useEffect(() => {
@@ -79,23 +92,35 @@ export default function LoginClient() {
 
     setLang(detected);
 
-    const planoStorage =
-      localStorage.getItem(
-        "checkout_plano"
+    try {
+
+      const planoStorage =
+        localStorage.getItem(
+          "checkout_plano"
+        );
+
+      const periodoStorage =
+        localStorage.getItem(
+          "checkout_periodo"
+        );
+
+      setPlano(
+        planoStorage
       );
 
-    const periodoStorage =
-      localStorage.getItem(
-        "checkout_periodo"
+      setPeriodo(
+        periodoStorage
       );
 
-    setPlano(
-      planoStorage
-    );
+    } catch (
+      err
+    ) {
 
-    setPeriodo(
-      periodoStorage
-    );
+      console.error(
+        "LOCAL STORAGE ERROR:",
+        err
+      );
+    }
 
     setMounted(true);
 
@@ -107,154 +132,152 @@ export default function LoginClient() {
 
   function getPlanoLabel() {
 
-    if (
-      plano === "basico"
-    ) {
+    switch (plano) {
 
-      return (
-        lang === "pt"
+      case "basico":
+
+        return lang === "pt"
           ? "Plano Básico"
-          : lang === "es"
-          ? "Plan Básico"
-          : "Basic Plan"
-      );
-    }
+          : "Plan Básico";
 
-    if (
-      plano === "profissional"
-    ) {
+      case "profissional":
 
-      return (
-        lang === "pt"
+        return lang === "pt"
           ? "Plano Profissional"
-          : lang === "es"
-          ? "Plan Profesional"
-          : "Professional Plan"
-      );
-    }
+          : "Plan Profesional";
 
-    if (
-      plano === "ultra"
-    ) {
+      case "ultra":
 
-      return "Ultra";
-    }
+        return "Ultra";
 
-    if (
-      plano === "empresarial"
-    ) {
+      case "empresarial":
 
-      return (
-        lang === "pt"
+        return lang === "pt"
           ? "Plano Empresarial"
-          : lang === "es"
-          ? "Plan Empresarial"
-          : "Enterprise Plan"
-      );
+          : "Plan Empresarial";
+
+      case "premium_dominus":
+
+        return "Premium Dominus 360°";
+
+      default:
+
+        return null;
     }
-
-    if (
-      plano === "premium_dominus"
-    ) {
-
-      return "Premium Dominus 360°";
-    }
-
-    return null;
   }
 
   function getPeriodoLabel() {
 
-    if (
-      periodo === "mensal"
-    ) {
+    switch (periodo) {
 
-      return (
-        lang === "pt"
+      case "mensal":
+
+        return lang === "pt"
           ? "Mensal"
-          : lang === "es"
-          ? "Mensual"
-          : "Monthly"
-      );
+          : "Mensual";
+
+      case "trimestral":
+
+        return "Trimestral";
+
+      case "anual":
+
+        return "Anual";
+
+      default:
+
+        return null;
     }
-
-    if (
-      periodo === "trimestral"
-    ) {
-
-      return (
-        lang === "pt"
-          ? "Trimestral"
-          : lang === "es"
-          ? "Trimestral"
-          : "Quarterly"
-      );
-    }
-
-    if (
-      periodo === "anual"
-    ) {
-
-      return (
-        lang === "pt"
-          ? "Anual"
-          : lang === "es"
-          ? "Anual"
-          : "Yearly"
-      );
-    }
-
-    return null;
   }
 
   /* =====================================================
-     LOGIN
+     LOGIN FLOW
   ===================================================== */
 
   async function handleSubmit(
-    e: React.FormEvent
+    e?: React.FormEvent
   ) {
 
-    e.preventDefault();
+    e?.preventDefault();
 
-    setErrorMsg(null);
+    if (loading) {
+      return;
+    }
+
+    console.log(
+      "🔥 LOGIN START"
+    );
 
     setLoading(true);
 
+    setErrorMsg(null);
+
     try {
 
+      /* ==========================================
+         LOGIN SUPABASE
+      ========================================== */
+
       const {
+
         data,
         error,
+
       } =
-        await supabase.auth.signInWithPassword({
+        await supabase.auth
+          .signInWithPassword({
 
-          email:
-            email.trim(),
+            email:
+              email.trim(),
 
-          password,
-        });
+            password,
+          });
+
+      console.log(
+        "AUTH RESPONSE:",
+        {
+          user:
+            data?.user?.email,
+          session:
+            !!data?.session,
+          error,
+        }
+      );
 
       /* ==========================================
-         ERRO REAL
+         LOGIN ERROR
       ========================================== */
 
       if (error) {
 
         console.error(
+          "LOGIN ERROR:",
           error
         );
 
         setErrorMsg(
-          error.message
+
+          lang === "pt"
+
+            ? "Email ou senha inválidos."
+
+            : "Email o contraseña inválidos."
         );
 
         return;
       }
 
+      /* ==========================================
+         SESSION CHECK
+      ========================================== */
+
       if (
         !data?.session
       ) {
+
+        console.error(
+          "NO SESSION"
+        );
 
         setErrorMsg(
 
@@ -262,24 +285,92 @@ export default function LoginClient() {
 
             ? "Sessão não criada."
 
-            : lang === "es"
-
-            ? "Sesión no creada."
-
-            : "Session not created."
+            : "Sesión no creada."
         );
 
         return;
       }
 
+      console.log(
+        "✅ SESSION OK"
+      );
+
       /* ==========================================
-         ONBOARDING PREMIUM
+         AGUARDA COOKIE SSR
+      ========================================== */
+
+      await new Promise(
+        (resolve) =>
+
+          setTimeout(
+            resolve,
+            2200
+          )
+      );
+
+      /* ==========================================
+         VALIDAR ASSINATURA
+      ========================================== */
+
+      const response =
+        await fetch(
+
+          "/api/assinaturas/status",
+
+          {
+            method: "GET",
+
+            credentials:
+              "include",
+
+            cache:
+              "no-store",
+          }
+        );
+
+      /* ==========================================
+         RESPONSE ERROR
+      ========================================== */
+
+      if (!response.ok) {
+
+        console.error(
+          "STATUS RESPONSE ERROR:",
+          response.status
+        );
+
+        setErrorMsg(
+
+          lang === "pt"
+
+            ? "Erro ao validar assinatura."
+
+            : "Error al validar suscripción."
+        );
+
+        return;
+      }
+
+      const assinatura =
+        await response.json();
+
+      console.log(
+        "📦 ASSINATURA:",
+        assinatura
+      );
+
+      /* ==========================================
+         CONTEXTO CHECKOUT
       ========================================== */
 
       if (
         plano &&
         periodo
       ) {
+
+        console.log(
+          "🟢 REDIRECT CHECKOUT"
+        );
 
         window.location.href =
           `/checkout?plano=${plano}&periodo=${periodo}`;
@@ -288,17 +379,38 @@ export default function LoginClient() {
       }
 
       /* ==========================================
-         DEFAULT
+         ASSINATURA ATIVA
       ========================================== */
 
-      window.location.href =
-        next;
+      if (
+        assinatura?.ativo === true
+      ) {
 
-    } catch (
-      err
-    ) {
+        console.log(
+          "🟢 REDIRECT DASHBOARD"
+        );
+
+        window.location.href =
+          next;
+
+        return;
+      }
+
+      /* ==========================================
+         SEM ASSINATURA
+      ========================================== */
+
+      console.log(
+        "🟡 REDIRECT PLANOS"
+      );
+
+      window.location.href =
+        "/planos";
+
+    } catch (err) {
 
       console.error(
+        "💥 LOGIN FATAL:",
         err
       );
 
@@ -308,11 +420,7 @@ export default function LoginClient() {
 
           ? "Erro inesperado no login."
 
-          : lang === "es"
-
-          ? "Error inesperado."
-
-          : "Unexpected login error."
+          : "Error inesperado."
       );
 
     } finally {
@@ -333,9 +441,9 @@ export default function LoginClient() {
       "
     >
 
-      {/* =====================================
-          CONTEXTO COGNITIVO
-      ===================================== */}
+      {/* =================================================
+          CONTEXTO ASSINATURA
+      ================================================= */}
 
       {mounted &&
         plano &&
@@ -361,18 +469,15 @@ export default function LoginClient() {
               text-emerald-700
             "
           >
-            {
 
+            {
               lang === "pt"
 
                 ? "Continuidade da Assinatura"
 
-                : lang === "es"
-
-                ? "Continuidad de Suscripción"
-
-                : "Subscription Continuity"
+                : "Continuidad de Suscripción"
             }
+
           </div>
 
           <div
@@ -405,9 +510,9 @@ export default function LoginClient() {
         </div>
       )}
 
-      {/* =====================================
+      {/* =================================================
           FORM
-      ===================================== */}
+      ================================================= */}
 
       <form
         onSubmit={handleSubmit}
@@ -418,17 +523,11 @@ export default function LoginClient() {
 
         <input
           type="email"
+          autoComplete="email"
           placeholder={
-
             lang === "pt"
-
               ? "Seu email"
-
-              : lang === "es"
-
-              ? "Tu email"
-
-              : "Your email"
+              : "Tu email"
           }
           value={email}
           onChange={(e) =>
@@ -455,17 +554,11 @@ export default function LoginClient() {
 
         <input
           type="password"
+          autoComplete="current-password"
           placeholder={
-
             lang === "pt"
-
               ? "Sua senha"
-
-              : lang === "es"
-
-              ? "Tu contraseña"
-
-              : "Your password"
+              : "Tu contraseña"
           }
           value={password}
           onChange={(e) =>
@@ -490,10 +583,6 @@ export default function LoginClient() {
           required
         />
 
-        {/* =====================================
-            ERROR
-        ===================================== */}
-
         {errorMsg && (
 
           <div
@@ -511,10 +600,6 @@ export default function LoginClient() {
             {errorMsg}
           </div>
         )}
-
-        {/* =====================================
-            BUTTON
-        ===================================== */}
 
         <button
           type="submit"
@@ -535,6 +620,7 @@ export default function LoginClient() {
             duration-300
             hover:scale-[1.01]
             hover:shadow-2xl
+            disabled:cursor-not-allowed
             disabled:opacity-70
           "
         >
@@ -542,38 +628,24 @@ export default function LoginClient() {
           {loading
 
             ? (
-
               lang === "pt"
-
                 ? "Processando..."
-
-                : lang === "es"
-
-                ? "Procesando..."
-
-                : "Processing..."
+                : "Procesando..."
             )
 
             : (
-
               lang === "pt"
-
                 ? "Entrar"
-
-                : lang === "es"
-
-                ? "Ingresar"
-
-                : "Sign In"
+                : "Ingresar"
             )}
 
         </button>
 
       </form>
 
-      {/* =====================================
-          SWITCHER
-      ===================================== */}
+      {/* =================================================
+          LANG SWITCH
+      ================================================= */}
 
       <div
         className="
@@ -592,9 +664,7 @@ export default function LoginClient() {
 
             setLang("pt");
 
-            setLangClient(
-              "pt"
-            );
+            setLangClient("pt");
           }}
           className={`
             transition-all
@@ -617,9 +687,7 @@ export default function LoginClient() {
 
             setLang("es");
 
-            setLangClient(
-              "es"
-            );
+            setLangClient("es");
           }}
           className={`
             transition-all
@@ -634,31 +702,6 @@ export default function LoginClient() {
           `}
         >
           🇪🇸 ES
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-
-            setLang("en");
-
-            setLangClient(
-              "en"
-            );
-          }}
-          className={`
-            transition-all
-
-            ${
-              lang === "en"
-
-                ? "font-black text-green-700"
-
-                : "text-neutral-500"
-            }
-          `}
-        >
-          🇺🇸 EN
         </button>
 
       </div>

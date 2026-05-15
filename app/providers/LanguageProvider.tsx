@@ -1,44 +1,147 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { Lang, getLangFromClient, setLangClient } from "@/app/lib/i18n";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+export type Lang =
+  | "pt"
+  | "es";
 
 type LanguageContextType = {
   lang: Lang;
-  setLang: (lang: Lang) => void;
+  setLang: (
+    lang: Lang
+  ) => void;
 };
 
-const LanguageContext = createContext<LanguageContextType | null>(null);
+const LanguageContext =
+  createContext<
+    LanguageContextType | undefined
+  >(undefined);
+
+/* =====================================================
+   STORAGE KEY
+===================================================== */
+
+const STORAGE_KEY =
+  "pecuariatech_lang";
+
+/* =====================================================
+   PROVIDER
+===================================================== */
 
 export function LanguageProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [lang, setLangState] = useState<Lang>("pt");
+
+  const [lang, setLangState] =
+    useState<Lang>("pt");
+
+  /* ===================================================
+     INIT
+  =================================================== */
 
   useEffect(() => {
-    const saved = getLangFromClient();
-    setLangState(saved);
+
+    try {
+
+      const saved =
+        localStorage.getItem(
+          STORAGE_KEY
+        ) as Lang | null;
+
+      if (
+        saved === "pt"
+        ||
+        saved === "es"
+      ) {
+
+        setLangState(saved);
+
+        return;
+      }
+
+      setLangState("pt");
+
+    } catch {
+
+      setLangState("pt");
+    }
+
   }, []);
 
-  function setLang(lang: Lang) {
-    setLangClient(lang);
-    setLangState(lang);
+  /* ===================================================
+     SET LANG
+  =================================================== */
+
+  function setLang(
+    nextLang: Lang
+  ) {
+
+    try {
+
+      localStorage.setItem(
+        STORAGE_KEY,
+        nextLang
+      );
+
+    } catch {}
+
+    setLangState(nextLang);
   }
 
+  /* ===================================================
+     MEMO
+  =================================================== */
+
+  const value =
+    useMemo(
+      () => ({
+        lang,
+        setLang,
+      }),
+      [lang]
+    );
+
+  /* ===================================================
+     PROVIDER
+  =================================================== */
+
   return (
-    <LanguageContext.Provider value={{ lang, setLang }}>
+
+    <LanguageContext.Provider
+      value={value}
+    >
+
       {children}
+
     </LanguageContext.Provider>
   );
 }
 
+/* =====================================================
+   HOOK
+===================================================== */
+
 export function useLanguage() {
-  const context = useContext(LanguageContext);
+
+  const context =
+    useContext(
+      LanguageContext
+    );
 
   if (!context) {
-    throw new Error("useLanguage must be used inside LanguageProvider");
+
+    throw new Error(
+      "useLanguage must be used inside LanguageProvider"
+    );
   }
 
   return context;

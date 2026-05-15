@@ -1,60 +1,245 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+// app/api/financeiro/profissional/route.ts
+// PecuariaTech — Financeiro Profissional
+//
+// Runtime estabilizado:
+// ✔ Next.js 16
+// ✔ Supabase SSR cookie-first
+// ✔ Equação Y
+// ✔ Regra Z
+// ✔ Fail-safe
+// ✔ Runtime resiliente
+// ✔ Sem cookies legacy
+// ✔ Sem get/set/remove
+// ✔ Sem getAll manual
+//
+// Arquitetura oficial:
+// createSSRClient centralizado
 
-export const runtime = "nodejs";
+import {
+  NextResponse,
+} from "next/server";
 
-function supabaseSSR() {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+import {
+  createSSRClient,
+} from "@/app/lib/supabase/server";
+
+export const runtime =
+  "nodejs";
+
+export const dynamic =
+  "force-dynamic";
+
+/* =====================================================
+   TYPES
+===================================================== */
+
+type FinanceiroRow = {
+
+  id?: string;
+
+  user_id?: string;
+
+  data?: string;
+
+  categoria?: string;
+
+  descricao?: string;
+
+  valor?: number;
+
+  tipo?: string;
+};
+
+type ResponseOK = {
+
+  ok: true;
+
+  rows:
+    FinanceiroRow[];
+
+  ts: string;
+};
+
+/* =====================================================
+   JSON
+===================================================== */
+
+function json(
+  data: any,
+  status = 200
+) {
+
+  return NextResponse.json(
+    data,
     {
-      cookies: {
-        getAll() {
-          return cookies().getAll();
-        },
-        setAll(cookiesToSet) {
-          const store = cookies();
-          cookiesToSet.forEach(({ name, value, options }) => {
-            store.set(name, value, options);
-          });
-        },
+      status,
+
+      headers: {
+        "Cache-Control":
+          "no-store",
       },
     }
   );
 }
 
+/* =====================================================
+   GET
+===================================================== */
+
 export async function GET() {
+
   try {
-    const supabase = supabaseSSR();
+
+    /* ==========================================
+       SSR CLIENT
+    ========================================== */
+
+    const supabase =
+      await createSSRClient();
+
+    /* ==========================================
+       AUTH
+    ========================================== */
 
     const {
-      data: { user },
+
+      data: {
+        user,
+      },
+
       error: authError,
-    } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      return NextResponse.json({ ok: false, reason: "no_session" }, { status: 401 });
-    }
+    } =
+      await supabase
+        .auth
+        .getUser();
 
-    const { data, error } = await supabase
-      .from("financeiro_profissional_view")
-      .select("*")
-      .eq("user_id", user.id)
-      .limit(300);
+    /* ==========================================
+       REGRA Z
+    ========================================== */
 
-    if (error) {
-      return NextResponse.json(
-        { ok: false, reason: "db_error", error: error.message },
-        { status: 500 }
+    if (
+      authError ||
+      !user
+    ) {
+
+      return json(
+
+        {
+
+          ok: false,
+
+          reason:
+            "no_session",
+        },
+
+        401
       );
     }
 
-    return NextResponse.json({ ok: true, rows: data ?? [] });
-  } catch (e: any) {
-    return NextResponse.json(
-      { ok: false, reason: "internal_error", message: e?.message ?? "unknown" },
-      { status: 500 }
+    /* ==========================================
+       QUERY
+    ========================================== */
+
+    const {
+
+      data,
+
+      error,
+
+    } =
+      await supabase
+
+        .from(
+          "financeiro_profissional_view"
+        )
+
+        .select("*")
+
+        .eq(
+          "user_id",
+          user.id
+        )
+
+        .order(
+          "data",
+          {
+            ascending: false,
+          }
+        );
+
+    /* ==========================================
+       DB ERROR
+    ========================================== */
+
+    if (error) {
+
+      return json(
+
+        {
+
+          ok: false,
+
+          reason:
+            "db_error",
+
+          message:
+            error.message,
+        },
+
+        500
+      );
+    }
+
+    /* ==========================================
+       PAYLOAD
+    ========================================== */
+
+    const payload:
+      ResponseOK = {
+
+      ok: true,
+
+      rows:
+        (data ??
+          []) as FinanceiroRow[],
+
+      ts:
+        new Date()
+          .toISOString(),
+    };
+
+    /* ==========================================
+       SUCCESS
+    ========================================== */
+
+    return json(
+      payload
+    );
+
+  } catch (
+    e: any
+  ) {
+
+    /* ==========================================
+       FAIL SAFE
+    ========================================== */
+
+    return json(
+
+      {
+
+        ok: false,
+
+        reason:
+          "internal_error",
+
+        message:
+          e?.message ??
+          "unknown",
+      },
+
+      500
     );
   }
 }

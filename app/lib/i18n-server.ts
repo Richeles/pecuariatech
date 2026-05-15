@@ -1,42 +1,106 @@
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+// app/lib/i18n-server.ts
+// PecuariaTech Runtime
+// SSR Language Runtime
+// Next.js 16 Canonical Runtime
+// PT-BR + ES-ES ONLY
+// Equação X
+// Equação Y
+// Regra Z
 
-export type Lang = "pt" | "es";
+import {
+  cookies,
+} from "next/headers";
 
-export async function getLangFromServer(): Promise<Lang> {
+/* =====================================================
+   TYPES
+===================================================== */
+
+export type Lang =
+  | "pt"
+  | "es";
+
+/* =====================================================
+   DEFAULT
+===================================================== */
+
+const DEFAULT_LANG:
+  Lang = "pt";
+
+/* =====================================================
+   VALIDATE
+===================================================== */
+
+function isValidLang(
+  value?: string | null
+): value is Lang {
+
+  return (
+
+    value === "pt" ||
+
+    value === "es"
+  );
+}
+
+/* =====================================================
+   GET LANG FROM SERVER
+===================================================== */
+
+export async function getLangFromServer():
+  Promise<Lang> {
+
   try {
-    const cookieStore = await cookies();
 
-    // 1️⃣ COOKIE (PRIORIDADE)
-    const cookieLang = cookieStore.get("lang")?.value;
-    if (cookieLang === "es") return "es";
+    /* ==========================================
+       NEXT 16
+    ========================================== */
 
-    // 2️⃣ USER PROFILE (SUPABASE)
-    try {
-      const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { cookies }
-      );
+    const cookieStore =
+      await cookies();
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    /* ==========================================
+       LANG COOKIE
+    ========================================== */
 
-      if (user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("lang")
-          .eq("id", user.id)
-          .single();
+    const lang =
+      cookieStore
+        .get(
+          "lang"
+        )
+        ?.value;
 
-        if (data?.lang === "es") return "es";
-      }
-    } catch {}
+    /* ==========================================
+       VALIDATION
+    ========================================== */
 
-    // 3️⃣ DEFAULT
-    return "pt";
-  } catch {
-    return "pt";
+    if (
+      isValidLang(
+        lang
+      )
+    ) {
+
+      return lang;
+    }
+
+    /* ==========================================
+       DEFAULT
+    ========================================== */
+
+    return DEFAULT_LANG;
+
+  } catch (
+    error
+  ) {
+
+    console.error(
+      "[I18N_SERVER]",
+      error
+    );
+
+    /* ==========================================
+       FAIL SAFE
+    ========================================== */
+
+    return DEFAULT_LANG;
   }
 }

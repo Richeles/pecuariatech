@@ -1,310 +1,512 @@
-// app/api/assinaturas/status/route.ts
+// =========================================================
+// PecuariaTech
+// API — Assinatura Status
+// Next.js 16
+// Equação Y + Regra Z + Triângulo 360
+// =========================================================
 
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
 
-export const dynamic = "force-dynamic";
+import {
+  createServerClient,
+} from "@supabase/ssr";
 
-/* ============================================================================
-   MATRIZ DE BENEFÍCIOS (EQUAÇÃO Z)
-============================================================================ */
+export const dynamic =
+  "force-dynamic";
 
-function getBeneficios(nivel: number) {
-  /**
-   * MASTER / ROOT
-   */
+/* =========================================================
+   BENEFÍCIOS
+========================================================= */
+
+function getBeneficios(
+  nivel: number
+) {
+
+  // =====================================================
+  // MASTER
+  // =====================================================
+
   if (nivel >= 999) {
+
     return {
+
       all: true,
 
-      /**
-       * Premium Governance
-       */
-      cfo_ultra: true,
-      motor_pi: true,
-
-      /**
-       * Core
-       */
+      // CORE
       rebanho: true,
       pastagem: true,
       financeiro: true,
 
-      /**
-       * Ultra
-       */
+      // PREMIUM
+      cfo: true,
+      cfo_ultra: true,
+
+      // IA
+      motor_pi: true,
+
+      // ULTRA
       engorda_ultra: true,
 
-      /**
-       * Enterprise
-       */
+      // ENTERPRISE
       multiusuario: true,
       esg: true,
     };
   }
 
+  // =====================================================
+  // PLANOS NORMAIS
+  // =====================================================
+
   return {
-    /**
-     * Base
-     */
+
+    // CORE
     rebanho: true,
     pastagem: true,
 
-    /**
-     * Financeiro Progressivo
-     */
-    financeiro: nivel >= 2,
+    // FINANCEIRO
+    financeiro:
+      nivel >= 2,
 
-    /**
-     * Premium Governance
-     */
-    cfo: nivel >= 3,
-    cfo_ultra: nivel >= 3,
-    motor_pi: nivel >= 3,
+    // PREMIUM
+    cfo:
+      nivel >= 3,
 
-    /**
-     * Ultra
-     */
-    engorda_ultra: nivel >= 3,
+    cfo_ultra:
+      nivel >= 3,
 
-    /**
-     * Enterprise
-     */
-    multiusuario: nivel >= 4,
-    esg: nivel >= 3,
+    motor_pi:
+      nivel >= 3,
+
+    // ULTRA
+    engorda_ultra:
+      nivel >= 3,
+
+    // ENTERPRISE
+    multiusuario:
+      nivel >= 4,
+
+    esg:
+      nivel >= 3,
   };
 }
 
-/* ============================================================================
+/* =========================================================
    GET
-============================================================================ */
+========================================================= */
 
 export async function GET() {
-  console.log("🔥 /api/assinaturas/status EXECUTANDO");
 
   try {
-    const cookieStore = await cookies();
 
-    /* =========================================================================
-       SUPABASE SSR COOKIE-FIRST
-    ========================================================================= */
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll().map((c) => ({
-              name: c.name,
-              value: c.value,
-            }));
-          },
-
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              try {
-                cookieStore.set(name, value, options);
-              } catch {}
-            });
-          },
-        },
-      }
+    console.log(
+      "🔥 /api/assinaturas/status"
     );
 
-    /* =========================================================================
-       1) SESSION
-    ========================================================================= */
+    // =====================================================
+    // COOKIES SSR
+    // =====================================================
+
+    const cookieStore =
+      await cookies();
+
+    // =====================================================
+    // SUPABASE SSR
+    // =====================================================
+
+    const supabase =
+      createServerClient(
+
+        process.env
+          .NEXT_PUBLIC_SUPABASE_URL!,
+
+        process.env
+          .NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+
+        {
+          cookies: {
+
+            getAll() {
+
+              return cookieStore
+                .getAll()
+                .map((cookie) => ({
+
+                  name:
+                    cookie.name,
+
+                  value:
+                    cookie.value,
+                }));
+            },
+
+            setAll(
+              cookiesToSet
+            ) {
+
+              cookiesToSet.forEach(
+
+                ({
+                  name,
+                  value,
+                  options,
+                }) => {
+
+                  try {
+
+                    cookieStore.set(
+                      name,
+                      value,
+                      options
+                    );
+
+                  } catch {}
+                }
+              );
+            },
+          },
+        }
+      );
+
+    // =====================================================
+    // USER
+    // =====================================================
 
     const {
+
       data: { user },
-    } = await supabase.auth.getUser();
+
+      error: userError,
+
+    } =
+      await supabase.auth
+        .getUser();
+
+    console.log(
+      "👤 USER:",
+      user?.email
+    );
+
+    // =====================================================
+    // USER ERROR
+    // =====================================================
+
+    if (userError) {
+
+      console.error(
+        "❌ USER ERROR:",
+        userError
+      );
+
+      return NextResponse.json({
+
+        ativo: false,
+
+        reason:
+          "user_error",
+      });
+    }
+
+    // =====================================================
+    // SEM SESSÃO
+    // =====================================================
 
     if (!user) {
+
       return NextResponse.json({
+
         ativo: false,
-        reason: "no_session",
+
+        reason:
+          "no_session",
       });
     }
 
-    /* =========================================================================
-       2) ADMIN MASTER OVERRIDE
-    ========================================================================= */
+    // =====================================================
+    // MASTER EMAIL
+    // =====================================================
 
-    if (user.email === "pecuariatech2026@gmail.com") {
+    if (
+      user.email ===
+      "pecuariatech2026@gmail.com"
+    ) {
+
+      console.log(
+        "🟢 MASTER EMAIL"
+      );
+
       return NextResponse.json({
+
         ativo: true,
 
         plano: "master",
+
         nivel: 999,
 
-        beneficios: {
-          all: true,
-          cfo_ultra: true,
-          motor_pi: true,
-        },
-
-        /**
-         * Premium Governance Layer
-         */
-        premium: {
-          cfo_ultra: {
-            locked: false,
-            preview: true,
-            feature: "cfo_ultra",
-            summary: "Governança financeira avançada ativa",
-          },
-        },
+        beneficios:
+          getBeneficios(999),
 
         is_admin: true,
+
         expires_at: null,
-        reason: "admin_email_override",
+
+        reason:
+          "admin_email_override",
       });
     }
 
-    /* =========================================================================
-       3) ADMIN USERS
-    ========================================================================= */
+    // =====================================================
+    // ADMIN USERS
+    // =====================================================
 
-    const { data: admin } = await supabase
-      .from("admin_users")
-      .select("user_id")
-      .eq("user_id", user.id)
-      .eq("role", "master")
-      .eq("ativo", true)
-      .maybeSingle();
+    const {
+
+      data: admin,
+
+      error: adminError,
+
+    } =
+      await supabase
+        .from("admin_users")
+        .select(`
+          user_id,
+          role,
+          ativo,
+          is_active
+        `)
+        .eq(
+          "user_id",
+          user.id
+        )
+        .eq(
+          "role",
+          "master"
+        )
+        .or(
+          "ativo.eq.true,is_active.eq.true"
+        )
+        .maybeSingle();
+
+    if (adminError) {
+
+      console.error(
+        "❌ ADMIN ERROR:",
+        adminError
+      );
+    }
+
+    // =====================================================
+    // MASTER OVERRIDE
+    // =====================================================
 
     if (admin) {
+
+      console.log(
+        "🟢 ADMIN OVERRIDE"
+      );
+
       return NextResponse.json({
+
         ativo: true,
 
         plano: "master",
+
         nivel: 999,
 
-        beneficios: {
-          all: true,
-          cfo_ultra: true,
-          motor_pi: true,
-        },
-
-        /**
-         * Premium Governance Layer
-         */
-        premium: {
-          cfo_ultra: {
-            locked: false,
-            preview: true,
-            feature: "cfo_ultra",
-            summary: "Governança financeira avançada ativa",
-          },
-        },
+        beneficios:
+          getBeneficios(999),
 
         is_admin: true,
+
         expires_at: null,
-        reason: "admin_override",
+
+        reason:
+          "admin_override",
       });
     }
 
-    /* =========================================================================
-       4) ASSINATURA
-    ========================================================================= */
+    // =====================================================
+    // ASSINATURA
+    // =====================================================
 
-    const { data: assinatura, error } = await supabase
-      .from("assinaturas")
-      .select("plano, nivel, status, expires_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const {
+
+      data: assinatura,
+
+      error,
+
+    } =
+      await supabase
+        .from("assinaturas")
+        .select(`
+          plano,
+          nivel,
+          status,
+          expires_at,
+          atualizado_em
+        `)
+        .eq(
+          "user_id",
+          user.id
+        )
+        .order(
+          "atualizado_em",
+          {
+            ascending: false,
+          }
+        )
+        .limit(1)
+        .maybeSingle();
+
+    console.log(
+      "📦 ASSINATURA:",
+      assinatura
+    );
+
+    // =====================================================
+    // ERRO
+    // =====================================================
 
     if (error) {
-      console.error("❌ ERRO ASSINATURA:", error);
+
+      console.error(
+        "❌ ASSINATURA ERROR:",
+        error
+      );
 
       return NextResponse.json({
+
         ativo: false,
-        reason: "internal_error",
+
+        reason:
+          "internal_error",
       });
     }
+
+    // =====================================================
+    // SEM ASSINATURA
+    // =====================================================
 
     const isAtiva =
-      assinatura?.status === "ativa" ||
-      assinatura?.status === "ativo";
 
-    if (!assinatura || !isAtiva) {
+      assinatura?.status ===
+        "ativa"
+
+      ||
+
+      assinatura?.status ===
+        "ativo";
+
+    if (
+      !assinatura
+      ||
+      !isAtiva
+    ) {
+
       return NextResponse.json({
+
         ativo: false,
-        reason: "no_subscription",
+
+        reason:
+          "no_subscription",
       });
     }
 
-    /* =========================================================================
-       5) BENEFÍCIOS
-    ========================================================================= */
+    // =====================================================
+    // NÍVEL CANÔNICO
+    // =====================================================
 
-    const nivel = Number(assinatura.nivel || 0);
+    let nivel = 1;
 
-    const beneficios = getBeneficios(nivel);
+    const plano =
+      String(
+        assinatura.plano || ""
+      ).toLowerCase();
 
-    /**
-     * CFO ULTRA
-     */
-    const cfoUltraEnabled =
-      beneficios?.all === true ||
-      beneficios?.cfo_ultra === true;
+    switch (plano) {
 
-    /* =========================================================================
-       6) RESPONSE FINAL
-    ========================================================================= */
+      case "basico":
+
+        nivel = 1;
+        break;
+
+      case "pro":
+
+      case "profissional":
+
+        nivel = 2;
+        break;
+
+      case "ultra":
+
+        nivel = 3;
+        break;
+
+      case "enterprise":
+
+      case "empresarial":
+
+      case "premium_dominus":
+
+        nivel = 4;
+        break;
+
+      case "master":
+
+        nivel = 999;
+        break;
+
+      default:
+
+        nivel = 1;
+    }
+
+    // =====================================================
+    // BENEFÍCIOS
+    // =====================================================
+
+    const beneficios =
+      getBeneficios(
+        nivel
+      );
+
+    // =====================================================
+    // RESPONSE
+    // =====================================================
 
     return NextResponse.json({
+
       ativo: true,
 
-      /**
-       * Plano
-       */
-      plano: assinatura.plano,
+      plano:
+        assinatura.plano,
 
       nivel,
 
-      /**
-       * Benefícios
-       */
       beneficios,
 
-      /**
-       * Premium Governance Layer
-       */
-      premium: {
-        cfo_ultra: {
-          locked: !cfoUltraEnabled,
-
-          preview: true,
-
-          feature: "cfo_ultra",
-
-          summary: cfoUltraEnabled
-            ? "Governança financeira avançada ativa"
-            : "Estabilidade projetada com oscilação em T+180 dias",
-        },
-      },
-
-      /**
-       * Meta
-       */
       is_admin: false,
 
-      expires_at: assinatura.expires_at ?? null,
+      expires_at:
+        assinatura.expires_at
+        ?? null,
 
       reason: "ok",
     });
 
   } catch (err) {
-    console.error("💥 ERRO CRÍTICO:", err);
+
+    console.error(
+      "💥 ERRO CRÍTICO:",
+      err
+    );
 
     return NextResponse.json({
+
       ativo: false,
-      reason: "internal_error",
+
+      reason:
+        "internal_error",
     });
   }
 }

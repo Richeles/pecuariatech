@@ -1,23 +1,25 @@
-// proxy.ts
+// =========================================================
 // PecuariaTech Enterprise Runtime
+// Proxy SSR Canonical ULTRA
+// Equação Y + Regra Z + Triângulo 360
 // Runtime SaaS estabilizado
-// Sem locale routing
+// =========================================================
 
 import {
   NextRequest,
   NextResponse,
 } from "next/server";
 
-/* =====================================================
-   PUBLIC
-===================================================== */
+/* =========================================================
+   PUBLIC FILE
+========================================================= */
 
 const PUBLIC_FILE =
   /\.(.*)$/;
 
-/* =====================================================
+/* =========================================================
    PROXY
-===================================================== */
+========================================================= */
 
 export function proxy(
   req: NextRequest
@@ -27,23 +29,46 @@ export function proxy(
     pathname,
   } = req.nextUrl;
 
-  /* ==========================================
-     IGNORAR
-  ========================================== */
+  console.log(
+    "🛰️ PROXY:",
+    pathname
+  );
+
+  /* =====================================================
+     IGNORAR RUNTIME
+  ===================================================== */
 
   if (
 
     pathname.startsWith(
       "/_next"
-    ) ||
+    )
 
-    pathname.startsWith(
-      "/api"
-    ) ||
+    ||
 
     pathname.startsWith(
       "/favicon"
-    ) ||
+    )
+
+    ||
+
+    pathname.startsWith(
+      "/images"
+    )
+
+    ||
+
+    pathname.startsWith(
+      "/icons"
+    )
+
+    ||
+
+    pathname.startsWith(
+      "/api"
+    )
+
+    ||
 
     PUBLIC_FILE.test(
       pathname
@@ -53,13 +78,13 @@ export function proxy(
     return NextResponse.next();
   }
 
-  /* ==========================================
-     LIMPEZA LOCALE ANTIGO
-  ========================================== */
+  /* =====================================================
+     LOCALE CLEAN
+  ===================================================== */
 
   if (
-
-    pathname === "/pt" ||
+    pathname === "/pt"
+    ||
     pathname === "/es"
   ) {
 
@@ -76,7 +101,9 @@ export function proxy(
 
   if (
 
-    pathname.startsWith("/pt/") ||
+    pathname.startsWith("/pt/")
+    ||
+
     pathname.startsWith("/es/")
   ) {
 
@@ -96,45 +123,70 @@ export function proxy(
     );
   }
 
-  /* ==========================================
-     AUTH
-  ========================================== */
+  /* =====================================================
+     COOKIES SSR SUPABASE
+  ===================================================== */
 
-  const accessToken =
-    req.cookies.get(
-      "sb-access-token"
-    )?.value;
+  const allCookies =
+    req.cookies.getAll();
 
-  const hasSession =
-    Boolean(
-      accessToken
+  const hasSupabaseCookie =
+
+    allCookies.some(
+      (cookie) =>
+
+        cookie.name.includes(
+          "auth-token"
+        )
     );
 
-  /* ==========================================
+  console.log(
+    "🍪 SSR COOKIE:",
+    hasSupabaseCookie
+  );
+
+  /* =====================================================
      ROTAS
-  ========================================== */
+  ===================================================== */
 
   const isLogin =
-    pathname ===
-    "/login";
+    pathname === "/login";
 
   const isCadastro =
-    pathname ===
-    "/cadastro";
+    pathname === "/cadastro";
 
   const isDashboard =
     pathname.startsWith(
       "/dashboard"
     );
 
-  /* ==========================================
+  const isPublicPage =
+
+    pathname === "/"
+    ||
+
+    pathname === "/planos"
+    ||
+
+    pathname === "/sobre"
+    ||
+
+    pathname === "/contato";
+
+  /* =====================================================
      REGRA Z
-  ========================================== */
+     SEM COOKIE -> LOGIN
+  ===================================================== */
 
   if (
-    !hasSession &&
+    !hasSupabaseCookie
+    &&
     isDashboard
   ) {
+
+    console.log(
+      "🔴 NO SESSION"
+    );
 
     const url =
       req.nextUrl.clone();
@@ -147,17 +199,27 @@ export function proxy(
     );
   }
 
-  /* ==========================================
+  /* =====================================================
      LOGIN/CADASTRO
-  ========================================== */
+     COM COOKIE -> DASHBOARD
+  ===================================================== */
 
   if (
-    hasSession &&
+
+    hasSupabaseCookie
+
+    &&
+
     (
-      isLogin ||
+      isLogin
+      ||
       isCadastro
     )
   ) {
+
+    console.log(
+      "🟢 SESSION OK"
+    );
 
     const url =
       req.nextUrl.clone();
@@ -170,20 +232,33 @@ export function proxy(
     );
   }
 
-  /* ==========================================
-     NEXT
-  ========================================== */
+  /* =====================================================
+     CACHE SAFE
+  ===================================================== */
 
-  return NextResponse.next();
+  const response =
+    NextResponse.next();
+
+  response.headers.set(
+    "x-pecuariatech-runtime",
+    "proxy-ultra"
+  );
+
+  response.headers.set(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate"
+  );
+
+  return response;
 }
 
-/* =====================================================
+/* =========================================================
    MATCHER
-===================================================== */
+========================================================= */
 
 export const config = {
 
   matcher: [
-    "/((?!_next|favicon.ico).*)",
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };

@@ -1,60 +1,160 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import {
+  NextResponse,
+} from "next/server";
 
-export const runtime = "nodejs";
+import {
+  createSSRClient,
+} from "@/app/lib/supabase/server";
 
-function supabaseSSR() {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookies().getAll();
-        },
-        setAll(cookiesToSet) {
-          const store = cookies();
-          cookiesToSet.forEach(({ name, value, options }) => {
-            store.set(name, value, options);
-          });
-        },
-      },
-    }
-  );
-}
+export const runtime =
+  "nodejs";
+
+export const dynamic =
+  "force-dynamic";
+
+/* =====================================================
+   GET
+===================================================== */
 
 export async function GET() {
+
   try {
-    const supabase = supabaseSSR();
+
+    /* ==========================================
+       SSR CLIENT
+    ========================================== */
+
+    const supabase =
+      await createSSRClient();
+
+    /* ==========================================
+       AUTH
+    ========================================== */
 
     const {
-      data: { user },
+
+      data: {
+        user,
+      },
+
       error: authError,
-    } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      return NextResponse.json({ ok: false, reason: "no_session" }, { status: 401 });
-    }
+    } =
+      await supabase.auth.getUser();
 
-    const { data, error } = await supabase
-      .from("financeiro_basico_view")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    /* ==========================================
+       REGRA Z
+    ========================================== */
 
-    if (error) {
+    if (
+      authError ||
+      !user
+    ) {
+
       return NextResponse.json(
-        { ok: false, reason: "db_error", error: error.message },
-        { status: 500 }
+
+        {
+
+          ok: false,
+
+          reason:
+            "no_session",
+        },
+
+        {
+          status: 401,
+        }
       );
     }
 
-    return NextResponse.json({ ok: true, row: data ?? {} });
-  } catch (e: any) {
+    /* ==========================================
+       VIEW
+    ========================================== */
+
+    const {
+
+      data,
+
+      error,
+
+    } =
+      await supabase
+
+        .from(
+          "financeiro_basico_view"
+        )
+
+        .select("*")
+
+        .eq(
+          "user_id",
+          user.id
+        )
+
+        .maybeSingle();
+
+    /* ==========================================
+       DB ERROR
+    ========================================== */
+
+    if (error) {
+
+      return NextResponse.json(
+
+        {
+
+          ok: false,
+
+          reason:
+            "db_error",
+
+          error:
+            error.message,
+        },
+
+        {
+          status: 500,
+        }
+      );
+    }
+
+    /* ==========================================
+       SUCCESS
+    ========================================== */
+
+    return NextResponse.json({
+
+      ok: true,
+
+      row:
+        data ?? {},
+    });
+
+  } catch (
+    e: any
+  ) {
+
+    /* ==========================================
+       FAIL SAFE
+    ========================================== */
+
     return NextResponse.json(
-      { ok: false, reason: "internal_error", message: e?.message ?? "unknown" },
-      { status: 500 }
+
+      {
+
+        ok: false,
+
+        reason:
+          "internal_error",
+
+        message:
+          e?.message ??
+          "unknown",
+      },
+
+      {
+        status: 500,
+      }
     );
   }
 }
