@@ -10,6 +10,7 @@
 // ✔ Regra Z
 
 import {
+  NextRequest,
   NextResponse,
 } from "next/server";
 
@@ -54,11 +55,15 @@ export async function GET() {
         .getUser();
 
     /* ==========================================
-       LANG
+       DEFAULT
     ========================================== */
 
     let lang =
       "pt";
+
+    /* ==========================================
+       PROFILE LANG
+    ========================================== */
 
     if (user) {
 
@@ -96,15 +101,12 @@ export async function GET() {
        SUCCESS
     ========================================== */
 
-    return NextResponse.json(
+    return NextResponse.json({
 
-      {
+      ok: true,
 
-        ok: true,
-
-        lang,
-      }
-    );
+      lang,
+    });
 
   } catch (
     e: any
@@ -130,6 +132,192 @@ export async function GET() {
 
       {
         status: 200,
+      }
+    );
+  }
+}
+
+/* =====================================================
+   POST
+===================================================== */
+
+export async function POST(
+  request: NextRequest
+) {
+
+  try {
+
+    /* ==========================================
+       BODY
+    ========================================== */
+
+    const body =
+      await request.json();
+
+    const lang =
+      body?.lang;
+
+    /* ==========================================
+       VALIDATION
+    ========================================== */
+
+    if (
+      lang !== "pt"
+      &&
+      lang !== "es"
+    ) {
+
+      return NextResponse.json(
+
+        {
+
+          ok: false,
+
+          reason:
+            "invalid_lang",
+        },
+
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /* ==========================================
+       SSR CLIENT
+    ========================================== */
+
+    const supabase =
+      await createSSRClient();
+
+    /* ==========================================
+       AUTH
+    ========================================== */
+
+    const {
+
+      data: {
+        user,
+      },
+
+      error: authError,
+
+    } =
+      await supabase
+        .auth
+        .getUser();
+
+    /* ==========================================
+       NO SESSION
+    ========================================== */
+
+    if (
+      authError ||
+      !user
+    ) {
+
+      return NextResponse.json(
+
+        {
+
+          ok: false,
+
+          reason:
+            "no_session",
+        },
+
+        {
+          status: 401,
+        }
+      );
+    }
+
+    /* ==========================================
+       UPDATE PROFILE
+    ========================================== */
+
+    const {
+
+      error,
+
+    } =
+      await supabase
+
+        .from(
+          "profiles"
+        )
+
+        .update({
+
+          lang,
+
+        })
+
+        .eq(
+          "id",
+          user.id
+        );
+
+    /* ==========================================
+       DB ERROR
+    ========================================== */
+
+    if (error) {
+
+      return NextResponse.json(
+
+        {
+
+          ok: false,
+
+          reason:
+            "db_error",
+
+          error:
+            error.message,
+        },
+
+        {
+          status: 500,
+        }
+      );
+    }
+
+    /* ==========================================
+       SUCCESS
+    ========================================== */
+
+    return NextResponse.json({
+
+      ok: true,
+
+      lang,
+    });
+
+  } catch (
+    e: any
+  ) {
+
+    /* ==========================================
+       FAIL SAFE
+    ========================================== */
+
+    return NextResponse.json(
+
+      {
+
+        ok: false,
+
+        reason:
+          "internal_error",
+
+        message:
+          e?.message ??
+          "unknown",
+      },
+
+      {
+        status: 500,
       }
     );
   }

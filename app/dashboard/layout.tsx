@@ -1,8 +1,8 @@
 // =========================================================
 // PecuariaTech
-// Dashboard Layout Runtime
+// Dashboard Layout Runtime Premium
 // Equação Y + Regra Z + Triângulo 360
-// Runtime Premium Estabilizado
+// Sistema Operacional Cognitivo do Agronegócio
 // =========================================================
 
 import Sidebar from "./components/Sidebar";
@@ -36,6 +36,9 @@ export default async function DashboardLayout({
 
   const runtimeLayer =
     "π Cognitive";
+
+  const runtimeMode =
+    "Enterprise";
 
   /* =====================================================
      UI
@@ -163,7 +166,7 @@ export default async function DashboardLayout({
                     text-gray-500
                   "
                 >
-                  Inteligência operacional pecuária
+                  Sistema Operacional Cognitivo do Agronegócio
                 </p>
 
               </div>
@@ -179,6 +182,49 @@ export default async function DashboardLayout({
                   gap-5
                 "
               >
+
+                {/* =====================================
+                    MODE
+                ===================================== */}
+
+                <div
+                  className="
+                    hidden
+                    rounded-2xl
+                    border
+                    border-blue-100
+                    bg-blue-50
+                    px-5
+                    py-3
+                    shadow-sm
+                    xl:block
+                  "
+                >
+
+                  <div
+                    className="
+                      text-[10px]
+                      font-black
+                      uppercase
+                      tracking-[0.2em]
+                      text-blue-700
+                    "
+                  >
+                    Mode
+                  </div>
+
+                  <div
+                    className="
+                      mt-1
+                      text-sm
+                      font-black
+                      text-blue-900
+                    "
+                  >
+                    {runtimeMode}
+                  </div>
+
+                </div>
 
                 {/* =====================================
                     RUNTIME

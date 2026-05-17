@@ -2,8 +2,6 @@
 // PecuariaTech — Checkout Runtime Premium
 // Equação Y + Regra Z + Runtime SaaS Seguro
 // Mercado Pago Production Ready
-// Admin sem bypass destrutivo
-// Fluxo SaaS real restaurado
 
 import {
   NextRequest,
@@ -162,18 +160,10 @@ async function getDynamicPrice(
       process.env
         .PYTHON_API_URL;
 
-    /* ==========================================
-       FAIL SAFE
-    ========================================== */
-
     if (!PYTHON_API) {
 
       return fallback;
     }
-
-    /* ==========================================
-       FETCH
-    ========================================== */
 
     const response =
       await fetch(
@@ -184,9 +174,7 @@ async function getDynamicPrice(
         }
       );
 
-    if (
-      !response.ok
-    ) {
+    if (!response.ok) {
 
       return fallback;
     }
@@ -235,7 +223,6 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-
           error:
             "MERCADOPAGO_ACCESS_TOKEN ausente",
         },
@@ -259,21 +246,12 @@ export async function POST(
       email,
     } = body;
 
-    /* ==========================================
-       ADMIN MASTER
-    ========================================== */
-
-    const isMaster =
-      email ===
-      "pecuariatech2026@gmail.com";
-
     console.log(
       "[CHECKOUT]",
       {
         plano,
         periodo,
         email,
-        isMaster,
       }
     );
 
@@ -289,12 +267,8 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-
           error:
             "Plano inválido",
-
-          recebido:
-            plano,
         },
         {
           status: 400,
@@ -313,12 +287,8 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-
           error:
             "Período inválido",
-
-          recebido:
-            periodo,
         },
         {
           status: 400,
@@ -331,9 +301,8 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-
           error:
-            "user_id é obrigatório",
+            "user_id obrigatório",
         },
         {
           status: 400,
@@ -350,7 +319,6 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-
           error:
             "email obrigatório",
         },
@@ -389,13 +357,8 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-
           error:
             "Preço inválido",
-
-          plano,
-
-          periodo,
         },
         {
           status: 500,
@@ -409,20 +372,6 @@ export async function POST(
 
     const origin =
       safeOrigin(req);
-
-    /* ==========================================
-       MERCADO PAGO
-    ========================================== */
-
-    const mp =
-      new MercadoPagoConfig({
-
-        accessToken:
-          MP_TOKEN,
-      });
-
-    const preference =
-      new Preference(mp);
 
     /* ==========================================
        URLS
@@ -441,7 +390,21 @@ export async function POST(
       `${origin}/api/webhook/mercadopago`;
 
     /* ==========================================
-       PREFERENCE BODY
+       MERCADO PAGO
+    ========================================== */
+
+    const mp =
+      new MercadoPagoConfig({
+
+        accessToken:
+          MP_TOKEN,
+      });
+
+    const preference =
+      new Preference(mp);
+
+    /* ==========================================
+       PREFERENCE
     ========================================== */
 
     const preferenceBody = {
@@ -472,6 +435,13 @@ export async function POST(
       payer: {
 
         email,
+      },
+
+      metadata: {
+
+        user_id,
+        plano,
+        periodo,
       },
 
       external_reference:
@@ -537,8 +507,6 @@ export async function POST(
       periodo,
 
       preco,
-
-      isMaster,
     });
 
   } catch (
@@ -552,7 +520,6 @@ export async function POST(
 
     return NextResponse.json(
       {
-
         ok: false,
 
         error:

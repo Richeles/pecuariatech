@@ -1,23 +1,13 @@
 "use client";
 
-import {
-  useState,
-} from "react";
-
-import {
-  getLangFromClient,
-  setLangClient,
-  t,
-  type Lang,
-} from "@/app/lib/i18n";
-
-import {
-  createBrowserClient,
-} from "@/app/lib/supabase-browser";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 /* =========================================================
    TYPES
 ========================================================= */
+
+type Lang = "pt" | "es";
 
 type Periodo =
   | "mensal"
@@ -25,103 +15,129 @@ type Periodo =
   | "anual";
 
 /* =========================================================
-   SUPABASE
+   TEXTOS
 ========================================================= */
 
-const supabase =
-  createBrowserClient();
+const TEXTS = {
+  pt: {
+    heroBadge:
+      "PecuariaTech Intelligence Layer",
+
+    heroTitle:
+      "Planos PecuariaTech",
+
+    heroDescription:
+      "Cada plano foi pensado para uma realidade diferente no campo — do controle básico à gestão com IA operacional, CFO Autônomo e inteligência estratégica integrada.",
+
+    tags: [
+      "Inteligência Pecuária",
+      "CFO Estratégico",
+      "IA Operacional",
+      "Dominus 360°",
+    ],
+
+    mensal: "Mensal",
+
+    trimestral:
+      "Trimestral",
+
+    anual: "Anual",
+
+    porMes:
+      "por mês",
+
+    porTrimestre:
+      "a cada 3 meses",
+
+    porAno:
+      "por ano",
+
+    assinar:
+      "Assinar",
+
+    destaque:
+      "Mais escolhido",
+
+    portugues:
+      "🇧🇷 Português",
+
+    espanhol:
+      "🇪🇸 Español",
+  },
+
+  es: {
+    heroBadge:
+      "PecuariaTech Intelligence Layer",
+
+    heroTitle:
+      "Planes PecuariaTech",
+
+    heroDescription:
+      "Cada plan fue diseñado para una realidad diferente en el campo — desde el control básico hasta la gestión con IA operacional, CFO Autónomo e inteligencia estratégica integrada.",
+
+    tags: [
+      "Inteligencia Ganadera",
+      "CFO Estratégico",
+      "IA Operacional",
+      "Dominus 360°",
+    ],
+
+    mensal:
+      "Mensual",
+
+    trimestral:
+      "Trimestral",
+
+    anual:
+      "Anual",
+
+    porMes:
+      "por mes",
+
+    porTrimestre:
+      "cada 3 meses",
+
+    porAno:
+      "por año",
+
+    assinar:
+      "Suscribirse",
+
+    destaque:
+      "Más elegido",
+
+    portugues:
+      "🇧🇷 Portugués",
+
+    espanhol:
+      "🇪🇸 Español",
+  },
+};
 
 /* =========================================================
-   COMPONENT
+   PLANOS
 ========================================================= */
 
-export default function PlanosClient() {
-
-  const [lang, setLang] =
-    useState<Lang>(
-      getLangFromClient()
-    );
-
-  const [periodo, setPeriodo] =
-    useState<Periodo>(
-      "mensal"
-    );
-
-  const [loadingPlano, setLoadingPlano] =
-    useState<string | null>(
-      null
-    );
-
-  /* =====================================================
-     PREÇOS
-  ===================================================== */
-
-  function calcularPreco(
-    valorMensal: number,
-    periodo: Periodo
-  ) {
-
-    if (periodo === "mensal") {
-      return valorMensal;
-    }
-
-    if (periodo === "trimestral") {
-      return valorMensal * 3 * 0.95;
-    }
-
-    if (periodo === "anual") {
-      return valorMensal * 12 * 0.8;
-    }
-
-    return valorMensal;
-  }
-
-  /* =====================================================
-     PLANOS
-  ===================================================== */
-
-  const planos = [
-
+const PLANOS = {
+  pt: [
     {
       id: "basico",
 
       nome:
-        lang === "pt"
-          ? "Básico"
-          : "Básico",
+        "Básico",
 
       descricao:
-        lang === "pt"
-          ? "Para quem deseja iniciar uma gestão moderna e organizada da fazenda."
-          : "Para quienes desean iniciar una gestión moderna y organizada.",
+        "Para quem quer sair do caderno, organizar a fazenda e ganhar clareza operacional no dia a dia.",
 
-      mensal: 149.9,
+      mensal: 189.97,
 
-      features: [
-
-        lang === "pt"
-          ? "Dashboard operacional"
-          : "Dashboard operacional",
-
-        lang === "pt"
-          ? "Controle de rebanho"
-          : "Control de ganado",
-
-        lang === "pt"
-          ? "Controle de pastagem"
-          : "Control de pastura",
-
-        lang === "pt"
-          ? "Indicadores iniciais"
-          : "Indicadores iniciales",
-
-        lang === "pt"
-          ? "Relatórios automáticos"
-          : "Reportes automáticos",
-
-        lang === "pt"
-          ? "Base digital sólida"
-          : "Base digital sólida",
+      beneficios: [
+        "Dashboard simples e intuitivo",
+        "Controle básico de rebanho",
+        "Controle essencial de pastagem",
+        "Relatório mensal automático",
+        "Indicadores operacionais iniciais",
+        "Base sólida para começar a gestão digital",
       ],
     },
 
@@ -129,84 +145,43 @@ export default function PlanosClient() {
       id: "profissional",
 
       nome:
-        lang === "pt"
-          ? "Profissional"
-          : "Profesional",
+        "Profissional",
 
       descricao:
-        lang === "pt"
-          ? "Para produtores que precisam compreender margem, custo e eficiência."
-          : "Para productores que necesitan entender margen y eficiencia.",
+        "Para o produtor que já se organiza, mas agora precisa entender os números da operação com mais precisão.",
 
-      mensal: 247.9,
+      mensal: 389.97,
 
-      features: [
-
-        lang === "pt"
-          ? "Relatórios avançados"
-          : "Reportes avanzados",
-
-        lang === "pt"
-          ? "Exportação Excel"
-          : "Exportación Excel",
-
-        lang === "pt"
-          ? "Indicadores financeiros"
-          : "Indicadores financieros",
-
-        lang === "pt"
-          ? "Alertas inteligentes"
-          : "Alertas inteligentes",
-
-        lang === "pt"
-          ? "Automação operacional"
-          : "Automatización operacional",
-
-        lang === "pt"
-          ? "Tudo do plano Básico"
-          : "Todo del plan Básico",
+      beneficios: [
+        "Tudo do plano Básico",
+        "Relatórios mensais avançados",
+        "Exportação de dados Excel",
+        "Indicadores financeiros iniciais",
+        "Planilhas profissionais automatizadas",
+        "Alertas operacionais inteligentes",
       ],
     },
 
     {
       id: "ultra",
 
+      nome:
+        "Ultra",
+
       destaque: true,
 
-      nome: "Ultra IA",
-
       descricao:
-        lang === "pt"
-          ? "IA operacional aplicada à tomada de decisão agrofinanceira."
-          : "IA operacional aplicada a decisiones agrofinancieras.",
+        "Para quem quer deixar de reagir aos problemas e começar a tomar decisões com apoio de IA operacional.",
 
-      mensal: 452.9,
+      mensal: 589.97,
 
-      features: [
-
-        lang === "pt"
-          ? "IA operacional integrada"
-          : "IA operacional integrada",
-
-        lang === "pt"
-          ? "Diagnóstico financeiro"
-          : "Diagnóstico financiero",
-
-        lang === "pt"
-          ? "Relatórios premium"
-          : "Reportes premium",
-
-        lang === "pt"
-          ? "Alertas inteligentes"
-          : "Alertas inteligentes",
-
-        lang === "pt"
-          ? "Análises avançadas"
-          : "Análisis avanzados",
-
-        lang === "pt"
-          ? "Plano mais escolhido"
-          : "Plan más elegido",
+      beneficios: [
+        "Tudo do plano Profissional",
+        "Relatórios premium automatizados",
+        "Análises financeiras avançadas",
+        "Diagnóstico mensal por IA",
+        "Alertas de decisão",
+        "Plano mais escolhido por produtores",
       ],
     },
 
@@ -214,247 +189,449 @@ export default function PlanosClient() {
       id: "empresarial",
 
       nome:
-        lang === "pt"
-          ? "Empresarial"
-          : "Empresarial",
+        "Empresarial",
 
       descricao:
-        lang === "pt"
-          ? "Escala, governança e controle para grandes operações."
-          : "Escala, gobernanza y control para grandes operaciones.",
+        "Para operações que exigem padronização, gestão integrada e controle em escala.",
 
-      mensal: 627.9,
+      mensal: 789.97,
 
-      features: [
-
-        lang === "pt"
-          ? "Multi-fazendas"
-          : "Multi-fincas",
-
-        lang === "pt"
-          ? "Multi-usuários"
-          : "Multiusuarios",
-
-        lang === "pt"
-          ? "Gestão de equipes"
-          : "Gestión de equipos",
-
-        lang === "pt"
-          ? "Relatórios personalizados"
-          : "Reportes personalizados",
-
-        lang === "pt"
-          ? "Infraestrutura corporativa"
-          : "Infraestructura corporativa",
+      beneficios: [
+        "Tudo do plano Ultra",
+        "Multi-fazendas e multi-usuários",
+        "Gestão de equipes",
+        "Relatórios personalizados",
+        "Alertas automáticos avançados",
       ],
     },
 
     {
-      id: "premium_dominus",
+      id: "dominus",
 
       nome:
         "Premium Dominus 360°",
 
       descricao:
-        lang === "pt"
-          ? "Infraestrutura estratégica para produtores, grupos e investidores."
-          : "Infraestructura estratégica para productores e inversionistas.",
+        "Para quem precisa enxergar a operação como estrutura de capital, gestão estratégica e geração sustentável de valor.",
 
-      mensal: 789.9,
+      mensal: 989.97,
 
-      features: [
-
-        lang === "pt"
-          ? "CFO Ultra integrado"
-          : "CFO Ultra integrado",
-
-        lang === "pt"
-          ? "IA preditiva"
-          : "IA predictiva",
-
-        lang === "pt"
-          ? "EBITDA automático"
-          : "EBITDA automático",
-
-        "Valuation",
-
-        lang === "pt"
-          ? "Simulações financeiras"
-          : "Simulaciones financieras",
-
-        lang === "pt"
-          ? "Suporte executivo VIP"
-          : "Soporte ejecutivo VIP",
+      beneficios: [
+        "Tudo do plano Empresarial",
+        "CFO Autônomo integrado",
+        "IA preditiva e diagnóstica",
+        "EBITDA e EBIT automáticos",
+        "Valuation e simulações financeiras",
+        "Suporte Ultra VIP",
       ],
     },
-  ];
+  ],
 
-  /* =====================================================
-     CHECKOUT
-  ===================================================== */
+  es: [
+    {
+      id: "basico",
 
-  async function handleCheckout(
-    planoId: string
+      nome:
+        "Básico",
+
+      descricao:
+        "Para quienes desean organizar la finca y ganar claridad operacional.",
+
+      mensal: 189.97,
+
+      beneficios: [
+        "Dashboard simple e intuitivo",
+        "Control básico del rebaño",
+        "Control esencial de pasturas",
+        "Reporte mensual automático",
+        "Indicadores operacionales iniciales",
+        "Base sólida para gestión digital",
+      ],
+    },
+
+    {
+      id: "profissional",
+
+      nome:
+        "Profesional",
+
+      descricao:
+        "Para productores que necesitan comprender los números de la operación con más precisión.",
+
+      mensal: 389.97,
+
+      beneficios: [
+        "Todo del plan Básico",
+        "Reportes avanzados",
+        "Exportación de datos",
+        "Indicadores financieros",
+        "Automatización profesional",
+        "Alertas inteligentes",
+      ],
+    },
+
+    {
+      id: "ultra",
+
+      nome:
+        "Ultra",
+
+      destaque: true,
+
+      descricao:
+        "Para quienes desean tomar decisiones con apoyo de IA operacional.",
+
+      mensal: 589.97,
+
+      beneficios: [
+        "Todo del plan Profesional",
+        "Reportes premium",
+        "Análisis financieros avanzados",
+        "Diagnóstico con IA",
+        "Alertas estratégicas",
+        "Plan más elegido",
+      ],
+    },
+
+    {
+      id: "empresarial",
+
+      nome:
+        "Empresarial",
+
+      descricao:
+        "Para operaciones que requieren gestión integrada y control a escala.",
+
+      mensal: 789.97,
+
+      beneficios: [
+        "Todo del plan Ultra",
+        "Multi-fincas",
+        "Gestión de equipos",
+        "Reportes personalizados",
+        "Alertas avanzadas",
+      ],
+    },
+
+    {
+      id: "dominus",
+
+      nome:
+        "Premium Dominus 360°",
+
+      descricao:
+        "Para quienes necesitan visión estratégica completa de la operación.",
+
+      mensal: 989.97,
+
+      beneficios: [
+        "Todo del plan Empresarial",
+        "CFO Autónomo",
+        "IA predictiva",
+        "EBITDA automático",
+        "Valuation financiero",
+        "Soporte VIP",
+      ],
+    },
+  ],
+};
+
+/* =========================================================
+   COMPONENT
+========================================================= */
+
+export default function PlanosClient() {
+
+  const router =
+    useRouter();
+
+  const [lang, setLang] =
+    useState<Lang>("pt");
+
+  const [periodo, setPeriodo] =
+    useState<Periodo>("mensal");
+
+  const t =
+    TEXTS[lang];
+
+  const planos =
+    PLANOS[lang];
+
+  function calcularPreco(
+    mensal: number
   ) {
 
-    try {
-
-      setLoadingPlano(
-        planoId
-      );
-
-      localStorage.setItem(
-        "checkout_plano",
-        planoId
-      );
-
-      localStorage.setItem(
-        "checkout_periodo",
-        periodo
-      );
-
-      const {
-        data: { session },
-      } =
-        await supabase.auth
-          .getSession();
-
-      /* ==========================================
-         SEM LOGIN
-      ========================================== */
-
-      if (!session) {
-
-        window.location.href =
-          `/cadastro?plano=${planoId}&periodo=${periodo}`;
-
-        return;
-      }
-
-      /* ==========================================
-         COM LOGIN
-      ========================================== */
-
-      window.location.href =
-        `/checkout?plano=${planoId}&periodo=${periodo}`;
-
-    } catch (err) {
-
-      console.error(
-        "CHECKOUT ERROR:",
-        err
-      );
-
-      alert(
-
-        lang === "pt"
-
-          ? "Erro ao iniciar checkout."
-
-          : "Error al iniciar checkout."
-      );
-
-    } finally {
-
-      setLoadingPlano(
-        null
-      );
+    if (
+      periodo === "mensal"
+    ) {
+      return mensal;
     }
+
+    if (
+      periodo === "trimestral"
+    ) {
+      return mensal * 2.7;
+    }
+
+    return mensal * 10;
   }
 
-  /* =====================================================
-     UI
-  ===================================================== */
+  function assinar(
+    plano: string
+  ) {
+
+    router.push(
+      `/checkout?plano=${plano}&periodo=${periodo}`
+    );
+  }
 
   return (
 
-    <div
-      className="
-        relative
-        -mt-4
-        md:-mt-10
-        pb-16
-        md:pb-24
-      "
-    >
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-white via-emerald-50 to-white px-6 py-16">
 
       {/* LANGUAGE */}
 
-      <div
-        className="
-          mb-8
-          flex
-          justify-center
-          md:justify-end
-        "
-      >
+      <div className="absolute right-6 top-6 z-50">
 
-        <div
-          className="
-            flex
-            items-center
-            gap-2
-            rounded-full
-            border
-            border-neutral-200
-            bg-white/90
-            p-1.5
-            shadow-sm
-            backdrop-blur
-          "
-        >
+        <div className="flex overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-lg">
 
           <button
-            type="button"
-            onClick={() => {
-
-              setLang("pt");
-
-              setLangClient("pt");
-            }}
-            className={`
-              rounded-full
-              px-4
-              py-2
-              text-xs
-              font-black
-              transition-all
-              ${
-                lang === "pt"
-                  ? "bg-green-600 text-white"
-                  : "text-neutral-600 hover:bg-neutral-100"
-              }
-            `}
+            onClick={() =>
+              setLang("pt")
+            }
+            className={`px-5 py-3 text-sm font-black transition-all ${
+              lang === "pt"
+                ? "bg-emerald-600 text-white"
+                : "text-gray-700 hover:bg-emerald-50"
+            }`}
           >
-            🇧🇷 PT
+            {t.portugues}
           </button>
 
           <button
-            type="button"
-            onClick={() => {
-
-              setLang("es");
-
-              setLangClient("es");
-            }}
-            className={`
-              rounded-full
-              px-4
-              py-2
-              text-xs
-              font-black
-              transition-all
-              ${
-                lang === "es"
-                  ? "bg-green-600 text-white"
-                  : "text-neutral-600 hover:bg-neutral-100"
-              }
-            `}
+            onClick={() =>
+              setLang("es")
+            }
+            className={`border-l border-emerald-100 px-5 py-3 text-sm font-black transition-all ${
+              lang === "es"
+                ? "bg-emerald-600 text-white"
+                : "text-gray-700 hover:bg-emerald-50"
+            }`}
           >
-            🇪🇸 ES
+            {t.espanhol}
           </button>
 
         </div>
+
+      </div>
+
+      {/* HERO */}
+
+      <div className="mx-auto max-w-5xl text-center">
+
+        <div className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-5 py-2 text-xs font-black uppercase tracking-[0.25em] text-emerald-700">
+          {t.heroBadge}
+        </div>
+
+        <h1 className="mt-8 text-5xl font-black tracking-tight text-gray-950 md:text-7xl">
+          {t.heroTitle}
+        </h1>
+
+        <p className="mx-auto mt-8 max-w-3xl text-xl leading-relaxed text-gray-600">
+          {t.heroDescription}
+        </p>
+
+        <div className="mt-10 flex flex-wrap justify-center gap-4">
+
+          {t.tags.map((item) => (
+            <div
+              key={item}
+              className="rounded-2xl border border-gray-200 bg-white px-6 py-3 text-sm font-bold text-gray-700 shadow-sm"
+            >
+              {item}
+            </div>
+          ))}
+
+        </div>
+
+        {/* PERIODOS */}
+
+        <div className="mt-14 flex flex-wrap justify-center gap-4">
+
+          <button
+            onClick={() =>
+              setPeriodo("mensal")
+            }
+            className={`rounded-2xl px-8 py-4 text-sm font-black transition-all ${
+              periodo === "mensal"
+                ? "bg-emerald-600 text-white shadow-lg"
+                : "bg-white text-gray-700 border border-gray-200"
+            }`}
+          >
+            {t.mensal}
+          </button>
+
+          <button
+            onClick={() =>
+              setPeriodo("trimestral")
+            }
+            className={`rounded-2xl px-8 py-4 text-sm font-black transition-all ${
+              periodo === "trimestral"
+                ? "bg-emerald-600 text-white shadow-lg"
+                : "bg-white text-gray-700 border border-gray-200"
+            }`}
+          >
+            {t.trimestral}
+          </button>
+
+          <button
+            onClick={() =>
+              setPeriodo("anual")
+            }
+            className={`rounded-2xl px-8 py-4 text-sm font-black transition-all ${
+              periodo === "anual"
+                ? "bg-emerald-600 text-white shadow-lg"
+                : "bg-white text-gray-700 border border-gray-200"
+            }`}
+          >
+            {t.anual}
+          </button>
+
+        </div>
+
+      </div>
+
+      {/* GRID PREMIUM */}
+
+      <div className="mx-auto mt-20 grid max-w-[1700px] gap-8 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
+
+        {planos.map((plano) => {
+
+          const preco =
+            calcularPreco(
+              plano.mensal
+            );
+
+          const inteiro =
+            preco.toFixed(2).split(".")[0];
+
+          const decimal =
+            preco.toFixed(2).split(".")[1];
+
+          return (
+
+            <div
+              key={plano.id}
+              className={`relative flex min-h-[980px] h-full flex-col rounded-3xl border bg-white p-10 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${
+                plano.destaque
+                  ? "border-emerald-400 ring-2 ring-emerald-200"
+                  : "border-gray-200"
+              }`}
+            >
+
+              {plano.destaque && (
+
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-5 py-2 text-xs font-black uppercase tracking-wide text-white shadow-lg">
+                  {t.destaque}
+                </div>
+
+              )}
+
+              <div>
+
+                <h3 className="text-2xl font-black text-gray-950">
+                  {plano.nome}
+                </h3>
+
+                <p className="mt-5 min-h-[190px] text-[15px] leading-9 text-gray-600">
+                  {plano.descricao}
+                </p>
+
+              </div>
+
+              {/* PREÇO PREMIUM */}
+
+              <div className="mt-10 min-h-[120px]">
+
+                <div className="flex items-end justify-start whitespace-nowrap">
+
+                  <span className="mr-1 mb-[7px] text-[16px] font-black text-emerald-600">
+                    R$
+                  </span>
+
+                  <span className="text-[42px] font-black leading-none tracking-tight text-emerald-600">
+                    {inteiro}
+                  </span>
+
+                  <span className="mb-[5px] ml-1 text-[20px] font-black leading-none text-emerald-600">
+                    ,{decimal}
+                  </span>
+
+                </div>
+
+                <div className="mt-3 text-sm font-semibold text-gray-500">
+
+                  {periodo === "mensal" &&
+                    t.porMes}
+
+                  {periodo === "trimestral" &&
+                    t.porTrimestre}
+
+                  {periodo === "anual" &&
+                    t.porAno}
+
+                </div>
+
+              </div>
+
+              {/* BENEFICIOS */}
+
+              <div className="mt-10 flex-1 space-y-4">
+
+                {plano.beneficios.map(
+                  (beneficio) => (
+
+                    <div
+                      key={beneficio}
+                      className="flex items-start gap-3 text-sm text-gray-700"
+                    >
+
+                      <div className="mt-1 text-emerald-600">
+                        ✓
+                      </div>
+
+                      <div>
+                        {beneficio}
+                      </div>
+
+                    </div>
+
+                  )
+                )}
+
+              </div>
+
+              {/* BUTTON */}
+
+              <button
+                onClick={() =>
+                  assinar(
+                    plano.id
+                  )
+                }
+                className={`mt-10 rounded-2xl px-6 py-4 text-sm font-black transition-all ${
+                  plano.destaque
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    : "bg-gray-950 text-white hover:bg-black"
+                }`}
+              >
+                {t.assinar}
+              </button>
+
+            </div>
+
+          );
+        })}
 
       </div>
 

@@ -1,61 +1,157 @@
-// app/services/financeiro/getFinanceiroSnapshot.ts
-// PecuariaTech Finance Runtime
-// Snapshot financeiro canônico
+// ======================================================
+// PecuariaTech
+// Financeiro Snapshot Runtime
+// Plataforma Operacional BioFinanceira
+// ======================================================
 
-export interface FinanceiroSnapshot {
+import {
+  createSSRClient,
+} from "@/app/lib/supabase/server";
 
+import {
+  normalizeFinanceiro,
+  normalizeApiResponse,
+} from "@/app/lib/runtime-normalizer";
+
+/* ======================================================
+   TYPES
+====================================================== */
+
+export type FinanceiroSnapshot = {
   receita: number;
-
   despesas: number;
-
   lucro: number;
-
   margem: number;
+};
 
-  fluxo_caixa: number;
+/* ======================================================
+   SERVICE
+====================================================== */
 
-  status: string;
-}
-
-/* =====================================================
-   SNAPSHOT
-===================================================== */
-
-export async function getFinanceiroSnapshot():
-Promise<FinanceiroSnapshot> {
+export async function getFinanceiroSnapshot() {
 
   try {
 
-    return {
+    /* ==================================================
+       SUPABASE
+    ================================================== */
 
-      receita: 0,
+    const supabase =
+      await createSSRClient();
 
-      despesas: 0,
+    /* ==================================================
+       AUTH
+    ================================================== */
 
-      lucro: 0,
+    const {
+      data: {
+        user,
+      },
+      error: authError,
+    } =
+      await supabase.auth.getUser();
 
-      margem: 0,
+    /* ==================================================
+       REGRA Z
+    ================================================== */
 
-      fluxo_caixa: 0,
+    if (
+      authError ||
+      !user
+    ) {
 
-      status: "runtime",
-    };
+      return normalizeApiResponse(
 
-  } catch {
+        {
+          receita: 0,
+          despesas: 0,
+          lucro: 0,
+          margem: 0,
+        },
 
-    return {
+        "no_session"
+      );
+    }
 
-      receita: 0,
+    /* ==================================================
+       VIEW
+    ================================================== */
 
-      despesas: 0,
+    const {
+      data,
+      error,
+    } =
+      await supabase
 
-      lucro: 0,
+        .from(
+          "financeiro_basico_view"
+        )
 
-      margem: 0,
+        .select("*")
 
-      fluxo_caixa: 0,
+        .eq(
+          "user_id",
+          user.id
+        )
 
-      status: "degraded",
-    };
+        .maybeSingle();
+
+    /* ==================================================
+       DB ERROR
+    ================================================== */
+
+    if (error) {
+
+      return normalizeApiResponse(
+
+        {
+          receita: 0,
+          despesas: 0,
+          lucro: 0,
+          margem: 0,
+        },
+
+        error.message
+      );
+    }
+
+    /* ==================================================
+       NORMALIZATION
+    ================================================== */
+
+    const runtime =
+      normalizeFinanceiro(
+        data ?? {}
+      );
+
+    /* ==================================================
+       SUCCESS
+    ================================================== */
+
+    return normalizeApiResponse(
+      runtime,
+      null
+    );
+
+  } catch (
+    e: any
+  ) {
+
+    /* ==================================================
+       FAIL SAFE
+    ================================================== */
+
+    return normalizeApiResponse(
+
+      {
+        receita: 0,
+        despesas: 0,
+        lucro: 0,
+        margem: 0,
+      },
+
+      e?.message ??
+      "internal_error"
+    );
   }
 }

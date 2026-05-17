@@ -1,30 +1,18 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+// =========================================================
+// PecuariaTech
+// Login Client Premium
+// Runtime Cognitivo
+// =========================================================
 
-import {
-  useSearchParams,
-} from "next/navigation";
+import { useState } from "react";
+
+import { useRouter } from "next/navigation";
 
 import {
   createBrowserClient,
 } from "@/app/lib/supabase-browser";
-
-import {
-  getLangFromClient,
-  Lang,
-  setLangClient,
-} from "@/app/lib/i18n";
-
-/* =========================================================
-   SUPABASE
-========================================================= */
-
-const supabase =
-  createBrowserClient();
 
 /* =========================================================
    COMPONENT
@@ -32,20 +20,8 @@ const supabase =
 
 export default function LoginClient() {
 
-  const searchParams =
-    useSearchParams();
-
-  /* =====================================================
-     NEXT ROUTE
-  ===================================================== */
-
-  const next =
-    searchParams?.get("next")
-    || "/dashboard";
-
-  /* =====================================================
-     STATES
-  ===================================================== */
+  const router =
+    useRouter();
 
   const [email, setEmail] =
     useState("");
@@ -56,371 +32,57 @@ export default function LoginClient() {
   const [loading, setLoading] =
     useState(false);
 
-  const [mounted, setMounted] =
-    useState(false);
-
-  const [errorMsg, setErrorMsg] =
-    useState<string | null>(
-      null
-    );
-
-  const [lang, setLang] =
-    useState<Lang>("pt");
+  const [error, setError] =
+    useState("");
 
   /* =====================================================
-     CONTEXTO CHECKOUT
+     LOGIN
   ===================================================== */
 
-  const [plano, setPlano] =
-    useState<string | null>(
-      null
-    );
-
-  const [periodo, setPeriodo] =
-    useState<string | null>(
-      null
-    );
-
-  /* =====================================================
-     INIT
-  ===================================================== */
-
-  useEffect(() => {
-
-    const detected =
-      getLangFromClient();
-
-    setLang(detected);
-
-    try {
-
-      const planoStorage =
-        localStorage.getItem(
-          "checkout_plano"
-        );
-
-      const periodoStorage =
-        localStorage.getItem(
-          "checkout_periodo"
-        );
-
-      setPlano(
-        planoStorage
-      );
-
-      setPeriodo(
-        periodoStorage
-      );
-
-    } catch (
-      err
-    ) {
-
-      console.error(
-        "LOCAL STORAGE ERROR:",
-        err
-      );
-    }
-
-    setMounted(true);
-
-  }, []);
-
-  /* =====================================================
-     LABELS
-  ===================================================== */
-
-  function getPlanoLabel() {
-
-    switch (plano) {
-
-      case "basico":
-
-        return lang === "pt"
-          ? "Plano Básico"
-          : "Plan Básico";
-
-      case "profissional":
-
-        return lang === "pt"
-          ? "Plano Profissional"
-          : "Plan Profesional";
-
-      case "ultra":
-
-        return "Ultra";
-
-      case "empresarial":
-
-        return lang === "pt"
-          ? "Plano Empresarial"
-          : "Plan Empresarial";
-
-      case "premium_dominus":
-
-        return "Premium Dominus 360°";
-
-      default:
-
-        return null;
-    }
-  }
-
-  function getPeriodoLabel() {
-
-    switch (periodo) {
-
-      case "mensal":
-
-        return lang === "pt"
-          ? "Mensal"
-          : "Mensual";
-
-      case "trimestral":
-
-        return "Trimestral";
-
-      case "anual":
-
-        return "Anual";
-
-      default:
-
-        return null;
-    }
-  }
-
-  /* =====================================================
-     LOGIN FLOW
-  ===================================================== */
-
-  async function handleSubmit(
-    e?: React.FormEvent
+  async function handleLogin(
+    e: React.FormEvent
   ) {
 
-    e?.preventDefault();
-
-    if (loading) {
-      return;
-    }
-
-    console.log(
-      "🔥 LOGIN START"
-    );
+    e.preventDefault();
 
     setLoading(true);
 
-    setErrorMsg(null);
+    setError("");
 
     try {
 
-      /* ==========================================
-         LOGIN SUPABASE
-      ========================================== */
+      const supabase =
+        createBrowserClient();
 
       const {
-
-        data,
         error,
-
       } =
         await supabase.auth
           .signInWithPassword({
 
-            email:
-              email.trim(),
-
+            email,
             password,
           });
 
-      console.log(
-        "AUTH RESPONSE:",
-        {
-          user:
-            data?.user?.email,
-          session:
-            !!data?.session,
-          error,
-        }
-      );
-
-      /* ==========================================
-         LOGIN ERROR
-      ========================================== */
-
       if (error) {
 
-        console.error(
-          "LOGIN ERROR:",
-          error
-        );
-
-        setErrorMsg(
-
-          lang === "pt"
-
-            ? "Email ou senha inválidos."
-
-            : "Email o contraseña inválidos."
+        setError(
+          error.message
         );
 
         return;
       }
 
-      /* ==========================================
-         SESSION CHECK
-      ========================================== */
-
-      if (
-        !data?.session
-      ) {
-
-        console.error(
-          "NO SESSION"
-        );
-
-        setErrorMsg(
-
-          lang === "pt"
-
-            ? "Sessão não criada."
-
-            : "Sesión no creada."
-        );
-
-        return;
-      }
-
-      console.log(
-        "✅ SESSION OK"
+      router.push(
+        "/dashboard"
       );
 
-      /* ==========================================
-         AGUARDA COOKIE SSR
-      ========================================== */
+      router.refresh();
 
-      await new Promise(
-        (resolve) =>
+    } catch {
 
-          setTimeout(
-            resolve,
-            2200
-          )
-      );
-
-      /* ==========================================
-         VALIDAR ASSINATURA
-      ========================================== */
-
-      const response =
-        await fetch(
-
-          "/api/assinaturas/status",
-
-          {
-            method: "GET",
-
-            credentials:
-              "include",
-
-            cache:
-              "no-store",
-          }
-        );
-
-      /* ==========================================
-         RESPONSE ERROR
-      ========================================== */
-
-      if (!response.ok) {
-
-        console.error(
-          "STATUS RESPONSE ERROR:",
-          response.status
-        );
-
-        setErrorMsg(
-
-          lang === "pt"
-
-            ? "Erro ao validar assinatura."
-
-            : "Error al validar suscripción."
-        );
-
-        return;
-      }
-
-      const assinatura =
-        await response.json();
-
-      console.log(
-        "📦 ASSINATURA:",
-        assinatura
-      );
-
-      /* ==========================================
-         CONTEXTO CHECKOUT
-      ========================================== */
-
-      if (
-        plano &&
-        periodo
-      ) {
-
-        console.log(
-          "🟢 REDIRECT CHECKOUT"
-        );
-
-        window.location.href =
-          `/checkout?plano=${plano}&periodo=${periodo}`;
-
-        return;
-      }
-
-      /* ==========================================
-         ASSINATURA ATIVA
-      ========================================== */
-
-      if (
-        assinatura?.ativo === true
-      ) {
-
-        console.log(
-          "🟢 REDIRECT DASHBOARD"
-        );
-
-        window.location.href =
-          next;
-
-        return;
-      }
-
-      /* ==========================================
-         SEM ASSINATURA
-      ========================================== */
-
-      console.log(
-        "🟡 REDIRECT PLANOS"
-      );
-
-      window.location.href =
-        "/planos";
-
-    } catch (err) {
-
-      console.error(
-        "💥 LOGIN FATAL:",
-        err
-      );
-
-      setErrorMsg(
-
-        lang === "pt"
-
-          ? "Erro inesperado no login."
-
-          : "Error inesperado."
+      setError(
+        "Erro interno no login."
       );
 
     } finally {
@@ -435,100 +97,29 @@ export default function LoginClient() {
 
   return (
 
-    <div
+    <form
+      onSubmit={handleLogin}
       className="
-        space-y-6
+        space-y-5
       "
     >
 
-      {/* =================================================
-          CONTEXTO ASSINATURA
-      ================================================= */}
+      <div>
 
-      {mounted &&
-        plano &&
-        periodo && (
-
-        <div
+        <label
           className="
-            rounded-2xl
-            border
-            border-emerald-200
-            bg-emerald-50/90
-            p-4
-            shadow-sm
+            mb-2
+            block
+            text-sm
+            font-semibold
+            text-neutral-700
           "
         >
-
-          <div
-            className="
-              text-[11px]
-              font-black
-              uppercase
-              tracking-widest
-              text-emerald-700
-            "
-          >
-
-            {
-              lang === "pt"
-
-                ? "Continuidade da Assinatura"
-
-                : "Continuidad de Suscripción"
-            }
-
-          </div>
-
-          <div
-            className="
-              mt-3
-              text-sm
-              text-emerald-900
-            "
-          >
-
-            <div
-              className="
-                font-bold
-              "
-            >
-              {getPlanoLabel()}
-            </div>
-
-            <div
-              className="
-                mt-1
-                text-emerald-700
-              "
-            >
-              {getPeriodoLabel()}
-            </div>
-
-          </div>
-
-        </div>
-      )}
-
-      {/* =================================================
-          FORM
-      ================================================= */}
-
-      <form
-        onSubmit={handleSubmit}
-        className="
-          space-y-4
-        "
-      >
+          Email
+        </label>
 
         <input
           type="email"
-          autoComplete="email"
-          placeholder={
-            lang === "pt"
-              ? "Seu email"
-              : "Tu email"
-          }
           value={email}
           onChange={(e) =>
             setEmail(
@@ -537,29 +128,38 @@ export default function LoginClient() {
           }
           className="
             w-full
-            rounded-xl
+            rounded-2xl
             border
-            border-neutral-200
-            bg-white/95
+            border-neutral-300
+            bg-white
             px-4
             py-3
             outline-none
-            transition-all
+            transition
             focus:border-green-600
-            focus:ring-2
-            focus:ring-green-600/20
           "
+          placeholder="seu@email.com"
           required
         />
 
+      </div>
+
+      <div>
+
+        <label
+          className="
+            mb-2
+            block
+            text-sm
+            font-semibold
+            text-neutral-700
+          "
+        >
+          Senha
+        </label>
+
         <input
           type="password"
-          autoComplete="current-password"
-          placeholder={
-            lang === "pt"
-              ? "Sua senha"
-              : "Tu contraseña"
-          }
           value={password}
           onChange={(e) =>
             setPassword(
@@ -568,144 +168,63 @@ export default function LoginClient() {
           }
           className="
             w-full
-            rounded-xl
+            rounded-2xl
             border
-            border-neutral-200
-            bg-white/95
+            border-neutral-300
+            bg-white
             px-4
             py-3
             outline-none
-            transition-all
+            transition
             focus:border-green-600
-            focus:ring-2
-            focus:ring-green-600/20
           "
+          placeholder="••••••••"
           required
         />
 
-        {errorMsg && (
+      </div>
 
-          <div
-            className="
-              rounded-xl
-              border
-              border-red-200
-              bg-red-50
-              px-4
-              py-3
-              text-sm
-              text-red-700
-            "
-          >
-            {errorMsg}
-          </div>
-        )}
+      {error && (
 
-        <button
-          type="submit"
-          disabled={loading}
+        <div
           className="
-            w-full
-            rounded-xl
-            bg-gradient-to-r
-            from-green-600
-            to-emerald-700
+            rounded-2xl
+            border
+            border-red-200
+            bg-red-50
+            px-4
             py-3
-            font-black
-            uppercase
-            tracking-wide
-            text-white
-            shadow-lg
-            transition-all
-            duration-300
-            hover:scale-[1.01]
-            hover:shadow-2xl
-            disabled:cursor-not-allowed
-            disabled:opacity-70
+            text-sm
+            text-red-700
           "
         >
+          {error}
+        </div>
+      )}
 
-          {loading
-
-            ? (
-              lang === "pt"
-                ? "Processando..."
-                : "Procesando..."
-            )
-
-            : (
-              lang === "pt"
-                ? "Entrar"
-                : "Ingresar"
-            )}
-
-        </button>
-
-      </form>
-
-      {/* =================================================
-          LANG SWITCH
-      ================================================= */}
-
-      <div
+      <button
+        type="submit"
+        disabled={loading}
         className="
-          flex
-          items-center
-          justify-center
-          gap-3
-          pt-2
-          text-sm
+          w-full
+          rounded-2xl
+          bg-green-700
+          px-4
+          py-3
+          font-black
+          text-white
+          transition
+          hover:bg-green-800
+          disabled:opacity-50
         "
       >
 
-        <button
-          type="button"
-          onClick={() => {
+        {loading
+          ? "Entrando..."
+          : "Entrar"}
 
-            setLang("pt");
+      </button>
 
-            setLangClient("pt");
-          }}
-          className={`
-            transition-all
-
-            ${
-              lang === "pt"
-
-                ? "font-black text-green-700"
-
-                : "text-neutral-500"
-            }
-          `}
-        >
-          🇧🇷 PT
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-
-            setLang("es");
-
-            setLangClient("es");
-          }}
-          className={`
-            transition-all
-
-            ${
-              lang === "es"
-
-                ? "font-black text-green-700"
-
-                : "text-neutral-500"
-            }
-          `}
-        >
-          🇪🇸 ES
-        </button>
-
-      </div>
-
-    </div>
+    </form>
   );
 }

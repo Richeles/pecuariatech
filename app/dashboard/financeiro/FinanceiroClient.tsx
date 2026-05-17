@@ -2,6 +2,7 @@
 
 // =========================================================
 // PecuariaTech
+// Plataforma Operacional BioFinanceira
 // Financeiro Runtime Inteligente
 // =========================================================
 
@@ -14,11 +15,18 @@ import {
    TYPES
 ========================================================= */
 
-type ResumoFinanceiro = {
-  receita_total: number | null;
-  custos_totais: number | null;
-  resultado_operacional: number | null;
-  margem_percentual: number | null;
+type FinanceiroPayload = {
+  receita: number;
+  despesas: number;
+  lucro: number;
+  margem: number;
+};
+
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+  meta?: any;
+  error?: string | null;
 };
 
 /* =========================================================
@@ -31,13 +39,20 @@ export default function FinanceiroClient() {
     resumo,
     setResumo,
   ] = useState<
-    ResumoFinanceiro | null
+    FinanceiroPayload | null
   >(null);
 
   const [
     loading,
     setLoading,
   ] = useState(true);
+
+  const [
+    error,
+    setError,
+  ] = useState<string | null>(
+    null
+  );
 
   /* =====================================================
      LOAD
@@ -51,9 +66,11 @@ export default function FinanceiroClient() {
 
       try {
 
+        setLoading(true);
+
         const response =
           await fetch(
-            "/api/financeiro/fluxo",
+            "/api/financeiro/basico",
             {
               cache: "no-store",
             }
@@ -62,24 +79,43 @@ export default function FinanceiroClient() {
         if (!response.ok) {
 
           throw new Error(
+            "Falha ao carregar runtime financeiro"
+          );
+        }
+
+        const json:
+          ApiResponse<FinanceiroPayload> =
+            await response.json();
+
+        if (!json.success) {
+
+          throw new Error(
+            json.error ??
             "Erro financeiro"
           );
         }
 
-        const data =
-          await response.json();
+        if (mounted) {
+
+          setResumo(
+            json.data
+          );
+        }
+
+      } catch (err: any) {
+
+        console.error(
+          "FINANCEIRO_RUNTIME:",
+          err
+        );
 
         if (mounted) {
 
-          setResumo(data);
+          setError(
+            err?.message ??
+            "Erro interno"
+          );
         }
-
-      } catch (err) {
-
-        console.error(
-          "FINANCEIRO:",
-          err
-        );
 
       } finally {
 
@@ -113,7 +149,7 @@ export default function FinanceiroClient() {
       valor === undefined
     ) {
 
-      return "—";
+      return "R$ 0,00";
     }
 
     return valor.toLocaleString(
@@ -152,7 +188,54 @@ export default function FinanceiroClient() {
             text-emerald-700
           "
         >
-          Carregando runtime financeiro...
+          Inicializando runtime
+          biofinanceiro...
+        </div>
+
+      </div>
+    );
+  }
+
+  /* =====================================================
+     ERROR
+  ===================================================== */
+
+  if (error) {
+
+    return (
+
+      <div
+        className="
+          rounded-3xl
+          border
+          border-red-100
+          bg-red-50
+          p-8
+          shadow-sm
+        "
+      >
+
+        <div className="space-y-2">
+
+          <h2
+            className="
+              text-lg
+              font-bold
+              text-red-700
+            "
+          >
+            Runtime Financeiro
+          </h2>
+
+          <p
+            className="
+              text-sm
+              text-red-600
+            "
+          >
+            {error}
+          </p>
+
         </div>
 
       </div>
@@ -185,30 +268,30 @@ export default function FinanceiroClient() {
           {
             titulo: "Receita",
             valor: moeda(
-              resumo?.receita_total
+              resumo?.receita
             ),
           },
 
           {
-            titulo: "Custos",
+            titulo: "Despesas",
             valor: moeda(
-              resumo?.custos_totais
+              resumo?.despesas
             ),
           },
 
           {
-            titulo: "Resultado",
+            titulo: "Lucro",
             valor: moeda(
-              resumo?.resultado_operacional
+              resumo?.lucro
             ),
           },
 
           {
             titulo: "Margem",
             valor:
-              resumo?.margem_percentual
-                ? `${resumo.margem_percentual.toFixed(1)}%`
-                : "—",
+              `${(
+                resumo?.margem ?? 0
+              ).toFixed(1)}%`,
           },
         ].map((item) => (
 
@@ -253,7 +336,7 @@ export default function FinanceiroClient() {
       </section>
 
       {/* =================================================
-          CFO
+          CFO COGNITIVO
       ================================================= */}
 
       <section
@@ -276,7 +359,7 @@ export default function FinanceiroClient() {
               text-gray-900
             "
           >
-            CFO Cognitivo
+            CFO Cognitivo BioFinanceiro
           </h2>
 
           <p
@@ -286,10 +369,12 @@ export default function FinanceiroClient() {
               text-gray-600
             "
           >
-            Runtime financeiro estabilizado.
-            O sistema agora opera de forma
-            modular, desacoplada e preparada
-            para evolução cognitiva autônoma.
+            O runtime financeiro agora opera
+            sobre governança semântica,
+            payload padronizado e integração
+            preparada para o Python Engine,
+            Motor π e inteligência operacional
+            biofinanceira do PecuariaTech.
           </p>
 
         </div>
