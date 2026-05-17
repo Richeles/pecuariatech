@@ -1,7 +1,12 @@
 "use client";
 
 import T from "@/app/components/T";
-import CFORealCard from "@/app/components/cfo/CFORealCard";
+
+import CFORealCard
+  from "@/app/components/cfo/CFORealCard";
+
+import CFOAIInsights
+  from "@/app/components/cfo/CFOAIInsights";
 
 /* =========================================================
    DASHBOARD HOME
@@ -387,7 +392,17 @@ export default function DashboardHome() {
 
           </div>
 
-          <CFORealCard />
+          {/* =================================================
+              CFO REAL + IA
+          ================================================= */}
+
+          <div className="space-y-8">
+
+            <CFORealCard />
+
+            <CFOAIInsights />
+
+          </div>
 
         </section>
 
