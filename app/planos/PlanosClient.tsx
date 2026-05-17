@@ -503,7 +503,7 @@ export default function PlanosClient() {
 
       {/* GRID PREMIUM */}
 
-      <div className="mx-auto mt-20 grid max-w-[1700px] gap-8 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
+      <div className="mx-auto mt-20 grid max-w-[1850px] gap-10 md:grid-cols-2 xl:grid-cols-5">
 
         {planos.map((plano) => {
 
@@ -522,7 +522,7 @@ export default function PlanosClient() {
 
             <div
               key={plano.id}
-              className={`relative flex min-h-[980px] h-full flex-col rounded-3xl border bg-white p-10 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${
+              className={`relative flex min-h-[980px] flex-col rounded-3xl border bg-white px-9 py-10 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${
                 plano.destaque
                   ? "border-emerald-400 ring-2 ring-emerald-200"
                   : "border-gray-200"
@@ -539,37 +539,37 @@ export default function PlanosClient() {
 
               <div>
 
-                <h3 className="text-2xl font-black text-gray-950">
+                <h3 className="min-h-[70px] text-[34px] font-black leading-tight text-gray-950">
                   {plano.nome}
                 </h3>
 
-                <p className="mt-5 min-h-[190px] text-[15px] leading-9 text-gray-600">
+                <p className="mt-6 min-h-[210px] text-[15px] leading-9 text-gray-600">
                   {plano.descricao}
                 </p>
 
               </div>
 
-              {/* PREÇO PREMIUM */}
+              {/* PREÇO */}
 
-              <div className="mt-10 min-h-[120px]">
+              <div className="mt-2 min-h-[120px]">
 
-                <div className="flex items-end justify-start whitespace-nowrap">
+                <div className="flex items-end whitespace-nowrap">
 
-                  <span className="mr-1 mb-[7px] text-[16px] font-black text-emerald-600">
+                  <span className="mr-1 mb-[10px] text-[18px] font-black text-emerald-600">
                     R$
                   </span>
 
-                  <span className="text-[42px] font-black leading-none tracking-tight text-emerald-600">
+                  <span className="text-[56px] font-black leading-none tracking-[-0.04em] text-emerald-600">
                     {inteiro}
                   </span>
 
-                  <span className="mb-[5px] ml-1 text-[20px] font-black leading-none text-emerald-600">
+                  <span className="mb-[10px] ml-1 text-[24px] font-black leading-none text-emerald-600">
                     ,{decimal}
                   </span>
 
                 </div>
 
-                <div className="mt-3 text-sm font-semibold text-gray-500">
+                <div className="mt-4 text-sm font-semibold text-gray-500">
 
                   {periodo === "mensal" &&
                     t.porMes}
