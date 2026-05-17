@@ -1,120 +1,388 @@
+"use client";
+
 import T from "@/app/components/T";
 import CFORealCard from "@/app/components/cfo/CFORealCard";
 
+/* =========================================================
+   DASHBOARD HOME
+   PecuariaTech Runtime Enterprise
+========================================================= */
+
 export default function DashboardHome() {
+
+  const modules = [
+    {
+      titlePt:
+        "Inteligência Financeira",
+
+      titleEs:
+        "Inteligencia Financiera",
+
+      descPt:
+        "Gestão financeira estratégica integrada ao runtime operacional.",
+
+      descEs:
+        "Gestión financiera estratégica integrada al runtime operacional.",
+
+      icon: "💰",
+    },
+
+    {
+      titlePt:
+        "Rebanho Inteligente",
+
+      titleEs:
+        "Rebaño Inteligente",
+
+      descPt:
+        "Rastreamento produtivo, sanitário e operacional do rebanho.",
+
+      descEs:
+        "Rastreo productivo, sanitario y operacional del rebaño.",
+
+      icon: "🐄",
+    },
+
+    {
+      titlePt:
+        "Pastagem Inteligente",
+
+      titleEs:
+        "Pastura Inteligente",
+
+      descPt:
+        "Controle de lotação, capacidade de suporte e eficiência do pasto.",
+
+      descEs:
+        "Control de carga animal, capacidad de soporte y eficiencia del pasto.",
+
+      icon: "🌱",
+    },
+
+    {
+      titlePt:
+        "CFO Cognitivo",
+
+      titleEs:
+        "CFO Cognitivo",
+
+      descPt:
+        "Diagnóstico financeiro automatizado por inteligência operacional.",
+
+      descEs:
+        "Diagnóstico financiero automatizado por inteligencia operacional.",
+
+      icon: "🧠",
+    },
+  ];
+
   return (
-    <main className="min-h-screen bg-[#08140d] text-white">
 
-      {/* FUNDO EXECUTIVO */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(38,90,55,0.20),transparent_60%)]" />
+    <main className="min-h-screen text-white">
 
-      <div className="relative z-10 mx-auto max-w-7xl space-y-14 p-8">
+      {/* =====================================================
+          WRAPPER
+      ===================================================== */}
 
-        {/* ================= HEADER ================= */}
-        <header className="space-y-4 border-b border-[#1d3324] pb-8">
+      <div className="mx-auto max-w-[1850px] space-y-14">
 
-          <div className="inline-flex items-center rounded-full border border-[#295135] bg-[#173222] px-4 py-2 text-sm text-green-300 shadow-lg">
-            IA operacional estabilizada
-          </div>
+        {/* =====================================================
+            HERO
+        ===================================================== */}
 
-          <div>
+        <section
+          className="
+            relative
+            overflow-hidden
+            rounded-[36px]
+            border
+            border-emerald-900/40
+            bg-gradient-to-br
+            from-[#02150d]
+            via-[#031b11]
+            to-[#021008]
+            p-10
+            shadow-2xl
+          "
+        >
 
-            <h1 className="text-5xl font-bold tracking-tight text-white">
+          {/* GLOW */}
+
+          <div
+            className="
+              absolute
+              -top-24
+              right-0
+              h-[320px]
+              w-[320px]
+              rounded-full
+              bg-emerald-500/10
+              blur-3xl
+            "
+          />
+
+          <div
+            className="
+              relative
+              z-10
+            "
+          >
+
+            {/* BADGE */}
+
+            <div
+              className="
+                inline-flex
+                items-center
+                rounded-full
+                border
+                border-emerald-500/20
+                bg-emerald-500/10
+                px-5
+                py-2
+                text-sm
+                font-semibold
+                text-emerald-300
+              "
+            >
+
+              <T
+                pt="IA operacional estabilizada"
+                es="IA operacional estabilizada"
+              />
+
+            </div>
+
+            {/* TITLE */}
+
+            <h1
+              className="
+                mt-7
+                text-5xl
+                font-black
+                tracking-tight
+                text-white
+                xl:text-6xl
+              "
+            >
               PecuariaTech
             </h1>
 
-            <p className="mt-4 max-w-3xl text-lg leading-8 text-green-100/70">
-              Plataforma operacional analítica para gestão inteligente,
-              financeira e estratégica da operação pecuária.
-            </p>
-
-          </div>
-
-        </header>
-
-        {/* ================= KPIs ================= */}
-        <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
-
-          {[
-            {
-              label: "kpi_animais",
-              value: "1.247",
-              hint: "kpi_total_rastreado",
-              active: true,
-            },
-            {
-              label: "kpi_receita",
-              value: "R$ 124.580",
-              hint: "kpi_mes_corrente",
-            },
-            {
-              label: "kpi_produtividade",
-              value: "87%",
-              hint: "kpi_indice_medio",
-            },
-          ].map((kpi) => (
-            <div
-              key={kpi.label}
-              className={`
-                relative overflow-hidden
-                rounded-3xl
-                border border-[#295135]
-                bg-[#102117]/90
-                p-8
-                shadow-2xl
-                backdrop-blur
-                transition-all duration-300
-                hover:border-green-400/40
-              `}
+            <p
+              className="
+                mt-6
+                max-w-4xl
+                text-lg
+                leading-9
+                text-emerald-100/70
+              "
             >
 
-              {/* LINHA SUPERIOR */}
-              <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-green-500/70 to-green-300/10" />
+              <T
+                pt="Plataforma operacional analítica para gestão inteligente, financeira e estratégica da operação pecuária."
+                es="Plataforma operacional analítica para gestión inteligente, financiera y estratégica de la operación ganadera."
+              />
 
-              <div className="space-y-5">
+            </p>
 
-                <div>
+            {/* KPI GRID */}
 
-                  <p className="text-sm text-green-100/50">
-                    <T k={kpi.label} />
-                  </p>
+            <div
+              className="
+                mt-14
+                grid
+                gap-6
+                md:grid-cols-2
+                xl:grid-cols-3
+              "
+            >
 
-                  <p className="mt-3 text-5xl font-bold tracking-tight text-white">
-                    {kpi.value}
-                  </p>
+              {[
+                {
+                  labelPt:
+                    "Animais rastreados",
+
+                  labelEs:
+                    "Animales rastreados",
+
+                  value: "1.247",
+
+                  hintPt:
+                    "Base operacional consolidada",
+
+                  hintEs:
+                    "Base operacional consolidada",
+                },
+
+                {
+                  labelPt:
+                    "Receita operacional",
+
+                  labelEs:
+                    "Ingresos operacionales",
+
+                  value: "R$ 124.580",
+
+                  hintPt:
+                    "Resultado consolidado mensal",
+
+                  hintEs:
+                    "Resultado consolidado mensual",
+                },
+
+                {
+                  labelPt:
+                    "Eficiência produtiva",
+
+                  labelEs:
+                    "Eficiencia productiva",
+
+                  value: "87%",
+
+                  hintPt:
+                    "Índice médio operacional",
+
+                  hintEs:
+                    "Índice operacional promedio",
+                },
+              ].map((item) => (
+
+                <div
+                  key={item.labelPt}
+                  className="
+                    rounded-3xl
+                    border
+                    border-emerald-500/20
+                    bg-[#0a2117]/90
+                    p-8
+                    shadow-xl
+                    backdrop-blur
+                  "
+                >
+
+                  <div
+                    className="
+                      text-sm
+                      text-emerald-100/50
+                    "
+                  >
+
+                    <T
+                      pt={item.labelPt}
+                      es={item.labelEs}
+                    />
+
+                  </div>
+
+                  <div
+                    className="
+                      mt-4
+                      text-5xl
+                      font-black
+                      tracking-tight
+                      text-white
+                    "
+                  >
+                    {item.value}
+                  </div>
+
+                  <div
+                    className="
+                      mt-3
+                      text-sm
+                      text-emerald-100/50
+                    "
+                  >
+
+                    <T
+                      pt={item.hintPt}
+                      es={item.hintEs}
+                    />
+
+                  </div>
 
                 </div>
 
-                <p className="text-sm text-green-100/60">
-                  <T k={kpi.hint} />
-                </p>
-
-              </div>
+              ))}
 
             </div>
-          ))}
+
+          </div>
 
         </section>
 
-        {/* ================= CFO ================= */}
-        <section className="space-y-5">
+        {/* =====================================================
+            CFO
+        ===================================================== */}
 
-          <div className="flex items-center justify-between">
+        <section className="space-y-6">
+
+          <div
+            className="
+              flex
+              flex-col
+              gap-5
+              lg:flex-row
+              lg:items-center
+              lg:justify-between
+            "
+          >
 
             <div>
 
-              <h2 className="text-3xl font-semibold text-white">
-                Inteligência Financeira
+              <h2
+                className="
+                  text-4xl
+                  font-black
+                  text-gray-950
+                "
+              >
+
+                <T
+                  pt="Inteligência Financeira"
+                  es="Inteligencia Financiera"
+                />
+
               </h2>
 
-              <p className="mt-2 text-green-100/60">
-                Análise operacional consolidada da fazenda
+              <p
+                className="
+                  mt-3
+                  text-lg
+                  text-gray-500
+                "
+              >
+
+                <T
+                  pt="Análise operacional consolidada da fazenda"
+                  es="Análisis operacional consolidado de la finca"
+                />
+
               </p>
 
             </div>
 
-            <div className="rounded-full border border-[#295135] bg-[#173222] px-4 py-2 text-sm text-green-300">
-              CFO Online
+            <div
+              className="
+                inline-flex
+                items-center
+                rounded-full
+                border
+                border-emerald-200
+                bg-emerald-50
+                px-5
+                py-3
+                text-sm
+                font-bold
+                text-emerald-700
+              "
+            >
+
+              <T
+                pt="CFO Online"
+                es="CFO Online"
+              />
+
             </div>
 
           </div>
@@ -123,109 +391,228 @@ export default function DashboardHome() {
 
         </section>
 
-        {/* ================= MÓDULOS ================= */}
+        {/* =====================================================
+            MODULOS
+        ===================================================== */}
+
         <section className="space-y-8">
 
           <div>
 
-            <h2 className="text-3xl font-semibold text-white">
-              Módulos Estratégicos
+            <h2
+              className="
+                text-4xl
+                font-black
+                text-gray-950
+              "
+            >
+
+              <T
+                pt="Módulos Estratégicos"
+                es="Módulos Estratégicos"
+              />
+
             </h2>
 
-            <p className="mt-2 text-green-100/60">
-              Núcleos operacionais integrados do sistema executivo rural
+            <p
+              className="
+                mt-3
+                text-lg
+                text-gray-500
+              "
+            >
+
+              <T
+                pt="Núcleos operacionais integrados do sistema executivo rural"
+                es="Núcleos operacionales integrados del sistema ejecutivo rural"
+              />
+
             </p>
 
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div
+            className="
+              grid
+              gap-7
+              md:grid-cols-2
+              xl:grid-cols-4
+            "
+          >
 
-            {[
-              {
-                title: "modulo_financeiro",
-                desc: "desc_financeiro",
-                icon: "💰",
-              },
-              {
-                title: "modulo_rebanho",
-                desc: "desc_rebanho",
-                icon: "🐄",
-              },
-              {
-                title: "modulo_pastagem",
-                desc: "desc_pastagem",
-                icon: "🌱",
-              },
-              {
-                title: "modulo_cfo",
-                desc: "desc_cfo",
-                icon: "🧠",
-              },
-            ].map((mod) => (
+            {modules.map((mod) => (
+
               <div
-                key={mod.title}
+                key={mod.titlePt}
                 className="
-                  rounded-3xl
-                  border border-[#295135]
-                  bg-[#102117]/90
-                  p-7
-                  shadow-2xl
-                  transition-all duration-300
-                  hover:border-green-400/40
-                  hover:bg-[#173222]
+                  rounded-[30px]
+                  border
+                  border-emerald-100
+                  bg-white
+                  p-8
+                  shadow-sm
+                  transition-all
+                  duration-300
+                  hover:-translate-y-1
+                  hover:shadow-2xl
                 "
               >
 
-                <div className="text-3xl">
+                <div className="text-4xl">
                   {mod.icon}
                 </div>
 
-                <h3 className="mt-5 text-xl font-semibold text-white">
-                  <T k={mod.title} />
+                <h3
+                  className="
+                    mt-6
+                    text-2xl
+                    font-black
+                    text-gray-950
+                  "
+                >
+
+                  <T
+                    pt={mod.titlePt}
+                    es={mod.titleEs}
+                  />
+
                 </h3>
 
-                <p className="mt-3 text-sm leading-7 text-green-100/60">
-                  <T k={mod.desc} />
+                <p
+                  className="
+                    mt-4
+                    leading-8
+                    text-gray-600
+                  "
+                >
+
+                  <T
+                    pt={mod.descPt}
+                    es={mod.descEs}
+                  />
+
                 </p>
 
               </div>
+
             ))}
 
           </div>
 
         </section>
 
-        {/* ================= STATUS ================= */}
-        <section className="rounded-3xl border border-[#295135] bg-gradient-to-r from-[#173222] to-[#102117] p-8 shadow-2xl">
+        {/* =====================================================
+            STATUS
+        ===================================================== */}
 
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <section
+          className="
+            rounded-[36px]
+            border
+            border-emerald-100
+            bg-gradient-to-r
+            from-[#052818]
+            to-[#031b11]
+            p-10
+            shadow-2xl
+          "
+        >
+
+          <div
+            className="
+              flex
+              flex-col
+              gap-8
+              lg:flex-row
+              lg:items-center
+              lg:justify-between
+            "
+          >
 
             <div>
 
-              <p className="text-sm uppercase tracking-wide text-green-200/60">
-                Sistema Operacional
-              </p>
+              <div
+                className="
+                  text-sm
+                  font-black
+                  uppercase
+                  tracking-[0.2em]
+                  text-emerald-300
+                "
+              >
 
-              <h3 className="mt-2 text-3xl font-semibold text-white">
-                Plataforma estabilizada
+                <T
+                  pt="Sistema Operacional"
+                  es="Sistema Operacional"
+                />
+
+              </div>
+
+              <h3
+                className="
+                  mt-4
+                  text-4xl
+                  font-black
+                  text-white
+                "
+              >
+
+                <T
+                  pt="Plataforma estabilizada"
+                  es="Plataforma estabilizada"
+                />
+
               </h3>
 
-              <p className="mt-3 max-w-2xl leading-7 text-green-100/70">
-                Todos os módulos operacionais estão sincronizados,
-                protegidos e funcionando dentro da arquitetura analítica integrada.
+              <p
+                className="
+                  mt-5
+                  max-w-3xl
+                  text-lg
+                  leading-9
+                  text-emerald-100/70
+                "
+              >
+
+                <T
+                  pt="Todos os módulos operacionais estão sincronizados, protegidos e funcionando dentro da arquitetura analítica integrada."
+                  es="Todos los módulos operacionales están sincronizados, protegidos y funcionando dentro de la arquitectura analítica integrada."
+                />
+
               </p>
 
             </div>
 
-            <div className="rounded-2xl border border-[#295135] bg-[#0b1811]/80 px-6 py-5">
+            <div
+              className="
+                inline-flex
+                items-center
+                gap-3
+                rounded-2xl
+                border
+                border-emerald-500/20
+                bg-[#0b1811]/70
+                px-7
+                py-5
+                text-lg
+                font-semibold
+                text-emerald-300
+              "
+            >
 
-              <div className="flex items-center gap-3 text-green-300">
+              <div
+                className="
+                  h-3
+                  w-3
+                  rounded-full
+                  bg-green-400
+                "
+              />
 
-                <div className="h-3 w-3 rounded-full bg-green-400" />
-
-                Operação online
-
-              </div>
+              <T
+                pt="Operação online"
+                es="Operación online"
+              />
 
             </div>
 

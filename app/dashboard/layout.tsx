@@ -50,7 +50,7 @@ export default async function DashboardLayout({
       className="
         min-h-screen
         bg-gradient-to-br
-        from-gray-50
+        from-[#f4f7f5]
         via-white
         to-emerald-50
         text-gray-800
@@ -77,7 +77,8 @@ export default async function DashboardLayout({
             border-r
             border-emerald-100
             bg-white/95
-            backdrop-blur
+            backdrop-blur-xl
+            shadow-sm
           "
         >
 
@@ -110,8 +111,9 @@ export default async function DashboardLayout({
               z-30
               border-b
               border-emerald-100
-              bg-white/90
-              backdrop-blur-xl
+              bg-white/85
+              backdrop-blur-2xl
+              shadow-sm
             "
           >
 
@@ -140,7 +142,7 @@ export default async function DashboardLayout({
                     text-[11px]
                     font-black
                     uppercase
-                    tracking-[0.25em]
+                    tracking-[0.28em]
                     text-emerald-700
                   "
                 >
@@ -151,9 +153,9 @@ export default async function DashboardLayout({
                   className="
                     mt-2
                     truncate
-                    text-2xl
+                    text-3xl
                     font-black
-                    text-gray-900
+                    text-gray-950
                   "
                 >
                   PecuariaTech
@@ -179,7 +181,7 @@ export default async function DashboardLayout({
                 className="
                   flex
                   items-center
-                  gap-5
+                  gap-4
                 "
               >
 
@@ -320,7 +322,7 @@ export default async function DashboardLayout({
                   className="
                     rounded-2xl
                     border
-                    border-gray-200
+                    border-emerald-100
                     bg-white
                     px-3
                     py-2
@@ -371,7 +373,10 @@ export default async function DashboardLayout({
               flex-1
               overflow-x-hidden
               overflow-y-auto
-              p-8
+              px-6
+              py-8
+              xl:px-10
+              2xl:px-14
             "
           >
 
@@ -379,7 +384,7 @@ export default async function DashboardLayout({
               className="
                 mx-auto
                 w-full
-                max-w-7xl
+                max-w-[1850px]
               "
             >
 

@@ -2,8 +2,8 @@
 
 // =========================================================
 // PecuariaTech
-// Language Switcher Premium
-// PT + ES Runtime
+// Language Switcher Premium Runtime
+// PT + ES + Runtime Sync
 // =========================================================
 
 import {
@@ -47,26 +47,51 @@ export default function LanguageSwitcher() {
 
     setMounted(true);
 
-  }, []);
+    const saved =
+      localStorage.getItem(
+        STORAGE_KEY
+      ) as Lang | null;
+
+    if (
+      saved &&
+      saved !== lang
+    ) {
+
+      setLang(saved);
+    }
+
+  }, [
+    lang,
+    setLang,
+  ]);
 
   /* =====================================================
-     CHANGE
+     CHANGE LANGUAGE
   ===================================================== */
 
   function handleChange(
     value: Lang
   ) {
 
+    // localStorage
     localStorage.setItem(
       STORAGE_KEY,
       value
     );
 
+    // runtime provider
     setLang(value);
+
+    // runtime event
+    window.dispatchEvent(
+      new Event(
+        "languageChanged"
+      )
+    );
   }
 
   /* =====================================================
-     AVOID HYDRATION ERROR
+     HYDRATION
   ===================================================== */
 
   if (!mounted) {
@@ -80,36 +105,48 @@ export default function LanguageSwitcher() {
 
   return (
 
-    <select
-      value={lang}
-      onChange={(e) =>
-        handleChange(
-          e.target.value as Lang
-        )
-      }
+    <div
       className="
-        rounded-xl
-        border
-        border-emerald-200
-        bg-white
-        px-3
-        py-2
-        text-sm
-        font-semibold
-        text-gray-700
-        shadow-sm
-        outline-none
+        flex
+        items-center
       "
     >
 
-      <option value="pt">
-        PT
-      </option>
+      <select
+        value={lang}
+        onChange={(e) =>
+          handleChange(
+            e.target.value as Lang
+          )
+        }
+        className="
+          rounded-xl
+          border
+          border-emerald-200
+          bg-white
+          px-3
+          py-2
+          text-sm
+          font-bold
+          text-gray-700
+          shadow-sm
+          outline-none
+          transition-all
+          hover:border-emerald-400
+          focus:border-emerald-500
+        "
+      >
 
-      <option value="es">
-        ES
-      </option>
+        <option value="pt">
+          🇧🇷 PT
+        </option>
 
-    </select>
+        <option value="es">
+          🇪🇸 ES
+        </option>
+
+      </select>
+
+    </div>
   );
 }

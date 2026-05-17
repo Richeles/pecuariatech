@@ -1,87 +1,71 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
-import {
-  getLangFromClient,
-  t,
-} from "@/app/lib/i18n";
+/* =========================================================
+   TYPES
+========================================================= */
 
-type Lang =
-  | "pt"
-  | "es";
+type Props = {
+  pt: string;
+  es?: string;
+};
+
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 export default function T({
-  k,
-}: {
-  k: string;
-}) {
+  pt,
+  es,
+}: Props) {
 
-  const [
-    lang,
-    setLang,
-  ] =
-    useState<Lang>(
-      "pt"
-    );
-
-  /* ==========================================
-     CLIENT LOCALE
-  ========================================== */
+  const [lang, setLang] =
+    useState("pt");
 
   useEffect(() => {
 
-    const current =
-      getLangFromClient();
+    const stored =
+      localStorage.getItem("pecuariatech_lang");
 
-    if (
-      current === "es"
-    ) {
-
-      setLang("es");
-
-    } else {
-
-      setLang("pt");
-
+    if (stored) {
+      setLang(stored);
     }
+
+    const handle =
+      () => {
+
+        const updated =
+          localStorage.getItem(
+            "pecuariatech_lang"
+          );
+
+        if (updated) {
+          setLang(updated);
+        }
+      };
+
+    window.addEventListener(
+      "languageChanged",
+      handle
+    );
+
+    return () => {
+
+      window.removeEventListener(
+        "languageChanged",
+        handle
+      );
+    };
 
   }, []);
 
-  /* ==========================================
-     TRANSLATION
-  ========================================== */
-
-  let value: any;
-
-  try {
-
-    value =
-      t(
-        lang,
-        k as any
-      );
-
-  } catch {
-
-    value = k;
-
-  }
-
-  /* ==========================================
-     SAFE RETURN
-  ========================================== */
-
   if (
-    typeof value !==
-    "string"
+    lang === "es" &&
+    es
   ) {
-
-    return <>{k}</>;
+    return <>{es}</>;
   }
 
-  return <>{value}</>;
+  return <>{pt}</>;
 }
