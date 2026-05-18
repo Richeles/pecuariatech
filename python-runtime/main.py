@@ -1,29 +1,21 @@
 # =========================================================
 # PecuariaTech
-# Python Runtime AI
-# CFO Runtime
+# Python Runtime Enterprise
 # =========================================================
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+
+from engine_risk import calcular_risco
+
+from engine_pastagem import analisar_pastagem
+
+from engine_clima import analisar_clima
 
 # =========================================================
 # APP
 # =========================================================
 
 app = FastAPI()
-
-# =========================================================
-# CORS
-# =========================================================
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # =========================================================
 # ROOT
@@ -33,47 +25,99 @@ app.add_middleware(
 def root():
 
     return {
-        "runtime": "PecuariaTech Python Runtime",
-        "status": "online"
+
+        "runtime":
+            "PecuariaTech Python Runtime",
+
+        "status":
+            "online",
     }
 
 # =========================================================
-# CFO ANALISAR
+# CFO AI
 # =========================================================
 
 @app.post("/cfo/analisar")
-async def analisar_cfo(payload: dict):
+def analisar_cfo(payload: dict):
 
-    resumo = payload.get("resumo", {})
-    mensal = payload.get("mensal", [])
+    resumo = payload.get(
+        "resumo",
+        {}
+    )
 
-    receita = resumo.get("receita_total", 0)
-    despesa = resumo.get("despesa_total", 0)
+    mensal = payload.get(
+        "mensal",
+        []
+    )
 
-    lucro = receita - despesa
-
-    risco = "baixo"
-
-    if lucro < 0:
-        risco = "alto"
-
-    elif lucro < receita * 0.1:
-        risco = "moderado"
+    diagnostico = calcular_risco(
+        resumo,
+        mensal
+    )
 
     return {
-        "runtime": "CFO_RUNTIME_AI",
 
-        "diagnostico": {
-            "receita": receita,
-            "despesa": despesa,
-            "lucro": lucro,
-            "risco": risco,
-            "meses_analisados": len(mensal),
-        },
+        "runtime":
+            "CFO_RUNTIME_AI",
 
-        "advisory": [
-            "Monitorar sincronismo de fluxo.",
-            "Avaliar eficiência operacional.",
-            "Reduzir pressão estrutural de caixa."
-        ]
+        "diagnostico":
+            diagnostico,
+
+        "advisory":
+            diagnostico.get(
+                "advisory",
+                []
+            ),
+    }
+
+# =========================================================
+# PASTAGEM AI
+# =========================================================
+
+@app.post("/pastagem/analisar")
+def analisar_pastagem_ai(payload: dict):
+
+    diagnostico = analisar_pastagem(
+        payload
+    )
+
+    return {
+
+        "runtime":
+            "PASTAGEM_COGNITIVE_ENGINE",
+
+        "diagnostico":
+            diagnostico,
+
+        "advisory":
+            diagnostico.get(
+                "advisory",
+                []
+            ),
+    }
+
+# =========================================================
+# CLIMATE AI
+# =========================================================
+
+@app.post("/clima/analisar")
+def analisar_clima_ai(payload: dict):
+
+    diagnostico = analisar_clima(
+        payload
+    )
+
+    return {
+
+        "runtime":
+            "CLIMATE_RUNTIME_ENGINE",
+
+        "diagnostico":
+            diagnostico,
+
+        "advisory":
+            diagnostico.get(
+                "advisory",
+                []
+            ),
     }
