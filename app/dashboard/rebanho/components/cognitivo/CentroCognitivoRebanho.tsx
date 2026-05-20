@@ -1,25 +1,34 @@
 "use client";
 
-type Props = {
-  score?: number;
+type Diagnostico = {
+  score_biologico?: number;
   risco?: string;
   compliance?: number;
+  pressao?: number;
+  temperatura?: number;
+  sanidade?: number;
+};
+
+type Props = {
+  diagnostico?: Diagnostico;
+  advisory?: string[];
   decisao?: string;
 };
 
 export default function CentroCognitivoRebanho({
-  score = 91,
-  risco = "BAIXO",
-  compliance = 96,
-  decisao = "Operação estabilizada",
+  diagnostico,
+  advisory = [],
+  decisao,
 }: Props) {
 
-  const riscoColor =
-    risco === "ALTO"
-      ? "text-red-600"
-      : risco === "MODERADO"
-      ? "text-amber-500"
-      : "text-emerald-600";
+  const score =
+    diagnostico?.score_biologico ?? 0;
+
+  const risco =
+    diagnostico?.risco ?? "BAIXO";
+
+  const compliance =
+    diagnostico?.compliance ?? 0;
 
   return (
 
@@ -34,16 +43,13 @@ export default function CentroCognitivoRebanho({
       "
     >
 
-      {/* HEADER */}
-
       <div
         className="
           flex
-          flex-col
+          items-center
+          justify-between
           gap-4
-          lg:flex-row
-          lg:items-center
-          lg:justify-between
+          flex-wrap
         "
       >
 
@@ -58,18 +64,18 @@ export default function CentroCognitivoRebanho({
               bg-emerald-50
               px-4
               py-2
-              text-xs
+              text-[11px]
               font-black
-              tracking-[0.2em]
+              tracking-[0.25em]
               text-emerald-700
             "
           >
-            CENTRO COGNITIVO BIOLOGICO
+            CENTRO COGNITIVO BIOLÓGICO
           </div>
 
           <h2
             className="
-              mt-2
+              mt-4
               text-4xl
               font-black
               tracking-tight
@@ -81,8 +87,8 @@ export default function CentroCognitivoRebanho({
 
           <p
             className="
-              mt-3
-              max-w-3xl
+              mt-4
+              max-w-4xl
               text-slate-600
               leading-relaxed
             "
@@ -97,12 +103,12 @@ export default function CentroCognitivoRebanho({
         <div
           className="
             rounded-full
-            bg-emerald-600
+            bg-emerald-500
             px-6
             py-3
-            text-sm
+            text-xs
             font-black
-            tracking-[0.2em]
+            tracking-[0.25em]
             text-white
           "
         >
@@ -111,141 +117,41 @@ export default function CentroCognitivoRebanho({
 
       </div>
 
-      {/* GRID */}
-
       <div
         className="
           mt-8
           grid
-          gap-5
-          lg:grid-cols-4
+          gap-4
+          md:grid-cols-4
         "
       >
 
-        {/* SCORE */}
+        <Card
+          title="Score Biológico"
+          value={String(score)}
+        />
 
-        <div
-          className="
-            rounded-3xl
-            border
-            border-emerald-100
-            bg-emerald-50
-            p-6
-          "
-        >
+        <Card
+          title="Risco Operacional"
+          value={risco}
+        />
 
-          <p className="text-sm text-slate-500">
-            Score Biológico
-          </p>
+        <Card
+          title="Compliance Sanitário"
+          value={`${compliance}%`}
+        />
 
-          <div
-            className="
-              mt-2
-              text-5xl
-              font-black
-              text-emerald-700
-            "
-          >
-            {score}
-          </div>
-
-        </div>
-
-        {/* RISCO */}
-
-        <div
-          className="
-            rounded-3xl
-            border
-            border-slate-200
-            bg-white
-            p-6
-          "
-        >
-
-          <p className="text-sm text-slate-500">
-            Risco Operacional
-          </p>
-
-          <div
-            className={`
-              mt-2
-              text-3xl
-              font-black
-              ${riscoColor}
-            `}
-          >
-            {risco}
-          </div>
-
-        </div>
-
-        {/* COMPLIANCE */}
-
-        <div
-          className="
-            rounded-3xl
-            border
-            border-slate-200
-            bg-white
-            p-6
-          "
-        >
-
-          <p className="text-sm text-slate-500">
-            Compliance Sanitário
-          </p>
-
-          <div
-            className="
-              mt-2
-              text-4xl
-              font-black
-              text-slate-900
-            "
-          >
-            {compliance}%
-          </div>
-
-        </div>
-
-        {/* DECISÃO */}
-
-        <div
-          className="
-            rounded-3xl
-            border
-            border-slate-200
-            bg-white
-            p-6
-          "
-        >
-
-          <p className="text-sm text-slate-500">
-            Decisão Recomendada
-          </p>
-
-          <div
-            className="
-              mt-2
-              text-lg
-              font-bold
-              text-slate-900
-            "
-          >
-            {decisao}
-          </div>
-
-        </div>
+        <Card
+          title="Decisão Recomendada"
+          value={decisao || "Sem decisão"}
+        />
 
       </div>
-
-      {/* GOVERNANÇA */}
 
       <div
         className="
           mt-8
-          rounded-3xl
+          rounded-[28px]
           border
           border-slate-100
           bg-slate-50
@@ -255,9 +161,9 @@ export default function CentroCognitivoRebanho({
 
         <div
           className="
-            text-sm
+            text-xs
             font-black
-            tracking-[0.2em]
+            tracking-[0.25em]
             text-slate-500
           "
         >
@@ -266,7 +172,7 @@ export default function CentroCognitivoRebanho({
 
         <div
           className="
-            mt-4
+            mt-5
             flex
             flex-wrap
             gap-3
@@ -295,7 +201,7 @@ export default function CentroCognitivoRebanho({
                 py-2
                 text-xs
                 font-black
-                tracking-[0.15em]
+                tracking-[0.2em]
                 text-emerald-700
               "
             >
@@ -308,6 +214,85 @@ export default function CentroCognitivoRebanho({
 
       </div>
 
+      {!!advisory.length && (
+
+        <div
+          className="
+            mt-8
+            grid
+            gap-4
+            md:grid-cols-2
+          "
+        >
+
+          {advisory.map((item) => (
+
+            <div
+              key={item}
+              className="
+                rounded-2xl
+                border
+                border-amber-200
+                bg-amber-50
+                p-4
+                text-sm
+                font-semibold
+                text-amber-900
+              "
+            >
+              {item}
+            </div>
+
+          ))}
+
+        </div>
+
+      )}
+
     </section>
+  );
+}
+
+function Card({
+  title,
+  value,
+}: {
+  title: string;
+  value: string;
+}) {
+
+  return (
+
+    <div
+      className="
+        rounded-[24px]
+        border
+        border-slate-200
+        bg-white
+        p-6
+      "
+    >
+
+      <div
+        className="
+          text-sm
+          text-slate-500
+        "
+      >
+        {title}
+      </div>
+
+      <div
+        className="
+          mt-3
+          text-5xl
+          font-black
+          text-slate-900
+        "
+      >
+        {value}
+      </div>
+
+    </div>
   );
 }

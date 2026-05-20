@@ -41,6 +41,10 @@ type RuntimeAI = {
     temperatura?: number;
 
     sanidade?: number;
+
+    peso?: number;
+
+    ganho?: number;
   };
 };
 
@@ -423,6 +427,19 @@ export default function RebanhoClient() {
     }, [filtered]);
 
   // =====================================================
+  // SCORE EXECUTIVO
+  // =====================================================
+
+  const scoreBiologico =
+    runtimeAI?.diagnostico?.score_biologico ?? 0;
+
+  const risco =
+    runtimeAI?.diagnostico?.risco ?? "BAIXO";
+
+  const compliance =
+    runtimeAI?.diagnostico?.compliance ?? 0;
+
+  // =====================================================
   // STATES
   // =====================================================
 
@@ -456,25 +473,25 @@ export default function RebanhoClient() {
 
   return (
 
-    <section className="space-y-6">
+    <section className="space-y-8">
 
       {/* =====================================================
-          RUNTIME COGNITIVO
+          HEADER EXECUTIVO
       ===================================================== */}
 
       <div
         className="
           relative
           overflow-hidden
-          rounded-[36px]
+          rounded-[40px]
           border
-          border-emerald-400/30
+          border-emerald-500/20
           bg-gradient-to-br
           from-[#03140d]
           via-[#072117]
           to-[#0b2d1f]
-          p-8
-          shadow-[0_20px_90px_rgba(0,0,0,0.35)]
+          p-10
+          shadow-[0_30px_120px_rgba(0,0,0,0.45)]
         "
       >
 
@@ -482,7 +499,7 @@ export default function RebanhoClient() {
           className="
             absolute
             inset-0
-            bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_35%)]
+            bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.12),transparent_35%)]
           "
         />
 
@@ -491,53 +508,178 @@ export default function RebanhoClient() {
             relative
             z-10
             flex
-            items-center
-            justify-between
-            gap-6
+            flex-col
+            gap-10
+            lg:flex-row
+            lg:items-center
+            lg:justify-between
           "
         >
 
-          <div>
+          <div className="max-w-4xl">
 
             <div
               className="
-                text-4xl
+                inline-flex
+                rounded-full
+                border
+                border-emerald-400/20
+                bg-emerald-500/10
+                px-5
+                py-2
+                text-xs
+                font-black
+                tracking-[0.25em]
+                text-emerald-200
+              "
+            >
+              ULTRA BIOLOGICAL COGNITIVE RUNTIME
+            </div>
+
+            <h1
+              className="
+                mt-6
+                text-5xl
                 font-black
                 tracking-tight
                 text-white
               "
             >
-              Runtime Cognitivo Rebanho
-            </div>
+              Governança Cognitiva do Rebanho
+            </h1>
 
-            <div
+            <p
               className="
-                mt-3
-                text-base
-                font-semibold
-                text-emerald-200
+                mt-5
+                max-w-3xl
+                text-lg
+                leading-relaxed
+                text-emerald-100/80
               "
             >
-              Governança Biológica • IA Operacional • Runtime Multi-Engine
-            </div>
+              Plataforma executiva integrada ao motor cognitivo
+              PecuariaTech com rastreabilidade inteligente,
+              brincos IoT, sanidade operacional, pressão animal,
+              compliance biológico e governança estrutural contínua.
+            </p>
 
           </div>
 
           <div
             className="
-              rounded-full
-              border
-              border-emerald-400/20
-              bg-emerald-500/20
-              px-6
-              py-3
-              text-xs
-              font-black
-              tracking-[0.25em]
-              text-emerald-100
+              grid
+              grid-cols-2
+              gap-4
+              lg:w-[420px]
             "
           >
-            ONLINE
+
+            <div
+              className="
+                rounded-3xl
+                border
+                border-emerald-400/20
+                bg-white/5
+                p-5
+              "
+            >
+              <div className="text-xs tracking-[0.2em] text-emerald-200">
+                SCORE BIOLÓGICO
+              </div>
+
+              <div
+                className="
+                  mt-3
+                  text-5xl
+                  font-black
+                  text-white
+                "
+              >
+                {scoreBiologico}
+              </div>
+            </div>
+
+            <div
+              className="
+                rounded-3xl
+                border
+                border-emerald-400/20
+                bg-white/5
+                p-5
+              "
+            >
+              <div className="text-xs tracking-[0.2em] text-emerald-200">
+                RISCO OPERACIONAL
+              </div>
+
+              <div
+                className="
+                  mt-4
+                  text-2xl
+                  font-black
+                  text-emerald-300
+                "
+              >
+                {risco}
+              </div>
+            </div>
+
+            <div
+              className="
+                rounded-3xl
+                border
+                border-emerald-400/20
+                bg-white/5
+                p-5
+              "
+            >
+              <div className="text-xs tracking-[0.2em] text-emerald-200">
+                COMPLIANCE
+              </div>
+
+              <div
+                className="
+                  mt-3
+                  text-4xl
+                  font-black
+                  text-white
+                "
+              >
+                {compliance}%
+              </div>
+            </div>
+
+            <div
+              className="
+                rounded-3xl
+                border
+                border-emerald-400/20
+                bg-white/5
+                p-5
+              "
+            >
+              <div className="text-xs tracking-[0.2em] text-emerald-200">
+                STATUS
+              </div>
+
+              <div
+                className="
+                  mt-4
+                  inline-flex
+                  rounded-full
+                  bg-emerald-500/20
+                  px-4
+                  py-2
+                  text-sm
+                  font-black
+                  tracking-[0.2em]
+                  text-emerald-100
+                "
+              >
+                ONLINE
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -576,6 +718,317 @@ export default function RebanhoClient() {
         femeas={resumo.femeas}
         racasTop={resumo.racasTop}
       />
+
+      {/* =====================================================
+          VISÃO EXECUTIVA
+      ===================================================== */}
+
+      <div
+        className="
+          grid
+          gap-6
+          lg:grid-cols-3
+        "
+      >
+
+        <div
+          className="
+            rounded-[34px]
+            border
+            border-emerald-100
+            bg-white
+            p-8
+            shadow-sm
+          "
+        >
+
+          <div
+            className="
+              text-xs
+              font-black
+              tracking-[0.25em]
+              text-emerald-700
+            "
+          >
+            GOVERNANÇA EXECUTIVA
+          </div>
+
+          <div
+            className="
+              mt-5
+              text-lg
+              leading-relaxed
+              text-slate-700
+            "
+          >
+            {runtimeAI?.executivo ||
+              "Governança biológica sincronizada."}
+          </div>
+
+        </div>
+
+        <div
+          className="
+            rounded-[34px]
+            border
+            border-emerald-100
+            bg-white
+            p-8
+            shadow-sm
+          "
+        >
+
+          <div
+            className="
+              text-xs
+              font-black
+              tracking-[0.25em]
+              text-emerald-700
+            "
+          >
+            MOTOR OPERACIONAL
+          </div>
+
+          <div
+            className="
+              mt-5
+              text-lg
+              leading-relaxed
+              text-slate-700
+            "
+          >
+            {runtimeAI?.operacional ||
+              "Operação estabilizada via IA cognitiva."}
+          </div>
+
+        </div>
+
+        <div
+          className="
+            rounded-[34px]
+            border
+            border-emerald-100
+            bg-white
+            p-8
+            shadow-sm
+          "
+        >
+
+          <div
+            className="
+              text-xs
+              font-black
+              tracking-[0.25em]
+              text-emerald-700
+            "
+          >
+            MOTOR TÁTICO
+          </div>
+
+          <div
+            className="
+              mt-5
+              text-lg
+              leading-relaxed
+              text-slate-700
+            "
+          >
+            {runtimeAI?.tatico ||
+              "Sincronismo operacional contínuo."}
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* =====================================================
+          TABELA EXECUTIVA
+      ===================================================== */}
+
+      <div
+        className="
+          overflow-x-auto
+          rounded-[36px]
+          border
+          border-white/40
+          bg-white
+          shadow-sm
+        "
+      >
+
+        <div
+          className="
+            flex
+            flex-col
+            gap-5
+            border-b
+            border-slate-100
+            p-7
+            lg:flex-row
+            lg:items-center
+            lg:justify-between
+          "
+        >
+
+          <div>
+
+            <div
+              className="
+                text-2xl
+                font-black
+                text-slate-900
+              "
+            >
+              Rebanho Inteligente
+            </div>
+
+            <div
+              className="
+                mt-2
+                text-sm
+                text-slate-500
+              "
+            >
+              Rastreabilidade biológica • Brincos inteligentes • Governança operacional
+            </div>
+
+          </div>
+
+          <div className="w-full lg:w-[420px]">
+
+            <input
+              value={q}
+              onChange={(e) =>
+                setQ(e.target.value)
+              }
+              placeholder="Buscar animal, raça, status..."
+              className="
+                w-full
+                rounded-2xl
+                border
+                border-slate-200
+                bg-slate-50
+                px-5
+                py-3
+                text-sm
+                outline-none
+                focus:border-emerald-300
+                focus:ring-4
+                focus:ring-emerald-100
+              "
+            />
+
+          </div>
+
+        </div>
+
+        <table
+          className="
+            min-w-full
+            text-sm
+          "
+        >
+
+          <thead
+            className="
+              bg-slate-50
+            "
+          >
+
+            <tr>
+
+              <th className="p-5 text-left font-black text-slate-600">
+                Brinco
+              </th>
+
+              <th className="p-5 text-left font-black text-slate-600">
+                Raça
+              </th>
+
+              <th className="p-5 text-left font-black text-slate-600">
+                Sexo
+              </th>
+
+              <th className="p-5 text-right font-black text-slate-600">
+                Peso
+              </th>
+
+              <th className="p-5 text-left font-black text-slate-600">
+                Status Biológico
+              </th>
+
+              <th className="p-5 text-left font-black text-slate-600">
+                Localização
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {filtered.map((a) => (
+
+              <tr
+                key={a.animal_id}
+                className="
+                  border-t
+                  border-slate-100
+                  transition-all
+                  hover:bg-emerald-50/40
+                "
+              >
+
+                <td className="p-5 font-bold">
+                  {a.brinco}
+                </td>
+
+                <td className="p-5">
+                  {a.raca}
+                </td>
+
+                <td className="p-5">
+                  {a.sexo}
+                </td>
+
+                <td className="p-5 text-right font-semibold">
+                  {a.peso ?? "—"} kg
+                </td>
+
+                <td className="p-5">
+
+                  <span
+                    className="
+                      rounded-full
+                      border
+                      border-emerald-200
+                      bg-emerald-50
+                      px-4
+                      py-2
+                      text-xs
+                      font-black
+                      tracking-[0.2em]
+                      text-emerald-700
+                    "
+                  >
+                    {a.status_biologico}
+                  </span>
+
+                </td>
+
+                <td className="p-5">
+                  {a.ultima_localizacao}
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
 
     </section>
   );
