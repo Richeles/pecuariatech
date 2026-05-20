@@ -1,25 +1,40 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import PastagemErrorBoundary from "./components/PastagemErrorBoundary";
-import UltraBiologicoPastagem from "./components/UltraBiologicoPastagem";
 
-/**
- * ✅ BLINDAGEM INTERNACIONAL — PastagemClient
- * - Evita crash React #31 (objeto como child)
- * - Normaliza qualquer string/array/objeto em texto seguro
- * - Protege rota com ErrorBoundary (SaaS não cai)
- *
- * Regra:
- * - Nunca renderizar objeto puro.
- * - Sempre normalizar qualquer campo vindo de API/motor.
- */
+import PastagemErrorBoundary
+from "./components/PastagemErrorBoundary";
 
-// ---------- types ----------
+import UltraBiologicoPastagem
+from "./components/UltraBiologicoPastagem";
+
+// ======================================================
+// TYPES
+// ======================================================
+
+type RuntimeStatus =
+  | "ONLINE"
+  | "DEGRADED"
+  | "OFFLINE";
+
+type RuntimePayload = {
+  ok?: boolean;
+  runtime_online?: boolean;
+  runtime_status?: RuntimeStatus;
+  cofator_triangular?: string;
+  executivo?: string;
+  operacional?: string;
+  tatico?: string;
+};
+
 type Alerta = {
-  tipo: "critico" | "atencao" | "info";
+  tipo:
+    | "critico"
+    | "atencao"
+    | "info";
+
   titulo: string;
-  detalhe: any; // <- blindado propositalmente
+  detalhe: any;
 };
 
 type ResumoPastagem = {
@@ -48,163 +63,621 @@ type Piquete = {
   ultima_movimentacao_em?: any;
 };
 
-// ---------- safe utils ----------
+// ======================================================
+// SAFE ENGINE
+// ======================================================
+
 function safeText(v: any): string {
-  if (v === null || v === undefined) return "";
-  if (typeof v === "string") return v;
-  if (typeof v === "number" || typeof v === "boolean") return String(v);
 
-  // array → texto
-  if (Array.isArray(v)) return v.map(safeText).filter(Boolean).join(", ");
+  if (
+    v === null ||
+    v === undefined
+  ) {
+    return "";
+  }
 
-  // objeto: tenta padrão Triângulo 360 (executivo/operacional)
-  if (typeof v === "object") {
-    const exec = (v as any)?.executivo;
-    const op = (v as any)?.operacional;
+  if (
+    typeof v === "string"
+  ) {
+    return v;
+  }
 
-    if (exec || op) {
-      const a = safeText(exec);
-      const b = safeText(op);
-      if (a && b) return `${a} • ${b}`;
-      return a || b || "";
-    }
+  if (
+    typeof v === "number" ||
+    typeof v === "boolean"
+  ) {
+    return String(v);
+  }
 
-    // fallback universal (não quebra)
+  if (
+    Array.isArray(v)
+  ) {
+
+    return v
+      .map(safeText)
+      .filter(Boolean)
+      .join(" • ");
+  }
+
+  if (
+    typeof v === "object"
+  ) {
+
     try {
-      return JSON.stringify(v);
+
+      const executivo =
+        safeText(v.executivo);
+
+      const operacional =
+        safeText(v.operacional);
+
+      const tatico =
+        safeText(v.tatico);
+
+      return [
+        executivo,
+        operacional,
+        tatico,
+      ]
+        .filter(Boolean)
+        .join(" • ");
+
     } catch {
-      return String(v);
+
+      return "[objeto]";
     }
   }
 
   return String(v);
 }
 
-function safeNumber(v: any, fallback = 0): number {
+function safeNumber(
+  v: any,
+  fallback = 0
+): number {
+
   const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
+
+  return Number.isFinite(n)
+    ? n
+    : fallback;
 }
 
-function normalizeResumo(raw: any): ResumoPastagem | null {
-  if (!raw || typeof raw !== "object") return null;
+// ======================================================
+// NORMALIZERS
+// ======================================================
 
-  // ✅ mantém Equação Y: apenas normaliza para render seguro
+function normalizeResumo(
+  raw: any
+): ResumoPastagem {
+
+  if (
+    !raw ||
+    typeof raw !== "object"
+  ) {
+    return {};
+  }
+
   return {
-    escopo: safeText(raw.escopo ?? ""),
-    qtd_piquetes: safeNumber(raw.qtd_piquetes ?? 0, 0),
-    area_total_ha: safeNumber(raw.area_total_ha ?? 0, 0),
-    area_ativa_ha: safeNumber(raw.area_ativa_ha ?? 0, 0),
-    animais_total: safeNumber(raw.animais_total ?? 0, 0),
-    ua_total: safeNumber(raw.ua_total ?? 0, 0),
-    ua_por_ha_atual: safeNumber(raw.ua_por_ha_atual ?? 0, 0),
-    ua_por_ha_suportada: safeNumber(raw.ua_por_ha_suportada ?? 0, 0),
-    ua_suportada_ativa: safeNumber(raw.ua_suportada_ativa ?? 0, 0),
-    pressao_pastagem_score: safeNumber(raw.pressao_pastagem_score ?? 0, 0),
-    risco_pastagem: safeText(raw.risco_pastagem ?? "DESCONHECIDO"),
-    decisao_recomendada: safeText(raw.decisao_recomendada ?? ""),
-    ultima_movimentacao_em: safeText(raw.ultima_movimentacao_em ?? ""),
+
+    escopo:
+      safeText(raw.escopo),
+
+    qtd_piquetes:
+      safeNumber(raw.qtd_piquetes),
+
+    area_total_ha:
+      safeNumber(raw.area_total_ha),
+
+    area_ativa_ha:
+      safeNumber(raw.area_ativa_ha),
+
+    animais_total:
+      safeNumber(raw.animais_total),
+
+    ua_total:
+      safeNumber(raw.ua_total),
+
+    ua_por_ha_atual:
+      safeNumber(raw.ua_por_ha_atual),
+
+    ua_por_ha_suportada:
+      safeNumber(raw.ua_por_ha_suportada),
+
+    ua_suportada_ativa:
+      safeNumber(raw.ua_suportada_ativa),
+
+    pressao_pastagem_score:
+      safeNumber(raw.pressao_pastagem_score),
+
+    risco_pastagem:
+      safeText(raw.risco_pastagem),
+
+    decisao_recomendada:
+      safeText(raw.decisao_recomendada),
+
+    ultima_movimentacao_em:
+      safeText(raw.ultima_movimentacao_em),
   };
 }
 
-function normalizePiquetes(raw: any): Piquete[] {
-  const arr = Array.isArray(raw) ? raw : [];
-  return arr.map((p) => ({
-    piquete_id: safeText(p?.piquete_id ?? ""),
-    nome: safeText(p?.nome ?? ""),
-    area_ha: safeNumber(p?.area_ha ?? 0, 0),
-    tipo_pasto: safeText(p?.tipo_pasto ?? ""),
-    capacidade_ua: safeNumber(p?.capacidade_ua ?? 0, 0),
-    status: safeText(p?.status ?? ""),
-    ultima_movimentacao_em: safeText(p?.ultima_movimentacao_em ?? ""),
+function normalizePiquetes(
+  raw: any
+): Piquete[] {
+
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  return raw.map((p) => ({
+
+    piquete_id:
+      safeText(p?.piquete_id),
+
+    nome:
+      safeText(p?.nome),
+
+    area_ha:
+      safeNumber(p?.area_ha),
+
+    tipo_pasto:
+      safeText(p?.tipo_pasto),
+
+    capacidade_ua:
+      safeNumber(p?.capacidade_ua),
+
+    status:
+      safeText(p?.status),
+
+    ultima_movimentacao_em:
+      safeText(p?.ultima_movimentacao_em),
+
   }));
 }
 
-function normalizeAlertas(raw: any): Alerta[] {
-  const arr = Array.isArray(raw) ? raw : [];
-  return arr
-    .map((a) => ({
-      tipo:
-        a?.tipo === "critico" || a?.tipo === "atencao" || a?.tipo === "info"
-          ? a.tipo
-          : "info",
-      titulo: safeText(a?.titulo ?? "Alerta"),
-      detalhe: safeText(a?.detalhe ?? a?.descricao ?? ""),
-    }))
-    .filter((x) => x.titulo || x.detalhe);
+function normalizeAlertas(
+  raw: any
+): Alerta[] {
+
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  return raw.map((a) => ({
+
+    tipo:
+      a?.tipo === "critico" ||
+      a?.tipo === "atencao"
+        ? a.tipo
+        : "info",
+
+    titulo:
+      safeText(a?.titulo),
+
+    detalhe:
+      safeText(
+        a?.detalhe ??
+        a?.descricao
+      ),
+
+  }));
 }
 
-// ---------- client ----------
-export default function PastagemClient() {
-  const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
+// ======================================================
+// COMPONENT
+// ======================================================
 
-  const [resumoRaw, setResumoRaw] = useState<any>(null);
-  const [piquetesRaw, setPiquetesRaw] = useState<any[]>([]);
-  const [alertasRaw, setAlertasRaw] = useState<any[]>([]);
+export default function PastagemClient() {
+
+  const [
+    mounted,
+    setMounted,
+  ] = useState(false);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    erro,
+    setErro,
+  ] = useState<string | null>(null);
+
+  const [
+    resumoRaw,
+    setResumoRaw,
+  ] = useState<any>(null);
+
+  const [
+    piquetesRaw,
+    setPiquetesRaw,
+  ] = useState<any[]>([]);
+
+  const [
+    alertasRaw,
+    setAlertasRaw,
+  ] = useState<any[]>([]);
+
+  const [
+    runtime,
+    setRuntime,
+  ] = useState<RuntimePayload | null>(null);
+
+  // ======================================================
+  // HYDRATION FIX
+  // ======================================================
 
   useEffect(() => {
+
+    setMounted(true);
+
+  }, []);
+
+  // ======================================================
+  // LOAD
+  // ======================================================
+
+  useEffect(() => {
+
+    if (!mounted) {
+      return;
+    }
+
     let alive = true;
 
     async function load() {
+
       try {
+
         setLoading(true);
         setErro(null);
 
-        // ✅ API read-only (Equação Y)
-        const res = await fetch(`/api/pastagem/status?ts=${Date.now()}`, {
-          cache: "no-store",
-        });
-        if (!res.ok) throw new Error(`Falha na Pastagem (HTTP ${res.status})`);
+        const res =
+          await fetch(
 
-        const json = await res.json();
+            `/api/pastagem/status?ts=${Date.now()}`,
 
-        if (!alive) return;
-        setResumoRaw(json?.resumo ?? null);
-        setPiquetesRaw(Array.isArray(json?.piquetes) ? json.piquetes : []);
-        setAlertasRaw(Array.isArray(json?.alertas) ? json.alertas : []);
+            {
+              cache:
+                "no-store",
+            }
+          );
+
+        if (!res.ok) {
+
+          throw new Error(
+            `Pastagem HTTP ${res.status}`
+          );
+        }
+
+        const json =
+          await res.json();
+
+        let runtimeJson: RuntimePayload = {
+
+          runtime_status:
+            "DEGRADED",
+
+          runtime_online:
+            false,
+        };
+
+        try {
+
+          const runtimeRes =
+            await fetch(
+              "/api/ai/pastagem",
+              {
+                cache:
+                  "no-store",
+              }
+            );
+
+          if (
+            runtimeRes.ok
+          ) {
+
+            runtimeJson =
+              await runtimeRes.json();
+          }
+
+        } catch {
+
+          runtimeJson = {
+
+            runtime_status:
+              "DEGRADED",
+
+            runtime_online:
+              false,
+          };
+        }
+
+        if (!alive) {
+          return;
+        }
+
+        setResumoRaw(
+          json?.resumo ?? null
+        );
+
+        setPiquetesRaw(
+          Array.isArray(
+            json?.piquetes
+          )
+            ? json.piquetes
+            : []
+        );
+
+        setAlertasRaw(
+          Array.isArray(
+            json?.alertas
+          )
+            ? json.alertas
+            : []
+        );
+
+        setRuntime(runtimeJson);
+
       } catch (e: any) {
-        if (!alive) return;
-        setErro(String(e?.message ?? "Erro inesperado na Pastagem."));
+
+        if (!alive) {
+          return;
+        }
+
+        setErro(
+          e?.message ??
+          "Erro inesperado."
+        );
+
       } finally {
-        if (!alive) return;
+
+        if (!alive) {
+          return;
+        }
+
         setLoading(false);
       }
     }
 
     load();
+
     return () => {
+
       alive = false;
     };
-  }, []);
 
-  const resumo = useMemo(() => normalizeResumo(resumoRaw), [resumoRaw]);
-  const piquetes = useMemo(() => normalizePiquetes(piquetesRaw), [piquetesRaw]);
-  const alertas = useMemo(() => normalizeAlertas(alertasRaw), [alertasRaw]);
+  }, [mounted]);
+
+  // ======================================================
+  // MEMO
+  // ======================================================
+
+  const resumo =
+    useMemo(
+      () =>
+        normalizeResumo(
+          resumoRaw
+        ),
+      [resumoRaw]
+    );
+
+  const piquetes =
+    useMemo(
+      () =>
+        normalizePiquetes(
+          piquetesRaw
+        ),
+      [piquetesRaw]
+    );
+
+  const alertas =
+    useMemo(
+      () =>
+        normalizeAlertas(
+          alertasRaw
+        ),
+      [alertasRaw]
+    );
+
+  // ======================================================
+  // SSR SAFE
+  // ======================================================
+
+  if (!mounted) {
+
+    return (
+
+      <section className="p-6">
+
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 text-sm text-zinc-300">
+
+          Inicializando governança cognitiva...
+
+        </div>
+
+      </section>
+    );
+  }
+
+  // ======================================================
+  // LOADING
+  // ======================================================
 
   if (loading) {
+
     return (
+
       <section className="p-6">
-        <div className="rounded-xl border bg-white p-4 text-sm text-gray-600">
-          Carregando Pastagem...
+
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 text-sm text-zinc-300">
+
+          Inicializando governança cognitiva...
+
         </div>
+
       </section>
     );
   }
+
+  // ======================================================
+  // ERROR
+  // ======================================================
 
   if (erro) {
+
     return (
+
       <section className="p-6">
-        <div className="rounded-xl border bg-white p-4 text-sm">
-          <b>Erro:</b> {erro}
+
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6">
+
+          <div className="text-sm font-semibold text-red-300">
+
+            Runtime estrutural degradado
+
+          </div>
+
+          <div className="mt-2 text-xs text-red-200">
+
+            {erro}
+
+          </div>
+
         </div>
+
       </section>
     );
   }
 
-  // ✅ Blindagem FINAL: Pastagem nunca derruba a rota
+  // ======================================================
+  // RENDER
+  // ======================================================
+
   return (
+
     <PastagemErrorBoundary>
-      <UltraBiologicoPastagem resumo={resumo} piquetes={piquetes} alertas={alertas} />
+
+      <section className="space-y-6">
+
+        {/* ======================================================
+            STATUS EXECUTIVO
+        ====================================================== */}
+
+        {runtime?.runtime_online ? (
+
+          <div
+            className="
+              rounded-2xl
+              border
+              border-[#4f9b68]
+              bg-gradient-to-r
+              from-[#dff7e8]
+              via-[#ccefd9]
+              to-[#dff7e8]
+              p-5
+              shadow-[0_8px_30px_rgba(16,185,129,0.10)]
+            "
+          >
+
+            <div className="flex items-center justify-between">
+
+              <div>
+
+                <div
+                  className="
+                    text-base
+                    font-black
+                    tracking-tight
+                    text-[#0f5132]
+                  "
+                >
+                  Runtime Cognitivo Online
+                </div>
+
+                <div
+                  className="
+                    mt-1
+                    text-sm
+                    font-medium
+                    text-[#1f6b45]
+                  "
+                >
+                  Symbiosis Python +
+                  Cofatores Triangulares ativos.
+                </div>
+
+              </div>
+
+              <div
+                className="
+                  rounded-full
+                  border
+                  border-[#4f9b68]
+                  bg-[#2f855a]
+                  px-4
+                  py-1.5
+                  text-xs
+                  font-black
+                  tracking-[0.18em]
+                  text-white
+                  shadow-md
+                "
+              >
+                ONLINE
+              </div>
+
+            </div>
+
+          </div>
+
+        ) : (
+
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5">
+
+            <div className="flex items-center justify-between">
+
+              <div>
+
+                <div className="text-sm font-semibold text-amber-300">
+
+                  Runtime Cognitivo Degradado
+
+                </div>
+
+                <div className="mt-1 text-xs text-amber-200/80">
+
+                  Governança preservada via fallback estrutural.
+
+                </div>
+
+              </div>
+
+              <div className="rounded-full border border-amber-400/20 bg-amber-500/10 px-3 py-1 text-xs text-amber-200">
+
+                FALLBACK
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )}
+
+        {/* ======================================================
+            ENGINE
+        ====================================================== */}
+
+        <UltraBiologicoPastagem
+          resumo={resumo}
+          piquetes={piquetes}
+          alertas={alertas}
+        />
+
+      </section>
+
     </PastagemErrorBoundary>
   );
 }

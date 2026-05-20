@@ -1,91 +1,182 @@
-import { NextResponse } from "next/server";
+// =========================================================
+// PecuariaTech
+// Pastagem AI Runtime API
+// Ultra Premium Cognitive Runtime
+// =========================================================
+
+import { NextResponse }
+from "next/server";
+
+import {
+  runtimePost,
+  runtimeHealth,
+}
+from "@/app/lib/runtime";
+
+// =========================================================
+// RUNTIME
+// =========================================================
+
+export const runtime =
+  "nodejs";
+
+export const dynamic =
+  "force-dynamic";
+
+// =========================================================
+// GET
+// =========================================================
 
 export async function GET() {
 
   try {
 
     // =====================================================
-    // MOCK OPERACIONAL
-    // Depois vamos conectar no Supabase real
+    // HEALTH CHECK
+    // =====================================================
+
+    const health =
+      await runtimeHealth();
+
+    // =====================================================
+    // PAYLOAD
     // =====================================================
 
     const payload = {
 
-      ua_por_ha: 3.8,
+      lotacao_atual: 3.2,
 
-      capacidade_suporte: 3.2,
+      capacidade_suporte: 2.4,
 
-      chuva_mm: 142,
+      dias_sem_chuva: 24,
 
-      dias_sem_chuva: 4,
+      umidade_solo: 31,
 
-      recuperacao_pasto: 76,
+      risco_fogo: "medio",
+
+      previsao_chuva_mm: 12,
+
+      triangulo_360: {
+
+        operacional:
+          "pressao_pasto",
+
+        tatico:
+          "rotacao",
+
+        executivo:
+          "risco_estrutural",
+      },
+
+      cofatores: {
+
+        biologico: 1.33,
+
+        operacional:
+          "pressao_alta",
+
+        climatico:
+          "seca_transicao",
+      },
     };
 
     // =====================================================
-    // PYTHON RUNTIME
+    // RUNTIME POST
     // =====================================================
 
-    const response = await fetch(
+    const runtime =
+      await runtimePost(
+        "/pastagem/analisar",
+        payload
+      );
 
-      "http://127.0.0.1:8000/pastagem/analisar",
+    // =====================================================
+    // DEGRADED MODE
+    // =====================================================
 
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-
-        body: JSON.stringify(
-          payload
-        ),
-      }
-    );
-
-    if (!response.ok) {
+    if (!runtime?.ok) {
 
       return NextResponse.json({
 
         ok: false,
 
+        degraded: true,
+
+        runtime_online:
+          health?.ok || false,
+
+        advisory: [
+
+          "Runtime cognitivo operando em modo degradado.",
+
+          "Fallback estrutural ativado.",
+
+          "Monitorar symbiosis Python.",
+        ],
+
         error:
-          "python_runtime_error",
+          runtime?.error ||
+          "runtime_degraded",
       });
     }
 
-    const data = await response.json();
-
     // =====================================================
-    // RESPONSE
+    // SUCCESS
     // =====================================================
 
     return NextResponse.json({
 
       ok: true,
 
-      runtime:
-        "PASTAGEM_AI_RUNTIME",
+      runtime_online:
+        true,
 
-      source:
-        "equacao_y",
+      engine:
+        "PASTAGEM_COGNITIVE_ENGINE",
 
-      ai:
-        data,
+      governance:
+        "TRIANGULAR_COGNITIVE_RUNTIME",
 
-      payload,
+      symbiosis:
+        "PYTHON_ACTIVE",
+
+      ...runtime,
     });
 
   } catch (error: any) {
 
-    return NextResponse.json({
+    // =====================================================
+    // FAIL SAFE
+    // =====================================================
 
-      ok: false,
+    return NextResponse.json(
 
-      error:
-        error?.message ??
-        "internal_error",
-    });
+      {
+
+        ok: false,
+
+        degraded: true,
+
+        runtime_online:
+          false,
+
+        advisory: [
+
+          "Runtime indisponível.",
+
+          "Entrando em fallback institucional.",
+
+          "Governança cognitiva preservada.",
+        ],
+
+        error:
+          error?.message ||
+          "internal_runtime_error",
+      },
+
+      {
+        status: 200,
+      }
+    );
   }
 }

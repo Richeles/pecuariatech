@@ -1,191 +1,65 @@
 // =========================================================
 // PecuariaTech
-// CFO Runtime AI
-// Equação Y + Runtime Python
-// SSR Cookie First
+// CFO AI Runtime API
 // =========================================================
 
-import { NextResponse } from "next/server";
+import { NextResponse }
+from "next/server";
 
-import { cookies }
-  from "next/headers";
+import { runtimePost }
+from "@/app/lib/runtime";
 
-import {
-  createServerClient,
-} from "@supabase/ssr";
-
-/* =========================================================
-   GET
-========================================================= */
+// =========================================================
+// GET
+// =========================================================
 
 export async function GET() {
 
   try {
 
-    /* =====================================================
-       COOKIES
-    ===================================================== */
+    const payload = {
 
-    const cookieStore =
-      await cookies();
+      resumo: {
+        receita_total: 180000,
+        custo_total: 110000,
+        resultado_operacional: 70000,
+      },
 
-    /* =====================================================
-       SUPABASE SSR
-    ===================================================== */
-
-    const supabase =
-      createServerClient(
-        process.env
-          .NEXT_PUBLIC_SUPABASE_URL!,
-
-        process.env
-          .NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-
+      mensal: [
         {
-          cookies: {
-            getAll() {
-              return cookieStore.getAll();
-            },
-
-            setAll() {},
-          },
-        }
-      );
-
-    /* =====================================================
-       USER
-    ===================================================== */
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-
-      return NextResponse.json(
-        {
-          ok: false,
-          reason: "no_session",
+          mes: "JAN",
+          resultado_operacional: 12000,
         },
+
         {
-          status: 401,
-        }
-      );
-    }
-
-    /* =====================================================
-       RESUMO
-    ===================================================== */
-
-    const {
-      data: resumo,
-      error: resumoError,
-    } = await supabase
-      .from("financeiro_resumo_view")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (resumoError) {
-
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            resumoError.message,
+          mes: "FEV",
+          resultado_operacional: 15000,
         },
+
         {
-          status: 500,
-        }
-      );
-    }
-
-    /* =====================================================
-       MENSAL
-    ===================================================== */
-
-    const {
-      data: mensal,
-      error: mensalError,
-    } = await supabase
-      .from("financeiro_mensal_view")
-      .select("*")
-      .eq("user_id", user.id)
-      .limit(12);
-
-    if (mensalError) {
-
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            mensalError.message,
+          mes: "MAR",
+          resultado_operacional: 17000,
         },
-        {
-          status: 500,
-        }
-      );
-    }
+      ],
+    };
 
-    /* =====================================================
-       PYTHON AI
-    ===================================================== */
-
-    const pythonResponse =
-      await fetch(
-        `${process.env.PYTHON_API_URL}/cfo/analisar`,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            user_id: user.id,
-            resumo,
-            mensal,
-          }),
-        }
+    const data =
+      await runtimePost(
+        "/cfo/analisar",
+        payload
       );
 
-    const ai =
-      await pythonResponse.json();
-
-    /* =====================================================
-       RESPONSE
-    ===================================================== */
-
-    return NextResponse.json({
-
-      ok: true,
-
-      runtime:
-        "CFO_RUNTIME_AI",
-
-      source:
-        "equacao_y",
-
-      resumo,
-
-      mensal,
-
-      ai,
-
-    });
+    return NextResponse.json(data);
 
   } catch (error: any) {
 
     return NextResponse.json(
       {
-        ok: false,
-
         error:
           error?.message ||
-          "internal_error",
+          "runtime_error",
       },
+
       {
         status: 500,
       }
