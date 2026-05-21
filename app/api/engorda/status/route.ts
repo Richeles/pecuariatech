@@ -1,152 +1,321 @@
-// app/api/engorda/status/route.ts
-// Engorda ULTRA — API read-only (Equação Y)
-// Regras:
-// - 401 sem Bearer JWT
-// - 200 com Bearer JWT válido
-// - NUNCA 500 por mismatch de coluna (fallback mínimo)
-// - client Supabase criado dentro do handler
-// - validação token canônica: auth.getUser() usando header Authorization
+import { NextRequest, NextResponse } from "next/server";
 
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
+
+import { createServerClient }
+from "@supabase/ssr";
 
 export const runtime = "nodejs";
+
 export const dynamic = "force-dynamic";
 
-function getBearerToken(req: Request) {
-  const auth = req.headers.get("authorization") || "";
-  const match = auth.match(/^Bearer\s+(.+)$/i);
-  return match?.[1]?.trim() || "";
-}
+/* =========================================================
+   LIMIT
+========================================================= */
 
 function parseLimit(v: string | null) {
-  const n = Number(v ?? "60");
-  if (!Number.isFinite(n)) return 60;
-  return Math.min(Math.max(n, 1), 200);
+
+  const n =
+    Number(v ?? "60");
+
+  if (!Number.isFinite(n)) {
+    return 60;
+  }
+
+  return Math.min(
+    Math.max(n, 1),
+    200
+  );
 }
 
-export async function GET(req: Request) {
+/* =========================================================
+   GET
+========================================================= */
+
+export async function GET(
+  req: NextRequest
+) {
+
   try {
-    // 1) token obrigatório
-    const token = getBearerToken(req);
-    if (!token) {
-      return NextResponse.json(
-        { error: "Unauthorized: missing bearer token" },
-        { status: 401 }
-      );
-    }
 
-    // 2) env obrigatório
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    /* =====================================================
+       ENV
+    ===================================================== */
 
-    if (!url || !anon) {
+    const supabaseUrl =
+      process.env
+        .NEXT_PUBLIC_SUPABASE_URL;
+
+    const supabaseAnonKey =
+      process.env
+        .NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (
+      !supabaseUrl ||
+      !supabaseAnonKey
+    ) {
+
       return NextResponse.json(
-        { error: "Server misconfigured: missing Supabase env (URL/ANON)" },
+        {
+          ativo: false,
+          reason: "missing_env",
+        },
         { status: 500 }
       );
     }
 
-    // 3) client canônico com Authorization header
-    const supabase = createClient(url, anon, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
+    /* =====================================================
+       COOKIE SSR FIRST
+    ===================================================== */
 
-    // 4) validação canônica do token
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !userData?.user) {
+    const cookieStore =
+      await cookies();
+
+    const supabase =
+      createServerClient(
+
+        supabaseUrl,
+        supabaseAnonKey,
+
+        {
+          cookies: {
+
+            get(name: string) {
+
+              return cookieStore
+                .get(name)?.value;
+            },
+
+            set() {},
+
+            remove() {},
+          },
+        }
+      );
+
+    /* =====================================================
+       USER
+    ===================================================== */
+
+    const {
+      data: { user },
+      error: authError,
+    } =
+      await supabase.auth.getUser();
+
+    if (
+      authError ||
+      !user
+    ) {
+
       return NextResponse.json(
         {
-          error: "Unauthorized: invalid token",
-          details: userErr?.message ?? null,
-          debug: {
-            tokenLength: token.length,
-            tokenPrefix: token.slice(0, 18),
-            anonLength: anon.length,
-            anonPrefix: anon.slice(0, 12),
-            supabaseUrlPrefix: url.slice(0, 35),
-          },
+          ativo: false,
+          reason: "no_session",
         },
         { status: 401 }
       );
     }
 
-    // 5) query params
-    const { searchParams } = new URL(req.url);
-    const limit = parseLimit(searchParams.get("limit"));
+    /* =====================================================
+       QUERY PARAMS
+    ===================================================== */
 
-    // 6) SELECT resiliente (Equação Y)
-    // A view é âncora. API se adapta.
-    // ✅ NÃO usar: data_ref, status_engorda (já provado que não existe)
+    const { searchParams } =
+      new URL(req.url);
+
+    const limit =
+      parseLimit(
+        searchParams.get("limit")
+      );
+
+    /* =====================================================
+       SELECT PREMIUM
+    ===================================================== */
+
     const preferredFields = [
+
       "animal_id",
+
       "brinco",
+
       "raca",
+
       "sexo",
+
       "sistema_engorda",
+
       "peso_kg_atual",
+
       "peso_alvo_kg",
+
       "gmd_kg_dia",
+
       "custo_rs_dia",
+
       "risco_operacional",
+
       "dias_ate_alvo",
+
       "alerta_status",
+
       "movimentacao_local",
+
       "piquete_nome",
+
       "tipo_pasto",
+
       "capacidade_ua",
     ];
 
-    const minimalFields = ["animal_id", "brinco", "raca", "sexo"];
+    const minimalFields = [
 
-    // tentativa 1: preferido
-    const q1 = await supabase
-      .from("engorda_base_view")
-      .select(preferredFields.join(","))
-      .order("animal_id", { ascending: true })
-      .limit(limit);
+      "animal_id",
+
+      "brinco",
+
+      "raca",
+
+      "sexo",
+    ];
+
+    /* =====================================================
+       QUERY 1
+    ===================================================== */
+
+    const q1 =
+      await supabase
+        .from(
+          "engorda_base_view"
+        )
+        .select(
+          preferredFields.join(",")
+        )
+        .order(
+          "animal_id",
+          {
+            ascending: true,
+          }
+        )
+        .limit(limit);
 
     if (!q1.error) {
+
       return NextResponse.json({
+
         ok: true,
-        source: "engorda_base_view",
-        user: { id: userData.user.id, email: userData.user.email },
-        filters: { limit },
-        data: q1.data ?? [],
+
+        ativo: true,
+
+        source:
+          "engorda_base_view",
+
+        user: {
+
+          id: user.id,
+
+          email: user.email,
+        },
+
+        filters: {
+          limit,
+        },
+
+        data:
+          q1.data ?? [],
       });
     }
 
-    // fallback final: mínimo (API nunca quebra por mismatch)
-    const q2 = await supabase
-      .from("engorda_base_view")
-      .select(minimalFields.join(","))
-      .order("animal_id", { ascending: true })
-      .limit(limit);
+    /* =====================================================
+       FALLBACK
+    ===================================================== */
+
+    const q2 =
+      await supabase
+        .from(
+          "engorda_base_view"
+        )
+        .select(
+          minimalFields.join(",")
+        )
+        .order(
+          "animal_id",
+          {
+            ascending: true,
+          }
+        )
+        .limit(limit);
 
     if (q2.error) {
+
       return NextResponse.json(
         {
-          error: "Supabase query error",
-          details: q2.error.message,
+
+          ativo: false,
+
+          reason:
+            "schema_mismatch",
+
+          details:
+            q2.error.message,
+
           hint:
-            "Mesmo select mínimo falhou. Validar schema real da engorda_base_view no Supabase.",
+            "Validar schema da engorda_base_view",
         },
         { status: 500 }
       );
     }
 
+    /* =====================================================
+       FALLBACK SUCCESS
+    ===================================================== */
+
     return NextResponse.json({
+
       ok: true,
-      source: "engorda_base_view",
-      user: { id: userData.user.id, email: userData.user.email },
-      filters: { limit },
-      warning: "Fallback aplicado por mismatch de schema na view.",
-      data: q2.data ?? [],
+
+      ativo: true,
+
+      warning:
+        "Fallback aplicado por mismatch de schema.",
+
+      source:
+        "engorda_base_view",
+
+      user: {
+
+        id: user.id,
+
+        email: user.email,
+      },
+
+      filters: {
+        limit,
+      },
+
+      data:
+        q2.data ?? [],
     });
+
   } catch (e: any) {
+
+    console.error(
+      "ERRO API ENGORDA:",
+      e
+    );
+
     return NextResponse.json(
-      { error: "Internal error", details: e?.message ?? String(e) },
+      {
+
+        ativo: false,
+
+        reason:
+          "internal_error",
+
+        details:
+          e?.message ??
+          String(e),
+      },
       { status: 500 }
     );
   }
