@@ -6,12 +6,18 @@ import {
 /* =========================================================
    PECUARIATECH PROXY
    Next.js 16 Runtime
-   Equação Y + Regra Z
+   Ultra Premium Biological Runtime
+   Equação Y + Equação Z + Triângulo 360
+   AUTH SSR + i18n + Dashboard HUB
 ========================================================= */
 
 export function proxy(
   request: NextRequest
 ) {
+
+  /* =====================================================
+     PATHNAME
+  ===================================================== */
 
   const pathname =
     request.nextUrl.pathname;
@@ -22,7 +28,7 @@ export function proxy(
   );
 
   /* =====================================================
-     IGNORAR NEXT
+     IGNORAR NEXT / ASSETS
   ===================================================== */
 
   if (
@@ -50,6 +56,38 @@ export function proxy(
   }
 
   /* =====================================================
+     LOCALES
+  ===================================================== */
+
+  const locales = [
+
+    "pt",
+
+    "es",
+  ];
+
+  const pathnameWithoutLocale =
+    pathname.replace(
+      /^\/(pt|es)/,
+      ""
+    ) || "/";
+
+  /* =====================================================
+     DETECTAR LOCALE
+  ===================================================== */
+
+  const locale =
+    locales.find(
+      (l) =>
+        pathname.startsWith(`/${l}`)
+    ) || "pt";
+
+  console.log(
+    "🌎 LOCALE:",
+    locale
+  );
+
+  /* =====================================================
      ROTAS PÚBLICAS
   ===================================================== */
 
@@ -62,55 +100,129 @@ export function proxy(
     "/planos",
 
     "/checkout",
+
+    "/cadastro",
+
+    "/reset-password",
   ];
 
   const isPublic =
     publicRoutes.some(
+
       (route) =>
 
-        pathname === route ||
+        pathnameWithoutLocale === route ||
 
-        pathname.startsWith(
+        pathnameWithoutLocale.startsWith(
           `${route}/`
         )
     );
 
+  /* =====================================================
+     LIBERAR ROTAS PÚBLICAS
+  ===================================================== */
+
   if (isPublic) {
+
+    console.log(
+      "🌐 PUBLIC ROUTE"
+    );
 
     return NextResponse.next();
   }
 
   /* =====================================================
-     SSR COOKIE
+     COOKIE SSR REAL
   ===================================================== */
 
-  const hasCookie =
-    request.cookies
-      .getAll()
-      .length > 0;
+  const cookies =
+    request.cookies.getAll();
+
+  const hasSupabaseCookie =
+    cookies.some(
+
+      (cookie) =>
+
+        cookie.name.includes(
+          "sb-"
+        ) ||
+
+        cookie.name.includes(
+          "supabase"
+        )
+    );
 
   console.log(
     "🍪 SSR COOKIE:",
-    hasCookie
+    hasSupabaseCookie
   );
 
   /* =====================================================
      REGRA Z
+     SEM COOKIE -> LOGIN
   ===================================================== */
 
-  if (!hasCookie) {
+  if (!hasSupabaseCookie) {
+
+    console.log(
+      "🚨 NO AUTH COOKIE"
+    );
+
+    const loginUrl =
+      new URL(
+        `/${locale}/login`,
+        request.url
+      );
 
     return NextResponse.redirect(
-
-      new URL(
-        "/login",
-        request.url
-      )
+      loginUrl
     );
   }
 
   /* =====================================================
-     OK
+     DASHBOARD PROTECTED
+  ===================================================== */
+
+  if (
+
+    pathname.includes(
+      "/dashboard"
+    )
+
+  ) {
+
+    console.log(
+      "🧠 DASHBOARD SSR:",
+      "AUTHORIZED"
+    );
+  }
+
+  /* =====================================================
+     GOVERNANÇA
+  ===================================================== */
+
+  console.log(
+    "🟢 EQUAÇÃO Y:",
+    "ATIVA"
+  );
+
+  console.log(
+    "🟢 EQUAÇÃO Z:",
+    "ATIVA"
+  );
+
+  console.log(
+    "🟢 TRIÂNGULO 360:",
+    "ATIVO"
+  );
+
+  console.log(
+    "🟢 BIOLOGICAL RUNTIME:",
+    "ONLINE"
+  );
+
+  /* =====================================================
+     NEXT
   ===================================================== */
 
   return NextResponse.next();

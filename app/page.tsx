@@ -2,9 +2,24 @@ import Image from "next/image";
 import Link from "next/link";
 
 export default function Home() {
+
   return (
-    <main className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* FUNDO HD PREMIUM */}
+
+    <main
+      className="
+        relative
+        min-h-screen
+        flex
+        items-center
+        justify-center
+        overflow-hidden
+      "
+    >
+
+      {/* =====================================================
+          BACKGROUND
+      ===================================================== */}
+
       <Image
         src="/bois-header.png"
         alt="Pecuária moderna e sustentável"
@@ -18,39 +33,146 @@ export default function Home() {
         "
       />
 
-      {/* Sharpen leve (simula nitidez premium, sem plugins) */}
-      <div className="absolute inset-0 backdrop-contrast-125 backdrop-saturate-125" />
+      {/* =====================================================
+          SHARPEN
+      ===================================================== */}
 
-      {/* Overlay ULTRA leve (não escurece, só estabiliza a leitura) */}
-      <div className="absolute inset-0 bg-black/10" />
+      <div
+        className="
+          absolute
+          inset-0
+          backdrop-contrast-125
+          backdrop-saturate-125
+        "
+      />
 
-      {/* Vinheta bem suave */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.10),rgba(0,0,0,0.35))]" />
+      {/* =====================================================
+          OVERLAY
+      ===================================================== */}
 
-      {/* Conteúdo */}
-      <div className="relative z-10 text-center px-6 max-w-5xl">
-        {/* Card invisível “glass” para destacar letras sem matar a imagem */}
-        <div className="mx-auto inline-block rounded-3xl px-8 py-10 md:px-14 md:py-12 bg-black/20 backdrop-blur-md border border-white/10 shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
-          {/* Nome */}
-          <h1 className="text-white text-6xl md:text-8xl font-extrabold tracking-tight drop-shadow-[0_10px_28px_rgba(0,0,0,0.60)]">
+      <div
+        className="
+          absolute
+          inset-0
+          bg-black/10
+        "
+      />
+
+      {/* =====================================================
+          VINHETA
+      ===================================================== */}
+
+      <div
+        className="
+          absolute
+          inset-0
+          bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.10),rgba(0,0,0,0.35))]
+        "
+      />
+
+      {/* =====================================================
+          CONTENT
+      ===================================================== */}
+
+      <div
+        className="
+          relative
+          z-10
+          text-center
+          px-6
+          max-w-5xl
+        "
+      >
+
+        {/* =====================================================
+            GLASS CARD
+        ===================================================== */}
+
+        <div
+          className="
+            mx-auto
+            inline-block
+            rounded-3xl
+            px-8
+            py-10
+            md:px-14
+            md:py-12
+            bg-black/20
+            backdrop-blur-md
+            border
+            border-white/10
+            shadow-[0_18px_60px_rgba(0,0,0,0.45)]
+          "
+        >
+
+          {/* =====================================================
+              TITLE
+          ===================================================== */}
+
+          <h1
+            className="
+              text-white
+              text-6xl
+              md:text-8xl
+              font-extrabold
+              tracking-tight
+              drop-shadow-[0_10px_28px_rgba(0,0,0,0.60)]
+            "
+          >
             PecuariaTech
           </h1>
 
-          {/* FRASE PRINCIPAL — MUITO MAIOR e verde */}
-          <p className="mt-6 text-2xl md:text-4xl font-extrabold leading-tight drop-shadow-[0_10px_22px_rgba(0,0,0,0.55)]">
+          {/* =====================================================
+              SUBTITLE
+          ===================================================== */}
+
+          <p
+            className="
+              mt-6
+              text-2xl
+              md:text-4xl
+              font-extrabold
+              leading-tight
+              drop-shadow-[0_10px_22px_rgba(0,0,0,0.55)]
+            "
+          >
+
             <span className="text-green-300">
-              Gestão pecuária inteligente para quem busca controle real,
-              decisões seguras e crescimento sustentável.
+
+              Gestão pecuária inteligente
+              para quem busca controle real,
+              decisões seguras
+              e crescimento sustentável.
+
             </span>
+
           </p>
 
-          {/* CTA */}
-          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center">
+          {/* =====================================================
+              CTA BUTTONS
+          ===================================================== */}
+
+          <div
+            className="
+              mt-12
+              flex
+              flex-col
+              sm:flex-row
+              gap-4
+              justify-center
+              items-center
+            "
+          >
+
+            {/* LOGIN */}
+
             <Link
               href="/login"
               className="
-                w-full sm:w-auto
-                px-12 py-4
+                w-full
+                sm:w-auto
+                px-12
+                py-4
                 rounded-2xl
                 bg-green-600
                 text-white
@@ -65,13 +187,18 @@ export default function Home() {
               Entrar
             </Link>
 
+            {/* PLANOS */}
+
             <Link
               href="/planos"
               className="
-                w-full sm:w-auto
-                px-12 py-4
+                w-full
+                sm:w-auto
+                px-12
+                py-4
                 rounded-2xl
-                border border-white/60
+                border
+                border-white/60
                 text-white
                 text-xl
                 font-extrabold
@@ -85,17 +212,121 @@ export default function Home() {
             >
               Ver Planos
             </Link>
+
           </div>
 
-          {/* Microcopy */}
-          <p className="mt-10 text-base md:text-lg text-white/80">
-            Plataforma profissional com módulos: Rebanho, Pastagem, Financeiro e Engorda ULTRA.
+          {/* =====================================================
+              RESET PASSWORD
+          ===================================================== */}
+
+          <div className="mt-6">
+
+            <Link
+              href="/reset-password"
+              className="
+                text-sm
+                md:text-base
+                font-semibold
+                text-white/85
+                underline-offset-4
+                transition
+                hover:text-green-300
+                hover:underline
+              "
+            >
+              Esqueci minha senha
+            </Link>
+
+          </div>
+
+          {/* =====================================================
+              MICROCOPY
+          ===================================================== */}
+
+          <p
+            className="
+              mt-10
+              text-base
+              md:text-lg
+              text-white/80
+            "
+          >
+
+            Plataforma profissional
+            com módulos:
+
+            Rebanho,
+            Pastagem,
+            Financeiro,
+            Engorda ULTRA
+            e Runtime Cognitivo AI.
+
           </p>
+
+          {/* =====================================================
+              STATUS RUNTIME
+          ===================================================== */}
+
+          <div
+            className="
+              mt-8
+              flex
+              flex-wrap
+              justify-center
+              gap-3
+            "
+          >
+
+            {[
+              "SSR AUTH",
+              "ENGORDA AI",
+              "CFO AI",
+              "REBANHO AI",
+              "PAI AI",
+              "TRIÂNGULO 360",
+              "ESG RUNTIME",
+              "IOT READY",
+            ].map((item) => (
+
+              <div
+                key={item}
+                className="
+                  rounded-full
+                  border
+                  border-green-400/20
+                  bg-green-500/10
+                  px-4
+                  py-2
+                  text-[11px]
+                  font-black
+                  tracking-[0.18em]
+                  text-green-100
+                "
+              >
+                {item}
+              </div>
+
+            ))}
+
+          </div>
+
         </div>
+
       </div>
 
-      {/* Cinema look */}
-      <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_160px_rgba(0,0,0,0.45)]" />
+      {/* =====================================================
+          CINEMA LOOK
+      ===================================================== */}
+
+      <div
+        className="
+          pointer-events-none
+          absolute
+          inset-0
+          shadow-[inset_0_0_160px_rgba(0,0,0,0.45)]
+        "
+      />
+
     </main>
   );
 }

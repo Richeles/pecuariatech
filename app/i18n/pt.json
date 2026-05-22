@@ -6,6 +6,8 @@
   "engorda": "Engorda",
   "assinatura": "Assinatura",
 
+  "dashboard_subtitulo": "Gestão Inteligente",
+
   "centro_controle": "Centro de controle da fazenda",
   "animais": "Animais",
   "receita": "Receita",
@@ -13,12 +15,19 @@
   "total_rastreado": "Total rastreado",
   "mes_corrente": "Mês corrente",
   "indice_medio": "Índice médio",
+
   "modulos_sistema": "Módulos do Sistema",
+
   "desc_financeiro": "Fluxo de caixa, custos, receitas e indicadores",
+
   "desc_rebanho": "Controle de animais e desempenho produtivo",
+
   "desc_pastagem": "Gestão de áreas, lotação e sustentabilidade",
+
   "desc_cfo": "Análises estratégicas e inteligência financeira",
+
   "acessar": "Acessar",
+
   "sistema_ok": "Sistema organizado e sob controle",
-  "sistema_desc": "Todos os módulos estão centralizados neste painel. Nenhuma funcionalidade foi perdida."
-}
+
+  "sistema_desc": "Todos os módulos estão centralizados neste painel

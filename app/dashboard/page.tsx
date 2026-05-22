@@ -8,14 +8,20 @@ import CFORealCard
 import CFOAIInsights
   from "@/app/components/cfo/CFOAIInsights";
 
+import ExecutiveChart
+  from "@/app/components/dashboard/ExecutiveChart";
+
 /* =========================================================
-   DASHBOARD HOME
-   PecuariaTech Runtime Enterprise
+   PECUARIATECH
+   ULTRA PREMIUM BIOLOGICAL RUNTIME
+   TRIÂNGULO ESPELHADO 360
+   EQUAÇÃO Y + EQUAÇÃO Z
 ========================================================= */
 
 export default function DashboardHome() {
 
   const modules = [
+
     {
       titlePt:
         "Inteligência Financeira",
@@ -30,6 +36,9 @@ export default function DashboardHome() {
         "Gestión financiera estratégica integrada al runtime operacional.",
 
       icon: "💰",
+
+      glow:
+        "from-emerald-500/20 to-green-500/5",
     },
 
     {
@@ -46,6 +55,9 @@ export default function DashboardHome() {
         "Rastreo productivo, sanitario y operacional del rebaño.",
 
       icon: "🐄",
+
+      glow:
+        "from-cyan-500/20 to-emerald-500/5",
     },
 
     {
@@ -62,141 +74,224 @@ export default function DashboardHome() {
         "Control de carga animal, capacidad de soporte y eficiencia del pasto.",
 
       icon: "🌱",
+
+      glow:
+        "from-lime-500/20 to-emerald-500/5",
     },
 
     {
       titlePt:
-        "CFO Cognitivo",
+        "Engorda ULTRA",
 
       titleEs:
-        "CFO Cognitivo",
+        "Engorda ULTRA",
 
       descPt:
-        "Diagnóstico financeiro automatizado por inteligência operacional.",
+        "Eficiência alimentar, projeção operacional e inteligência biológica.",
 
       descEs:
-        "Diagnóstico financiero automatizado por inteligencia operacional.",
+        "Eficiencia alimentaria, proyección operacional e inteligencia biológica.",
 
-      icon: "🧠",
+      icon: "⚡",
+
+      glow:
+        "from-yellow-500/20 to-orange-500/5",
     },
   ];
 
   return (
 
-    <main className="min-h-screen text-white">
+    <main
+      className="
+        min-h-screen
+        bg-[#f3f7f4]
+        pb-16
+      "
+    >
 
       {/* =====================================================
           WRAPPER
       ===================================================== */}
 
-      <div className="mx-auto max-w-[1850px] space-y-14">
+      <div
+        className="
+          mx-auto
+          max-w-[1820px]
+          space-y-8
+        "
+      >
 
         {/* =====================================================
-            HERO
+            HERO EXECUTIVO
         ===================================================== */}
 
         <section
           className="
             relative
             overflow-hidden
-            rounded-[36px]
+            rounded-[34px]
             border
-            border-emerald-900/40
+            border-emerald-900/20
             bg-gradient-to-br
-            from-[#02150d]
-            via-[#031b11]
-            to-[#021008]
-            p-10
-            shadow-2xl
+            from-[#03150d]
+            via-[#062317]
+            to-[#0b2e1f]
+            px-8
+            py-8
+            xl:px-12
+            xl:py-10
+            shadow-[0_0_80px_rgba(16,185,129,0.10)]
           "
         >
-
-          {/* GLOW */}
 
           <div
             className="
               absolute
-              -top-24
-              right-0
-              h-[320px]
-              w-[320px]
+              -top-40
+              right-[-120px]
+              h-[420px]
+              w-[420px]
               rounded-full
-              bg-emerald-500/10
+              bg-emerald-400/10
               blur-3xl
             "
           />
 
           <div
             className="
-              relative
-              z-10
+              absolute
+              inset-0
+              opacity-[0.03]
+              bg-[linear-gradient(rgba(255,255,255,0.4)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.4)_1px,transparent_1px)]
+              bg-[size:80px_80px]
             "
-          >
+          />
 
-            {/* BADGE */}
+          <div className="relative z-10">
+
+            {/* TOP BAR */}
 
             <div
               className="
-                inline-flex
+                flex
+                flex-wrap
                 items-center
-                rounded-full
-                border
-                border-emerald-500/20
-                bg-emerald-500/10
-                px-5
-                py-2
-                text-sm
-                font-semibold
-                text-emerald-300
+                gap-3
               "
             >
 
-              <T
-                pt="IA operacional estabilizada"
-                es="IA operacional estabilizada"
-              />
+              <div
+                className="
+                  inline-flex
+                  items-center
+                  gap-3
+                  rounded-full
+                  border
+                  border-emerald-400/20
+                  bg-emerald-500/10
+                  px-5
+                  py-2
+                  text-xs
+                  font-bold
+                  uppercase
+                  tracking-[0.22em]
+                  text-emerald-300
+                  backdrop-blur-xl
+                "
+              >
+
+                <div
+                  className="
+                    h-2.5
+                    w-2.5
+                    rounded-full
+                    bg-green-400
+                    animate-pulse
+                  "
+                />
+
+                <T
+                  pt="IA operacional estabilizada"
+                  es="IA operacional estabilizada"
+                />
+
+              </div>
+
+              <div
+                className="
+                  rounded-full
+                  border
+                  border-white/10
+                  bg-black/20
+                  px-4
+                  py-2
+                  text-xs
+                  font-semibold
+                  tracking-wide
+                  text-emerald-100/70
+                "
+              >
+                TRIÂNGULO 360 • EQUAÇÃO Y • EQUAÇÃO Z
+              </div>
 
             </div>
 
-            {/* TITLE */}
+            {/* TITLES */}
 
-            <h1
-              className="
-                mt-7
-                text-5xl
-                font-black
-                tracking-tight
-                text-white
-                xl:text-6xl
-              "
-            >
-              PecuariaTech
-            </h1>
+            <div className="mt-6 max-w-4xl">
 
-            <p
-              className="
-                mt-6
-                max-w-4xl
-                text-lg
-                leading-9
-                text-emerald-100/70
-              "
-            >
+              <h1
+                className="
+                  text-4xl
+                  font-black
+                  leading-tight
+                  tracking-tight
+                  text-white
+                  lg:text-5xl
+                "
+              >
+                PecuariaTech
+              </h1>
 
-              <T
-                pt="Plataforma operacional analítica para gestão inteligente, financeira e estratégica da operação pecuária."
-                es="Plataforma operacional analítica para gestión inteligente, financiera y estratégica de la operación ganadera."
-              />
+              <h2
+                className="
+                  mt-2
+                  text-2xl
+                  font-bold
+                  text-emerald-100
+                  lg:text-3xl
+                "
+              >
+                Dashboard Executivo
+              </h2>
 
-            </p>
+              <p
+                className="
+                  mt-4
+                  max-w-3xl
+                  text-base
+                  leading-relaxed
+                  text-emerald-50/75
+                  lg:text-lg
+                "
+              >
+
+                <T
+                  pt="Plataforma operacional analítica para gestão inteligente, financeira e estratégica da operação pecuária."
+                  es="Plataforma operacional analítica para gestión inteligente, financiera y estratégica de la operación ganadera."
+                />
+
+              </p>
+
+            </div>
 
             {/* KPI GRID */}
 
             <div
               className="
-                mt-14
+                mt-8
                 grid
-                gap-6
+                gap-5
                 md:grid-cols-2
                 xl:grid-cols-3
               "
@@ -205,76 +300,102 @@ export default function DashboardHome() {
               {[
                 {
                   labelPt:
-                    "Animais rastreados",
+                    "EBITDA",
 
                   labelEs:
-                    "Animales rastreados",
+                    "EBITDA",
 
-                  value: "1.247",
+                  value:
+                    "R$ 1.240.000",
 
                   hintPt:
-                    "Base operacional consolidada",
+                    "↑ 12.4% nos últimos 30 dias",
 
                   hintEs:
-                    "Base operacional consolidada",
+                    "↑ 12.4% en los últimos 30 días",
                 },
 
                 {
                   labelPt:
-                    "Receita operacional",
+                    "Margem Operacional",
 
                   labelEs:
-                    "Ingresos operacionales",
+                    "Margen Operacional",
 
-                  value: "R$ 124.580",
+                  value:
+                    "18.2%",
 
                   hintPt:
-                    "Resultado consolidado mensal",
+                    "↑ crescimento consistente",
 
                   hintEs:
-                    "Resultado consolidado mensual",
+                    "↑ crecimiento consistente",
                 },
 
                 {
                   labelPt:
-                    "Eficiência produtiva",
+                    "Custo Alimentar",
 
                   labelEs:
-                    "Eficiencia productiva",
+                    "Costo Alimentario",
 
-                  value: "87%",
+                  value:
+                    "R$ 482.000",
 
                   hintPt:
-                    "Índice médio operacional",
+                    "↓ redução de 4.1%",
 
                   hintEs:
-                    "Índice operacional promedio",
+                    "↓ reducción de 4.1%",
                 },
               ].map((item) => (
 
                 <div
                   key={item.labelPt}
                   className="
-                    rounded-3xl
+                    rounded-[24px]
                     border
-                    border-emerald-500/20
-                    bg-[#0a2117]/90
-                    p-8
-                    shadow-xl
-                    backdrop-blur
+                    border-white/10
+                    bg-black/25
+                    p-5
+                    backdrop-blur-xl
+                    transition-all
+                    duration-300
+                    hover:border-emerald-400/20
+                    hover:bg-black/30
                   "
                 >
 
                   <div
                     className="
-                      text-sm
-                      text-emerald-100/50
+                      flex
+                      items-center
+                      justify-between
                     "
                   >
 
-                    <T
-                      pt={item.labelPt}
-                      es={item.labelEs}
+                    <span
+                      className="
+                        text-sm
+                        font-medium
+                        text-emerald-100/60
+                      "
+                    >
+
+                      <T
+                        pt={item.labelPt}
+                        es={item.labelEs}
+                      />
+
+                    </span>
+
+                    <div
+                      className="
+                        h-2.5
+                        w-2.5
+                        rounded-full
+                        bg-green-400
+                      "
                     />
 
                   </div>
@@ -282,7 +403,7 @@ export default function DashboardHome() {
                   <div
                     className="
                       mt-4
-                      text-5xl
+                      text-3xl
                       font-black
                       tracking-tight
                       text-white
@@ -293,9 +414,9 @@ export default function DashboardHome() {
 
                   <div
                     className="
-                      mt-3
+                      mt-2
                       text-sm
-                      text-emerald-100/50
+                      text-emerald-300
                     "
                   >
 
@@ -317,16 +438,26 @@ export default function DashboardHome() {
         </section>
 
         {/* =====================================================
+            PERFORMANCE
+        ===================================================== */}
+
+        <section className="-mt-2">
+
+          <ExecutiveChart />
+
+        </section>
+
+        {/* =====================================================
             CFO
         ===================================================== */}
 
-        <section className="space-y-6">
+        <section className="-mt-4 space-y-6">
 
           <div
             className="
               flex
               flex-col
-              gap-5
+              gap-4
               lg:flex-row
               lg:items-center
               lg:justify-between
@@ -339,7 +470,8 @@ export default function DashboardHome() {
                 className="
                   text-4xl
                   font-black
-                  text-gray-950
+                  tracking-tight
+                  text-[#07130d]
                 "
               >
 
@@ -352,9 +484,9 @@ export default function DashboardHome() {
 
               <p
                 className="
-                  mt-3
+                  mt-2
                   text-lg
-                  text-gray-500
+                  text-gray-600
                 "
               >
 
@@ -371,17 +503,29 @@ export default function DashboardHome() {
               className="
                 inline-flex
                 items-center
+                gap-3
                 rounded-full
                 border
                 border-emerald-200
-                bg-emerald-50
+                bg-white
                 px-5
                 py-3
                 text-sm
                 font-bold
                 text-emerald-700
+                shadow-lg
               "
             >
+
+              <div
+                className="
+                  h-2.5
+                  w-2.5
+                  rounded-full
+                  bg-green-500
+                  animate-pulse
+                "
+              />
 
               <T
                 pt="CFO Online"
@@ -392,11 +536,7 @@ export default function DashboardHome() {
 
           </div>
 
-          {/* =================================================
-              CFO REAL + IA
-          ================================================= */}
-
-          <div className="space-y-8">
+          <div className="space-y-6">
 
             <CFORealCard />
 
@@ -407,10 +547,10 @@ export default function DashboardHome() {
         </section>
 
         {/* =====================================================
-            MODULOS
+            MÓDULOS
         ===================================================== */}
 
-        <section className="space-y-8">
+        <section className="-mt-2 space-y-6">
 
           <div>
 
@@ -418,7 +558,8 @@ export default function DashboardHome() {
               className="
                 text-4xl
                 font-black
-                text-gray-950
+                tracking-tight
+                text-[#07130d]
               "
             >
 
@@ -431,9 +572,9 @@ export default function DashboardHome() {
 
             <p
               className="
-                mt-3
+                mt-2
                 text-lg
-                text-gray-500
+                text-gray-600
               "
             >
 
@@ -449,7 +590,7 @@ export default function DashboardHome() {
           <div
             className="
               grid
-              gap-7
+              gap-6
               md:grid-cols-2
               xl:grid-cols-4
             "
@@ -459,177 +600,82 @@ export default function DashboardHome() {
 
               <div
                 key={mod.titlePt}
-                className="
-                  rounded-[30px]
+                className={`
+                  relative
+                  overflow-hidden
+                  rounded-[28px]
                   border
-                  border-emerald-100
-                  bg-white
-                  p-8
-                  shadow-sm
+                  border-white/40
+                  bg-gradient-to-br
+                  ${mod.glow}
+                  bg-[#08150f]
+                  p-6
+                  shadow-[0_0_30px_rgba(0,0,0,0.08)]
+                  backdrop-blur-xl
                   transition-all
-                  duration-300
+                  duration-500
                   hover:-translate-y-1
-                  hover:shadow-2xl
-                "
+                  hover:shadow-[0_0_40px_rgba(16,185,129,0.12)]
+                `}
               >
 
-                <div className="text-4xl">
-                  {mod.icon}
+                <div
+                  className="
+                    absolute
+                    right-[-40px]
+                    top-[-40px]
+                    h-40
+                    w-40
+                    rounded-full
+                    bg-white/5
+                    blur-3xl
+                  "
+                />
+
+                <div className="relative z-10">
+
+                  <div className="text-4xl">
+                    {mod.icon}
+                  </div>
+
+                  <h3
+                    className="
+                      mt-5
+                      text-2xl
+                      font-black
+                      leading-tight
+                      text-white
+                    "
+                  >
+
+                    <T
+                      pt={mod.titlePt}
+                      es={mod.titleEs}
+                    />
+
+                  </h3>
+
+                  <p
+                    className="
+                      mt-4
+                      text-base
+                      leading-8
+                      text-emerald-50/75
+                    "
+                  >
+
+                    <T
+                      pt={mod.descPt}
+                      es={mod.descEs}
+                    />
+
+                  </p>
+
                 </div>
-
-                <h3
-                  className="
-                    mt-6
-                    text-2xl
-                    font-black
-                    text-gray-950
-                  "
-                >
-
-                  <T
-                    pt={mod.titlePt}
-                    es={mod.titleEs}
-                  />
-
-                </h3>
-
-                <p
-                  className="
-                    mt-4
-                    leading-8
-                    text-gray-600
-                  "
-                >
-
-                  <T
-                    pt={mod.descPt}
-                    es={mod.descEs}
-                  />
-
-                </p>
 
               </div>
 
             ))}
-
-          </div>
-
-        </section>
-
-        {/* =====================================================
-            STATUS
-        ===================================================== */}
-
-        <section
-          className="
-            rounded-[36px]
-            border
-            border-emerald-100
-            bg-gradient-to-r
-            from-[#052818]
-            to-[#031b11]
-            p-10
-            shadow-2xl
-          "
-        >
-
-          <div
-            className="
-              flex
-              flex-col
-              gap-8
-              lg:flex-row
-              lg:items-center
-              lg:justify-between
-            "
-          >
-
-            <div>
-
-              <div
-                className="
-                  text-sm
-                  font-black
-                  uppercase
-                  tracking-[0.2em]
-                  text-emerald-300
-                "
-              >
-
-                <T
-                  pt="Sistema Operacional"
-                  es="Sistema Operacional"
-                />
-
-              </div>
-
-              <h3
-                className="
-                  mt-4
-                  text-4xl
-                  font-black
-                  text-white
-                "
-              >
-
-                <T
-                  pt="Plataforma estabilizada"
-                  es="Plataforma estabilizada"
-                />
-
-              </h3>
-
-              <p
-                className="
-                  mt-5
-                  max-w-3xl
-                  text-lg
-                  leading-9
-                  text-emerald-100/70
-                "
-              >
-
-                <T
-                  pt="Todos os módulos operacionais estão sincronizados, protegidos e funcionando dentro da arquitetura analítica integrada."
-                  es="Todos los módulos operacionales están sincronizados, protegidos y funcionando dentro de la arquitectura analítica integrada."
-                />
-
-              </p>
-
-            </div>
-
-            <div
-              className="
-                inline-flex
-                items-center
-                gap-3
-                rounded-2xl
-                border
-                border-emerald-500/20
-                bg-[#0b1811]/70
-                px-7
-                py-5
-                text-lg
-                font-semibold
-                text-emerald-300
-              "
-            >
-
-              <div
-                className="
-                  h-3
-                  w-3
-                  rounded-full
-                  bg-green-400
-                "
-              />
-
-              <T
-                pt="Operação online"
-                es="Operación online"
-              />
-
-            </div>
 
           </div>
 
