@@ -1,102 +1,55 @@
 "use client";
 
 // =========================================================
-// PecuariaTech
-// Language Switcher Premium Runtime
-// PT + ES + Runtime Sync
+// PECUARIATECH
+// LANGUAGE SWITCHER PREMIUM
+// I18N RUNTIME
 // =========================================================
 
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  useLanguage,
-  type Lang,
-} from "@/app/providers/LanguageProvider";
-
-/* =========================================================
-   STORAGE
-========================================================= */
-
-const STORAGE_KEY =
-  "pecuariatech_lang";
-
-/* =========================================================
-   COMPONENT
-========================================================= */
+import { useRouter } from "next/navigation";
 
 export default function LanguageSwitcher() {
 
-  const {
-    lang,
-    setLang,
-  } = useLanguage();
-
-  const [
-    mounted,
-    setMounted,
-  ] = useState(false);
-
-  /* =====================================================
-     HYDRATION SAFE
-  ===================================================== */
-
-  useEffect(() => {
-
-    setMounted(true);
-
-    const saved =
-      localStorage.getItem(
-        STORAGE_KEY
-      ) as Lang | null;
-
-    if (
-      saved &&
-      saved !== lang
-    ) {
-
-      setLang(saved);
-    }
-
-  }, [
-    lang,
-    setLang,
-  ]);
+  const router =
+    useRouter();
 
   /* =====================================================
      CHANGE LANGUAGE
   ===================================================== */
 
-  function handleChange(
-    value: Lang
+  function changeLanguage(
+    locale: "pt" | "es"
   ) {
 
-    // localStorage
-    localStorage.setItem(
-      STORAGE_KEY,
-      value
-    );
+    // COOKIE GLOBAL
 
-    // runtime provider
-    setLang(value);
+    document.cookie =
+      `NEXT_LOCALE=${locale}; path=/; max-age=31536000`;
 
-    // runtime event
-    window.dispatchEvent(
-      new Event(
-        "languageChanged"
-      )
-    );
-  }
+    // PATHNAME
 
-  /* =====================================================
-     HYDRATION
-  ===================================================== */
+    const currentPath =
+      window.location.pathname;
 
-  if (!mounted) {
+    // REMOVE PREFIXO ATUAL
 
-    return null;
+    const cleanPath =
+      currentPath
+        .replace(/^\/pt/, "")
+        .replace(/^\/es/, "");
+
+    // NOVA ROTA
+
+    const nextPath =
+      locale === "pt"
+        ? `/pt${cleanPath}`
+        : `/es${cleanPath}`;
+
+    // REDIRECT PREMIUM
+
+    router.push(nextPath);
+
+    router.refresh();
   }
 
   /* =====================================================
@@ -109,43 +62,57 @@ export default function LanguageSwitcher() {
       className="
         flex
         items-center
+        gap-2
+        rounded-2xl
+        border
+        border-white/20
+        bg-white/90
+        px-3
+        py-2
+        shadow-lg
+        backdrop-blur-xl
       "
     >
 
-      <select
-        value={lang}
-        onChange={(e) =>
-          handleChange(
-            e.target.value as Lang
-          )
+      {/* PT */}
+
+      <button
+        onClick={() =>
+          changeLanguage("pt")
         }
         className="
           rounded-xl
-          border
-          border-emerald-200
-          bg-white
           px-3
-          py-2
+          py-1
           text-sm
           font-bold
-          text-gray-700
-          shadow-sm
-          outline-none
-          transition-all
-          hover:border-emerald-400
-          focus:border-emerald-500
+          text-neutral-700
+          transition
+          hover:bg-neutral-100
         "
       >
+        🇧🇷 PT
+      </button>
 
-        <option value="pt">
-          🇧🇷 PT
-        </option>
+      {/* ES */}
 
-        <option value="es">
-          🇪🇸 ES
-        </option>
-
-      </select>
+      <button
+        onClick={() =>
+          changeLanguage("es")
+        }
+        className="
+          rounded-xl
+          px-3
+          py-1
+          text-sm
+          font-bold
+          text-neutral-700
+          transition
+          hover:bg-neutral-100
+        "
+      >
+        🇪🇸 ES
+      </button>
 
     </div>
   );

@@ -1,96 +1,438 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams, useParams } from "next/navigation";
-import { createClient } from "@/app/lib/supabase-browser";
-import { getLangFromClient, t, Lang } from "@/app/lib/i18n";
+import { useState } from "react";
 
-const supabase = createClient();
+import Link from "next/link";
+
+import Image from "next/image";
+
+import {
+  useRouter,
+  usePathname,
+} from "next/navigation";
+
+import {
+  createBrowserClient,
+} from "@/app/lib/supabase-browser";
+
+import LanguageSwitcher
+from "@/app/components/i18n/LanguageSwitcher";
 
 export default function LoginClient() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const params = useParams();
 
-  const lang = (params?.lang as Lang) || "pt";
+  const router =
+    useRouter();
 
-  const next =
-    searchParams?.get("next") || `/${lang}/dashboard`;
+  const pathname =
+    usePathname();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const locale =
+    pathname?.split("/")[1] || "pt";
 
-  async function handleSubmit(e: React.FormEvent) {
+  const [email, setEmail] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  const texts = {
+
+    pt: {
+      subtitle:
+        "Inteligência operacional pecuária",
+
+      email:
+        "Email",
+
+      password:
+        "Senha",
+
+      enter:
+        "Entrar",
+
+      entering:
+        "Entrando...",
+
+      forgot:
+        "Esqueci minha senha",
+
+      invalid:
+        "Email ou senha inválidos.",
+
+      internal:
+        "Erro interno no login.",
+    },
+
+    es: {
+      subtitle:
+        "Inteligencia operacional ganadera",
+
+      email:
+        "Correo",
+
+      password:
+        "Contraseña",
+
+      enter:
+        "Ingresar",
+
+      entering:
+        "Ingresando...",
+
+      forgot:
+        "Olvidé mi contraseña",
+
+      invalid:
+        "Correo o contraseña inválidos.",
+
+      internal:
+        "Error interno de login.",
+    },
+  };
+
+  const t =
+    locale === "es"
+      ? texts.es
+      : texts.pt;
+
+  async function handleLogin(
+    e: React.FormEvent
+  ) {
+
     e.preventDefault();
-    setErrorMsg(null);
+
     setLoading(true);
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+    setError("");
 
-      if (error || !data?.session) {
-        setErrorMsg("Falha no login.");
+    try {
+
+      const supabase =
+        createBrowserClient();
+
+      const {
+        error,
+      } =
+        await supabase.auth
+          .signInWithPassword({
+
+            email:
+              email.trim(),
+
+            password,
+          });
+
+      if (error) {
+
+        console.error(error);
+
+        setError(
+          t.invalid
+        );
+
         return;
       }
 
-      // 🔥 CRÍTICO: força SSR cookie sync
-      window.location.href = next;
+      router.push(
+        locale === "es"
+          ? "/es/dashboard"
+          : "/dashboard"
+      );
 
-    } catch {
-      setErrorMsg("Erro inesperado.");
+      router.refresh();
+
+    } catch (err) {
+
+      console.error(err);
+
+      setError(
+        t.internal
+      );
+
     } finally {
+
       setLoading(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
 
-      <input
-        type="email"
-        placeholder={t(lang, "email")}
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full rounded border px-4 py-2"
-        required
-      />
+    <div
+      className="
+        relative
+        flex
+        min-h-screen
+        items-center
+        justify-center
+        overflow-hidden
+        bg-black
+      "
+    >
 
-      <input
-        type="password"
-        placeholder={t(lang, "password")}
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full rounded border px-4 py-2"
-        required
-      />
+      {/* BACKGROUND */}
 
-      {errorMsg && (
-        <div className="text-red-600 text-sm">{errorMsg}</div>
-      )}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-green-600 text-white py-2 rounded"
+      <div
+        className="
+          absolute
+          inset-0
+        "
       >
-        {loading ? t(lang, "processando") : t(lang, "enter")}
-      </button>
 
-      <div className="text-center text-sm mt-3 space-y-1">
-        <a href={`/${lang}/register`} className="text-green-700">
-          {t(lang, "create_account")}
-        </a>
-        <br />
-        <a href={`/${lang}/forgot-password`} className="text-gray-500">
-          {t(lang, "forgot_password")}
-        </a>
+        <Image
+          src="/pecuariatech.png"
+          alt="PecuariaTech"
+          fill
+          priority
+          className="
+            object-cover
+            opacity-40
+          "
+        />
+
+        <div
+          className="
+            absolute
+            inset-0
+            bg-black/55
+          "
+        />
+
       </div>
 
-    </form>
+      {/* LANGUAGE */}
+
+      <div
+        className="
+          absolute
+          right-6
+          top-6
+          z-20
+        "
+      >
+        <LanguageSwitcher />
+      </div>
+
+      {/* CARD */}
+
+      <div
+        className="
+          relative
+          z-10
+          w-full
+          max-w-md
+          rounded-[32px]
+          border
+          border-white/10
+          bg-white/90
+          p-10
+          shadow-2xl
+          backdrop-blur-xl
+        "
+      >
+
+        {/* HEADER */}
+
+        <div className="text-center">
+
+          <h1
+            className="
+              text-5xl
+              font-black
+              text-green-700
+            "
+          >
+            PecuariaTech
+          </h1>
+
+          <p
+            className="
+              mt-4
+              text-neutral-600
+            "
+          >
+            {t.subtitle}
+          </p>
+
+        </div>
+
+        {/* FORM */}
+
+        <form
+          onSubmit={handleLogin}
+          className="
+            mt-10
+            space-y-5
+          "
+        >
+
+          {/* EMAIL */}
+
+          <div>
+
+            <label
+              className="
+                mb-2
+                block
+                text-sm
+                font-semibold
+                text-neutral-700
+              "
+            >
+              {t.email}
+            </label>
+
+            <input
+              type="email"
+              value={email}
+              onChange={(e) =>
+                setEmail(
+                  e.target.value
+                )
+              }
+              className="
+                w-full
+                rounded-2xl
+                border
+                border-neutral-300
+                bg-white
+                px-4
+                py-3
+                outline-none
+                transition
+                focus:border-green-600
+              "
+              placeholder="seu@email.com"
+              required
+            />
+
+          </div>
+
+          {/* PASSWORD */}
+
+          <div>
+
+            <label
+              className="
+                mb-2
+                block
+                text-sm
+                font-semibold
+                text-neutral-700
+              "
+            >
+              {t.password}
+            </label>
+
+            <input
+              type="password"
+              value={password}
+              onChange={(e) =>
+                setPassword(
+                  e.target.value
+                )
+              }
+              className="
+                w-full
+                rounded-2xl
+                border
+                border-neutral-300
+                bg-white
+                px-4
+                py-3
+                outline-none
+                transition
+                focus:border-green-600
+              "
+              placeholder="••••••••"
+              required
+            />
+
+          </div>
+
+          {/* ERROR */}
+
+          {error && (
+
+            <div
+              className="
+                rounded-2xl
+                border
+                border-red-200
+                bg-red-50
+                px-4
+                py-3
+                text-sm
+                text-red-700
+              "
+            >
+              {error}
+            </div>
+
+          )}
+
+          {/* BUTTON */}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="
+              w-full
+              rounded-2xl
+              bg-green-700
+              px-4
+              py-3
+              font-black
+              text-white
+              transition
+              hover:bg-green-800
+              disabled:opacity-50
+            "
+          >
+
+            {loading
+              ? t.entering
+              : t.enter}
+
+          </button>
+
+          {/* FORGOT */}
+
+          <div
+            className="
+              pt-2
+              text-center
+            "
+          >
+
+            <Link
+              href={
+                locale === "es"
+                  ? "/es/reset-password"
+                  : "/reset-password"
+              }
+              className="
+                text-sm
+                text-green-700
+                transition
+                hover:text-green-800
+                hover:underline
+              "
+            >
+              {t.forgot}
+            </Link>
+
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
   );
 }
