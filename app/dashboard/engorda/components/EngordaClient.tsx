@@ -312,14 +312,18 @@ export default function EngordaClient() {
         total={total}
 
         margem={Number(
-          margem
-        ).toFixed(2)}
+          Number(margem).toFixed(2)
+        )}
 
         risco={risco}
 
-        pi={pi}
+        pi={Number(
+          Number(pi).toFixed(2)
+        )}
 
-        compliance={compliance}
+        compliance={Number(
+          Number(compliance).toFixed(2)
+        )}
 
         esg={esg}
 

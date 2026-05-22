@@ -8,7 +8,7 @@
 
   "dashboard_subtitulo": "Gestão Inteligente",
 
-  "centro_controle": "Centro de controle da fazenda",
+  "centro_controle": "Centro de Controle Executivo da Operação",
   "animais": "Animais",
   "receita": "Receita",
   "produtividade": "Produtividade",
@@ -16,18 +16,19 @@
   "mes_corrente": "Mês corrente",
   "indice_medio": "Índice médio",
 
-  "modulos_sistema": "Módulos do Sistema",
+  "modulos_sistema": "Módulos Estratégicos do Sistema",
 
-  "desc_financeiro": "Fluxo de caixa, custos, receitas e indicadores",
+  "desc_financeiro": "Fluxo de caixa, margem operacional, custos estruturais e inteligência financeira executiva.",
 
-  "desc_rebanho": "Controle de animais e desempenho produtivo",
+  "desc_rebanho": "Rastreamento produtivo, sanitário, biológico e governança operacional do rebanho.",
 
-  "desc_pastagem": "Gestão de áreas, lotação e sustentabilidade",
+  "desc_pastagem": "Gestão inteligente de áreas, lotação, capacidade de suporte e sustentabilidade operacional.",
 
-  "desc_cfo": "Análises estratégicas e inteligência financeira",
+  "desc_cfo": "Runtime cognitivo financeiro com análises estratégicas e suporte executivo à decisão.",
 
   "acessar": "Acessar",
 
-  "sistema_ok": "Sistema organizado e sob controle",
+  "sistema_ok": "Sistema organizado, sincronizado e operacional",
 
-  "sistema_desc": "Todos os módulos estão centralizados neste painel
+  "sistema_desc": "Todos os módulos estão centralizados neste painel executivo com integração cognitiva, governança operacional e inteligência analítica em tempo real."
+}
