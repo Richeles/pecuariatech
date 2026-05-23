@@ -1,5 +1,13 @@
 "use client";
 
+// =========================================================
+// PECUARIATECH
+// LOGIN CLIENT PREMIUM
+// RUNTIME COGNITIVO
+// TRIÂNGULO ESPELHADO 360
+// EQUAÇÃO X + Y + Z
+// =========================================================
+
 import { useState } from "react";
 
 import Link from "next/link";
@@ -17,6 +25,10 @@ import {
 
 import LanguageSwitcher
 from "@/app/components/i18n/LanguageSwitcher";
+
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 export default function LoginClient() {
 
@@ -41,9 +53,14 @@ export default function LoginClient() {
   const [error, setError] =
     useState("");
 
+  /* =====================================================
+     TEXTS
+  ===================================================== */
+
   const texts = {
 
     pt: {
+
       subtitle:
         "Inteligência operacional pecuária",
 
@@ -70,6 +87,7 @@ export default function LoginClient() {
     },
 
     es: {
+
       subtitle:
         "Inteligencia operacional ganadera",
 
@@ -101,6 +119,10 @@ export default function LoginClient() {
       ? texts.es
       : texts.pt;
 
+  /* =====================================================
+     LOGIN
+  ===================================================== */
+
   async function handleLogin(
     e: React.FormEvent
   ) {
@@ -128,9 +150,16 @@ export default function LoginClient() {
             password,
           });
 
+      /* =================================================
+         LOGIN ERROR
+      ================================================= */
+
       if (error) {
 
-        console.error(error);
+        console.error(
+          "LOGIN ERROR:",
+          error.message
+        );
 
         setError(
           t.invalid
@@ -139,10 +168,17 @@ export default function LoginClient() {
         return;
       }
 
+      /* =================================================
+         DASHBOARD MULTILÍNGUE ESTÁVEL
+      ================================================= */
+
       router.push(
+
         locale === "es"
+
           ? "/es/dashboard"
-          : "/dashboard"
+
+          : "/pt/dashboard"
       );
 
       router.refresh();
@@ -161,6 +197,10 @@ export default function LoginClient() {
     }
   }
 
+  /* =====================================================
+     UI
+  ===================================================== */
+
   return (
 
     <div
@@ -175,7 +215,9 @@ export default function LoginClient() {
       "
     >
 
-      {/* BACKGROUND */}
+      {/* =================================================
+          BACKGROUND
+      ================================================= */}
 
       <div
         className="
@@ -200,12 +242,15 @@ export default function LoginClient() {
             absolute
             inset-0
             bg-black/55
+            backdrop-blur-[2px]
           "
         />
 
       </div>
 
-      {/* LANGUAGE */}
+      {/* =================================================
+          LANGUAGE SWITCHER
+      ================================================= */}
 
       <div
         className="
@@ -215,10 +260,14 @@ export default function LoginClient() {
           z-20
         "
       >
+
         <LanguageSwitcher />
+
       </div>
 
-      {/* CARD */}
+      {/* =================================================
+          LOGIN CARD
+      ================================================= */}
 
       <div
         className="
@@ -236,7 +285,9 @@ export default function LoginClient() {
         "
       >
 
-        {/* HEADER */}
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
         <div className="text-center">
 
@@ -261,7 +312,9 @@ export default function LoginClient() {
 
         </div>
 
-        {/* FORM */}
+        {/* =================================================
+            FORM
+        ================================================= */}
 
         <form
           onSubmit={handleLogin}
@@ -307,7 +360,13 @@ export default function LoginClient() {
                 transition
                 focus:border-green-600
               "
-              placeholder="seu@email.com"
+              placeholder={
+                locale === "es"
+
+                  ? "tu@email.com"
+
+                  : "seu@email.com"
+              }
               required
             />
 
@@ -401,7 +460,9 @@ export default function LoginClient() {
 
           </button>
 
-          {/* FORGOT */}
+          {/* =================================================
+              RESET PASSWORD
+          ================================================= */}
 
           <div
             className="
@@ -413,11 +474,14 @@ export default function LoginClient() {
             <Link
               href={
                 locale === "es"
+
                   ? "/es/reset-password"
-                  : "/reset-password"
+
+                  : "/pt/reset-password"
               }
               className="
                 text-sm
+                font-semibold
                 text-green-700
                 transition
                 hover:text-green-800

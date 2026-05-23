@@ -5,10 +5,10 @@ import {
 
 /* =========================================================
    PECUARIATECH PROXY
-   Next.js 16 Runtime
-   Ultra Premium Biological Runtime
-   Equação Y + Equação Z + Triângulo 360
-   AUTH SSR + i18n + Dashboard HUB
+   NEXT.JS 16 RUNTIME
+   ULTRA PREMIUM BIOLOGICAL RUNTIME
+   EQUAÇÃO Y + EQUAÇÃO Z + TRIÂNGULO 360
+   AUTH SSR + i18n + DASHBOARD HUB
 ========================================================= */
 
 export function proxy(
@@ -56,6 +56,51 @@ export function proxy(
   }
 
   /* =====================================================
+     REDIRECT ROOT
+  ===================================================== */
+
+  if (pathname === "/") {
+
+    return NextResponse.redirect(
+
+      new URL(
+        "/pt/login",
+        request.url
+      )
+    );
+  }
+
+  /* =====================================================
+     REDIRECT LOGIN
+  ===================================================== */
+
+  if (pathname === "/login") {
+
+    return NextResponse.redirect(
+
+      new URL(
+        "/pt/login",
+        request.url
+      )
+    );
+  }
+
+  /* =====================================================
+     REDIRECT DASHBOARD LEGADO
+  ===================================================== */
+
+  if (pathname === "/dashboard") {
+
+    return NextResponse.redirect(
+
+      new URL(
+        "/pt/dashboard",
+        request.url
+      )
+    );
+  }
+
+  /* =====================================================
      LOCALES
   ===================================================== */
 
@@ -78,7 +123,9 @@ export function proxy(
 
   const locale =
     locales.find(
+
       (l) =>
+
         pathname.startsWith(`/${l}`)
     ) || "pt";
 
@@ -168,14 +215,12 @@ export function proxy(
       "🚨 NO AUTH COOKIE"
     );
 
-    const loginUrl =
+    return NextResponse.redirect(
+
       new URL(
         `/${locale}/login`,
         request.url
-      );
-
-    return NextResponse.redirect(
-      loginUrl
+      )
     );
   }
 

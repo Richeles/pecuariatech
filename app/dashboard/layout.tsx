@@ -8,7 +8,7 @@
 import Sidebar from "./components/Sidebar";
 
 import LanguageSwitcher
-  from "@/app/components/i18n/LanguageSwitcher";
+from "@/app/components/i18n/LanguageSwitcher";
 
 /* =========================================================
    NEXT
@@ -50,10 +50,10 @@ export default async function DashboardLayout({
       className="
         min-h-screen
         bg-gradient-to-br
-        from-[#f4f7f5]
-        via-white
-        to-emerald-50
-        text-gray-800
+        from-[#07150f]
+        via-[#0b1f17]
+        to-[#10271d]
+        text-white
       "
     >
 
@@ -75,10 +75,10 @@ export default async function DashboardLayout({
             z-40
             flex-shrink-0
             border-r
-            border-emerald-100
-            bg-white/95
-            backdrop-blur-xl
-            shadow-sm
+            border-emerald-500/10
+            bg-[#081811]/95
+            backdrop-blur-2xl
+            shadow-2xl
           "
         >
 
@@ -110,10 +110,9 @@ export default async function DashboardLayout({
               top-0
               z-30
               border-b
-              border-emerald-100
-              bg-white/85
+              border-emerald-500/10
+              bg-[#07150f]/90
               backdrop-blur-2xl
-              shadow-sm
             "
           >
 
@@ -143,7 +142,7 @@ export default async function DashboardLayout({
                     font-black
                     uppercase
                     tracking-[0.28em]
-                    text-emerald-700
+                    text-emerald-400
                   "
                 >
                   Runtime Cognitivo
@@ -155,7 +154,7 @@ export default async function DashboardLayout({
                     truncate
                     text-3xl
                     font-black
-                    text-gray-950
+                    text-white
                   "
                 >
                   PecuariaTech
@@ -165,10 +164,10 @@ export default async function DashboardLayout({
                   className="
                     mt-1
                     text-sm
-                    text-gray-500
+                    text-emerald-100/70
                   "
                 >
-                  Sistema Operacional Cognitivo do Agronegócio
+                  Gestão Inteligente Operacional Pecuária
                 </p>
 
               </div>
@@ -194,11 +193,11 @@ export default async function DashboardLayout({
                     hidden
                     rounded-2xl
                     border
-                    border-blue-100
-                    bg-blue-50
+                    border-cyan-500/10
+                    bg-cyan-500/5
                     px-5
                     py-3
-                    shadow-sm
+                    shadow-xl
                     xl:block
                   "
                 >
@@ -209,7 +208,7 @@ export default async function DashboardLayout({
                       font-black
                       uppercase
                       tracking-[0.2em]
-                      text-blue-700
+                      text-cyan-300
                     "
                   >
                     Mode
@@ -220,7 +219,7 @@ export default async function DashboardLayout({
                       mt-1
                       text-sm
                       font-black
-                      text-blue-900
+                      text-cyan-100
                     "
                   >
                     {runtimeMode}
@@ -237,11 +236,11 @@ export default async function DashboardLayout({
                     hidden
                     rounded-2xl
                     border
-                    border-emerald-100
-                    bg-white
+                    border-emerald-500/10
+                    bg-emerald-500/5
                     px-5
                     py-3
-                    shadow-sm
+                    shadow-xl
                     lg:block
                   "
                 >
@@ -252,7 +251,7 @@ export default async function DashboardLayout({
                       font-black
                       uppercase
                       tracking-[0.2em]
-                      text-emerald-700
+                      text-emerald-300
                     "
                   >
                     Runtime
@@ -263,7 +262,7 @@ export default async function DashboardLayout({
                       mt-1
                       text-sm
                       font-bold
-                      text-gray-900
+                      text-white
                     "
                   >
                     {runtimeLayer}
@@ -280,11 +279,11 @@ export default async function DashboardLayout({
                     hidden
                     rounded-2xl
                     border
-                    border-green-100
-                    bg-green-50
+                    border-green-500/10
+                    bg-green-500/5
                     px-5
                     py-3
-                    shadow-sm
+                    shadow-xl
                     lg:block
                   "
                 >
@@ -295,7 +294,7 @@ export default async function DashboardLayout({
                       font-black
                       uppercase
                       tracking-[0.2em]
-                      text-green-700
+                      text-green-300
                     "
                   >
                     Status
@@ -306,7 +305,7 @@ export default async function DashboardLayout({
                       mt-1
                       text-sm
                       font-black
-                      text-green-800
+                      text-green-200
                     "
                   >
                     {runtimeStatus}
@@ -322,11 +321,11 @@ export default async function DashboardLayout({
                   className="
                     rounded-2xl
                     border
-                    border-emerald-100
-                    bg-white
+                    border-emerald-500/10
+                    bg-[#10271d]
                     px-3
                     py-2
-                    shadow-sm
+                    shadow-xl
                   "
                 >
 
@@ -347,12 +346,12 @@ export default async function DashboardLayout({
                     justify-center
                     rounded-full
                     bg-gradient-to-br
-                    from-green-600
+                    from-green-500
                     to-emerald-700
                     text-sm
                     font-black
                     text-white
-                    shadow-xl
+                    shadow-[0_0_25px_rgba(16,185,129,0.45)]
                   "
                 >
                   U

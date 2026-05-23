@@ -53,58 +53,114 @@ export default function Sidebar({
 }: {
   lang?: "pt" | "es";
 }) {
+
   const pathname = usePathname();
 
   return (
+
     <aside
       className="
-        hidden lg:flex
-        w-[250px]
+        hidden
+        lg:flex
+        w-[240px]
         flex-col
-        border-r border-[#406454]
+        border-r
+        border-[#284135]
         bg-gradient-to-b
-        from-[#0b2418]
-        via-[#123524]
-        to-[#0d2b1d]
+        from-[#081b12]
+        via-[#0d2418]
+        to-[#081b12]
         text-white
       "
     >
-      {/* LOGO */}
-      <div className="border-b border-[#355845] p-6">
 
-        <h1 className="text-[24px] font-black tracking-tight text-white">
+      {/* LOGO */}
+
+      <div
+        className="
+          border-b
+          border-[#284135]
+          p-6
+        "
+      >
+
+        <h1
+          className="
+            text-[22px]
+            font-black
+            tracking-tight
+            text-white
+          "
+        >
           PecuariaTech
         </h1>
 
-        <p className="mt-1 text-sm text-green-100/70">
-          Sistema Operacional Rural
+        <p
+          className="
+            mt-2
+            text-sm
+            leading-relaxed
+            text-green-100/70
+          "
+        >
+          Gestão inteligente pecuária
         </p>
 
       </div>
 
       {/* STATUS */}
+
       <div className="p-4">
 
         <div
           className="
             rounded-2xl
-            border border-[#4d7c63]
-            bg-[#214734]
+            border
+            border-[#315240]
+            bg-[#173325]
             p-4
-            shadow-lg
+            shadow-xl
           "
         >
-          <div className="flex items-center gap-2">
 
-            <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+          <div
+            className="
+              flex
+              items-center
+              gap-3
+            "
+          >
 
-            <span className="text-sm font-medium text-green-100">
+            <div
+              className="
+                h-2
+                w-2
+                rounded-full
+                bg-green-400
+                animate-pulse
+              "
+            />
+
+            <span
+              className="
+                text-sm
+                font-semibold
+                text-green-100
+              "
+            >
               IA operacional ativa
             </span>
 
           </div>
 
-          <p className="mt-3 text-sm leading-relaxed text-green-100/70">
+          <p
+            className="
+              mt-3
+              text-sm
+              leading-relaxed
+              text-green-100/70
+            "
+          >
             Plataforma analítica estabilizada
           </p>
 
@@ -113,7 +169,14 @@ export default function Sidebar({
       </div>
 
       {/* MENU */}
-      <nav className="flex-1 px-4 py-6">
+
+      <nav
+        className="
+          flex-1
+          px-4
+          py-6
+        "
+      >
 
         <div className="space-y-2">
 
@@ -126,6 +189,7 @@ export default function Sidebar({
               pathname === fullHref;
 
             return (
+
               <Link
                 key={item.href}
                 href={fullHref}
@@ -146,12 +210,13 @@ export default function Sidebar({
                       `
                       : `
                         text-green-100/85
-                        hover:bg-[#2f5f47]
-                        hover:border-[#4d7c63]
+                        hover:bg-[#214734]
+                        hover:border-[#315240]
                       `
                   }
                 `}
               >
+
                 <span className="text-lg">
                   {item.icon}
                 </span>
@@ -163,6 +228,7 @@ export default function Sidebar({
                 </span>
 
               </Link>
+
             );
           })}
 
@@ -170,6 +236,53 @@ export default function Sidebar({
 
       </nav>
 
+      {/* FOOTER */}
+
+      <div
+        className="
+          border-t
+          border-[#284135]
+          p-4
+        "
+      >
+
+        <div
+          className="
+            rounded-2xl
+            border
+            border-[#315240]
+            bg-[#10251b]
+            p-4
+          "
+        >
+
+          <div
+            className="
+              text-xs
+              uppercase
+              tracking-[0.2em]
+              text-green-100/50
+            "
+          >
+            Runtime Cognitivo
+          </div>
+
+          <div
+            className="
+              mt-2
+              text-sm
+              font-semibold
+              text-green-100
+            "
+          >
+            Triângulo 360 Online
+          </div>
+
+        </div>
+
+      </div>
+
     </aside>
+
   );
 }

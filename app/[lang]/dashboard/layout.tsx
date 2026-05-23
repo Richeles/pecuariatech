@@ -65,7 +65,7 @@ export default async function DashboardLayout({
             <p className="mt-1 text-sm text-[#4f6d58]">
               {t(
                 safeLang,
-                "dashboard_subtitulo"
+                "Gestão Inteligente"
               )}
             </p>
 

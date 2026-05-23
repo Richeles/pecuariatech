@@ -15,12 +15,12 @@ from "@/app/dashboard/ai/components/PAIAICenter";
 
 /* =========================================================
    PECUARIATECH
-   ULTRA PREMIUM BIOLOGICAL DASHBOARD
+   ULTRA EXECUTIVE HUB
    TRIÂNGULO ESPELHADO 360
-   EQUAÇÃO Y + Z + X
+   EQUAÇÃO Y + EQUAÇÃO Z
 ========================================================= */
 
-export default function DashboardPage() {
+export default function DashboardExecutivePage() {
 
   return (
 
@@ -124,7 +124,7 @@ export default function DashboardPage() {
                   text-emerald-100
                 "
               >
-                Dashboard Executivo Ultra Premium
+                Executive Ultra Dashboard
               </h2>
 
               <p
@@ -137,8 +137,8 @@ export default function DashboardPage() {
                 "
               >
                 Runtime executivo cognitivo integrado ao
-                financeiro, rebanho, pastagem, engorda
-                e governança operacional.
+                financeiro, rebanho, pastagem, engorda e
+                governança operacional da fazenda.
               </p>
 
             </div>
@@ -154,19 +154,19 @@ export default function DashboardPage() {
         <PAIAICenter />
 
         {/* =================================================
-            EXECUTIVE CHART
+            CHART EXECUTIVO
         ================================================= */}
 
         <ExecutiveChart />
 
         {/* =================================================
-            EXECUTIVE ANALYTICS
+            GRID ANALÍTICO
         ================================================= */}
 
         <ExecutiveAnalyticsGrid />
 
         {/* =================================================
-            CFO
+            CFO AI
         ================================================= */}
 
         <section
@@ -186,5 +186,6 @@ export default function DashboardPage() {
       </div>
 
     </main>
+
   );
 }

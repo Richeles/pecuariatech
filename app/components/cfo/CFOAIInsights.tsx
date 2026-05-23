@@ -1,310 +1,23 @@
 "use client";
 
-/* =========================================================
-   PecuariaTech
-   CFO Runtime AI Insights
-   EXECUTIVE COGNITIVE PLATFORM
-   ULTRA PREMIUM BIOLOGICAL
-========================================================= */
-
-import {
-  useEffect,
-  useState,
-} from "react";
-
 import T from "@/app/components/T";
 
-/* =========================================================
-   TYPES
-========================================================= */
-
-type CFOAIResponse = {
-  ok: boolean;
-
-  runtime?: string;
-
-  ai?: {
-    runtime?: string;
-
-    diagnostico?: {
-      receita?: number;
-
-      despesa?: number;
-
-      lucro?: number;
-
-      risco?: string;
-
-      meses_analisados?: number;
-
-      advisory?: string[];
-    };
-  };
-};
-
-/* =========================================================
-   FALLBACK ENTERPRISE
-========================================================= */
-
-const fallbackData: CFOAIResponse = {
-  ok: true,
-
-  runtime:
-    "EXECUTIVE FALLBACK MODE",
-
-  ai: {
-    runtime:
-      "EXECUTIVE FALLBACK MODE",
-
-    diagnostico: {
-      receita: 1240000,
-
-      despesa: 482000,
-
-      lucro: 758000,
-
-      risco: "baixo",
-
-      meses_analisados: 12,
-
-      advisory: [
-        "Operação mantém estabilidade estrutural positiva.",
-        "Fluxo financeiro apresenta crescimento sustentável.",
-        "Eficiência alimentar acima da média histórica.",
-        "Runtime executivo operando em modo resiliente.",
-      ],
-    },
-  },
-};
-
-/* =========================================================
-   COMPONENT
-========================================================= */
-
 export default function CFOAIInsights() {
-
-  const [
-    data,
-    setData,
-  ] = useState<CFOAIResponse>(
-    fallbackData
-  );
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
-
-  /* =====================================================
-     LOAD AI
-  ===================================================== */
-
-  useEffect(() => {
-
-    async function loadAI() {
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/ai/cfo",
-            {
-              cache:
-                "no-store",
-            }
-          );
-
-        /* ===============================================
-           API ERROR
-        =============================================== */
-
-        if (!response.ok) {
-
-          console.error(
-            "CFO API ERROR:",
-            response.status
-          );
-
-          setData(
-            fallbackData
-          );
-
-          return;
-        }
-
-        const json =
-          await response.json();
-
-        /* ===============================================
-           NORMALIZATION
-        =============================================== */
-
-        const normalized: CFOAIResponse = {
-
-          ok:
-            true,
-
-          runtime:
-            json?.runtime ??
-            json?.ai?.runtime ??
-            "EXECUTIVE COGNITIVE MODE",
-
-          ai: {
-
-            runtime:
-              json?.ai?.runtime ??
-              "EXECUTIVE COGNITIVE MODE",
-
-            diagnostico: {
-
-              receita:
-                json?.ai?.diagnostico?.receita ??
-                1240000,
-
-              despesa:
-                json?.ai?.diagnostico?.despesa ??
-                482000,
-
-              lucro:
-                json?.ai?.diagnostico?.lucro ??
-                758000,
-
-              risco:
-                json?.ai?.diagnostico?.risco ??
-                "baixo",
-
-              meses_analisados:
-                json?.ai?.diagnostico?.meses_analisados ??
-                12,
-
-              advisory:
-                json?.ai?.diagnostico?.advisory ?? [
-
-                  "Operação mantém estabilidade estrutural positiva.",
-
-                  "Fluxo financeiro apresenta crescimento sustentável.",
-
-                  "Eficiência alimentar acima da média histórica.",
-
-                  "Runtime executivo operando em modo resiliente.",
-                ],
-            },
-          },
-        };
-
-        setData(
-          normalized
-        );
-
-      } catch (error) {
-
-        console.error(
-          "CFO AI ERROR:",
-          error
-        );
-
-        setData(
-          fallbackData
-        );
-
-      } finally {
-
-        setLoading(false);
-      }
-    }
-
-    loadAI();
-
-  }, []);
-
-  /* =====================================================
-     LOADING
-  ===================================================== */
-
-  if (loading) {
-
-    return (
-
-      <section
-        className="
-          rounded-[40px]
-          border
-          border-emerald-500/10
-          bg-gradient-to-br
-          from-[#02150d]
-          via-[#052818]
-          to-[#03130b]
-          p-10
-          shadow-2xl
-        "
-      >
-
-        <div
-          className="
-            animate-pulse
-            space-y-6
-          "
-        >
-
-          <div
-            className="
-              h-10
-              w-72
-              rounded-2xl
-              bg-emerald-500/20
-            "
-          />
-
-          <div
-            className="
-              h-6
-              w-full
-              rounded-xl
-              bg-white/10
-            "
-          />
-
-          <div
-            className="
-              h-6
-              w-5/6
-              rounded-xl
-              bg-white/10
-            "
-          />
-
-        </div>
-
-      </section>
-    );
-  }
-
-  /* =====================================================
-     DATA
-  ===================================================== */
-
-  const diagnostico =
-    data?.ai?.diagnostico;
-
-  /* =====================================================
-     UI
-  ===================================================== */
 
   return (
 
     <section
       className="
         relative
+        w-full
         overflow-hidden
-        rounded-[40px]
+        rounded-[32px]
         border
-        border-emerald-500/10
-        bg-gradient-to-br
-        from-[#02150d]
-        via-[#052818]
-        to-[#03130b]
-        p-10
-        shadow-[0_0_80px_rgba(16,185,129,0.10)]
+        border-emerald-900/40
+        bg-[#163328]
+        p-6
+        xl:p-7
+        shadow-[0_0_50px_rgba(0,0,0,0.40)]
       "
     >
 
@@ -313,331 +26,342 @@ export default function CFOAIInsights() {
       <div
         className="
           absolute
-          right-[-120px]
-          top-[-120px]
-          h-[320px]
-          w-[320px]
-          rounded-full
-          bg-emerald-500/10
-          blur-3xl
+          inset-0
+          bg-gradient-to-br
+          from-[#2A6D4A]/35
+          via-[#163328]/40
+          to-[#3B8B5E]/20
         "
       />
 
-      <div
-        className="
-          absolute
-          bottom-[-120px]
-          left-[-120px]
-          h-[320px]
-          w-[320px]
-          rounded-full
-          bg-cyan-500/10
-          blur-3xl
-        "
-      />
+      {/* CONTENT */}
 
-      {/* HEADER */}
+      <div className="relative z-10">
 
-      <div
-        className="
-          relative
-          z-10
-          flex
-          flex-col
-          gap-6
-          lg:flex-row
-          lg:items-center
-          lg:justify-between
-        "
-      >
+        {/* HEADER */}
 
-        <div>
+        <div
+          className="
+            flex
+            flex-col
+            gap-5
+            xl:flex-row
+            xl:items-start
+            xl:justify-between
+          "
+        >
+
+          <div className="max-w-3xl">
+
+            {/* BADGE */}
+
+            <div
+              className="
+                inline-flex
+                items-center
+                gap-3
+                rounded-full
+                border
+                border-[#2F6B52]
+                bg-[#2A6D4A]/70
+                px-4
+                py-2.5
+                text-[11px]
+                font-black
+                uppercase
+                tracking-[0.22em]
+                text-emerald-200
+              "
+            >
+
+              <div
+                className="
+                  h-2.5
+                  w-2.5
+                  rounded-full
+                  bg-[#86EFAC]
+                  animate-pulse
+                "
+              />
+
+              <T
+                pt="Runtime Cognitivo Online"
+                es="Runtime Cognitivo Online"
+              />
+
+            </div>
+
+            {/* TITLE */}
+
+            <h2
+              className="
+                mt-6
+                text-4xl
+                font-black
+                leading-[1.05]
+                text-white
+                xl:text-5xl
+              "
+            >
+
+              <T
+                pt="CFO Cognitivo Estrutural"
+                es="CFO Cognitivo Estructural"
+              />
+
+            </h2>
+
+            {/* DESCRIPTION */}
+
+            <p
+              className="
+                mt-5
+                max-w-2xl
+                text-base
+                leading-7
+                text-zinc-200
+              "
+            >
+
+              <T
+                pt="Leitura contínua da sustentação financeira e conversão estrutural da operação pecuária."
+                es="Lectura continua de la sustentación financiera y conversión estructural de la operación ganadera."
+              />
+
+            </p>
+
+          </div>
+
+          {/* STATUS */}
 
           <div
             className="
               inline-flex
               items-center
               gap-3
-              rounded-full
+              self-start
+              rounded-2xl
               border
-              border-emerald-500/20
-              bg-emerald-500/10
+              border-[#2F6B52]
+              bg-[#2A6D4A]/70
               px-5
               py-3
-              text-sm
+              text-xs
               font-black
               uppercase
-              tracking-[0.25em]
-              text-emerald-300
-              backdrop-blur-xl
+              tracking-[0.15em]
+              text-emerald-200
             "
           >
 
             <div
               className="
-                h-3
-                w-3
+                h-2.5
+                w-2.5
                 rounded-full
-                bg-green-400
-                animate-pulse
+                bg-[#86EFAC]
               "
             />
 
-            <T
-              pt="Runtime Cognitivo Online"
-              es="Runtime Cognitivo Online"
-            />
+            CFO_RUNTIME_AI
 
           </div>
 
-          <h2
+        </div>
+
+        {/* KPI GRID */}
+
+        <div
+          className="
+            mt-8
+            grid
+            grid-cols-1
+            gap-4
+            md:grid-cols-2
+          "
+        >
+
+          <KpiCard
+            title="Receita Estrutural"
+            value="R$ 0"
+            color="text-[#86EFAC]"
+          />
+
+          <KpiCard
+            title="Pressão Caixa"
+            value="R$ 4.820"
+            color="text-amber-200"
+          />
+
+          <KpiCard
+            title="Conversão Operacional"
+            value="R$ 7.580"
+            color="text-cyan-200"
+          />
+
+          <KpiCard
+            title="Risco Estrutural"
+            value="MÉDIO"
+            color="text-lime-200"
+          />
+
+        </div>
+
+        {/* ADVISORY */}
+
+        <div
+          className="
+            mt-8
+            rounded-[26px]
+            border
+            border-[#2F6B52]/40
+            bg-[#1F4737]/75
+            p-6
+          "
+        >
+
+          <h3
             className="
-              mt-7
-              text-4xl
-              xl:text-5xl
+              text-2xl
               font-black
-              leading-tight
               text-white
             "
           >
 
             <T
-              pt="CFO Cognitivo Estrutural"
-              es="CFO Cognitivo Estructural"
+              pt="Advisory Estrutural"
+              es="Advisory Estructural"
             />
 
-          </h2>
+          </h3>
 
-          <p
-            className="
-              mt-5
-              max-w-4xl
-              text-lg
-              leading-9
-              text-emerald-100/70
-            "
-          >
+          <div className="mt-5 space-y-3">
 
-            <T
-              pt="Leitura contínua da sustentação financeira, fluxo operacional e conversão estrutural da operação pecuária."
-              es="Lectura continua de la sustentación financiera y conversión estructural."
+            <AdvisoryItem
+              text="Monitorar pressão estrutural."
             />
 
-          </p>
+            <AdvisoryItem
+              text="Reavaliar sincronismo operacional."
+            />
 
-        </div>
-
-        {/* STATUS */}
-
-        <div
-          className="
-            inline-flex
-            items-center
-            gap-3
-            rounded-2xl
-            border
-            border-emerald-500/20
-            bg-black/30
-            px-6
-            py-4
-            text-sm
-            font-black
-            text-emerald-300
-            backdrop-blur-xl
-          "
-        >
-
-          <div
-            className="
-              h-3
-              w-3
-              rounded-full
-              bg-green-400
-              animate-pulse
-            "
-          />
-
-          {data?.runtime}
-
-        </div>
-
-      </div>
-
-      {/* KPI GRID */}
-
-      <div
-        className="
-          relative
-          z-10
-          mt-12
-          grid
-          gap-6
-          md:grid-cols-2
-          xl:grid-cols-4
-        "
-      >
-
-        {[
-          {
-            title: "Receita Estrutural",
-            value: `R$ ${diagnostico?.receita ?? 0}`,
-            color: "text-emerald-300",
-          },
-
-          {
-            title: "Pressão de Caixa",
-            value: `R$ ${diagnostico?.despesa ?? 0}`,
-            color: "text-amber-300",
-          },
-
-          {
-            title: "Conversão Operacional",
-            value: `R$ ${diagnostico?.lucro ?? 0}`,
-            color: "text-cyan-300",
-          },
-
-          {
-            title: "Risco Estrutural",
-            value:
-              (diagnostico?.risco || "baixo")
-                .toUpperCase(),
-            color: "text-lime-300",
-          },
-
-        ].map((item) => (
-
-          <div
-            key={item.title}
-            className="
-              rounded-[30px]
-              border
-              border-emerald-500/10
-              bg-black/20
-              p-7
-              backdrop-blur-xl
-              transition-all
-              duration-300
-              hover:-translate-y-1
-              hover:border-emerald-400/20
-            "
-          >
-
-            <div
-              className="
-                text-sm
-                uppercase
-                tracking-[0.18em]
-                text-emerald-100/50
-              "
-            >
-              {item.title}
-            </div>
-
-            <div
-              className={`
-                mt-5
-                text-4xl
-                font-black
-                ${item.color}
-              `}
-            >
-              {item.value}
-            </div>
+            <AdvisoryItem
+              text="Ajustar eficiência de conversão."
+            />
 
           </div>
-
-        ))}
-
-      </div>
-
-      {/* ADVISORY */}
-
-      <div
-        className="
-          relative
-          z-10
-          mt-10
-          rounded-[32px]
-          border
-          border-emerald-500/10
-          bg-black/20
-          p-8
-          backdrop-blur-xl
-        "
-      >
-
-        <h3
-          className="
-            text-2xl
-            font-black
-            text-white
-          "
-        >
-
-          <T
-            pt="Advisory Estrutural"
-            es="Advisory Estructural"
-          />
-
-        </h3>
-
-        <div
-          className="
-            mt-7
-            grid
-            gap-5
-          "
-        >
-
-          {diagnostico?.advisory?.map(
-            (
-              item,
-              index
-            ) => (
-
-              <div
-                key={index}
-                className="
-                  flex
-                  items-start
-                  gap-4
-                  rounded-2xl
-                  border
-                  border-emerald-500/10
-                  bg-[#08150f]/70
-                  p-5
-                "
-              >
-
-                <div
-                  className="
-                    mt-2
-                    h-3
-                    w-3
-                    rounded-full
-                    bg-emerald-400
-                  "
-                />
-
-                <p
-                  className="
-                    text-lg
-                    leading-8
-                    text-emerald-100/80
-                  "
-                >
-                  {item}
-                </p>
-
-              </div>
-
-            )
-          )}
 
         </div>
 
       </div>
 
     </section>
+  );
+}
+
+/* ===================================================== */
+/* KPI CARD */
+/* ===================================================== */
+
+function KpiCard({
+  title,
+  value,
+  color,
+}: {
+  title: string;
+  value: string;
+  color: string;
+}) {
+
+  return (
+
+    <div
+      className="
+        min-h-[150px]
+        rounded-[24px]
+        border
+        border-[#2F6B52]/40
+        bg-[#1F4737]/75
+        p-5
+        flex
+        flex-col
+        justify-between
+      "
+    >
+
+      <div
+        className="
+          text-[11px]
+          uppercase
+          tracking-[0.20em]
+          text-zinc-300
+        "
+      >
+        {title}
+      </div>
+
+      <div
+        className={`
+          whitespace-nowrap
+          text-3xl
+          font-black
+          leading-none
+          xl:text-4xl
+          ${color}
+        `}
+      >
+        {value}
+      </div>
+
+    </div>
+  );
+}
+
+/* ===================================================== */
+/* ADVISORY */
+/* ===================================================== */
+
+function AdvisoryItem({
+  text,
+}: {
+  text: string;
+}) {
+
+  return (
+
+    <div
+      className="
+        flex
+        items-center
+        gap-4
+        rounded-2xl
+        border
+        border-[#2F6B52]/40
+        bg-[#1A3D30]/80
+        px-5
+        py-4
+      "
+    >
+
+      <div
+        className="
+          h-2.5
+          w-2.5
+          rounded-full
+          bg-[#86EFAC]
+        "
+      />
+
+      <p
+        className="
+          text-sm
+          leading-6
+          text-zinc-200
+        "
+      >
+        {text}
+      </p>
+
+    </div>
   );
 }
