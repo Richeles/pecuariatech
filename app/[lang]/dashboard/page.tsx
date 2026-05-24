@@ -7,15 +7,13 @@ from "@/app/components/dashboard/ExecutiveAnalyticsGrid";
 import CFOAIInsights
 from "@/app/components/cfo/CFOAIInsights";
 
-import CFORealCard
-from "@/app/components/cfo/CFORealCard";
-
 import PAIAICenter
 from "@/app/dashboard/ai/components/PAIAICenter";
 
 /* =========================================================
    PECUARIATECH
    ULTRA PREMIUM BIOLOGICAL DASHBOARD
+   VERDE GRAMA TECNOLÓGICO
    TRIÂNGULO ESPELHADO 360
    EQUAÇÃO Y + Z + X
 ========================================================= */
@@ -27,7 +25,7 @@ export default function DashboardPage() {
     <main
       className="
         min-h-screen
-        bg-[#06110b]
+        bg-[#E8F5E9]
         p-8
       "
     >
@@ -48,13 +46,13 @@ export default function DashboardPage() {
           className="
             rounded-[36px]
             border
-            border-emerald-500/10
+            border-[#D8F3DC]/20
             bg-gradient-to-br
-            from-[#07150f]
-            via-[#0b2017]
-            to-[#10271d]
+            from-[#4D9A6D]
+            via-[#5FB981]
+            to-[#3B7D57]
             p-10
-            shadow-[0_0_80px_rgba(16,185,129,0.10)]
+            shadow-[0_0_80px_rgba(34,197,94,0.18)]
           "
         >
 
@@ -77,15 +75,16 @@ export default function DashboardPage() {
                   gap-3
                   rounded-full
                   border
-                  border-emerald-400/20
-                  bg-emerald-500/10
+                  border-[#DCFCE7]/20
+                  bg-[#BBF7D0]/25
                   px-5
                   py-2
                   text-xs
                   font-black
                   uppercase
                   tracking-[0.20em]
-                  text-emerald-300
+                  text-[#F0FFF4]
+                  backdrop-blur-xl
                 "
               >
 
@@ -94,7 +93,7 @@ export default function DashboardPage() {
                     h-2.5
                     w-2.5
                     rounded-full
-                    bg-green-400
+                    bg-[#DCFCE7]
                     animate-pulse
                   "
                 />
@@ -121,7 +120,7 @@ export default function DashboardPage() {
                   text-5xl
                   font-bold
                   tracking-tight
-                  text-emerald-100
+                  text-[#F0FFF4]
                 "
               >
                 Dashboard Executivo Ultra Premium
@@ -133,7 +132,7 @@ export default function DashboardPage() {
                   max-w-4xl
                   text-xl
                   leading-relaxed
-                  text-emerald-50/70
+                  text-[#ECFDF5]
                 "
               >
                 Runtime executivo cognitivo integrado ao
@@ -166,18 +165,14 @@ export default function DashboardPage() {
         <ExecutiveAnalyticsGrid />
 
         {/* =================================================
-            CFO
+            CFO PREMIUM
         ================================================= */}
 
         <section
           className="
-            grid
-            gap-8
-            xl:grid-cols-2
+            w-full
           "
         >
-
-          <CFORealCard />
 
           <CFOAIInsights />
 

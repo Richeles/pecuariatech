@@ -7,15 +7,13 @@ from "@/app/components/dashboard/ExecutiveAnalyticsGrid";
 import CFOAIInsights
 from "@/app/components/cfo/CFOAIInsights";
 
-import CFORealCard
-from "@/app/components/cfo/CFORealCard";
-
 import PAIAICenter
 from "@/app/dashboard/ai/components/PAIAICenter";
 
 /* =========================================================
    PECUARIATECH
    ULTRA EXECUTIVE HUB
+   VERDE GRAMA TECNOLÓGICO
    TRIÂNGULO ESPELHADO 360
    EQUAÇÃO Y + EQUAÇÃO Z
 ========================================================= */
@@ -27,7 +25,7 @@ export default function DashboardExecutivePage() {
     <main
       className="
         min-h-screen
-        bg-[#06110b]
+        bg-[#E8F5E9]
         p-8
       "
     >
@@ -46,20 +44,52 @@ export default function DashboardExecutivePage() {
 
         <section
           className="
+            relative
+            overflow-hidden
             rounded-[36px]
             border
-            border-emerald-500/10
+            border-[#D8F3DC]/20
             bg-gradient-to-br
-            from-[#07150f]
-            via-[#0b2017]
-            to-[#10271d]
+            from-[#4D9A6D]
+            via-[#5FB981]
+            to-[#3B7D57]
             p-10
-            shadow-[0_0_80px_rgba(16,185,129,0.10)]
+            shadow-[0_0_90px_rgba(34,197,94,0.18)]
           "
         >
 
+          {/* FX */}
+
           <div
             className="
+              absolute
+              right-[-140px]
+              top-[-140px]
+              h-[360px]
+              w-[360px]
+              rounded-full
+              bg-[#DCFCE7]/20
+              blur-3xl
+            "
+          />
+
+          <div
+            className="
+              absolute
+              bottom-[-140px]
+              left-[-140px]
+              h-[360px]
+              w-[360px]
+              rounded-full
+              bg-[#86EFAC]/15
+              blur-3xl
+            "
+          />
+
+          <div
+            className="
+              relative
+              z-10
               flex
               items-center
               justify-between
@@ -70,6 +100,8 @@ export default function DashboardExecutivePage() {
 
             <div>
 
+              {/* STATUS */}
+
               <div
                 className="
                   inline-flex
@@ -77,15 +109,16 @@ export default function DashboardExecutivePage() {
                   gap-3
                   rounded-full
                   border
-                  border-emerald-400/20
-                  bg-emerald-500/10
+                  border-[#DCFCE7]/20
+                  bg-[#BBF7D0]/25
                   px-5
                   py-2
                   text-xs
                   font-black
                   uppercase
                   tracking-[0.20em]
-                  text-emerald-300
+                  text-[#F0FFF4]
+                  backdrop-blur-xl
                 "
               >
 
@@ -94,7 +127,7 @@ export default function DashboardExecutivePage() {
                     h-2.5
                     w-2.5
                     rounded-full
-                    bg-green-400
+                    bg-[#DCFCE7]
                     animate-pulse
                   "
                 />
@@ -102,6 +135,8 @@ export default function DashboardExecutivePage() {
                 Runtime Cognitivo Online
 
               </div>
+
+              {/* TITLE */}
 
               <h1
                 className="
@@ -115,17 +150,21 @@ export default function DashboardExecutivePage() {
                 PecuariaTech
               </h1>
 
+              {/* SUBTITLE */}
+
               <h2
                 className="
                   mt-3
                   text-5xl
                   font-bold
                   tracking-tight
-                  text-emerald-100
+                  text-[#F0FFF4]
                 "
               >
                 Executive Ultra Dashboard
               </h2>
+
+              {/* DESCRIPTION */}
 
               <p
                 className="
@@ -133,7 +172,7 @@ export default function DashboardExecutivePage() {
                   max-w-4xl
                   text-xl
                   leading-relaxed
-                  text-emerald-50/70
+                  text-[#ECFDF5]
                 "
               >
                 Runtime executivo cognitivo integrado ao
@@ -166,18 +205,14 @@ export default function DashboardExecutivePage() {
         <ExecutiveAnalyticsGrid />
 
         {/* =================================================
-            CFO AI
+            CFO AI PREMIUM
         ================================================= */}
 
         <section
           className="
-            grid
-            gap-8
-            xl:grid-cols-2
+            w-full
           "
         >
-
-          <CFORealCard />
 
           <CFOAIInsights />
 
