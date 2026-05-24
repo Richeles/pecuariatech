@@ -3,7 +3,8 @@
 /* =========================================================
    PECUARIATECH
    PAI AI CENTER
-   STABLE ENTERPRISE RUNTIME
+   AGRO PREMIUM BIOLÓGICO
+   VERDE GRAMA TECNOLÓGICO
    TRIÂNGULO 360
    EQUAÇÃO Y + EQUAÇÃO Z
 ========================================================= */
@@ -37,14 +38,14 @@ export default function PAIAICenter() {
         overflow-hidden
         rounded-[32px]
         border
-        border-emerald-500/10
+        border-[#DCFCE7]/10
         bg-gradient-to-br
-        from-[#03150d]
-        via-[#062317]
-        to-[#0b2e1f]
+        from-[#4D9A6D]
+        via-[#74C69D]
+        to-[#3B7D57]
         p-8
         xl:p-10
-        shadow-[0_0_80px_rgba(16,185,129,0.10)]
+        shadow-[0_0_90px_rgba(34,197,94,0.18)]
       "
     >
 
@@ -68,7 +69,20 @@ export default function PAIAICenter() {
           h-[320px]
           w-[320px]
           rounded-full
-          bg-emerald-400/10
+          bg-[#DCFCE7]/20
+          blur-3xl
+        "
+      />
+
+      <div
+        className="
+          absolute
+          bottom-[-120px]
+          left-[-120px]
+          h-[320px]
+          w-[320px]
+          rounded-full
+          bg-[#BBF7D0]/15
           blur-3xl
         "
       />
@@ -100,15 +114,16 @@ export default function PAIAICenter() {
                 gap-3
                 rounded-full
                 border
-                border-emerald-400/20
-                bg-emerald-500/10
+                border-[#DCFCE7]/20
+                bg-[#BBF7D0]/25
                 px-5
                 py-2.5
                 text-xs
                 font-black
                 uppercase
                 tracking-[0.22em]
-                text-emerald-300
+                text-[#F0FFF4]
+                backdrop-blur-xl
               "
             >
 
@@ -117,7 +132,7 @@ export default function PAIAICenter() {
                   h-2.5
                   w-2.5
                   rounded-full
-                  bg-green-400
+                  bg-[#DCFCE7]
                   animate-pulse
                 "
               />
@@ -145,7 +160,7 @@ export default function PAIAICenter() {
                 max-w-3xl
                 text-lg
                 leading-relaxed
-                text-emerald-50/75
+                text-[#F0FFF4]
               "
             >
               Núcleo cognitivo executivo integrado ao runtime
@@ -161,8 +176,8 @@ export default function PAIAICenter() {
             className="
               rounded-[26px]
               border
-              border-white/10
-              bg-black/20
+              border-[#DCFCE7]/10
+              bg-[#5FB981]/20
               px-7
               py-6
               backdrop-blur-xl
@@ -176,7 +191,7 @@ export default function PAIAICenter() {
                 font-black
                 uppercase
                 tracking-[0.20em]
-                text-emerald-300
+                text-[#ECFDF5]
               "
             >
               STATUS EXECUTIVO
@@ -197,7 +212,7 @@ export default function PAIAICenter() {
               className="
                 mt-3
                 text-sm
-                text-emerald-100/70
+                text-[#F0FFF4]
               "
             >
               Runtime cognitivo estabilizado
@@ -228,14 +243,14 @@ export default function PAIAICenter() {
               className="
                 rounded-[24px]
                 border
-                border-white/10
-                bg-black/20
+                border-[#DCFCE7]/10
+                bg-[#5FB981]/20
                 p-6
                 backdrop-blur-xl
                 transition-all
                 duration-300
-                hover:border-emerald-400/20
-                hover:bg-black/30
+                hover:border-[#DCFCE7]/20
+                hover:bg-[#74C69D]/25
               "
             >
 
@@ -245,7 +260,7 @@ export default function PAIAICenter() {
                   font-bold
                   uppercase
                   tracking-[0.18em]
-                  text-emerald-200/70
+                  text-[#ECFDF5]
                 "
               >
                 {item.title}

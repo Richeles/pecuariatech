@@ -1,5 +1,11 @@
 "use client";
 
+// CAMINHO: app/components/cfo/CFOAIInsights.tsx
+// PecuariaTech
+// CFO Runtime Agro Premium Biológico
+// Verde Grama Tecnológico
+// Next.js 16 + TypeScript strict
+
 import T from "@/app/components/T";
 
 export default function CFOAIInsights() {
@@ -13,11 +19,11 @@ export default function CFOAIInsights() {
         overflow-hidden
         rounded-[32px]
         border
-        border-emerald-900/40
-        bg-[#163328]
+        border-[#D8F3DC]/10
+        bg-[#4D9A6D]
         p-6
         xl:p-7
-        shadow-[0_0_50px_rgba(0,0,0,0.40)]
+        shadow-[0_0_60px_rgba(34,197,94,0.22)]
       "
     >
 
@@ -28,9 +34,9 @@ export default function CFOAIInsights() {
           absolute
           inset-0
           bg-gradient-to-br
-          from-[#2A6D4A]/35
-          via-[#163328]/40
-          to-[#3B8B5E]/20
+          from-[#BBF7D0]/20
+          via-transparent
+          to-[#95D5B2]/20
         "
       />
 
@@ -62,15 +68,16 @@ export default function CFOAIInsights() {
                 gap-3
                 rounded-full
                 border
-                border-[#2F6B52]
-                bg-[#2A6D4A]/70
+                border-[#DCFCE7]/20
+                bg-[#BBF7D0]/25
                 px-4
                 py-2.5
                 text-[11px]
                 font-black
                 uppercase
                 tracking-[0.22em]
-                text-emerald-200
+                text-[#F0FFF4]
+                backdrop-blur-xl
               "
             >
 
@@ -79,7 +86,7 @@ export default function CFOAIInsights() {
                   h-2.5
                   w-2.5
                   rounded-full
-                  bg-[#86EFAC]
+                  bg-[#DCFCE7]
                   animate-pulse
                 "
               />
@@ -119,7 +126,7 @@ export default function CFOAIInsights() {
                 max-w-2xl
                 text-base
                 leading-7
-                text-zinc-200
+                text-[#F0FFF4]
               "
             >
 
@@ -142,15 +149,16 @@ export default function CFOAIInsights() {
               self-start
               rounded-2xl
               border
-              border-[#2F6B52]
-              bg-[#2A6D4A]/70
+              border-[#DCFCE7]/20
+              bg-[#BBF7D0]/25
               px-5
               py-3
               text-xs
               font-black
               uppercase
               tracking-[0.15em]
-              text-emerald-200
+              text-[#F0FFF4]
+              backdrop-blur-xl
             "
           >
 
@@ -159,7 +167,7 @@ export default function CFOAIInsights() {
                 h-2.5
                 w-2.5
                 rounded-full
-                bg-[#86EFAC]
+                bg-[#DCFCE7]
               "
             />
 
@@ -184,25 +192,25 @@ export default function CFOAIInsights() {
           <KpiCard
             title="Receita Estrutural"
             value="R$ 0"
-            color="text-[#86EFAC]"
+            color="text-[#F0FFF4]"
           />
 
           <KpiCard
             title="Pressão Caixa"
             value="R$ 4.820"
-            color="text-amber-200"
+            color="text-amber-100"
           />
 
           <KpiCard
             title="Conversão Operacional"
             value="R$ 7.580"
-            color="text-cyan-200"
+            color="text-cyan-100"
           />
 
           <KpiCard
             title="Risco Estrutural"
             value="MÉDIO"
-            color="text-lime-200"
+            color="text-lime-100"
           />
 
         </div>
@@ -214,9 +222,10 @@ export default function CFOAIInsights() {
             mt-8
             rounded-[26px]
             border
-            border-[#2F6B52]/40
-            bg-[#1F4737]/75
+            border-[#D8F3DC]/10
+            bg-[#74C69D]/25
             p-6
+            backdrop-blur-xl
           "
         >
 
@@ -280,12 +289,16 @@ function KpiCard({
         min-h-[150px]
         rounded-[24px]
         border
-        border-[#2F6B52]/40
-        bg-[#1F4737]/75
+        border-[#D8F3DC]/10
+        bg-gradient-to-br
+        from-[#74C69D]
+        via-[#95D5B2]
+        to-[#5FB981]
         p-5
         flex
         flex-col
         justify-between
+        shadow-[0_0_35px_rgba(34,197,94,0.14)]
       "
     >
 
@@ -294,7 +307,7 @@ function KpiCard({
           text-[11px]
           uppercase
           tracking-[0.20em]
-          text-zinc-300
+          text-[#ECFDF5]
         "
       >
         {title}
@@ -336,10 +349,11 @@ function AdvisoryItem({
         gap-4
         rounded-2xl
         border
-        border-[#2F6B52]/40
-        bg-[#1A3D30]/80
+        border-[#D8F3DC]/10
+        bg-[#95D5B2]/20
         px-5
         py-4
+        backdrop-blur-xl
       "
     >
 
@@ -348,7 +362,7 @@ function AdvisoryItem({
           h-2.5
           w-2.5
           rounded-full
-          bg-[#86EFAC]
+          bg-[#DCFCE7]
         "
       />
 
@@ -356,7 +370,7 @@ function AdvisoryItem({
         className="
           text-sm
           leading-6
-          text-zinc-200
+          text-[#F0FFF4]
         "
       >
         {text}

@@ -1,10 +1,9 @@
-```tsx
 "use client";
 
 // CAMINHO: app/dashboard/DashboardClient.tsx
 // PecuariaTech
-// Dashboard Executivo Premium Ultra
-// Runtime Cognitivo Estável
+// Dashboard Executivo Agro Premium Biológico
+// Verde Fazenda Tecnológica
 // Next.js 16 + TypeScript strict
 
 import CFOAIInsights
@@ -26,14 +25,14 @@ export default function DashboardClient() {
           overflow-hidden
           rounded-[36px]
           border
-          border-[#86EFAC]/10
+          border-[#D8F3DC]/10
           bg-gradient-to-br
-          from-[#214D3D]
-          via-[#2A6D4A]
-          to-[#1B4332]
+          from-[#3B7D57]
+          via-[#4D9A6D]
+          to-[#2F6B4B]
           p-8
           xl:p-12
-          shadow-[0_0_90px_rgba(16,185,129,0.14)]
+          shadow-[0_0_90px_rgba(34,197,94,0.16)]
         "
       >
 
@@ -47,7 +46,7 @@ export default function DashboardClient() {
             h-[360px]
             w-[360px]
             rounded-full
-            bg-[#BBF7D0]/15
+            bg-[#DCFCE7]/20
             blur-3xl
           "
         />
@@ -60,7 +59,7 @@ export default function DashboardClient() {
             h-[360px]
             w-[360px]
             rounded-full
-            bg-[#86EFAC]/10
+            bg-[#86EFAC]/15
             blur-3xl
           "
         />
@@ -78,15 +77,15 @@ export default function DashboardClient() {
               gap-3
               rounded-full
               border
-              border-[#BBF7D0]/20
-              bg-[#3B8B5E]/40
+              border-[#DCFCE7]/20
+              bg-[#74C69D]/25
               px-5
               py-3
               text-xs
               font-black
               uppercase
               tracking-[0.28em]
-              text-[#ECFDF5]
+              text-[#F0FFF4]
               backdrop-blur-xl
             "
           >
@@ -96,7 +95,7 @@ export default function DashboardClient() {
                 h-3
                 w-3
                 rounded-full
-                bg-[#BBF7D0]
+                bg-[#DCFCE7]
                 animate-pulse
               "
             />
@@ -131,7 +130,7 @@ export default function DashboardClient() {
               max-w-4xl
               text-base
               leading-8
-              text-[#ECFDF5]
+              text-[#F0FFF4]
               xl:text-lg
             "
           >
@@ -207,14 +206,14 @@ export default function DashboardClient() {
         className="
           rounded-[36px]
           border
-          border-[#86EFAC]/10
+          border-[#D8F3DC]/10
           bg-gradient-to-br
-          from-[#1B4332]
-          via-[#2A6D4A]
-          to-[#214D3D]
+          from-[#2F6B4B]
+          via-[#4D9A6D]
+          to-[#3B7D57]
           p-8
           xl:p-10
-          shadow-[0_0_70px_rgba(16,185,129,0.12)]
+          shadow-[0_0_70px_rgba(34,197,94,0.14)]
         "
       >
 
@@ -238,7 +237,7 @@ export default function DashboardClient() {
               mt-5
               text-base
               leading-8
-              text-[#ECFDF5]
+              text-[#F0FFF4]
               xl:text-lg
             "
           >
@@ -336,7 +335,7 @@ export default function DashboardClient() {
               items-center
               justify-center
               rounded-2xl
-              bg-[#3B8B5E]
+              bg-[#5FB981]
               px-8
               py-4
               text-base
@@ -344,7 +343,7 @@ export default function DashboardClient() {
               text-white
               transition-all
               duration-300
-              hover:bg-[#4FA36F]
+              hover:bg-[#74C69D]
               hover:scale-[1.02]
             "
           >
@@ -378,10 +377,10 @@ function KpiCard({
 }) {
 
   const colors = {
-    emerald: "text-[#BBF7D0]",
-    amber: "text-amber-200",
-    cyan: "text-cyan-200",
-    lime: "text-lime-200",
+    emerald: "text-[#DCFCE7]",
+    amber: "text-amber-100",
+    cyan: "text-cyan-100",
+    lime: "text-lime-100",
   };
 
   return (
@@ -390,13 +389,13 @@ function KpiCard({
       className="
         rounded-[28px]
         border
-        border-[#86EFAC]/10
+        border-[#D8F3DC]/10
         bg-gradient-to-br
-        from-[#214D3D]
-        via-[#2A6D4A]
-        to-[#1B4332]
+        from-[#4D9A6D]
+        via-[#5FB981]
+        to-[#3B7D57]
         p-6
-        shadow-[0_0_35px_rgba(16,185,129,0.10)]
+        shadow-[0_0_35px_rgba(34,197,94,0.12)]
       "
     >
 
@@ -405,7 +404,7 @@ function KpiCard({
           text-xs
           uppercase
           tracking-[0.24em]
-          text-[#D1FAE5]
+          text-[#ECFDF5]
         "
       >
         {titulo}
@@ -460,12 +459,12 @@ function Plano({
         ${
           destaque
             ? `
-              border-[#BBF7D0]/30
-              bg-[#3B8B5E]/25
+              border-[#DCFCE7]/30
+              bg-[#74C69D]/25
             `
             : `
-              border-[#86EFAC]/10
-              bg-[#214D3D]/70
+              border-[#D8F3DC]/10
+              bg-[#3B7D57]/70
             `
         }
       `}
@@ -494,14 +493,14 @@ function Plano({
           <span
             className="
               rounded-full
-              bg-[#BBF7D0]/20
+              bg-[#DCFCE7]/20
               px-3
               py-1
               text-xs
               font-black
               uppercase
               tracking-[0.20em]
-              text-[#ECFDF5]
+              text-[#F0FFF4]
             "
           >
             Ultra
@@ -516,7 +515,7 @@ function Plano({
           mt-4
           text-sm
           leading-7
-          text-[#ECFDF5]
+          text-[#F0FFF4]
         "
       >
         {descricao}
@@ -527,7 +526,7 @@ function Plano({
           mt-6
           space-y-3
           text-sm
-          text-zinc-100
+          text-white
         "
       >
 
@@ -542,7 +541,7 @@ function Plano({
             "
           >
 
-            <span className="text-[#BBF7D0]">
+            <span className="text-[#DCFCE7]">
               ✓
             </span>
 
@@ -559,7 +558,7 @@ function Plano({
           mt-8
           text-2xl
           font-black
-          text-[#BBF7D0]
+          text-[#DCFCE7]
         "
       >
         {preco}
@@ -568,4 +567,3 @@ function Plano({
     </div>
   );
 }
-```
