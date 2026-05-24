@@ -1,13 +1,5 @@
 "use client";
 
-// =========================================================
-// PECUARIATECH
-// LOGIN CLIENT PREMIUM
-// RUNTIME COGNITIVO
-// TRIÂNGULO ESPELHADO 360
-// EQUAÇÃO X + Y + Z
-// =========================================================
-
 import { useState } from "react";
 
 import Link from "next/link";
@@ -19,24 +11,13 @@ import {
   usePathname,
 } from "next/navigation";
 
-import {
-  createBrowserClient,
-} from "@/app/lib/supabase-browser";
-
-import LanguageSwitcher
-from "@/app/components/i18n/LanguageSwitcher";
-
-/* =========================================================
-   COMPONENT
-========================================================= */
+import LanguageSwitcher from "@/app/components/i18n/LanguageSwitcher";
 
 export default function LoginClient() {
 
-  const router =
-    useRouter();
+  const router = useRouter();
 
-  const pathname =
-    usePathname();
+  const pathname = usePathname();
 
   const locale =
     pathname?.split("/")[1] || "pt";
@@ -52,10 +33,6 @@ export default function LoginClient() {
 
   const [error, setError] =
     useState("");
-
-  /* =====================================================
-     TEXTS
-  ===================================================== */
 
   const texts = {
 
@@ -119,10 +96,6 @@ export default function LoginClient() {
       ? texts.es
       : texts.pt;
 
-  /* =====================================================
-     LOGIN
-  ===================================================== */
-
   async function handleLogin(
     e: React.FormEvent
   ) {
@@ -135,30 +108,38 @@ export default function LoginClient() {
 
     try {
 
-      const supabase =
-        createBrowserClient();
+      const response =
+        await fetch(
+          "/api/auth/login",
+          {
+            method: "POST",
 
-      const {
-        error,
-      } =
-        await supabase.auth
-          .signInWithPassword({
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-            email:
-              email.trim(),
+            credentials:
+              "include",
 
-            password,
-          });
+            body: JSON.stringify({
 
-      /* =================================================
-         LOGIN ERROR
-      ================================================= */
+              email:
+                email.trim(),
 
-      if (error) {
+              password,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
 
         console.error(
           "LOGIN ERROR:",
-          error.message
+          data
         );
 
         setError(
@@ -168,9 +149,48 @@ export default function LoginClient() {
         return;
       }
 
-      /* =================================================
-         DASHBOARD MULTILÍNGUE ESTÁVEL
-      ================================================= */
+      console.log(
+        "🟢 LOGIN SSR OK"
+      );
+
+      await new Promise(
+        (resolve) =>
+          setTimeout(
+            resolve,
+            800
+          )
+      );
+
+      const statusRes =
+        await fetch(
+          `/api/assinaturas/status?ts=${Date.now()}`,
+          {
+            credentials:
+              "include",
+          }
+        );
+
+      const status =
+        await statusRes.json();
+
+      console.log(
+        "🧠 STATUS:",
+        status
+      );
+
+      if (!status?.ativo) {
+
+        console.error(
+          "🚨 STATUS INVÁLIDO:",
+          status
+        );
+
+        setError(
+          t.internal
+        );
+
+        return;
+      }
 
       router.push(
 
@@ -185,7 +205,10 @@ export default function LoginClient() {
 
     } catch (err) {
 
-      console.error(err);
+      console.error(
+        "💥 LOGIN ERROR:",
+        err
+      );
 
       setError(
         t.internal
@@ -197,147 +220,71 @@ export default function LoginClient() {
     }
   }
 
-  /* =====================================================
-     UI
-  ===================================================== */
-
   return (
 
-    <div
-      className="
-        relative
-        flex
-        min-h-screen
-        items-center
-        justify-center
-        overflow-hidden
-        bg-black
-      "
-    >
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black">
 
-      {/* =================================================
-          BACKGROUND
-      ================================================= */}
+      {/* BACKGROUND */}
 
-      <div
-        className="
-          absolute
-          inset-0
-        "
-      >
+      <div className="absolute inset-0">
 
         <Image
           src="/pecuariatech.png"
           alt="PecuariaTech"
           fill
           priority
-          className="
-            object-cover
-            opacity-40
-          "
+          className="object-cover opacity-40"
         />
 
-        <div
-          className="
-            absolute
-            inset-0
-            bg-black/55
-            backdrop-blur-[2px]
-          "
-        />
+        <div className="absolute inset-0 bg-black/55 backdrop-blur-[2px]" />
 
       </div>
 
-      {/* =================================================
-          LANGUAGE SWITCHER
-      ================================================= */}
+      {/* LANGUAGE */}
 
-      <div
-        className="
-          absolute
-          right-6
-          top-6
-          z-20
-        "
-      >
+      <div className="absolute right-6 top-6 z-20">
 
         <LanguageSwitcher />
 
       </div>
 
-      {/* =================================================
-          LOGIN CARD
-      ================================================= */}
+      {/* CARD */}
 
-      <div
-        className="
-          relative
-          z-10
-          w-full
-          max-w-md
-          rounded-[32px]
-          border
-          border-white/10
-          bg-white/90
-          p-10
-          shadow-2xl
-          backdrop-blur-xl
-        "
-      >
+      <div className="relative z-10 w-full max-w-md rounded-[32px] border border-white/10 bg-white/90 p-10 shadow-2xl backdrop-blur-xl">
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
+        {/* HEADER */}
 
         <div className="text-center">
 
-          <h1
-            className="
-              text-5xl
-              font-black
-              text-green-700
-            "
-          >
+          <h1 className="text-5xl font-black text-green-700">
+
             PecuariaTech
+
           </h1>
 
-          <p
-            className="
-              mt-4
-              text-neutral-600
-            "
-          >
+          <p className="mt-4 text-neutral-600">
+
             {t.subtitle}
+
           </p>
 
         </div>
 
-        {/* =================================================
-            FORM
-        ================================================= */}
+        {/* FORM */}
 
         <form
           onSubmit={handleLogin}
-          className="
-            mt-10
-            space-y-5
-          "
+          className="mt-10 space-y-5"
         >
 
           {/* EMAIL */}
 
           <div>
 
-            <label
-              className="
-                mb-2
-                block
-                text-sm
-                font-semibold
-                text-neutral-700
-              "
-            >
+            <label className="mb-2 block text-sm font-semibold text-neutral-700">
+
               {t.email}
+
             </label>
 
             <input
@@ -348,23 +295,10 @@ export default function LoginClient() {
                   e.target.value
                 )
               }
-              className="
-                w-full
-                rounded-2xl
-                border
-                border-neutral-300
-                bg-white
-                px-4
-                py-3
-                outline-none
-                transition
-                focus:border-green-600
-              "
+              className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 outline-none transition focus:border-green-600"
               placeholder={
                 locale === "es"
-
                   ? "tu@email.com"
-
                   : "seu@email.com"
               }
               required
@@ -376,16 +310,10 @@ export default function LoginClient() {
 
           <div>
 
-            <label
-              className="
-                mb-2
-                block
-                text-sm
-                font-semibold
-                text-neutral-700
-              "
-            >
+            <label className="mb-2 block text-sm font-semibold text-neutral-700">
+
               {t.password}
+
             </label>
 
             <input
@@ -396,18 +324,7 @@ export default function LoginClient() {
                   e.target.value
                 )
               }
-              className="
-                w-full
-                rounded-2xl
-                border
-                border-neutral-300
-                bg-white
-                px-4
-                py-3
-                outline-none
-                transition
-                focus:border-green-600
-              "
+              className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 outline-none transition focus:border-green-600"
               placeholder="••••••••"
               required
             />
@@ -418,19 +335,10 @@ export default function LoginClient() {
 
           {error && (
 
-            <div
-              className="
-                rounded-2xl
-                border
-                border-red-200
-                bg-red-50
-                px-4
-                py-3
-                text-sm
-                text-red-700
-              "
-            >
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+
               {error}
+
             </div>
 
           )}
@@ -440,18 +348,7 @@ export default function LoginClient() {
           <button
             type="submit"
             disabled={loading}
-            className="
-              w-full
-              rounded-2xl
-              bg-green-700
-              px-4
-              py-3
-              font-black
-              text-white
-              transition
-              hover:bg-green-800
-              disabled:opacity-50
-            "
+            className="w-full rounded-2xl bg-green-700 px-4 py-3 font-black text-white transition hover:bg-green-800 disabled:opacity-50"
           >
 
             {loading
@@ -460,35 +357,21 @@ export default function LoginClient() {
 
           </button>
 
-          {/* =================================================
-              RESET PASSWORD
-          ================================================= */}
+          {/* RESET */}
 
-          <div
-            className="
-              pt-2
-              text-center
-            "
-          >
+          <div className="pt-2 text-center">
 
             <Link
               href={
                 locale === "es"
-
                   ? "/es/reset-password"
-
                   : "/pt/reset-password"
               }
-              className="
-                text-sm
-                font-semibold
-                text-green-700
-                transition
-                hover:text-green-800
-                hover:underline
-              "
+              className="text-sm font-semibold text-green-700 transition hover:text-green-800 hover:underline"
             >
+
               {t.forgot}
+
             </Link>
 
           </div>
