@@ -178,28 +178,36 @@ export default function LoginClient() {
         status
       );
 
-      if (!status?.ativo) {
+      /* =========================================
+         FLUXO SaaS
+      ========================================= */
 
-        console.error(
-          "🚨 STATUS INVÁLIDO:",
-          status
+      if (status?.ativo) {
+
+        router.push(
+
+          locale === "es"
+
+            ? "/es/dashboard"
+
+            : "/pt/dashboard"
         );
 
-        setError(
-          t.internal
+      } else {
+
+        console.warn(
+          "⚠️ Usuário sem assinatura ativa"
         );
 
-        return;
+        router.push(
+
+          locale === "es"
+
+            ? "/es/planos"
+
+            : "/pt/planos"
+        );
       }
-
-      router.push(
-
-        locale === "es"
-
-          ? "/es/dashboard"
-
-          : "/pt/dashboard"
-      );
 
       router.refresh();
 
@@ -295,7 +303,7 @@ export default function LoginClient() {
                   e.target.value
                 )
               }
-              className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 outline-none transition focus:border-green-600"
+              className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 outline-none transition focus:border-green-700"
               placeholder={
                 locale === "es"
                   ? "tu@email.com"
@@ -324,7 +332,7 @@ export default function LoginClient() {
                   e.target.value
                 )
               }
-              className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 outline-none transition focus:border-green-600"
+              className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 outline-none transition focus:border-green-700"
               placeholder="••••••••"
               required
             />
@@ -348,7 +356,7 @@ export default function LoginClient() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-green-700 px-4 py-3 font-black text-white transition hover:bg-green-800 disabled:opacity-50"
+            className="w-full rounded-2xl bg-green-800 px-4 py-3 font-black text-white transition hover:bg-green-900 disabled:opacity-50"
           >
 
             {loading
