@@ -11,7 +11,8 @@ import {
   usePathname,
 } from "next/navigation";
 
-import LanguageSwitcher from "@/app/components/i18n/LanguageSwitcher";
+import LanguageSwitcher
+from "@/app/components/i18n/LanguageSwitcher";
 
 export default function LoginClient() {
 
@@ -102,6 +103,10 @@ export default function LoginClient() {
 
     e.preventDefault();
 
+    if (loading) {
+      return;
+    }
+
     setLoading(true);
 
     setError("");
@@ -125,7 +130,9 @@ export default function LoginClient() {
             body: JSON.stringify({
 
               email:
-                email.trim(),
+                email
+                  .trim()
+                  .toLowerCase(),
 
               password,
             }),
@@ -138,7 +145,7 @@ export default function LoginClient() {
       if (!response.ok) {
 
         console.error(
-          "LOGIN ERROR:",
+          "❌ LOGIN SSR ERROR:",
           data
         );
 
@@ -153,11 +160,13 @@ export default function LoginClient() {
         "🟢 LOGIN SSR OK"
       );
 
+      // aguarda cookies SSR
+
       await new Promise(
         (resolve) =>
           setTimeout(
             resolve,
-            800
+            1200
           )
       );
 
@@ -250,7 +259,14 @@ export default function LoginClient() {
 
       {/* LANGUAGE */}
 
-      <div className="absolute right-6 top-6 z-20">
+      <div
+        className="
+          absolute
+          right-6
+          top-6
+          z-20
+        "
+      >
 
         <LanguageSwitcher />
 
@@ -303,7 +319,18 @@ export default function LoginClient() {
                   e.target.value
                 )
               }
-              className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 outline-none transition focus:border-green-700"
+              className="
+                w-full
+                rounded-2xl
+                border
+                border-neutral-300
+                bg-white
+                px-4
+                py-3
+                outline-none
+                transition
+                focus:border-green-600
+              "
               placeholder={
                 locale === "es"
                   ? "tu@email.com"
@@ -332,7 +359,18 @@ export default function LoginClient() {
                   e.target.value
                 )
               }
-              className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 outline-none transition focus:border-green-700"
+              className="
+                w-full
+                rounded-2xl
+                border
+                border-neutral-300
+                bg-white
+                px-4
+                py-3
+                outline-none
+                transition
+                focus:border-green-700
+              "
               placeholder="••••••••"
               required
             />
@@ -375,7 +413,14 @@ export default function LoginClient() {
                   ? "/es/reset-password"
                   : "/pt/reset-password"
               }
-              className="text-sm font-semibold text-green-700 transition hover:text-green-800 hover:underline"
+              className="
+                text-sm
+                font-semibold
+                text-green-700
+                transition
+                hover:text-green-800
+                hover:underline
+              "
             >
 
               {t.forgot}

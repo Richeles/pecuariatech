@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+
+import {
+  usePathname,
+} from "next/navigation";
+
+import {
+  pecuariaTheme,
+} from "@/app/lib/theme";
 
 const items = [
   {
@@ -54,39 +61,39 @@ export default function Sidebar({
   lang?: "pt" | "es";
 }) {
 
-  const pathname = usePathname();
+  const pathname =
+    usePathname();
 
   return (
 
     <aside
-      className="
+      className={`
         hidden
         lg:flex
-        w-[240px]
+        w-[250px]
         flex-col
         border-r
-        border-[#284135]
-        bg-gradient-to-b
-        from-[#081b12]
-        via-[#0d2418]
-        to-[#081b12]
-        text-white
-      "
+        border-[#355845]
+        ${pecuariaTheme.sidebar.background}
+        ${pecuariaTheme.sidebar.text}
+      `}
     >
 
-      {/* LOGO */}
+      {/* =====================================================
+          LOGO
+      ===================================================== */}
 
       <div
         className="
           border-b
-          border-[#284135]
+          border-[#355845]
           p-6
         "
       >
 
         <h1
           className="
-            text-[22px]
+            text-[24px]
             font-black
             tracking-tight
             text-white
@@ -97,18 +104,19 @@ export default function Sidebar({
 
         <p
           className="
-            mt-2
+            mt-1
             text-sm
-            leading-relaxed
-            text-green-100/70
+            text-[#b7d6c2]
           "
         >
-          Gestão inteligente pecuária
+          Gestão Inteligente
         </p>
 
       </div>
 
-      {/* STATUS */}
+      {/* =====================================================
+          STATUS
+      ===================================================== */}
 
       <div className="p-4">
 
@@ -116,10 +124,11 @@ export default function Sidebar({
           className="
             rounded-2xl
             border
-            border-[#315240]
-            bg-[#173325]
+            border-[#355845]
+            bg-[#173126]
             p-4
             shadow-xl
+            backdrop-blur-sm
           "
         >
 
@@ -127,7 +136,7 @@ export default function Sidebar({
             className="
               flex
               items-center
-              gap-3
+              gap-2
             "
           >
 
@@ -136,7 +145,7 @@ export default function Sidebar({
                 h-2
                 w-2
                 rounded-full
-                bg-green-400
+                bg-[#52b788]
                 animate-pulse
               "
             />
@@ -145,7 +154,7 @@ export default function Sidebar({
               className="
                 text-sm
                 font-semibold
-                text-green-100
+                text-[#f3fff7]
               "
             >
               IA operacional ativa
@@ -158,7 +167,7 @@ export default function Sidebar({
               mt-3
               text-sm
               leading-relaxed
-              text-green-100/70
+              text-[#b7d6c2]
             "
           >
             Plataforma analítica estabilizada
@@ -168,7 +177,9 @@ export default function Sidebar({
 
       </div>
 
-      {/* MENU */}
+      {/* =====================================================
+          MENU
+      ===================================================== */}
 
       <nav
         className="
@@ -195,36 +206,59 @@ export default function Sidebar({
                 href={fullHref}
                 prefetch={false}
                 className={`
-                  flex items-center gap-4
+                  flex
+                  items-center
+                  gap-4
                   rounded-2xl
-                  px-4 py-3
-                  transition-all duration-200
-                  border border-transparent
+                  px-4
+                  py-3
+                  border
+                  transition-all
+                  duration-200
+
                   ${
                     active
+
                       ? `
-                        bg-[#6bbd88]
-                        text-white
+                        ${pecuariaTheme.sidebar.active}
+                        border-[#4f9b68]
                         shadow-xl
-                        border-[#95d5ab]
+                        scale-[1.01]
                       `
+
                       : `
-                        text-green-100/85
+                        border-transparent
+                        text-[#d7ffe5]
                         hover:bg-[#214734]
-                        hover:border-[#315240]
+                        hover:border-[#4f9b68]
+                        hover:text-white
                       `
                   }
                 `}
               >
 
-                <span className="text-lg">
+                {/* ICON */}
+
+                <span
+                  className="
+                    text-lg
+                  "
+                >
                   {item.icon}
                 </span>
 
-                <span className="font-medium">
+                {/* LABEL */}
+
+                <span
+                  className="
+                    font-medium
+                  "
+                >
+
                   {lang === "es"
                     ? item.labelES
                     : item.labelPT}
+
                 </span>
 
               </Link>
@@ -236,12 +270,14 @@ export default function Sidebar({
 
       </nav>
 
-      {/* FOOTER */}
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
 
       <div
         className="
           border-t
-          border-[#284135]
+          border-[#355845]
           p-4
         "
       >
@@ -250,7 +286,7 @@ export default function Sidebar({
           className="
             rounded-2xl
             border
-            border-[#315240]
+            border-[#355845]
             bg-[#10251b]
             p-4
           "
@@ -261,7 +297,7 @@ export default function Sidebar({
               text-xs
               uppercase
               tracking-[0.2em]
-              text-green-100/50
+              text-[#b7d6c2]
             "
           >
             Runtime Cognitivo
@@ -272,7 +308,7 @@ export default function Sidebar({
               mt-2
               text-sm
               font-semibold
-              text-green-100
+              text-[#f3fff7]
             "
           >
             Triângulo 360 Online

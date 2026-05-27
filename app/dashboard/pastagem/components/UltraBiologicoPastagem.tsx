@@ -115,19 +115,24 @@ export default function UltraBiologicoPastagem({
           overflow-hidden
           rounded-[42px]
           border
-          border-emerald-100
-          bg-white
+          border-[#294437]
+          bg-gradient-to-br
+          from-[#173126]
+          via-[#1d3b2d]
+          to-[#14281f]
           p-10
-          shadow-[0_10px_60px_rgba(0,0,0,0.06)]
+          shadow-[0_10px_60px_rgba(0,0,0,0.28)]
         "
       >
+
+        {/* OVERLAY */}
 
         <div
           className="
             absolute
             inset-0
             bg-gradient-to-br
-            from-emerald-500/5
+            from-[#52b788]/10
             to-transparent
           "
         />
@@ -145,9 +150,13 @@ export default function UltraBiologicoPastagem({
             "
           >
 
-            {/* LEFT */}
+            {/* =====================================================
+                LEFT
+            ===================================================== */}
 
             <div className="max-w-4xl">
+
+              {/* TAG */}
 
               <div
                 className="
@@ -155,19 +164,22 @@ export default function UltraBiologicoPastagem({
                   items-center
                   rounded-full
                   border
-                  border-emerald-200
-                  bg-emerald-50
+                  border-[#3f6b55]
+                  bg-[#1e3d2f]
                   px-5
                   py-2
                   text-[11px]
                   font-black
                   uppercase
                   tracking-[0.24em]
-                  text-emerald-700
+                  text-[#b7d6c2]
+                  shadow-lg
                 "
               >
                 PECUARIATECH COGNITIVE RUNTIME
               </div>
+
+              {/* TITLE */}
 
               <h1
                 className="
@@ -175,11 +187,13 @@ export default function UltraBiologicoPastagem({
                   text-5xl
                   font-black
                   tracking-tight
-                  text-gray-950
+                  text-[#f3fff7]
                 "
               >
                 Ultra Biológico — Pastagem
               </h1>
+
+              {/* SUBTITLE */}
 
               <p
                 className="
@@ -187,7 +201,7 @@ export default function UltraBiologicoPastagem({
                   max-w-3xl
                   text-[15px]
                   leading-relaxed
-                  text-gray-600
+                  text-[#b7d6c2]
                 "
               >
                 Plataforma biológica operacional integrada
@@ -196,7 +210,9 @@ export default function UltraBiologicoPastagem({
                 de pressão de pastagem em tempo real.
               </p>
 
-              {/* KPI */}
+              {/* =====================================================
+                  KPI
+              ===================================================== */}
 
               <div
                 className="
@@ -208,53 +224,175 @@ export default function UltraBiologicoPastagem({
                 "
               >
 
-                <div className="rounded-3xl border bg-white p-5 shadow-sm">
-                  <div className="text-xs uppercase tracking-[0.14em] text-gray-500">
+                {/* PIQUETES */}
+
+                <div
+                  className="
+                    rounded-3xl
+                    border
+                    border-[#355845]
+                    bg-[#1a3327]
+                    p-5
+                    shadow-xl
+                  "
+                >
+
+                  <div
+                    className="
+                      text-xs
+                      uppercase
+                      tracking-[0.14em]
+                      text-[#8eb59d]
+                    "
+                  >
                     Piquetes
                   </div>
 
-                  <div className="mt-3 text-4xl font-black text-gray-950">
+                  <div
+                    className="
+                      mt-3
+                      text-4xl
+                      font-black
+                      text-[#f3fff7]
+                    "
+                  >
                     {safeText(resumo?.qtd_piquetes ?? 0)}
                   </div>
+
                 </div>
 
-                <div className="rounded-3xl border bg-white p-5 shadow-sm">
-                  <div className="text-xs uppercase tracking-[0.14em] text-gray-500">
+                {/* PRESSÃO */}
+
+                <div
+                  className="
+                    rounded-3xl
+                    border
+                    border-[#355845]
+                    bg-[#1a3327]
+                    p-5
+                    shadow-xl
+                  "
+                >
+
+                  <div
+                    className="
+                      text-xs
+                      uppercase
+                      tracking-[0.14em]
+                      text-[#8eb59d]
+                    "
+                  >
                     Pressão
                   </div>
 
-                  <div className="mt-3 text-4xl font-black text-gray-950">
-                    {safeText(resumo?.pressao_pastagem_score ?? 0)}
+                  <div
+                    className="
+                      mt-3
+                      text-4xl
+                      font-black
+                      text-[#f3fff7]
+                    "
+                  >
+                    {safeText(
+                      resumo?.pressao_pastagem_score ?? 0
+                    )}
                   </div>
+
                 </div>
 
-                <div className="rounded-3xl border bg-white p-5 shadow-sm">
-                  <div className="text-xs uppercase tracking-[0.14em] text-gray-500">
+                {/* UA */}
+
+                <div
+                  className="
+                    rounded-3xl
+                    border
+                    border-[#355845]
+                    bg-[#1a3327]
+                    p-5
+                    shadow-xl
+                  "
+                >
+
+                  <div
+                    className="
+                      text-xs
+                      uppercase
+                      tracking-[0.14em]
+                      text-[#8eb59d]
+                    "
+                  >
                     UA/ha
                   </div>
 
-                  <div className="mt-3 text-4xl font-black text-gray-950">
-                    {safeText(resumo?.ua_por_ha_atual ?? 0)}
+                  <div
+                    className="
+                      mt-3
+                      text-4xl
+                      font-black
+                      text-[#f3fff7]
+                    "
+                  >
+                    {safeText(
+                      resumo?.ua_por_ha_atual ?? 0
+                    )}
                   </div>
+
                 </div>
 
-                <div className="rounded-3xl border bg-red-50 p-5 shadow-sm">
-                  <div className="text-xs uppercase tracking-[0.14em] text-gray-500">
+                {/* RISCO */}
+
+                <div
+                  className="
+                    rounded-3xl
+                    border
+                    border-[#6a3a3a]
+                    bg-[#3a1f1f]
+                    p-5
+                    shadow-xl
+                  "
+                >
+
+                  <div
+                    className="
+                      text-xs
+                      uppercase
+                      tracking-[0.14em]
+                      text-[#d6b0b0]
+                    "
+                  >
                     Risco
                   </div>
 
-                  <div className="mt-3 text-3xl font-black text-red-700">
+                  <div
+                    className="
+                      mt-3
+                      text-3xl
+                      font-black
+                      text-[#ffd6d6]
+                    "
+                  >
                     {risco}
                   </div>
+
                 </div>
 
               </div>
 
             </div>
 
-            {/* RIGHT */}
+            {/* =====================================================
+                RIGHT
+            ===================================================== */}
 
-            <div className="w-full xl:max-w-[360px] space-y-5">
+            <div
+              className="
+                w-full
+                xl:max-w-[360px]
+                space-y-5
+              "
+            >
+
+              {/* ONLINE */}
 
               {runtimeOnline ? (
 
@@ -262,21 +400,44 @@ export default function UltraBiologicoPastagem({
                   className="
                     rounded-[30px]
                     border
-                    border-emerald-500/20
-                    bg-emerald-500/10
+                    border-[#3f6b55]
+                    bg-[#1d3b2d]
                     p-6
+                    shadow-xl
                   "
                 >
 
-                  <div className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700">
+                  <div
+                    className="
+                      text-[11px]
+                      font-black
+                      uppercase
+                      tracking-[0.2em]
+                      text-[#8eb59d]
+                    "
+                  >
                     Runtime Cognitivo
                   </div>
 
-                  <div className="mt-3 text-3xl font-black text-emerald-950">
+                  <div
+                    className="
+                      mt-3
+                      text-3xl
+                      font-black
+                      text-[#f3fff7]
+                    "
+                  >
                     ONLINE
                   </div>
 
-                  <div className="mt-4 text-xs leading-relaxed text-emerald-900">
+                  <div
+                    className="
+                      mt-4
+                      text-xs
+                      leading-relaxed
+                      text-[#b7d6c2]
+                    "
+                  >
                     Symbiosis Runtime • IA Cognitiva • Governança operacional ativa
                   </div>
 
@@ -284,39 +445,91 @@ export default function UltraBiologicoPastagem({
 
               ) : (
 
+                /* FALLBACK */
+
                 <div
                   className="
                     rounded-[30px]
                     border
-                    border-amber-400/20
-                    bg-amber-50
+                    border-[#355845]
+                    bg-[#1d3328]
                     p-6
+                    shadow-xl
                   "
                 >
 
-                  <div className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-700">
+                  <div
+                    className="
+                      text-[11px]
+                      font-black
+                      uppercase
+                      tracking-[0.2em]
+                      text-[#8eb59d]
+                    "
+                  >
                     Runtime Fallback
                   </div>
 
-                  <div className="mt-3 text-2xl font-black text-amber-950">
+                  <div
+                    className="
+                      mt-3
+                      text-2xl
+                      font-black
+                      text-[#f3fff7]
+                    "
+                  >
                     Governança Preservada
                   </div>
 
-                  <div className="mt-4 text-xs leading-relaxed text-amber-800">
-                    Runtime em fallback estrutural. Dashboard operacional continua protegido.
+                  <div
+                    className="
+                      mt-4
+                      text-xs
+                      leading-relaxed
+                      text-[#b7d6c2]
+                    "
+                  >
+                    Runtime em fallback estrutural.
+                    Dashboard operacional continua protegido.
                   </div>
 
                 </div>
 
               )}
 
-              <div className="rounded-[30px] border bg-gray-50 p-6">
+              {/* DECISÃO */}
 
-                <div className="text-[11px] font-black uppercase tracking-[0.22em] text-gray-500">
+              <div
+                className="
+                  rounded-[30px]
+                  border
+                  border-[#355845]
+                  bg-[#1a3327]
+                  p-6
+                  shadow-xl
+                "
+              >
+
+                <div
+                  className="
+                    text-[11px]
+                    font-black
+                    uppercase
+                    tracking-[0.22em]
+                    text-[#8eb59d]
+                  "
+                >
                   Decisão Recomendada
                 </div>
 
-                <div className="mt-4 text-2xl font-black text-gray-950">
+                <div
+                  className="
+                    mt-4
+                    text-2xl
+                    font-black
+                    text-[#f3fff7]
+                  "
+                >
                   {safeText(
                     resumo?.decisao_recomendada ??
                     "SEM DECISÃO"
@@ -333,23 +546,33 @@ export default function UltraBiologicoPastagem({
 
       </section>
 
-      {/* RESUMO */}
+      {/* =====================================================
+          RESUMO
+      ===================================================== */}
 
       <PastagemResumoCard resumo={resumo} />
 
-      {/* TRIANGULO */}
+      {/* =====================================================
+          TRIÂNGULO
+      ===================================================== */}
 
       <PastagemTriangulo360 resumo={resumo} />
 
-      {/* IA */}
+      {/* =====================================================
+          IA
+      ===================================================== */}
 
       <PastagemAIInsights />
 
-      {/* ALERTAS */}
+      {/* =====================================================
+          ALERTAS
+      ===================================================== */}
 
       <PastagemAlertasCard alertas={alertas} />
 
-      {/* PIQUETES */}
+      {/* =====================================================
+          PIQUETES
+      ===================================================== */}
 
       <PastagemPiquetesTable piquetes={piquetes} />
 

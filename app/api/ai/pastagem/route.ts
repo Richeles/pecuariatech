@@ -86,7 +86,7 @@ export async function GET() {
 
     const runtime =
       await runtimePost(
-        "/pastagem/analisar",
+        "http://127.0.0.1:8000/pastagem/analisar",
         payload
       );
 

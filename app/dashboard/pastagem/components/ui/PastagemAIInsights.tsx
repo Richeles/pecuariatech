@@ -9,8 +9,11 @@ export default function PastagemAIInsights() {
         overflow-hidden
         rounded-[36px]
         border
-        border-zinc-800
-        bg-zinc-950
+        border-[#355845]
+        bg-gradient-to-br
+        from-[#14281f]
+        via-[#173126]
+        to-[#1a3327]
         p-8
         shadow-[0_20px_80px_rgba(0,0,0,0.35)]
       "
@@ -27,13 +30,16 @@ export default function PastagemAIInsights() {
         "
       >
 
+        {/* LEFT */}
+
         <div className="max-w-3xl">
 
           <div
             className="
               text-3xl
               font-black
-              text-white
+              tracking-tight
+              text-[#f3fff7]
             "
           >
             PecuariaTech Biological Intelligence
@@ -44,7 +50,7 @@ export default function PastagemAIInsights() {
               mt-4
               text-sm
               leading-relaxed
-              text-zinc-400
+              text-[#b7d6c2]
             "
           >
             Motor operacional integrado ao runtime Python
@@ -56,21 +62,24 @@ export default function PastagemAIInsights() {
 
         </div>
 
+        {/* BADGE */}
+
         <div
           className="
             inline-flex
             items-center
             rounded-full
             border
-            border-emerald-500/20
-            bg-emerald-500/10
+            border-[#4f9b68]
+            bg-[#214734]
             px-6
             py-4
             text-xs
             font-black
             uppercase
             tracking-[0.22em]
-            text-emerald-300
+            text-[#d7ffe5]
+            shadow-lg
           "
         >
           TRIÂNGULO 360 • EQUAÇÃO Y • IA COGNITIVA

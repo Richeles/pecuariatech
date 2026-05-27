@@ -50,10 +50,10 @@ export default async function DashboardLayout({
       className="
         min-h-screen
         bg-gradient-to-br
-        from-[#07150f]
-        via-[#0b1f17]
-        to-[#10271d]
-        text-white
+        from-[#edf5ef]
+        via-[#f7faf8]
+        to-[#dcefe2]
+        text-gray-800
       "
     >
 
@@ -75,10 +75,10 @@ export default async function DashboardLayout({
             z-40
             flex-shrink-0
             border-r
-            border-emerald-500/10
-            bg-[#081811]/95
-            backdrop-blur-2xl
-            shadow-2xl
+            border-[#d7e8dc]
+            bg-white/95
+            backdrop-blur-xl
+            shadow-sm
           "
         >
 
@@ -110,8 +110,8 @@ export default async function DashboardLayout({
               top-0
               z-30
               border-b
-              border-emerald-500/10
-              bg-[#07150f]/90
+              border-[#d7e8dc]
+              bg-[#f8fcf9]/95
               backdrop-blur-2xl
             "
           >
@@ -142,7 +142,7 @@ export default async function DashboardLayout({
                     font-black
                     uppercase
                     tracking-[0.28em]
-                    text-emerald-400
+                    text-[#2f6b4f]
                   "
                 >
                   Runtime Cognitivo
@@ -154,7 +154,7 @@ export default async function DashboardLayout({
                     truncate
                     text-3xl
                     font-black
-                    text-white
+                    text-[#183a2d]
                   "
                 >
                   PecuariaTech
@@ -164,7 +164,7 @@ export default async function DashboardLayout({
                   className="
                     mt-1
                     text-sm
-                    text-emerald-100/70
+                    text-[#5f7d6c]
                   "
                 >
                   Gestão Inteligente Operacional Pecuária
@@ -193,8 +193,8 @@ export default async function DashboardLayout({
                     hidden
                     rounded-2xl
                     border
-                    border-cyan-500/10
-                    bg-cyan-500/5
+                    border-[#cfe1d6]
+                    bg-[#eef7f1]
                     px-5
                     py-3
                     shadow-xl
@@ -208,7 +208,7 @@ export default async function DashboardLayout({
                       font-black
                       uppercase
                       tracking-[0.2em]
-                      text-cyan-300
+                      text-[#2f6b4f]
                     "
                   >
                     Mode
@@ -219,7 +219,7 @@ export default async function DashboardLayout({
                       mt-1
                       text-sm
                       font-black
-                      text-cyan-100
+                      text-[#183a2d]
                     "
                   >
                     {runtimeMode}
@@ -236,8 +236,8 @@ export default async function DashboardLayout({
                     hidden
                     rounded-2xl
                     border
-                    border-emerald-500/10
-                    bg-emerald-500/5
+                    border-[#d7e8dc]
+                    bg-white
                     px-5
                     py-3
                     shadow-xl
@@ -251,7 +251,7 @@ export default async function DashboardLayout({
                       font-black
                       uppercase
                       tracking-[0.2em]
-                      text-emerald-300
+                      text-[#2f6b4f]
                     "
                   >
                     Runtime
@@ -262,7 +262,7 @@ export default async function DashboardLayout({
                       mt-1
                       text-sm
                       font-bold
-                      text-white
+                      text-[#183a2d]
                     "
                   >
                     {runtimeLayer}
@@ -279,8 +279,8 @@ export default async function DashboardLayout({
                     hidden
                     rounded-2xl
                     border
-                    border-green-500/10
-                    bg-green-500/5
+                    border-[#cfe1d6]
+                    bg-[#eef7f1]
                     px-5
                     py-3
                     shadow-xl
@@ -294,7 +294,7 @@ export default async function DashboardLayout({
                       font-black
                       uppercase
                       tracking-[0.2em]
-                      text-green-300
+                      text-[#2f6b4f]
                     "
                   >
                     Status
@@ -305,7 +305,7 @@ export default async function DashboardLayout({
                       mt-1
                       text-sm
                       font-black
-                      text-green-200
+                      text-[#1f5138]
                     "
                   >
                     {runtimeStatus}
@@ -321,8 +321,8 @@ export default async function DashboardLayout({
                   className="
                     rounded-2xl
                     border
-                    border-emerald-500/10
-                    bg-[#10271d]
+                    border-[#d7e8dc]
+                    bg-white
                     px-3
                     py-2
                     shadow-xl
@@ -346,12 +346,12 @@ export default async function DashboardLayout({
                     justify-center
                     rounded-full
                     bg-gradient-to-br
-                    from-green-500
-                    to-emerald-700
+                    from-[#2f6b4f]
+                    to-[#183a2d]
                     text-sm
                     font-black
                     text-white
-                    shadow-[0_0_25px_rgba(16,185,129,0.45)]
+                    shadow-[0_0_25px_rgba(16,185,129,0.20)]
                   "
                 >
                   U

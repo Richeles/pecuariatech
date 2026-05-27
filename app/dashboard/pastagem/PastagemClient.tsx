@@ -491,7 +491,18 @@ export default function PastagemClient() {
 
       <section className="p-6">
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 text-sm text-zinc-300">
+        <div
+          className="
+            rounded-3xl
+            border
+            border-[#355845]
+            bg-[#14281f]
+            p-6
+            text-sm
+            text-[#b7d6c2]
+            shadow-xl
+          "
+        >
 
           Inicializando governança cognitiva...
 
@@ -511,7 +522,18 @@ export default function PastagemClient() {
 
       <section className="p-6">
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 text-sm text-zinc-300">
+        <div
+          className="
+            rounded-3xl
+            border
+            border-[#355845]
+            bg-[#14281f]
+            p-6
+            text-sm
+            text-[#b7d6c2]
+            shadow-xl
+          "
+        >
 
           Inicializando governança cognitiva...
 
@@ -531,15 +553,36 @@ export default function PastagemClient() {
 
       <section className="p-6">
 
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6">
+        <div
+          className="
+            rounded-3xl
+            border
+            border-[#6a3a3a]
+            bg-[#2b1616]
+            p-6
+            shadow-xl
+          "
+        >
 
-          <div className="text-sm font-semibold text-red-300">
+          <div
+            className="
+              text-sm
+              font-bold
+              text-[#ffd6d6]
+            "
+          >
 
             Runtime estrutural degradado
 
           </div>
 
-          <div className="mt-2 text-xs text-red-200">
+          <div
+            className="
+              mt-2
+              text-xs
+              text-[#f1bcbc]
+            "
+          >
 
             {erro}
 
@@ -569,15 +612,15 @@ export default function PastagemClient() {
 
           <div
             className="
-              rounded-2xl
+              rounded-3xl
               border
-              border-[#4f9b68]
+              border-[#355845]
               bg-gradient-to-r
-              from-[#dff7e8]
-              via-[#ccefd9]
-              to-[#dff7e8]
+              from-[#173126]
+              via-[#1d3b2d]
+              to-[#173126]
               p-5
-              shadow-[0_8px_30px_rgba(16,185,129,0.10)]
+              shadow-[0_8px_30px_rgba(0,0,0,0.22)]
             "
           >
 
@@ -590,7 +633,7 @@ export default function PastagemClient() {
                     text-base
                     font-black
                     tracking-tight
-                    text-[#0f5132]
+                    text-[#f3fff7]
                   "
                 >
                   Runtime Cognitivo Online
@@ -601,7 +644,7 @@ export default function PastagemClient() {
                     mt-1
                     text-sm
                     font-medium
-                    text-[#1f6b45]
+                    text-[#b7d6c2]
                   "
                 >
                   Symbiosis Python +
@@ -634,19 +677,40 @@ export default function PastagemClient() {
 
         ) : (
 
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5">
+          <div
+            className="
+              rounded-3xl
+              border
+              border-[#5c4a1f]
+              bg-[#2a2210]
+              p-5
+              shadow-xl
+            "
+          >
 
             <div className="flex items-center justify-between">
 
               <div>
 
-                <div className="text-sm font-semibold text-amber-300">
+                <div
+                  className="
+                    text-sm
+                    font-bold
+                    text-[#ffe7b0]
+                  "
+                >
 
                   Runtime Cognitivo Degradado
 
                 </div>
 
-                <div className="mt-1 text-xs text-amber-200/80">
+                <div
+                  className="
+                    mt-1
+                    text-xs
+                    text-[#e6d3a3]
+                  "
+                >
 
                   Governança preservada via fallback estrutural.
 
@@ -654,7 +718,19 @@ export default function PastagemClient() {
 
               </div>
 
-              <div className="rounded-full border border-amber-400/20 bg-amber-500/10 px-3 py-1 text-xs text-amber-200">
+              <div
+                className="
+                  rounded-full
+                  border
+                  border-[#8b6b24]
+                  bg-[#3a2d12]
+                  px-3
+                  py-1
+                  text-xs
+                  font-semibold
+                  text-[#ffe7b0]
+                "
+              >
 
                 FALLBACK
 
@@ -674,6 +750,7 @@ export default function PastagemClient() {
           resumo={resumo}
           piquetes={piquetes}
           alertas={alertas}
+          runtime={runtime}
         />
 
       </section>

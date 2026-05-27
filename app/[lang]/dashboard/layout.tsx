@@ -16,6 +16,7 @@ export default async function DashboardLayout({
     lang: string;
   }>;
 }) {
+
   // ======================================
   // NEXT 16 PARAMS
   // ======================================
@@ -36,43 +37,90 @@ export default async function DashboardLayout({
   // ======================================
 
   return (
-    <div className="flex min-h-screen bg-[#edf2ee]">
+
+    <div
+      className="
+        flex
+        min-h-screen
+        bg-gradient-to-br
+        from-[#e7f0ea]
+        via-[#edf5ef]
+        to-[#dce9e1]
+      "
+    >
 
       {/* SIDEBAR */}
+
       <Sidebar lang={safeLang} />
 
       {/* CONTENT */}
-      <div className="flex flex-1 flex-col">
+
+      <div
+        className="
+          flex
+          flex-1
+          flex-col
+        "
+      >
 
         {/* HEADER */}
+
         <header
           className="
-            sticky top-0 z-40
-            flex items-center justify-between
-            border-b border-[#d7e5da]
-            bg-white/95
-            px-8 py-5
+            sticky
+            top-0
+            z-40
+            flex
+            items-center
+            justify-between
+            border-b
+            border-[#cfe1d5]
+            bg-[#f4faf6]/95
+            px-8
+            py-5
             backdrop-blur-xl
+            shadow-[0_2px_12px_rgba(0,0,0,0.04)]
           "
         >
+
           {/* TITLES */}
+
           <div>
 
-            <h1 className="text-3xl font-black text-[#173222] tracking-tight">
+            <h1
+              className="
+                text-3xl
+                font-black
+                tracking-tight
+                text-[#173222]
+              "
+            >
               PecuariaTech
             </h1>
 
-            <p className="mt-1 text-sm text-[#4f6d58]">
-              {t(
-                safeLang,
-                "Gestão Inteligente"
-              )}
+            <p
+              className="
+                mt-1
+                text-sm
+                font-medium
+                tracking-wide
+                text-[#4f6d58]
+              "
+            >
+              Gestão Inteligente
             </p>
 
           </div>
 
           {/* ACTIONS */}
-          <div className="flex items-center gap-4">
+
+          <div
+            className="
+              flex
+              items-center
+              gap-4
+            "
+          >
 
             <LanguageSwitcher />
 
@@ -81,7 +129,13 @@ export default async function DashboardLayout({
         </header>
 
         {/* MAIN */}
-        <main className="flex-1 overflow-y-auto">
+
+        <main
+          className="
+            flex-1
+            overflow-y-auto
+          "
+        >
           {children}
         </main>
 

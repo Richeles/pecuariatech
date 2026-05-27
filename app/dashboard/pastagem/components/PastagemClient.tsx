@@ -85,8 +85,8 @@ function badge(
 
     return `
       bg-red-500/10
-      text-red-700
-      border-red-300
+      text-red-300
+      border-red-500/30
     `;
   }
 
@@ -94,15 +94,15 @@ function badge(
 
     return `
       bg-yellow-500/10
-      text-yellow-700
-      border-yellow-300
+      text-yellow-200
+      border-yellow-500/30
     `;
   }
 
   return `
-    bg-slate-500/10
-    text-slate-700
-    border-slate-300
+    bg-emerald-500/10
+    text-emerald-200
+    border-emerald-500/30
   `;
 }
 
@@ -290,10 +290,10 @@ export default function PastagemClient() {
 
   const piColor =
     piScore >= 80
-      ? "text-[#06351f]"
+      ? "text-[#f3fff7]"
       : piScore >= 60
-      ? "text-yellow-600"
-      : "text-red-600";
+      ? "text-yellow-300"
+      : "text-red-300";
 
   /* =====================================================
      LOADING
@@ -303,7 +303,12 @@ export default function PastagemClient() {
 
     return (
 
-      <div className="p-10 text-slate-500">
+      <div
+        className="
+          p-10
+          text-[#b7d6c2]
+        "
+      >
 
         Inicializando runtime cognitivo...
 
@@ -319,7 +324,12 @@ export default function PastagemClient() {
 
     return (
 
-      <div className="p-10 text-red-500">
+      <div
+        className="
+          p-10
+          text-red-300
+        "
+      >
 
         {erro}
 
@@ -336,8 +346,8 @@ export default function PastagemClient() {
     <div
       className="
         min-h-screen
-        bg-[#eef4ef]
-        text-[#0f172a]
+        bg-[#14281f]
+        text-[#f3fff7]
         p-6
       "
     >
@@ -353,6 +363,7 @@ export default function PastagemClient() {
             text-5xl
             font-black
             tracking-tight
+            text-[#f3fff7]
           "
         >
           Pastagem
@@ -362,7 +373,7 @@ export default function PastagemClient() {
           className="
             mt-3
             text-lg
-            text-slate-500
+            text-[#b7d6c2]
           "
         >
           Gestão operacional das áreas,
@@ -382,13 +393,13 @@ export default function PastagemClient() {
           overflow-hidden
           rounded-[42px]
           border
-          border-[#4f9b68]
+          border-[#355845]
           bg-gradient-to-r
-          from-[#6fc48e]
-          via-[#59b67c]
-          to-[#6fc48e]
+          from-[#173126]
+          via-[#1d3b2d]
+          to-[#173126]
           p-10
-          shadow-[0_25px_80px_rgba(16,185,129,0.22)]
+          shadow-[0_25px_80px_rgba(0,0,0,0.28)]
           mb-10
         "
       >
@@ -399,7 +410,7 @@ export default function PastagemClient() {
           className="
             absolute
             inset-0
-            bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_40%)]
+            bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.06),transparent_40%)]
           "
         />
 
@@ -425,7 +436,7 @@ export default function PastagemClient() {
                 text-4xl
                 font-black
                 tracking-tight
-                text-[#06351f]
+                text-[#f3fff7]
               "
             >
               Runtime Cognitivo Online
@@ -436,7 +447,7 @@ export default function PastagemClient() {
                 mt-3
                 text-lg
                 font-semibold
-                text-[#14532d]
+                text-[#b7d6c2]
               "
             >
               Symbiosis Python +
@@ -451,8 +462,8 @@ export default function PastagemClient() {
             className="
               rounded-full
               border
-              border-white/30
-              bg-white/20
+              border-[#4f9b68]
+              bg-[#214734]
               px-6
               py-3
               backdrop-blur
@@ -473,7 +484,7 @@ export default function PastagemClient() {
                   h-3
                   w-3
                   rounded-full
-                  bg-[#d7ffe5]
+                  bg-[#52b788]
                   animate-pulse
                 "
               />
@@ -483,7 +494,7 @@ export default function PastagemClient() {
                   text-sm
                   font-black
                   tracking-[0.2em]
-                  text-[#06351f]
+                  text-[#f3fff7]
                 "
               >
                 ONLINE
@@ -548,10 +559,10 @@ export default function PastagemClient() {
               className="
                 rounded-[28px]
                 border
-                border-white/40
-                bg-white/80
+                border-[#355845]
+                bg-[#1a3327]
                 p-6
-                shadow-sm
+                shadow-xl
               "
             >
 
@@ -561,19 +572,19 @@ export default function PastagemClient() {
                   font-bold
                   uppercase
                   tracking-[0.2em]
-                  text-slate-400
+                  text-[#8eb59d]
                 "
               >
                 {item[0]}
               </div>
 
               <div
-                className="
+                className={`
                   mt-4
                   text-5xl
                   font-black
                   ${piColor}
-                "
+                `}
               >
                 {item[1] || 0}
               </div>
