@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+  usePathname,
+} from "next/navigation";
+
+import LanguageSwitcher
+from "@/app/components/i18n/LanguageSwitcher";
 
 /* =========================================================
    TYPES
@@ -29,13 +35,6 @@ const TEXTS = {
     heroDescription:
       "Cada plano foi pensado para uma realidade diferente no campo — do controle básico à gestão com IA operacional, CFO Autônomo e inteligência estratégica integrada.",
 
-    tags: [
-      "Inteligência Pecuária",
-      "CFO Estratégico",
-      "IA Operacional",
-      "Dominus 360°",
-    ],
-
     mensal: "Mensal",
 
     trimestral:
@@ -57,12 +56,6 @@ const TEXTS = {
 
     destaque:
       "Mais escolhido",
-
-    portugues:
-      "🇧🇷 Português",
-
-    espanhol:
-      "🇪🇸 Español",
   },
 
   es: {
@@ -73,14 +66,7 @@ const TEXTS = {
       "Planes PecuariaTech",
 
     heroDescription:
-      "Cada plan fue diseñado para una realidad diferente en el campo — desde el control básico hasta la gestión con IA operacional, CFO Autónomo e inteligencia estratégica integrada.",
-
-    tags: [
-      "Inteligencia Ganadera",
-      "CFO Estratégico",
-      "IA Operacional",
-      "Dominus 360°",
-    ],
+      "Cada plan fue diseñado para una realidad diferente en el campo.",
 
     mensal:
       "Mensual",
@@ -105,12 +91,6 @@ const TEXTS = {
 
     destaque:
       "Más elegido",
-
-    portugues:
-      "🇧🇷 Portugués",
-
-    espanhol:
-      "🇪🇸 Español",
   },
 };
 
@@ -122,218 +102,77 @@ const PLANOS = {
   pt: [
     {
       id: "basico",
-
-      nome:
-        "Básico",
-
+      nome: "Básico",
       descricao:
         "Para quem quer sair do caderno, organizar a fazenda e ganhar clareza operacional no dia a dia.",
-
       mensal: 189.97,
-
       beneficios: [
         "Dashboard simples e intuitivo",
         "Controle básico de rebanho",
         "Controle essencial de pastagem",
         "Relatório mensal automático",
-        "Indicadores operacionais iniciais",
-        "Base sólida para começar a gestão digital",
       ],
     },
 
     {
       id: "profissional",
-
-      nome:
-        "Profissional",
-
+      nome: "Profissional",
       descricao:
-        "Para o produtor que já se organiza, mas agora precisa entender os números da operação com mais precisão.",
-
+        "Para produtores que precisam compreender os números da operação com maior precisão.",
       mensal: 389.97,
-
       beneficios: [
-        "Tudo do plano Básico",
-        "Relatórios mensais avançados",
-        "Exportação de dados Excel",
-        "Indicadores financeiros iniciais",
-        "Planilhas profissionais automatizadas",
-        "Alertas operacionais inteligentes",
-      ],
-    },
-
-    {
-      id: "ultra",
-
-      nome:
-        "Ultra",
-
-      destaque: true,
-
-      descricao:
-        "Para quem quer deixar de reagir aos problemas e começar a tomar decisões com apoio de IA operacional.",
-
-      mensal: 589.97,
-
-      beneficios: [
-        "Tudo do plano Profissional",
-        "Relatórios premium automatizados",
-        "Análises financeiras avançadas",
-        "Diagnóstico mensal por IA",
-        "Alertas de decisão",
-        "Plano mais escolhido por produtores",
-      ],
-    },
-
-    {
-      id: "empresarial",
-
-      nome:
-        "Empresarial",
-
-      descricao:
-        "Para operações que exigem padronização, gestão integrada e controle em escala.",
-
-      mensal: 789.97,
-
-      beneficios: [
-        "Tudo do plano Ultra",
-        "Multi-fazendas e multi-usuários",
-        "Gestão de equipes",
-        "Relatórios personalizados",
-        "Alertas automáticos avançados",
-      ],
-    },
-
-    {
-      id: "dominus",
-
-      nome:
-        "Premium Dominus 360°",
-
-      descricao:
-        "Para quem precisa enxergar a operação como estrutura de capital, gestão estratégica e geração sustentável de valor.",
-
-      mensal: 989.97,
-
-      beneficios: [
-        "Tudo do plano Empresarial",
-        "CFO Autônomo integrado",
-        "IA preditiva e diagnóstica",
-        "EBITDA e EBIT automáticos",
-        "Valuation e simulações financeiras",
-        "Suporte Ultra VIP",
-      ],
-    },
-  ],
-
-  es: [
-    {
-      id: "basico",
-
-      nome:
-        "Básico",
-
-      descricao:
-        "Para quienes desean organizar la finca y ganar claridad operacional.",
-
-      mensal: 189.97,
-
-      beneficios: [
-        "Dashboard simple e intuitivo",
-        "Control básico del rebaño",
-        "Control esencial de pasturas",
-        "Reporte mensual automático",
-        "Indicadores operacionales iniciales",
-        "Base sólida para gestión digital",
-      ],
-    },
-
-    {
-      id: "profissional",
-
-      nome:
-        "Profesional",
-
-      descricao:
-        "Para productores que necesitan comprender los números de la operación con más precisión.",
-
-      mensal: 389.97,
-
-      beneficios: [
-        "Todo del plan Básico",
-        "Reportes avanzados",
-        "Exportación de datos",
-        "Indicadores financieros",
-        "Automatización profesional",
+        "Relatórios avançados",
+        "Exportação Excel",
+        "Indicadores financeiros",
         "Alertas inteligentes",
       ],
     },
 
     {
       id: "ultra",
-
-      nome:
-        "Ultra",
-
+      nome: "Ultra",
       destaque: true,
-
       descricao:
-        "Para quienes desean tomar decisiones con apoyo de IA operacional.",
-
+        "Tomada de decisão com IA operacional e inteligência pecuária avançada.",
       mensal: 589.97,
-
       beneficios: [
-        "Todo del plan Profesional",
-        "Reportes premium",
-        "Análisis financieros avanzados",
-        "Diagnóstico con IA",
-        "Alertas estratégicas",
-        "Plan más elegido",
+        "IA operacional",
+        "Análises avançadas",
+        "Alertas estratégicos",
+        "Motor analítico",
       ],
     },
 
     {
       id: "empresarial",
-
-      nome:
-        "Empresarial",
-
+      nome: "Empresarial",
       descricao:
-        "Para operaciones que requieren gestión integrada y control a escala.",
-
+        "Gestão integrada para operações com múltiplas fazendas e equipes.",
       mensal: 789.97,
-
       beneficios: [
-        "Todo del plan Ultra",
-        "Multi-fincas",
-        "Gestión de equipos",
-        "Reportes personalizados",
-        "Alertas avanzadas",
+        "Gestão de equipes",
+        "Governança operacional",
+        "Relatórios personalizados",
+        "Multioperações",
       ],
     },
 
     {
       id: "dominus",
-
-      nome:
-        "Premium Dominus 360°",
-
+      nome: "Dominus 360°",
       descricao:
-        "Para quienes necesitan visión estratégica completa de la operación.",
-
+        "Camada executiva premium com CFO Autônomo e inteligência financeira.",
       mensal: 989.97,
-
       beneficios: [
-        "Todo del plan Empresarial",
-        "CFO Autónomo",
-        "IA predictiva",
-        "EBITDA automático",
-        "Valuation financiero",
-        "Soporte VIP",
+        "CFO Autônomo",
+        "IA preditiva",
+        "Valuation financeiro",
+        "Suporte prioritário",
       ],
     },
   ],
+
+  es: [],
 };
 
 /* =========================================================
@@ -345,17 +184,24 @@ export default function PlanosClient() {
   const router =
     useRouter();
 
-  const [lang, setLang] =
-    useState<Lang>("pt");
+  const pathname =
+    usePathname();
+
+  const lang: Lang =
+    pathname.startsWith("/es")
+      ? "es"
+      : "pt";
 
   const [periodo, setPeriodo] =
     useState<Periodo>("mensal");
 
   const t =
-    TEXTS[lang];
+    TEXTS[lang as keyof typeof TEXTS];
 
   const planos =
-    PLANOS[lang];
+    PLANOS[lang as keyof typeof PLANOS]?.length
+      ? PLANOS[lang as keyof typeof PLANOS]
+      : PLANOS.pt;
 
   function calcularPreco(
     mensal: number
@@ -387,86 +233,126 @@ export default function PlanosClient() {
 
   return (
 
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-white via-emerald-50 to-white px-6 py-16">
+    <div
+      className="
+        relative
+        min-h-screen
+        overflow-hidden
+        bg-gradient-to-br
+        from-[#06110b]
+        via-[#0c1f16]
+        to-[#163328]
+        px-6
+        py-20
+      "
+    >
 
-      {/* LANGUAGE */}
+      {/* LANGUAGE SWITCHER */}
 
-      <div className="absolute right-6 top-6 z-50">
-
-        <div className="flex overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-lg">
-
-          <button
-            onClick={() =>
-              setLang("pt")
-            }
-            className={`px-5 py-3 text-sm font-black transition-all ${
-              lang === "pt"
-                ? "bg-emerald-600 text-white"
-                : "text-gray-700 hover:bg-emerald-50"
-            }`}
-          >
-            {t.portugues}
-          </button>
-
-          <button
-            onClick={() =>
-              setLang("es")
-            }
-            className={`border-l border-emerald-100 px-5 py-3 text-sm font-black transition-all ${
-              lang === "es"
-                ? "bg-emerald-600 text-white"
-                : "text-gray-700 hover:bg-emerald-50"
-            }`}
-          >
-            {t.espanhol}
-          </button>
-
-        </div>
-
+      <div
+        className="
+          absolute
+          top-8
+          right-8
+          z-50
+        "
+      >
+        <LanguageSwitcher />
       </div>
+
+      {/* OVERLAY PREMIUM */}
+
+      <div
+        className="
+          absolute
+          inset-0
+          bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_45%)]
+          pointer-events-none
+        "
+      />
 
       {/* HERO */}
 
-      <div className="mx-auto max-w-5xl text-center">
+      <div className="relative z-10 mx-auto max-w-[1600px] text-center">
 
-        <div className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-5 py-2 text-xs font-black uppercase tracking-[0.25em] text-emerald-700">
+        <div
+          className="
+            inline-flex
+            items-center
+            rounded-full
+            border
+            border-emerald-500/20
+            bg-emerald-500/10
+            px-6
+            py-3
+            text-xs
+            font-black
+            uppercase
+            tracking-[0.24em]
+            text-emerald-200
+            backdrop-blur-sm
+          "
+        >
           {t.heroBadge}
         </div>
 
-        <h1 className="mt-8 text-5xl font-black tracking-tight text-gray-950 md:text-7xl">
+        <h1
+          className="
+            mt-8
+            text-5xl
+            font-black
+            tracking-tight
+            text-white
+            xl:text-7xl
+          "
+        >
           {t.heroTitle}
         </h1>
 
-        <p className="mx-auto mt-8 max-w-3xl text-xl leading-relaxed text-gray-600">
+        <p
+          className="
+            mx-auto
+            mt-8
+            max-w-5xl
+            text-lg
+            leading-8
+            text-emerald-100/80
+            xl:text-xl
+          "
+        >
           {t.heroDescription}
         </p>
 
-        <div className="mt-10 flex flex-wrap justify-center gap-4">
-
-          {t.tags.map((item) => (
-            <div
-              key={item}
-              className="rounded-2xl border border-gray-200 bg-white px-6 py-3 text-sm font-bold text-gray-700 shadow-sm"
-            >
-              {item}
-            </div>
-          ))}
-
-        </div>
-
         {/* PERIODOS */}
 
-        <div className="mt-14 flex flex-wrap justify-center gap-4">
+        <div
+          className="
+            mt-12
+            flex
+            flex-wrap
+            items-center
+            justify-center
+            gap-4
+          "
+        >
 
           <button
             onClick={() =>
               setPeriodo("mensal")
             }
-            className={`rounded-2xl px-8 py-4 text-sm font-black transition-all ${
-              periodo === "mensal"
-                ? "bg-emerald-600 text-white shadow-lg"
-                : "bg-white text-gray-700 border border-gray-200"
-            }`}
+            className={`
+              rounded-2xl
+              px-8
+              py-4
+              text-sm
+              font-black
+              transition-all
+              ${
+                periodo === "mensal"
+                  ? "bg-emerald-500 text-black shadow-[0_0_30px_rgba(16,185,129,0.35)]"
+                  : "border border-emerald-900 bg-[#052e24]/80 text-emerald-100 hover:bg-[#08382d]"
+              }
+            `}
           >
             {t.mensal}
           </button>
@@ -475,11 +361,19 @@ export default function PlanosClient() {
             onClick={() =>
               setPeriodo("trimestral")
             }
-            className={`rounded-2xl px-8 py-4 text-sm font-black transition-all ${
-              periodo === "trimestral"
-                ? "bg-emerald-600 text-white shadow-lg"
-                : "bg-white text-gray-700 border border-gray-200"
-            }`}
+            className={`
+              rounded-2xl
+              px-8
+              py-4
+              text-sm
+              font-black
+              transition-all
+              ${
+                periodo === "trimestral"
+                  ? "bg-emerald-500 text-black shadow-[0_0_30px_rgba(16,185,129,0.35)]"
+                  : "border border-emerald-900 bg-[#052e24]/80 text-emerald-100 hover:bg-[#08382d]"
+              }
+            `}
           >
             {t.trimestral}
           </button>
@@ -488,11 +382,19 @@ export default function PlanosClient() {
             onClick={() =>
               setPeriodo("anual")
             }
-            className={`rounded-2xl px-8 py-4 text-sm font-black transition-all ${
-              periodo === "anual"
-                ? "bg-emerald-600 text-white shadow-lg"
-                : "bg-white text-gray-700 border border-gray-200"
-            }`}
+            className={`
+              rounded-2xl
+              px-8
+              py-4
+              text-sm
+              font-black
+              transition-all
+              ${
+                periodo === "anual"
+                  ? "bg-emerald-500 text-black shadow-[0_0_30px_rgba(16,185,129,0.35)]"
+                  : "border border-emerald-900 bg-[#052e24]/80 text-emerald-100 hover:bg-[#08382d]"
+              }
+            `}
           >
             {t.anual}
           </button>
@@ -501,9 +403,20 @@ export default function PlanosClient() {
 
       </div>
 
-      {/* GRID PREMIUM */}
+      {/* GRID */}
 
-      <div className="mx-auto mt-20 grid max-w-[1850px] gap-10 md:grid-cols-2 xl:grid-cols-5">
+      <div
+        className="
+          relative
+          z-10
+          mx-auto
+          mt-20
+          grid
+          max-w-[2100px]
+          gap-8
+          xl:grid-cols-5
+        "
+      >
 
         {planos.map((plano) => {
 
@@ -522,54 +435,129 @@ export default function PlanosClient() {
 
             <div
               key={plano.id}
-              className={`relative flex min-h-[980px] flex-col rounded-3xl border bg-white px-9 py-10 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${
-                plano.destaque
-                  ? "border-emerald-400 ring-2 ring-emerald-200"
-                  : "border-gray-200"
-              }`}
+              className={`
+                relative
+                flex
+                min-h-[680px]
+                flex-col
+                rounded-[34px]
+                border
+                bg-[#10241b]/95
+                p-8
+                backdrop-blur-md
+                shadow-[0_20px_60px_rgba(0,0,0,0.45)]
+                transition-all
+                duration-300
+                hover:-translate-y-2
+                hover:shadow-[0_35px_90px_rgba(0,0,0,0.55)]
+                ${
+                  plano.destaque
+                    ? "border-emerald-400 ring-2 ring-emerald-300/30"
+                    : "border-emerald-900/40"
+                }
+              `}
             >
 
               {plano.destaque && (
 
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-5 py-2 text-xs font-black uppercase tracking-wide text-white shadow-lg">
+                <div
+                  className="
+                    absolute
+                    -top-5
+                    left-1/2
+                    -translate-x-1/2
+                    rounded-full
+                    bg-emerald-600
+                    px-6
+                    py-3
+                    text-xs
+                    font-black
+                    uppercase
+                    tracking-[0.18em]
+                    text-white
+                    shadow-xl
+                  "
+                >
                   {t.destaque}
                 </div>
 
               )}
 
-              <div>
+              <h3
+                className="
+                  text-[34px]
+                  font-black
+                  leading-tight
+                  text-white
+                "
+              >
+                {plano.nome}
+              </h3>
 
-                <h3 className="min-h-[70px] text-[34px] font-black leading-tight text-gray-950">
-                  {plano.nome}
-                </h3>
-
-                <p className="mt-6 min-h-[210px] text-[15px] leading-9 text-gray-600">
-                  {plano.descricao}
-                </p>
-
-              </div>
+              <p
+                className="
+                  mt-5
+                  min-h-[100px]
+                  text-[15px]
+                  leading-7
+                  text-emerald-100/75
+                "
+              >
+                {plano.descricao}
+              </p>
 
               {/* PREÇO */}
 
-              <div className="mt-2 min-h-[120px]">
+              <div className="mt-8">
 
-                <div className="flex items-end whitespace-nowrap">
+                <div className="flex items-end">
 
-                  <span className="mr-1 mb-[10px] text-[18px] font-black text-emerald-600">
+                  <span
+                    className="
+                      mr-2
+                      mb-2
+                      text-lg
+                      font-black
+                      text-emerald-400
+                    "
+                  >
                     R$
                   </span>
 
-                  <span className="text-[56px] font-black leading-none tracking-[-0.04em] text-emerald-600">
+                  <span
+                    className="
+                      text-[58px]
+                      font-black
+                      leading-none
+                      tracking-[-0.06em]
+                      text-emerald-400
+                    "
+                  >
                     {inteiro}
                   </span>
 
-                  <span className="mb-[10px] ml-1 text-[24px] font-black leading-none text-emerald-600">
+                  <span
+                    className="
+                      mb-2
+                      ml-1
+                      text-[24px]
+                      font-black
+                      text-emerald-400
+                    "
+                  >
                     ,{decimal}
                   </span>
 
                 </div>
 
-                <div className="mt-4 text-sm font-semibold text-gray-500">
+                <div
+                  className="
+                    mt-2
+                    text-sm
+                    font-bold
+                    text-emerald-100/50
+                  "
+                >
 
                   {periodo === "mensal" &&
                     t.porMes}
@@ -586,17 +574,36 @@ export default function PlanosClient() {
 
               {/* BENEFICIOS */}
 
-              <div className="mt-10 flex-1 space-y-4">
+              <div
+                className="
+                  mt-8
+                  flex-1
+                  space-y-4
+                "
+              >
 
                 {plano.beneficios.map(
                   (beneficio) => (
 
                     <div
                       key={beneficio}
-                      className="flex items-start gap-3 text-sm text-gray-700"
+                      className="
+                        flex
+                        items-start
+                        gap-3
+                        text-[14px]
+                        leading-6
+                        text-emerald-100/80
+                      "
                     >
 
-                      <div className="mt-1 text-emerald-600">
+                      <div
+                        className="
+                          mt-1
+                          font-black
+                          text-emerald-400
+                        "
+                      >
                         ✓
                       </div>
 
@@ -619,11 +626,20 @@ export default function PlanosClient() {
                     plano.id
                   )
                 }
-                className={`mt-10 rounded-2xl px-6 py-4 text-sm font-black transition-all ${
-                  plano.destaque
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                    : "bg-gray-950 text-white hover:bg-black"
-                }`}
+                className={`
+                  mt-8
+                  rounded-[22px]
+                  px-6
+                  py-5
+                  text-sm
+                  font-black
+                  transition-all
+                  ${
+                    plano.destaque
+                      ? "bg-emerald-500 text-white hover:bg-emerald-400"
+                      : "bg-[#1d3b2d] text-white hover:bg-[#28543f]"
+                  }
+                `}
               >
                 {t.assinar}
               </button>

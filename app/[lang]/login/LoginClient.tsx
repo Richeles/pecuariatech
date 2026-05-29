@@ -241,7 +241,7 @@ export default function LoginClient() {
 
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black">
 
-      {/* BACKGROUND */}
+      {/* BACKGROUND PREMIUM */}
 
       <div className="absolute inset-0">
 
@@ -250,10 +250,22 @@ export default function LoginClient() {
           alt="PecuariaTech"
           fill
           priority
-          className="object-cover opacity-40"
+          quality={100}
+          className="
+            object-cover
+            object-center
+            opacity-100
+            scale-105
+          "
         />
 
-        <div className="absolute inset-0 bg-black/55 backdrop-blur-[2px]" />
+        <div
+          className="
+            absolute
+            inset-0
+            bg-black/0
+          "
+        />
 
       </div>
 
@@ -274,7 +286,7 @@ export default function LoginClient() {
 
       {/* CARD */}
 
-      <div className="relative z-10 w-full max-w-md rounded-[32px] border border-white/10 bg-white/90 p-10 shadow-2xl backdrop-blur-xl">
+      <div className="relative z-10 w-full max-w-md rounded-[32px] border border-white/20 bg-white/95 p-10 shadow-2xl backdrop-blur-xl">
 
         {/* HEADER */}
 

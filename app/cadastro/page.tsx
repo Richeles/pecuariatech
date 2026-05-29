@@ -33,17 +33,14 @@ export default function CadastroPage() {
         }}
       />
 
-      {/* OVERLAY */}
+      {/* OVERLAY AJUSTADO PREMIUM */}
 
       <div
         className="
           absolute
           inset-0
-          bg-gradient-to-br
-          from-black/70
-          via-black/60
-          to-black/80
-          backdrop-blur-sm
+          bg-black/30
+          backdrop-blur-[1.5px]
         "
       />
 

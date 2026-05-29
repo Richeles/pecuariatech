@@ -5,13 +5,16 @@
 // SSR SAFE + Suspense SAFE
 // =========================================================
 
+import Link from "next/link";
 import { Suspense } from "react";
 
 import LoginClient from "./LoginClient";
 
 import LanguageSwitcher from "@/app/components/i18n/LanguageSwitcher";
 
-import { getLangFromServer } from "@/app/lib/i18n-server";
+import {
+  getLangFromServer,
+} from "@/app/lib/i18n-server";
 
 import { t } from "@/app/lib/i18n";
 
@@ -20,7 +23,8 @@ import { t } from "@/app/lib/i18n";
 // SSR DINÂMICO
 // =========================================================
 
-export const dynamic = "force-dynamic";
+export const dynamic =
+  "force-dynamic";
 
 // =========================================================
 // PAGE
@@ -28,16 +32,8 @@ export const dynamic = "force-dynamic";
 
 export default async function PublicLoginPage() {
 
-  // =======================================================
-  // SSR LANG
-  // =======================================================
-
   const lang =
     await getLangFromServer();
-
-  // =======================================================
-  // UI
-  // =======================================================
 
   return (
 
@@ -64,6 +60,7 @@ export default async function PublicLoginPage() {
           inset-0
           bg-cover
           bg-center
+          bg-no-repeat
         "
         style={{
           backgroundImage:
@@ -71,12 +68,13 @@ export default async function PublicLoginPage() {
         }}
       />
 
+      {/* OVERLAY LEVE */}
+
       <div
         className="
           absolute
           inset-0
-          bg-black/50
-          backdrop-blur-[2px]
+          bg-black/[0.03]
         "
       />
 
@@ -112,11 +110,10 @@ export default async function PublicLoginPage() {
           className="
             rounded-3xl
             border
-            border-white/20
-            bg-white/95
+            border-white/30
+            bg-white/92
             p-8
-            shadow-2xl
-            backdrop-blur
+            shadow-[0_20px_60px_rgba(0,0,0,0.35)]
           "
         >
 
@@ -183,12 +180,72 @@ export default async function PublicLoginPage() {
                 />
 
               </div>
+
             }
           >
 
             <LoginClient />
 
           </Suspense>
+
+          {/* ===============================================
+              ACTIONS
+          =============================================== */}
+
+          <div
+            className="
+              mt-8
+              flex
+              flex-col
+              gap-3
+            "
+          >
+
+            <Link
+              href="/cadastro"
+              className="
+                flex
+                items-center
+                justify-center
+                rounded-2xl
+                border
+                border-green-200
+                bg-green-50
+                px-4
+                py-3
+                text-sm
+                font-bold
+                text-green-700
+                transition-all
+                hover:bg-green-100
+              "
+            >
+              Criar Conta
+            </Link>
+
+            <Link
+              href={`/${lang}/planos`}
+              className="
+                flex
+                items-center
+                justify-center
+                rounded-2xl
+                border
+                border-neutral-200
+                bg-white
+                px-4
+                py-3
+                text-sm
+                font-semibold
+                text-neutral-700
+                transition-all
+                hover:bg-neutral-100
+              "
+            >
+              Ver Planos
+            </Link>
+
+          </div>
 
         </div>
 

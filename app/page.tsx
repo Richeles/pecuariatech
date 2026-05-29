@@ -1,331 +1,232 @@
-import Image from "next/image";
 import Link from "next/link";
 
-export default function Home() {
+export default function HomePage() {
 
   return (
 
     <main
       className="
         relative
-        min-h-screen
         flex
+        min-h-screen
         items-center
         justify-center
         overflow-hidden
+        bg-black
       "
     >
 
-      {/* =====================================================
-          BACKGROUND
-      ===================================================== */}
-
-      <Image
-        src="/bois-header.png"
-        alt="Pecuária moderna e sustentável"
-        fill
-        priority
-        className="
-          object-cover
-          brightness-[1.30]
-          contrast-[1.18]
-          saturate-[1.12]
-        "
-      />
-
-      {/* =====================================================
-          SHARPEN
-      ===================================================== */}
+      {/* BACKGROUND */}
 
       <div
         className="
           absolute
           inset-0
-          backdrop-contrast-125
-          backdrop-saturate-125
+          bg-cover
+          bg-center
+          scale-105
         "
+        style={{
+          backgroundImage:
+            "url('/pecuariatech.png')",
+        }}
       />
 
-      {/* =====================================================
-          OVERLAY
-      ===================================================== */}
+      {/* OVERLAY AJUSTADO */}
 
       <div
         className="
           absolute
           inset-0
-          bg-black/10
+          bg-black/45
         "
       />
 
-      {/* =====================================================
-          VINHETA
-      ===================================================== */}
+      {/* LIGHT EFFECT */}
 
       <div
         className="
           absolute
           inset-0
-          bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.10),rgba(0,0,0,0.35))]
+          bg-gradient-to-t
+          from-black/55
+          via-transparent
+          to-black/20
         "
       />
 
-      {/* =====================================================
-          CONTENT
-      ===================================================== */}
+      {/* CONTENT */}
 
       <div
         className="
           relative
           z-10
-          text-center
-          px-6
           max-w-5xl
+          px-6
+          text-center
         "
       >
 
-        {/* =====================================================
-            GLASS CARD
-        ===================================================== */}
+        {/* BADGE */}
 
         <div
           className="
-            mx-auto
-            inline-block
-            rounded-3xl
-            px-8
-            py-10
-            md:px-14
-            md:py-12
-            bg-black/20
-            backdrop-blur-md
+            inline-flex
+            items-center
+            gap-3
+            rounded-full
             border
-            border-white/10
-            shadow-[0_18px_60px_rgba(0,0,0,0.45)]
+            border-green-400/30
+            bg-green-500/10
+            px-5
+            py-3
+            text-xs
+            font-black
+            uppercase
+            tracking-[0.24em]
+            text-green-200
+            backdrop-blur-sm
           "
         >
 
-          {/* =====================================================
-              TITLE
-          ===================================================== */}
-
-          <h1
+          <div
             className="
+              h-2
+              w-2
+              rounded-full
+              bg-green-400
+              animate-pulse
+            "
+          />
+
+          Runtime Cognitivo Online
+
+        </div>
+
+        {/* TITLE */}
+
+        <h1
+          className="
+            mt-8
+            text-6xl
+            font-black
+            tracking-tight
+            text-green-400
+            drop-shadow-[0_0_25px_rgba(34,197,94,0.35)]
+            xl:text-8xl
+          "
+        >
+          PecuariaTech
+        </h1>
+
+        {/* SUBTITLE */}
+
+        <p
+          className="
+            mt-8
+            text-lg
+            leading-9
+            text-neutral-100
+            drop-shadow-lg
+            xl:text-2xl
+          "
+        >
+          Plataforma operacional cognitiva
+          para gestão financeira,
+          rebanho, pastagem,
+          engorda e inteligência pecuária.
+        </p>
+
+        {/* BUTTONS */}
+
+        <div
+          className="
+            mt-12
+            flex
+            flex-col
+            gap-5
+            md:flex-row
+            md:justify-center
+          "
+        >
+
+          {/* LOGIN */}
+
+          <Link
+            href="/pt/login"
+            prefetch={false}
+            className="
+              rounded-2xl
+              bg-green-500
+              px-10
+              py-5
+              text-lg
+              font-black
               text-white
-              text-6xl
-              md:text-8xl
-              font-extrabold
-              tracking-tight
-              drop-shadow-[0_10px_28px_rgba(0,0,0,0.60)]
+              transition-all
+              duration-300
+              hover:scale-105
+              hover:bg-green-400
+              hover:shadow-[0_0_35px_rgba(34,197,94,0.45)]
             "
           >
-            PecuariaTech
-          </h1>
+            Entrar
+          </Link>
 
-          {/* =====================================================
-              SUBTITLE
-          ===================================================== */}
+          {/* PLANOS */}
 
-          <p
+          <Link
+            href="/pt/planos"
+            prefetch={false}
             className="
-              mt-6
-              text-2xl
-              md:text-4xl
-              font-extrabold
-              leading-tight
-              drop-shadow-[0_10px_22px_rgba(0,0,0,0.55)]
+              rounded-2xl
+              border
+              border-white/20
+              bg-black/20
+              px-10
+              py-5
+              text-lg
+              font-black
+              text-white
+              backdrop-blur-sm
+              transition-all
+              duration-300
+              hover:scale-105
+              hover:bg-white/10
             "
           >
+            Ver Planos
+          </Link>
 
-            <span className="text-green-300">
+          {/* CADASTRO */}
 
-              Gestão pecuária inteligente
-              para quem busca controle real,
-              decisões seguras
-              e crescimento sustentável.
-
-            </span>
-
-          </p>
-
-          {/* =====================================================
-              CTA BUTTONS
-          ===================================================== */}
-
-          <div
+          <Link
+            href="/cadastro"
+            prefetch={false}
             className="
-              mt-12
-              flex
-              flex-col
-              sm:flex-row
-              gap-4
-              justify-center
-              items-center
+              rounded-2xl
+              border
+              border-green-400/40
+              bg-green-500/10
+              px-10
+              py-5
+              text-lg
+              font-black
+              text-white
+              backdrop-blur-sm
+              transition-all
+              duration-300
+              hover:scale-105
+              hover:bg-green-500/20
+              hover:shadow-[0_0_30px_rgba(34,197,94,0.25)]
             "
           >
-
-            {/* LOGIN */}
-
-            <Link
-              href="/login"
-              className="
-                w-full
-                sm:w-auto
-                px-12
-                py-4
-                rounded-2xl
-                bg-green-600
-                text-white
-                text-xl
-                font-extrabold
-                shadow-lg
-                hover:bg-green-700
-                hover:shadow-xl
-                transition
-              "
-            >
-              Entrar
-            </Link>
-
-            {/* PLANOS */}
-
-            <Link
-              href="/planos"
-              className="
-                w-full
-                sm:w-auto
-                px-12
-                py-4
-                rounded-2xl
-                border
-                border-white/60
-                text-white
-                text-xl
-                font-extrabold
-                backdrop-blur-md
-                bg-white/10
-                hover:bg-white
-                hover:text-green-800
-                transition
-                shadow-lg
-              "
-            >
-              Ver Planos
-            </Link>
-
-          </div>
-
-          {/* =====================================================
-              RESET PASSWORD
-          ===================================================== */}
-
-          <div className="mt-6">
-
-            <Link
-              href="/reset-password"
-              className="
-                text-sm
-                md:text-base
-                font-semibold
-                text-white/85
-                underline-offset-4
-                transition
-                hover:text-green-300
-                hover:underline
-              "
-            >
-              Esqueci minha senha
-            </Link>
-
-          </div>
-
-          {/* =====================================================
-              MICROCOPY
-          ===================================================== */}
-
-          <p
-            className="
-              mt-10
-              text-base
-              md:text-lg
-              text-white/80
-            "
-          >
-
-            Plataforma profissional
-            com módulos:
-
-            Rebanho,
-            Pastagem,
-            Financeiro,
-            Engorda ULTRA
-            e Runtime Cognitivo AI.
-
-          </p>
-
-          {/* =====================================================
-              STATUS RUNTIME
-          ===================================================== */}
-
-          <div
-            className="
-              mt-8
-              flex
-              flex-wrap
-              justify-center
-              gap-3
-            "
-          >
-
-            {[
-              "SSR AUTH",
-              "ENGORDA AI",
-              "CFO AI",
-              "REBANHO AI",
-              "PAI AI",
-              "TRIÂNGULO 360",
-              "ESG RUNTIME",
-              "IOT READY",
-            ].map((item) => (
-
-              <div
-                key={item}
-                className="
-                  rounded-full
-                  border
-                  border-green-400/20
-                  bg-green-500/10
-                  px-4
-                  py-2
-                  text-[11px]
-                  font-black
-                  tracking-[0.18em]
-                  text-green-100
-                "
-              >
-                {item}
-              </div>
-
-            ))}
-
-          </div>
+            Criar Conta
+          </Link>
 
         </div>
 
       </div>
-
-      {/* =====================================================
-          CINEMA LOOK
-      ===================================================== */}
-
-      <div
-        className="
-          pointer-events-none
-          absolute
-          inset-0
-          shadow-[inset_0_0_160px_rgba(0,0,0,0.45)]
-        "
-      />
 
     </main>
   );

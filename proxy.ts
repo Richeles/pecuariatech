@@ -8,7 +8,6 @@ import {
    NEXT.JS 16 RUNTIME
    ULTRA PREMIUM BIOLOGICAL RUNTIME
    EQUAÇÃO Y + EQUAÇÃO Z + TRIÂNGULO 360
-   AUTH SSR + i18n + DASHBOARD HUB
 ========================================================= */
 
 export function proxy(
@@ -56,18 +55,17 @@ export function proxy(
   }
 
   /* =====================================================
-     REDIRECT ROOT
+     ROOT PÚBLICO
+     HOME SAAS
   ===================================================== */
 
   if (pathname === "/") {
 
-    return NextResponse.redirect(
-
-      new URL(
-        "/pt/login",
-        request.url
-      )
+    console.log(
+      "🏠 PUBLIC HOME"
     );
+
+    return NextResponse.next();
   }
 
   /* =====================================================
@@ -280,13 +278,6 @@ export function proxy(
 export const config = {
 
   matcher: [
-
-    /*
-     * Tudo EXCETO:
-     * - api
-     * - _next
-     * - arquivos
-     */
 
     "/((?!api|_next|.*\\..*).*)",
   ],

@@ -1,9 +1,11 @@
 "use client";
 
 // =========================================================
-// PecuariaTech
-// Login Client Premium
-// Runtime Cognitivo
+// PECUARIATECH
+// LOGIN CLIENT PREMIUM
+// SSR COOKIE FIRST
+// EQUAÇÃO Y + EQUAÇÃO Z
+// RUNTIME COGNITIVO MULTILÍNGUE
 // =========================================================
 
 import { useState } from "react";
@@ -40,7 +42,7 @@ export default function LoginClient() {
   ===================================================== */
 
   async function handleLogin(
-    e: React.FormEvent
+    e: React.FormEvent<HTMLFormElement>
   ) {
 
     e.preventDefault();
@@ -54,32 +56,91 @@ export default function LoginClient() {
       const supabase =
         createBrowserClient();
 
+      /* =================================================
+         AUTH LOGIN
+      ================================================= */
+
       const {
+        data,
         error,
       } =
         await supabase.auth
           .signInWithPassword({
 
-            email,
+            email:
+              email.trim(),
+
             password,
           });
 
+      /* =================================================
+         ERROR
+      ================================================= */
+
       if (error) {
 
-        setError(
+        console.error(
+          "LOGIN ERROR:",
           error.message
+        );
+
+        setError(
+          "Email ou senha inválidos."
         );
 
         return;
       }
 
-      router.push(
-        "/dashboard"
+      /* =================================================
+         SESSION VALIDATION
+      ================================================= */
+
+      if (!data?.session) {
+
+        setError(
+          "Sessão não encontrada."
+        );
+
+        return;
+      }
+
+      /* =================================================
+         SSR COOKIE SYNC
+      ================================================= */
+
+      await fetch(
+        "/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            access_token:
+              data.session.access_token,
+            refresh_token:
+              data.session.refresh_token,
+          }),
+        }
+      );
+
+      /* =================================================
+         CANONICAL MULTILANGUAGE ROUTE
+      ================================================= */
+
+      router.replace(
+        "/pt/dashboard"
       );
 
       router.refresh();
 
-    } catch {
+    } catch (err) {
+
+      console.error(
+        "LOGIN FATAL:",
+        err
+      );
 
       setError(
         "Erro interno no login."
@@ -97,134 +158,264 @@ export default function LoginClient() {
 
   return (
 
-    <form
-      onSubmit={handleLogin}
+    <div
       className="
-        space-y-5
+        flex
+        min-h-screen
+        items-center
+        justify-center
+        bg-gradient-to-br
+        from-[#07150f]
+        via-[#0d1f17]
+        to-[#10271d]
+        px-6
       "
     >
 
-      <div>
-
-        <label
-          className="
-            mb-2
-            block
-            text-sm
-            font-semibold
-            text-neutral-700
-          "
-        >
-          Email
-        </label>
-
-        <input
-          type="email"
-          value={email}
-          onChange={(e) =>
-            setEmail(
-              e.target.value
-            )
-          }
-          className="
-            w-full
-            rounded-2xl
-            border
-            border-neutral-300
-            bg-white
-            px-4
-            py-3
-            outline-none
-            transition
-            focus:border-green-600
-          "
-          placeholder="seu@email.com"
-          required
-        />
-
-      </div>
-
-      <div>
-
-        <label
-          className="
-            mb-2
-            block
-            text-sm
-            font-semibold
-            text-neutral-700
-          "
-        >
-          Senha
-        </label>
-
-        <input
-          type="password"
-          value={password}
-          onChange={(e) =>
-            setPassword(
-              e.target.value
-            )
-          }
-          className="
-            w-full
-            rounded-2xl
-            border
-            border-neutral-300
-            bg-white
-            px-4
-            py-3
-            outline-none
-            transition
-            focus:border-green-600
-          "
-          placeholder="••••••••"
-          required
-        />
-
-      </div>
-
-      {error && (
-
-        <div
-          className="
-            rounded-2xl
-            border
-            border-red-200
-            bg-red-50
-            px-4
-            py-3
-            text-sm
-            text-red-700
-          "
-        >
-          {error}
-        </div>
-      )}
-
-      <button
-        type="submit"
-        disabled={loading}
+      <div
         className="
           w-full
-          rounded-2xl
-          bg-green-700
-          px-4
-          py-3
-          font-black
-          text-white
-          transition
-          hover:bg-green-800
-          disabled:opacity-50
+          max-w-[460px]
+          rounded-[36px]
+          border
+          border-[#355845]
+          bg-[#102018]/95
+          p-10
+          shadow-[0_0_80px_rgba(0,0,0,0.35)]
+          backdrop-blur-2xl
         "
       >
 
-        {loading
-          ? "Entrando..."
-          : "Entrar"}
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
-      </button>
+        <div className="text-center">
 
-    </form>
+          <div
+            className="
+              inline-flex
+              items-center
+              gap-3
+              rounded-full
+              border
+              border-[#355845]
+              bg-[#173126]
+              px-5
+              py-3
+              text-xs
+              font-black
+              uppercase
+              tracking-[0.24em]
+              text-[#d8f3dc]
+            "
+          >
+
+            <div
+              className="
+                h-2
+                w-2
+                rounded-full
+                bg-[#52b788]
+                animate-pulse
+              "
+            />
+
+            Runtime Cognitivo
+
+          </div>
+
+          <h1
+            className="
+              mt-8
+              text-4xl
+              font-black
+              tracking-tight
+              text-white
+            "
+          >
+            PecuariaTech
+          </h1>
+
+          <p
+            className="
+              mt-4
+              text-sm
+              leading-relaxed
+              text-[#b7d6c2]
+            "
+          >
+            Plataforma operacional inteligente
+            integrada ao runtime pecuário premium.
+          </p>
+
+        </div>
+
+        {/* =================================================
+            FORM
+        ================================================= */}
+
+        <form
+          onSubmit={handleLogin}
+          className="
+            mt-10
+            space-y-6
+          "
+        >
+
+          {/* EMAIL */}
+
+          <div>
+
+            <label
+              className="
+                mb-2
+                block
+                text-sm
+                font-semibold
+                text-[#d8f3dc]
+              "
+            >
+              Email
+            </label>
+
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) =>
+                setEmail(
+                  e.target.value
+                )
+              }
+              className="
+                w-full
+                rounded-2xl
+                border
+                border-[#355845]
+                bg-[#14281f]
+                px-5
+                py-4
+                text-white
+                outline-none
+                transition-all
+                duration-200
+                placeholder:text-[#6c8a78]
+                focus:border-[#52b788]
+                focus:ring-2
+                focus:ring-[#52b788]/20
+              "
+              placeholder="seu@email.com"
+            />
+
+          </div>
+
+          {/* PASSWORD */}
+
+          <div>
+
+            <label
+              className="
+                mb-2
+                block
+                text-sm
+                font-semibold
+                text-[#d8f3dc]
+              "
+            >
+              Senha
+            </label>
+
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) =>
+                setPassword(
+                  e.target.value
+                )
+              }
+              className="
+                w-full
+                rounded-2xl
+                border
+                border-[#355845]
+                bg-[#14281f]
+                px-5
+                py-4
+                text-white
+                outline-none
+                transition-all
+                duration-200
+                placeholder:text-[#6c8a78]
+                focus:border-[#52b788]
+                focus:ring-2
+                focus:ring-[#52b788]/20
+              "
+              placeholder="••••••••"
+            />
+
+          </div>
+
+          {/* ERROR */}
+
+          {error ? (
+
+            <div
+              className="
+                rounded-2xl
+                border
+                border-red-500/20
+                bg-red-500/10
+                px-4
+                py-3
+                text-sm
+                text-red-200
+              "
+            >
+              {error}
+            </div>
+
+          ) : null}
+
+          {/* BUTTON */}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="
+              w-full
+              rounded-2xl
+              bg-gradient-to-r
+              from-[#3B7D57]
+              via-[#4D9A6D]
+              to-[#2F6B4B]
+              px-6
+              py-4
+              text-sm
+              font-black
+              uppercase
+              tracking-[0.16em]
+              text-white
+              transition-all
+              duration-300
+              hover:scale-[1.01]
+              hover:shadow-[0_0_30px_rgba(82,183,136,0.28)]
+              disabled:cursor-not-allowed
+              disabled:opacity-60
+            "
+          >
+
+            {loading
+              ? "Entrando..."
+              : "Acessar Plataforma"}
+
+          </button>
+
+        </form>
+
+      </div>
+
+    </div>
   );
 }

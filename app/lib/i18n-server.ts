@@ -51,35 +51,39 @@ export async function getLangFromServer():
 
   try {
 
-    /* ==========================================
-       NEXT 16
-    ========================================== */
-
     const cookieStore =
       await cookies();
 
     /* ==========================================
-       LANG COOKIE
+       COOKIE CANÔNICO
     ========================================== */
 
     const lang =
       cookieStore
-        .get(
-          "lang"
-        )
+        .get("lang")
         ?.value;
 
-    /* ==========================================
-       VALIDATION
-    ========================================== */
-
     if (
-      isValidLang(
-        lang
-      )
+      isValidLang(lang)
     ) {
 
       return lang;
+    }
+
+    /* ==========================================
+       COMPATIBILIDADE LEGADA
+    ========================================== */
+
+    const nextLocale =
+      cookieStore
+        .get("NEXT_LOCALE")
+        ?.value;
+
+    if (
+      isValidLang(nextLocale)
+    ) {
+
+      return nextLocale;
     }
 
     /* ==========================================
@@ -96,10 +100,6 @@ export async function getLangFromServer():
       "[I18N_SERVER]",
       error
     );
-
-    /* ==========================================
-       FAIL SAFE
-    ========================================== */
 
     return DEFAULT_LANG;
   }
