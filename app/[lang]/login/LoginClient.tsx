@@ -1,4 +1,4 @@
-voce mudou foi este scriopt: "use client";
+"use client";
 
 import { useState } from "react";
 
