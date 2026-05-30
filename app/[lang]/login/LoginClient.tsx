@@ -292,10 +292,16 @@ export default function LoginClient() {
 
         <div className="text-center">
 
-          <h1 className="text-5xl font-black text-red-700">
-
-            LOGIN NOVO VERCEL TESTE
-
+          <h1
+            className="
+              text-5xl
+              font-black
+              tracking-tight
+              text-green-600
+              drop-shadow-[0_0_15px_rgba(34,197,94,0.25)]
+            "
+          >
+            PecuariaTech
           </h1>
 
           <p className="mt-4 text-neutral-600">
