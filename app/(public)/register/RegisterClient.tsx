@@ -120,6 +120,7 @@ export default function RegisterClient() {
 
       /* ==========================================
          CONTINUIDADE COGNITIVA
+         🔥 ALTERAÇÃO ÚNICA NESTE ARQUIVO
       ========================================== */
 
       if (
@@ -127,8 +128,9 @@ export default function RegisterClient() {
         periodo
       ) {
 
+        // ALTERADO: adicionado /pt/ no next
         router.push(
-          `/login?next=/checkout?plano=${plano}&periodo=${periodo}`
+          `/login?next=/pt/checkout?plano=${plano}&periodo=${periodo}`
         );
 
         return;

@@ -225,6 +225,10 @@ export async function POST(
           password,
         });
 
+    console.log(
+      "🔥 PASSOU SIGNIN"
+    );
+
     // =====================================================
     // LOGIN ERROR
     // =====================================================
@@ -300,6 +304,10 @@ export async function POST(
       await supabase.auth
         .getUser();
 
+    console.log(
+      "🔥 PASSOU GETUSER"
+    );
+
     if (
       userError ||
       !userData?.user
@@ -356,6 +364,10 @@ export async function POST(
       response.cookies
         .getAll()
         .length > 0
+    );
+
+    console.log(
+      "🔥 RETORNANDO RESPONSE"
     );
 
     // =====================================================

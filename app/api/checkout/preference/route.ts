@@ -1,22 +1,19 @@
 // app/api/checkout/preference/route.ts
 // PecuariaTech — Checkout Runtime Premium
 // Equação Y + Regra Z + Runtime SaaS Seguro
-// Mercado Pago Production Ready
+// 🔥 CORRIGIDO: Valida usuário via cookie SSR (não confia no cliente)
 
 import {
   NextRequest,
   NextResponse,
 } from "next/server";
 
-import MercadoPagoConfig, {
-  Preference,
-} from "mercadopago";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+import MercadoPagoConfig, { Preference } from "mercadopago";
 
-export const runtime =
-  "nodejs";
-
-export const dynamic =
-  "force-dynamic";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 /* =====================================================
    PLANOS
@@ -26,7 +23,6 @@ const PLANOS: Record<
   string,
   {
     titulo: string;
-
     precos: {
       mensal: number;
       trimestral: number;
@@ -34,78 +30,43 @@ const PLANOS: Record<
     };
   }
 > = {
-
   basico: {
-
-    titulo:
-      "Plano Básico",
-
+    titulo: "Plano Básico",
     precos: {
-
       mensal: 149.9,
-
       trimestral: 404.9,
-
       anual: 1439.9,
     },
   },
-
   profissional: {
-
-    titulo:
-      "Plano Profissional",
-
+    titulo: "Plano Profissional",
     precos: {
-
       mensal: 247.9,
-
       trimestral: 669.9,
-
       anual: 2379.9,
     },
   },
-
   ultra: {
-
-    titulo:
-      "Plano Ultra",
-
+    titulo: "Plano Ultra",
     precos: {
-
       mensal: 452.9,
-
       trimestral: 1222.9,
-
       anual: 4349.9,
     },
   },
-
   empresarial: {
-
-    titulo:
-      "Plano Empresarial",
-
+    titulo: "Plano Empresarial",
     precos: {
-
       mensal: 627.9,
-
       trimestral: 1694.9,
-
       anual: 6029.9,
     },
   },
-
   premium_dominus: {
-
-    titulo:
-      "Premium Dominus 360°",
-
+    titulo: "Premium Dominus 360°",
     precos: {
-
       mensal: 789.9,
-
       trimestral: 2132.9,
-
       anual: 7582.9,
     },
   },
@@ -116,30 +77,15 @@ const PLANOS: Record<
 ===================================================== */
 
 function n(v: any): number {
-
-  const x =
-    Number(v);
-
-  return Number.isFinite(x)
-    ? x
-    : 0;
+  const x = Number(v);
+  return Number.isFinite(x) ? x : 0;
 }
 
-function safeOrigin(
-  req: NextRequest
-) {
-
+function safeOrigin(req: NextRequest) {
   return (
-    process.env
-      .NEXT_PUBLIC_SITE_URL ||
-
-    process.env
-      .NEXT_PUBLIC_APP_URL ||
-
-    req.headers.get(
-      "origin"
-    ) ||
-
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    req.headers.get("origin") ||
     "https://www.pecuariatech.com"
   );
 }
@@ -153,49 +99,23 @@ async function getDynamicPrice(
   periodo: string,
   fallback: number
 ) {
-
   try {
-
-    const PYTHON_API =
-      process.env
-        .PYTHON_API_URL;
-
+    const PYTHON_API = process.env.PYTHON_API_URL;
     if (!PYTHON_API) {
-
       return fallback;
     }
-
-    const response =
-      await fetch(
-        `${PYTHON_API}/pricing`,
-        {
-          method: "GET",
-          cache: "no-store",
-        }
-      );
-
+    const response = await fetch(`${PYTHON_API}/pricing`, {
+      method: "GET",
+      cache: "no-store",
+    });
     if (!response.ok) {
-
       return fallback;
     }
-
-    const pricing =
-      await response.json();
-
-    const value =
-      pricing?.[plano]?.[
-        periodo
-      ];
-
-    const preco =
-      n(value);
-
-    return preco > 0
-      ? preco
-      : fallback;
-
+    const pricing = await response.json();
+    const value = pricing?.[plano]?.[periodo];
+    const preco = n(value);
+    return preco > 0 ? preco : fallback;
   } catch {
-
     return fallback;
   }
 }
@@ -204,31 +124,59 @@ async function getDynamicPrice(
    POST
 ===================================================== */
 
-export async function POST(
-  req: NextRequest
-) {
-
+export async function POST(req: NextRequest) {
   try {
+    /* ==========================================
+       🔥 VALIDAÇÃO SSR (Equação Y)
+       O usuário é obtido do COOKIE, não do cliente!
+    ========================================== */
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("[CHECKOUT] Missing Supabase env");
+      return NextResponse.json(
+        { ok: false, error: "missing_env" },
+        { status: 500 }
+      );
+    }
+
+    const cookieStore = await cookies();
+
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll() {},
+      },
+    });
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error("[CHECKOUT] User not authenticated:", userError);
+      return NextResponse.json(
+        { ok: false, error: "unauthorized", message: "Usuário não autenticado" },
+        { status: 401 }
+      );
+    }
+
+    const user_id = user.id;
+    const email = user.email;
+
+    console.log("[CHECKOUT] Usuário autenticado:", { user_id, email });
 
     /* ==========================================
        ENV
     ========================================== */
 
-    const MP_TOKEN =
-      process.env
-        .MERCADOPAGO_ACCESS_TOKEN;
-
+    const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
     if (!MP_TOKEN) {
-
       return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "MERCADOPAGO_ACCESS_TOKEN ausente",
-        },
-        {
-          status: 500,
-        }
+        { ok: false, error: "MERCADOPAGO_ACCESS_TOKEN ausente" },
+        { status: 500 }
       );
     }
 
@@ -236,95 +184,26 @@ export async function POST(
        BODY
     ========================================== */
 
-    const body =
-      await req.json();
+    const body = await req.json();
+    const { plano, periodo } = body;
 
-    const {
-      plano,
-      periodo,
-      user_id,
-      email,
-    } = body;
-
-    console.log(
-      "[CHECKOUT]",
-      {
-        plano,
-        periodo,
-        email,
-      }
-    );
+    console.log("[CHECKOUT]", { plano, periodo, email });
 
     /* ==========================================
        VALIDATION
     ========================================== */
 
-    if (
-      !plano ||
-      !PLANOS[plano]
-    ) {
-
+    if (!plano || !PLANOS[plano]) {
       return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "Plano inválido",
-        },
-        {
-          status: 400,
-        }
+        { ok: false, error: "Plano inválido" },
+        { status: 400 }
       );
     }
 
-    if (
-      ![
-        "mensal",
-        "trimestral",
-        "anual",
-      ].includes(periodo)
-    ) {
-
+    if (!["mensal", "trimestral", "anual"].includes(periodo)) {
       return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "Período inválido",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (!user_id) {
-
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "user_id obrigatório",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (
-      !email ||
-      typeof email !==
-        "string"
-    ) {
-
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "email obrigatório",
-        },
-        {
-          status: 400,
-        }
+        { ok: false, error: "Período inválido" },
+        { status: 400 }
       );
     }
 
@@ -332,37 +211,13 @@ export async function POST(
        PREÇO
     ========================================== */
 
-    const fallbackPrice =
-      PLANOS[
-        plano
-      ].precos[
-        periodo as
-          | "mensal"
-          | "trimestral"
-          | "anual"
-      ];
+    const fallbackPrice = PLANOS[plano].precos[periodo as "mensal" | "trimestral" | "anual"];
+    const preco = await getDynamicPrice(plano, periodo, fallbackPrice);
 
-    const preco =
-      await getDynamicPrice(
-        plano,
-        periodo,
-        fallbackPrice
-      );
-
-    if (
-      !preco ||
-      isNaN(preco)
-    ) {
-
+    if (!preco || isNaN(preco)) {
       return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "Preço inválido",
-        },
-        {
-          status: 500,
-        }
+        { ok: false, error: "Preço inválido" },
+        { status: 500 }
       );
     }
 
@@ -370,170 +225,74 @@ export async function POST(
        ORIGIN
     ========================================== */
 
-    const origin =
-      safeOrigin(req);
+    const origin = safeOrigin(req);
 
     /* ==========================================
        URLS
     ========================================== */
 
-    const successUrl =
-      `${origin}/dashboard`;
+    const successUrl = `${origin}/dashboard`;
+    const failureUrl = `${origin}/planos`;
+    const pendingUrl = `${origin}/planos`;
+    const webhookUrl = process.env.WEBHOOK_PUBLIC_URL || `${origin}/api/webhook/mercadopago`;
 
-    const failureUrl =
-      `${origin}/planos`;
-
-    const pendingUrl =
-      `${origin}/planos`;
-
-    const webhookUrl =
-      `${origin}/api/webhook/mercadopago`;
+    console.log("[CHECKOUT_URLS]", {
+      origin,
+      successUrl,
+      failureUrl,
+      pendingUrl,
+      webhookUrl,
+    });
 
     /* ==========================================
        MERCADO PAGO
     ========================================== */
 
-    const mp =
-      new MercadoPagoConfig({
-
-        accessToken:
-          MP_TOKEN,
-      });
-
-    const preference =
-      new Preference(mp);
-
-    /* ==========================================
-       PREFERENCE
-    ========================================== */
+    const mp = new MercadoPagoConfig({ accessToken: MP_TOKEN });
+    const preference = new Preference(mp);
 
     const preferenceBody = {
-
       items: [
-
         {
-
-          id:
-            `${plano}_${periodo}`,
-
-          title:
-            `${PLANOS[plano].titulo} - ${periodo}`,
-
-          description:
-            `Assinatura ${PLANOS[plano].titulo}`,
-
+          id: `${plano}_${periodo}`,
+          title: `${PLANOS[plano].titulo} - ${periodo}`,
+          description: `Assinatura ${PLANOS[plano].titulo}`,
           quantity: 1,
-
-          currency_id:
-            "BRL",
-
-          unit_price:
-            Number(preco),
+          currency_id: "BRL",
+          unit_price: Number(preco),
         },
       ],
-
-      payer: {
-
-        email,
-      },
-
-      metadata: {
-
-        user_id,
-        plano,
-        periodo,
-      },
-
-      external_reference:
-        `${user_id}|${plano}|${periodo}`,
-
-      back_urls: {
-
-        success:
-          successUrl,
-
-        failure:
-          failureUrl,
-
-        pending:
-          pendingUrl,
-      },
-
-      auto_return:
-        "approved",
-
-      notification_url:
-        webhookUrl,
+      payer: { email },
+      metadata: { user_id, plano, periodo },
+      external_reference: `${user_id}|${plano}|${periodo}`,
+      back_urls: { success: successUrl, failure: failureUrl, pending: pendingUrl },
+      notification_url: webhookUrl,
     };
 
-    /* ==========================================
-       CREATE
-    ========================================== */
+    const result = await preference.create({ body: preferenceBody });
 
-    const result =
-      await preference.create({
-        body:
-          preferenceBody,
-      });
-
-    if (
-      !result?.init_point
-    ) {
-
-      throw new Error(
-        "mercadopago_init_point_missing"
-      );
+    if (!result?.init_point) {
+      throw new Error("mercadopago_init_point_missing");
     }
 
-    /* ==========================================
-       SUCCESS
-    ========================================== */
-
     return NextResponse.json({
-
       ok: true,
-
-      provider:
-        "mercadopago",
-
-      init_point:
-        result.init_point,
-
-      sandbox_init_point:
-        result.sandbox_init_point,
-
+      provider: "mercadopago",
+      init_point: result.init_point,
+      sandbox_init_point: result.sandbox_init_point,
       plano,
-
       periodo,
-
       preco,
     });
-
-  } catch (
-    err: any
-  ) {
-
-    console.error(
-      "[CHECKOUT_RUNTIME]",
-      err
-    );
-
+  } catch (err: any) {
+    console.error("[CHECKOUT_RUNTIME]", err);
     return NextResponse.json(
       {
         ok: false,
-
-        error:
-          "checkout_runtime_error",
-
-        detalhe:
-          String(
-            err?.message ||
-            err
-          ),
+        error: "checkout_runtime_error",
+        detalhe: String(err?.message || err),
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

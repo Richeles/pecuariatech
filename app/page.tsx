@@ -32,26 +32,26 @@ export default function HomePage() {
         }}
       />
 
-      {/* OVERLAY AJUSTADO */}
+      {/* OVERLAY MAIS CLARO */}
 
       <div
         className="
           absolute
           inset-0
-          bg-black/45
+          bg-black/15
         "
       />
 
-      {/* LIGHT EFFECT */}
+      {/* LIGHT EFFECT MAIS SUAVE */}
 
       <div
         className="
           absolute
           inset-0
           bg-gradient-to-t
-          from-black/55
+          from-black/15
           via-transparent
-          to-black/20
+          to-black/5
         "
       />
 

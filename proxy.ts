@@ -164,6 +164,18 @@ export function proxy(
     );
 
   /* =====================================================
+     🔥 LOG DE DIAGNÓSTICO PARA CHECKOUT
+  ===================================================== */
+
+  if (pathnameWithoutLocale === "/checkout") {
+    console.log("🔍 CHECKOUT DETECTADO");
+    console.log("🔍 pathname original:", pathname);
+    console.log("🔍 pathname sem locale:", pathnameWithoutLocale);
+    console.log("🔍 locale detectado:", locale);
+    console.log("🔍 isPublic:", isPublic);
+  }
+
+  /* =====================================================
      LIBERAR ROTAS PÚBLICAS
   ===================================================== */
 
@@ -201,6 +213,15 @@ export function proxy(
     "🍪 SSR COOKIE:",
     hasSupabaseCookie
   );
+
+  /* =====================================================
+     🔥 LOG DE COOKIE PARA CHECKOUT
+  ===================================================== */
+
+  if (pathnameWithoutLocale === "/checkout") {
+    console.log("🔍 CHECKOUT - hasSupabaseCookie:", hasSupabaseCookie);
+    console.log("🔍 CHECKOUT - cookies encontrados:", cookies.map(c => c.name));
+  }
 
   /* =====================================================
      REGRA Z

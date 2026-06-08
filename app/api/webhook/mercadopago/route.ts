@@ -16,7 +16,7 @@ const mp = new MercadoPagoConfig({
 const paymentClient = new Payment(mp);
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!, // ✅ corrigido (padrão do projeto)
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
@@ -71,7 +71,7 @@ function isValidValue(plano: string, periodo: string, valor: number) {
   const esperado = PLANOS[plano]?.[periodo];
   if (!esperado) return false;
 
-  const tolerancia = 0.1; // 🔥 aumentei levemente (produção real)
+  const tolerancia = 0.1;
   return Math.abs(valor - esperado) < tolerancia;
 }
 
@@ -92,6 +92,13 @@ function calcularRenovacao(periodo: string) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    // 🔥 LOGS DE DIAGNÓSTICO - ÚNICA ALTERAÇÃO
+    console.log("=================================");
+    console.log("🔥 WEBHOOK MERCADO PAGO CHAMADO");
+    console.log("🔥 DATA:", new Date().toISOString());
+    console.log("🔥 BODY:", JSON.stringify(body));
+    console.log("=================================");
 
     const paymentId = body?.data?.id;
     const eventType = body?.type;

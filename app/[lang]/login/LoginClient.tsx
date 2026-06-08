@@ -9,6 +9,7 @@ import Image from "next/image";
 import {
   useRouter,
   usePathname,
+  useSearchParams,
 } from "next/navigation";
 
 import LanguageSwitcher
@@ -19,6 +20,15 @@ export default function LoginClient() {
   const router = useRouter();
 
   const pathname = usePathname();
+
+  const searchParams =
+    useSearchParams();
+
+  const nextUrl =
+    searchParams.get("next");
+
+  // 🔥 LOG ADICIONADO PARA DIAGNOSTICAR A NEXT URL
+  console.log("🚨 NEXT URL RECEBIDA:", nextUrl);
 
   const locale =
     pathname?.split("/")[1] || "pt";
@@ -188,10 +198,18 @@ export default function LoginClient() {
       );
 
       /* =========================================
-         FLUXO SaaS
+         RESPEITA NEXT URL - MODIFICADO
+         🔥 LOG ADICIONADO PARA DEBUG
       ========================================= */
 
-      if (status?.ativo) {
+      if (nextUrl) {
+
+        // 🔥 LOG CRÍTICO - MOSTRA A URL QUE SERÁ USADA
+        console.log("🔍 NEXT URL =", nextUrl);
+
+        window.location.href = nextUrl;
+
+      } else if (status?.ativo) {
 
         router.push(
 
@@ -326,7 +344,6 @@ export default function LoginClient() {
             <label className="mb-2 block text-sm font-semibold text-neutral-700">
 
               {t.email}
-
             </label>
 
             <input
@@ -366,7 +383,6 @@ export default function LoginClient() {
             <label className="mb-2 block text-sm font-semibold text-neutral-700">
 
               {t.password}
-
             </label>
 
             <input
@@ -402,7 +418,6 @@ export default function LoginClient() {
             <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
 
               {error}
-
             </div>
 
           )}
@@ -442,7 +457,6 @@ export default function LoginClient() {
             >
 
               {t.forgot}
-
             </Link>
 
           </div>

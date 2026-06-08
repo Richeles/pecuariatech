@@ -222,12 +222,21 @@ export default function PlanosClient() {
     return mensal * 10;
   }
 
+  /* =========================================================
+     FUNÇÃO ASSINAR CORRIGIDA (com locale)
+  ========================================================= */
+
   function assinar(
     plano: string
   ) {
 
+    const locale =
+      pathname.startsWith("/es")
+        ? "es"
+        : "pt";
+
     router.push(
-      `/checkout?plano=${plano}&periodo=${periodo}`
+      `/${locale}/checkout?plano=${plano}&periodo=${periodo}`
     );
   }
 

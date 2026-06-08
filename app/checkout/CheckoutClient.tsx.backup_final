@@ -1,0 +1,94 @@
+﻿"use client";
+
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { getLangFromClient, t } from "@/app/lib/i18n";
+import { createClient } from "@/app/lib/supabase-browser";
+
+export default function CheckoutClient() {
+
+  console.log("🔥 CHECKOUTCLIENT MONTADO");
+
+  const params = useSearchParams();
+  const supabase = createClient();
+  const lang = getLangFromClient();
+  const plano = params.get("plano");
+  const periodo = params.get("periodo");
+
+  console.log("🔥 PARAMS:", { plano, periodo, lang });
+
+  useEffect(() => {
+    console.log("🔥 USE EFFECT EXECUTOU");
+
+    async function iniciarCheckout() {
+      console.log("🔥 INICIAR CHECKOUT");
+
+      try {
+        console.log("🔥 ANTES GET USER");
+        console.log("🍪 document.cookie:", document.cookie);
+
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+        console.log("🔥 RESULTADO GET USER");
+        console.log("🧪 CHECKOUT USER:", user?.email ?? "NULL");
+        console.log("🧪 CHECKOUT ERROR:", userError);
+
+        if (!plano || !periodo) {
+          alert("Plano invalido.");
+          window.location.href = "/planos";
+          return;
+        }
+
+        if (!user) {
+          localStorage.setItem("checkout_plano", plano);
+          localStorage.setItem("checkout_periodo", periodo);
+          const encodedNext = encodeURIComponent(`/checkout?plano=${plano}&periodo=${periodo}`);
+          const locale = getLangFromClient();
+          window.location.href = `/${locale}/login?next=${encodedNext}`;
+          return;
+        }
+
+        console.log("🔥 ANTES NURA");
+        fetch("/api/nura/checkout-lead", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: user.id, email: user.email, plano, periodo }),
+        });
+
+        console.log("🔥 ANTES MERCADO PAGO");
+        const response = await fetch("/api/checkout/preference", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ plano, periodo, email: user.email, user_id: user.id }),
+        });
+
+        const data = await response.json();
+        console.log("🔥 DEPOIS MERCADO PAGO", data);
+
+        if (!response.ok || !data?.init_point) {
+          console.error("[CHECKOUT_ERROR]", data);
+          alert("Erro ao iniciar pagamento");
+          window.location.href = "/planos";
+          return;
+        }
+
+        console.log("🔥 REDIRECIONANDO PARA MP:", data.init_point);
+        window.location.href = data.init_point;
+
+      } catch (err) {
+        console.error("[CHECKOUT_FATAL]", err);
+        alert("Erro inesperado no checkout.");
+        window.location.href = "/planos";
+      }
+    }
+
+    iniciarCheckout();
+  }, [plano, periodo]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <p className="text-lg text-neutral-600">{t(lang, "processando")}</p>
+    </div>
+  );
+}
