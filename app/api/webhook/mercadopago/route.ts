@@ -22,34 +22,34 @@ const supabase = createClient(
 
 // ===============================
 // PLANOS (FONTE REAL ATUALIZADA)
-// 🔥 PREÇOS NOVOS DEFINIDOS POR VOCÊ
+// 🔥 PREÇOS DEFINIDOS CONFORME PÁGINA DE PLANOS
 // ===============================
 
 const PLANOS: Record<string, Record<string, number>> = {
   basico: {
-    mensal: 149.9,
-    trimestral: 149.9 * 3 * 0.95,
-    anual: 149.9 * 12 * 0.8,
+    mensal: 189.97,
+    trimestral: 512.92,
+    anual: 1899.70,
   },
   profissional: {
-    mensal: 247.9,
-    trimestral: 247.9 * 3 * 0.95,
-    anual: 247.9 * 12 * 0.8,
+    mensal: 389.97,
+    trimestral: 1052.92,
+    anual: 3899.70,
   },
   ultra: {
-    mensal: 452.9,
-    trimestral: 452.9 * 3 * 0.95,
-    anual: 452.9 * 12 * 0.8,
+    mensal: 589.97,
+    trimestral: 1592.92,
+    anual: 5899.70,
   },
   empresarial: {
-    mensal: 627.9,
-    trimestral: 627.9 * 3 * 0.95,
-    anual: 627.9 * 12 * 0.8,
+    mensal: 789.97,
+    trimestral: 2132.92,
+    anual: 7899.70,
   },
-  premium: {
-    mensal: 789.9,
-    trimestral: 789.9 * 3 * 0.95,
-    anual: 789.9 * 12 * 0.8,
+  premium_dominus: {
+    mensal: 989.97,
+    trimestral: 2672.92,
+    anual: 9899.70,
   },
 };
 
@@ -59,29 +59,23 @@ const PLANOS: Record<string, Record<string, number>> = {
 
 function parseExternalReference(ref: string | null) {
   if (!ref) return null;
-
   const [user_id, plano, periodo] = ref.split("|");
-
   if (!user_id || !plano || !periodo) return null;
-
   return { user_id, plano, periodo };
 }
 
 function isValidValue(plano: string, periodo: string, valor: number) {
   const esperado = PLANOS[plano]?.[periodo];
   if (!esperado) return false;
-
-  const tolerancia = 0.1;
+  const tolerancia = 0.1; // para pequenos arredondamentos
   return Math.abs(valor - esperado) < tolerancia;
 }
 
 function calcularRenovacao(periodo: string) {
   const renovacao = new Date();
-
   if (periodo === "mensal") renovacao.setMonth(renovacao.getMonth() + 1);
   if (periodo === "trimestral") renovacao.setMonth(renovacao.getMonth() + 3);
   if (periodo === "anual") renovacao.setFullYear(renovacao.getFullYear() + 1);
-
   return renovacao.toISOString();
 }
 
@@ -93,7 +87,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // 🔥 LOGS DE DIAGNÓSTICO - ÚNICA ALTERAÇÃO
     console.log("=================================");
     console.log("🔥 WEBHOOK MERCADO PAGO CHAMADO");
     console.log("🔥 DATA:", new Date().toISOString());
@@ -107,12 +100,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, ignored: true });
     }
 
-    // ===========================
-    // CONSULTA PAGAMENTO MP
-    // ===========================
-
     const payment = await paymentClient.get({ id: paymentId });
-
     if (!payment) {
       return NextResponse.json(
         { ok: false, error: "payment_not_found" },
@@ -126,7 +114,6 @@ export async function POST(req: NextRequest) {
     const moeda = payment.currency_id ?? "BRL";
 
     const parsed = parseExternalReference(externalRef);
-
     if (!parsed) {
       return NextResponse.json(
         { ok: false, error: "invalid_external_reference" },
@@ -135,10 +122,6 @@ export async function POST(req: NextRequest) {
     }
 
     const { user_id, plano, periodo } = parsed;
-
-    // ===========================
-    // VALIDAÇÃO CRUZADA
-    // ===========================
 
     if (!PLANOS[plano]?.[periodo]) {
       return NextResponse.json(
@@ -166,10 +149,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ===========================
-    // IDEMPOTÊNCIA
-    // ===========================
-
+    // Idempotência
     const { data: existingLog } = await supabase
       .from("financeiro_logs")
       .select("id")
@@ -180,10 +160,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, idempotent: true });
     }
 
-    // ===========================
-    // LOG FINANCEIRO
-    // ===========================
-
+    // Log financeiro
     await supabase.from("financeiro_logs").insert({
       user_id,
       plano,
@@ -197,10 +174,7 @@ export async function POST(req: NextRequest) {
       criado_em: new Date().toISOString(),
     });
 
-    // ===========================
-    // ATIVAÇÃO ASSINATURA
-    // ===========================
-
+    // Ativação da assinatura (sem o campo 'periodo', que não existe na tabela assinaturas)
     if (status === "approved") {
       const renovacao_em = calcularRenovacao(periodo);
 
@@ -216,7 +190,6 @@ export async function POST(req: NextRequest) {
           .update({
             status: "ativa",
             plano,
-            periodo,
             valor: valorPago,
             metodo_pagamento: "mercadopago",
             renovacao_em,
@@ -227,7 +200,6 @@ export async function POST(req: NextRequest) {
         await supabase.from("assinaturas").insert({
           user_id,
           plano,
-          periodo,
           status: "ativa",
           valor: valorPago,
           metodo_pagamento: "mercadopago",
@@ -239,10 +211,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true });
-
   } catch (error: any) {
     console.error("Webhook error:", error);
-
     return NextResponse.json(
       { ok: false, error: "webhook_failure" },
       { status: 500 }
