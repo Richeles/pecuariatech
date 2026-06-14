@@ -1,3 +1,6 @@
+﻿// app/api/webhook/mercadopago/route.ts
+// Versão segura: preços do banco, sem upsert (usa select/insert)
+
 import { NextRequest, NextResponse } from "next/server";
 import MercadoPagoConfig, { Payment } from "mercadopago";
 import { createClient } from "@supabase/supabase-js";
@@ -5,57 +8,23 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// ===============================
-// CONFIGURAÇÕES
-// ===============================
-
-const mp = new MercadoPagoConfig({
-  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
-});
-
-const paymentClient = new Payment(mp);
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// ===============================
-// PLANOS (FONTE REAL ATUALIZADA)
-// 🔥 PREÇOS DEFINIDOS CONFORME PÁGINA DE PLANOS
-// ===============================
+const mp = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN! });
+const paymentClient = new Payment(mp);
 
-const PLANOS: Record<string, Record<string, number>> = {
-  basico: {
-    mensal: 189.97,
-    trimestral: 512.92,
-    anual: 1899.70,
-  },
-  profissional: {
-    mensal: 389.97,
-    trimestral: 1052.92,
-    anual: 3899.70,
-  },
-  ultra: {
-    mensal: 589.97,
-    trimestral: 1592.92,
-    anual: 5899.70,
-  },
-  empresarial: {
-    mensal: 789.97,
-    trimestral: 2132.92,
-    anual: 7899.70,
-  },
-  premium_dominus: {
-    mensal: 989.97,
-    trimestral: 2672.92,
-    anual: 9899.70,
-  },
-};
-
-// ===============================
-// HELPERS
-// ===============================
+async function getPrecosFromDatabase(plano: string) {
+  const { data } = await supabase
+    .from("planos_precos")
+    .select("preco_mensal, preco_trimestral, preco_anual")
+    .eq("plano_codigo", plano)
+    .maybeSingle();
+  if (!data) return null;
+  return { mensal: data.preco_mensal, trimestral: data.preco_trimestral, anual: data.preco_anual };
+}
 
 function parseExternalReference(ref: string | null) {
   if (!ref) return null;
@@ -64,11 +33,8 @@ function parseExternalReference(ref: string | null) {
   return { user_id, plano, periodo };
 }
 
-function isValidValue(plano: string, periodo: string, valor: number) {
-  const esperado = PLANOS[plano]?.[periodo];
-  if (!esperado) return false;
-  const tolerancia = 0.1; // para pequenos arredondamentos
-  return Math.abs(valor - esperado) < tolerancia;
+function isValidValue(esperado: number, recebido: number) {
+  return Math.abs(recebido - esperado) < 0.1;
 }
 
 function calcularRenovacao(periodo: string) {
@@ -79,34 +45,17 @@ function calcularRenovacao(periodo: string) {
   return renovacao.toISOString();
 }
 
-// ===============================
-// POST — WEBHOOK
-// ===============================
-
 export async function POST(req: NextRequest) {
+  const startTime = Date.now();
   try {
     const body = await req.json();
-
-    console.log("=================================");
-    console.log("🔥 WEBHOOK MERCADO PAGO CHAMADO");
-    console.log("🔥 DATA:", new Date().toISOString());
-    console.log("🔥 BODY:", JSON.stringify(body));
-    console.log("=================================");
-
     const paymentId = body?.data?.id;
     const eventType = body?.type;
-
-    if (!paymentId || eventType !== "payment") {
-      return NextResponse.json({ ok: true, ignored: true });
-    }
+    console.log("🔥 WEBHOOK CHAMADO", { paymentId, eventType });
+    if (!paymentId || eventType !== "payment") return NextResponse.json({ ok: true, ignored: true });
 
     const payment = await paymentClient.get({ id: paymentId });
-    if (!payment) {
-      return NextResponse.json(
-        { ok: false, error: "payment_not_found" },
-        { status: 404 }
-      );
-    }
+    if (!payment) return NextResponse.json({ ok: false, error: "payment_not_found" }, { status: 404 });
 
     const status = payment.status;
     const externalRef = payment.external_reference;
@@ -114,120 +63,47 @@ export async function POST(req: NextRequest) {
     const moeda = payment.currency_id ?? "BRL";
 
     const parsed = parseExternalReference(externalRef);
-    if (!parsed) {
-      return NextResponse.json(
-        { ok: false, error: "invalid_external_reference" },
-        { status: 400 }
-      );
-    }
-
+    if (!parsed) return NextResponse.json({ ok: false, error: "invalid_external_reference" }, { status: 400 });
     const { user_id, plano, periodo } = parsed;
 
-    if (!PLANOS[plano]?.[periodo]) {
-      return NextResponse.json(
-        { ok: false, error: "invalid_plan_or_period" },
-        { status: 400 }
-      );
+    const precos = await getPrecosFromDatabase(plano);
+    if (!precos) return NextResponse.json({ ok: false, error: "plan_not_found" }, { status: 400 });
+    const precoEsperado = precos[periodo as keyof typeof precos];
+    if (!precoEsperado) return NextResponse.json({ ok: false, error: "invalid_period" }, { status: 400 });
+    if (!isValidValue(precoEsperado, valorPago)) {
+      return NextResponse.json({ ok: false, error: "valor_mismatch", esperado: precoEsperado, recebido: valorPago }, { status: 400 });
     }
+    if (moeda !== "BRL") return NextResponse.json({ ok: false, error: "currency_mismatch", moeda }, { status: 400 });
 
-    if (!isValidValue(plano, periodo, valorPago)) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "valor_mismatch",
-          esperado: PLANOS[plano][periodo],
-          recebido: valorPago,
-        },
-        { status: 400 }
-      );
-    }
+    // Idempotência: verifica se log já existe
+    const { data: existingLog } = await supabase.from("financeiro_logs").select("id").eq("payment_id", paymentId).maybeSingle();
+    if (existingLog) return NextResponse.json({ ok: true, idempotent: true });
 
-    if (moeda !== "BRL") {
-      return NextResponse.json(
-        { ok: false, error: "currency_mismatch", moeda },
-        { status: 400 }
-      );
-    }
-
-    // Idempotência
-    const { data: existingLog } = await supabase
-      .from("financeiro_logs")
-      .select("id")
-      .eq("payment_id", paymentId)
-      .maybeSingle();
-
-    if (existingLog) {
-      return NextResponse.json({ ok: true, idempotent: true });
-    }
-
-    // Log financeiro
+    // Insere log financeiro
     await supabase.from("financeiro_logs").insert({
-      user_id,
-      plano,
-      periodo,
-      valor: valorPago,
-      moeda,
-      origem: "mercadopago",
-      evento: status,
-      payment_id: paymentId,
-      external_reference: externalRef,
-      criado_em: new Date().toISOString(),
+      payment_id: paymentId, user_id, plano, periodo, valor: valorPago, moeda,
+      origem: "mercadopago", evento: status, external_reference: externalRef, criado_em: new Date().toISOString(),
     });
 
-    // Ativação da assinatura (sem o campo 'periodo', que não existe na tabela assinaturas)
     if (status === "approved") {
       const renovacao_em = calcularRenovacao(periodo);
-
-      const { data: assinatura } = await supabase
-        .from("assinaturas")
-        .select("id")
-        .eq("user_id", user_id)
-        .maybeSingle();
-
-      if (assinatura) {
-        await supabase
-          .from("assinaturas")
-          .update({
-            status: "ativa",
-            plano,
-            valor: valorPago,
-            metodo_pagamento: "mercadopago",
-            renovacao_em,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", assinatura.id);
+      const assinaturaData = { status: "ativa", plano, nivel: plano, valor: valorPago, metodo_pagamento: "mercadopago", renovacao_em, expires_at: renovacao_em, updated_at: new Date().toISOString() };
+      const { data: existingAssinatura } = await supabase.from("assinaturas").select("id").eq("user_id", user_id).maybeSingle();
+      if (existingAssinatura) {
+        await supabase.from("assinaturas").update(assinaturaData).eq("id", existingAssinatura.id);
       } else {
-        await supabase.from("assinaturas").insert({
-          user_id,
-          plano,
-          status: "ativa",
-          valor: valorPago,
-          metodo_pagamento: "mercadopago",
-          renovacao_em,
-          criado_em: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
+        await supabase.from("assinaturas").insert({ user_id, ...assinaturaData, criado_em: new Date().toISOString() });
       }
     }
 
+    console.log(`✅ Webhook processado em ${Date.now() - startTime}ms`);
     return NextResponse.json({ ok: true });
   } catch (error: any) {
     console.error("Webhook error:", error);
-    return NextResponse.json(
-      { ok: false, error: "webhook_failure" },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: false, error: "webhook_failure" }, { status: 500 });
   }
 }
 
-// ===============================
-// HEALTH CHECK
-// ===============================
-
 export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    endpoint: "mercadopago_webhook",
-    status: "alive",
-  });
+  return NextResponse.json({ ok: true, endpoint: "mercadopago_webhook", status: "alive" });
 }

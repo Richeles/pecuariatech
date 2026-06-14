@@ -1,0 +1,29 @@
+﻿import httpx
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class Pergunta(BaseModel):
+    texto: str
+
+API_URL = "https://text.pollinations.ai/"
+
+@app.post("/nura")
+async def nura(pergunta: Pergunta):
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.get(
+                API_URL,
+                params={"text": pergunta.texto}
+            )
+            response.raise_for_status()
+            resposta = response.text.strip()
+            return {"resposta": resposta}
+    except Exception as e:
+        print(f"Erro interno: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro na IA: {str(e)}")
+
+@app.get("/nura/health")
+async def health():
+    return {"status": "ok", "provider": "Pollinations AI"}

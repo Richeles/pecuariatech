@@ -1,0 +1,47 @@
+﻿import os
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from dotenv import load_dotenv
+
+# Carregar variáveis do arquivo .env
+load_dotenv()
+
+app = FastAPI()
+
+class Pergunta(BaseModel):
+    texto: str
+
+# Configurar cliente Gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    print("⚠️ GEMINI_API_KEY não definida. A NURA funcionará em modo eco.")
+    client = None
+else:
+    try:
+        from google import genai
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        model = "gemini-2.0-flash"
+        print("✅ NURA usando Google GenAI (gemini-2.0-flash)")
+    except ImportError:
+        print("⚠️ google-genai não instalado. Execute: pip install google-genai")
+        client = None
+    except Exception as e:
+        print(f"⚠️ Erro ao configurar GenAI: {e}")
+        client = None
+
+@app.post("/nura")
+async def nura(pergunta: Pergunta):
+    if client is None:
+        return {"resposta": f"Você perguntou: {pergunta.texto}. (Modo eco – IA offline)"}
+    try:
+        response = client.models.generate_content(
+            model=model,
+            contents=pergunta.texto,
+        )
+        return {"resposta": response.text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/nura/health")
+async def health():
+    return {"status": "NURA ativa", "modo": "Gemini (GenAI)" if client else "eco"}
