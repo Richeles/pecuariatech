@@ -1,3 +1,11 @@
-fastapi
+﻿fastapi
 uvicorn
+httpx
+requests
+python-dotenv
+groq
+sentence-transformers
+faiss-cpu
+numpy
+pydantic
 pandas
