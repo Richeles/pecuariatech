@@ -6,15 +6,15 @@ import uuid
 import requests
 import numpy as np
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
-import faiss
 from dotenv import load_dotenv
 from groq import Groq
 
+# Carrega variáveis de ambiente
 load_dotenv()
+
 app = FastAPI()
 
 # ============================================
@@ -33,27 +33,40 @@ if not SERPER_API_KEY:
     print("⚠️ SERPER_API_KEY não configurada. A busca web não estará disponível.")
 
 # ============================================
-# RAG – Conhecimento permanente
+# RAG – Conhecimento permanente (opcional, desligado por padrão para evitar excesso de memória)
 # ============================================
+ENABLE_RAG = os.getenv("ENABLE_RAG", "false").lower() == "true"
+
 embedder = None
 rag_index = None
 rag_texts = []
 
 def load_rag():
+    """Carrega o RAG local apenas se ENABLE_RAG=true e as bibliotecas estiverem disponíveis."""
     global embedder, rag_index, rag_texts
-    try:
-        embedder = SentenceTransformer('all-MiniLM-L6-v2')
-    except Exception as e:
-        print("⚠️ RAG desativado:", e)
+    if not ENABLE_RAG:
+        print("⚠️ RAG desabilitado (ENABLE_RAG=false). Apenas busca web e LLM.")
         return
+    try:
+        from sentence_transformers import SentenceTransformer
+        import faiss
+        embedder = SentenceTransformer('all-MiniLM-L6-v2')
+    except ImportError:
+        print("⚠️ sentence-transformers ou faiss não instalados. RAG não disponível.")
+        return
+    except Exception as e:
+        print(f"⚠️ Erro ao carregar SentenceTransformer: {e}")
+        return
+
     index_path = "data/rag/index.faiss"
     texts_path = "data/rag/texts.json"
     if os.path.exists(index_path) and os.path.exists(texts_path):
         rag_index = faiss.read_index(index_path)
         with open(texts_path, 'r', encoding='utf-8') as f:
             rag_texts = json.load(f)
-        print("✅ RAG carregado")
+        print("✅ RAG carregado do disco (local)")
     else:
+        # Documentos de exemplo (apenas regras técnicas, sem preços fixos)
         docs = [
             "Brachiaria brizantha: resistente a cigarrinhas, boa produção em solos de média fertilidade.",
             "Capim Mombaça: alto valor nutritivo (12% PB), requer alta fertilidade e manejo intensivo.",
@@ -75,17 +88,22 @@ def load_rag():
         faiss.write_index(rag_index, index_path)
         with open(texts_path, 'w', encoding='utf-8') as f:
             json.dump(rag_texts, f, indent=2)
-        print("✅ RAG criado (apenas regras técnicas, sem preços fixos)")
+        print("✅ RAG criado localmente (apenas regras técnicas)")
 
+# Carrega o RAG apenas se habilitado
 load_rag()
 
-def busca_rag(pergunta, top_k=5):
-    if embedder is None or rag_index is None or not rag_texts:
+def busca_rag(pergunta: str, top_k: int = 5) -> list:
+    """Retorna documentos do RAG local se ativo, senão lista vazia."""
+    if not ENABLE_RAG or embedder is None or rag_index is None or not rag_texts:
         return []
     query_emb = embedder.encode([pergunta])
     distances, indices = rag_index.search(query_emb.astype(np.float32), top_k)
     return [rag_texts[i] for i in indices[0] if i != -1]
 
+# ============================================
+# Detector de perguntas dinâmicas (busca web)
+# ============================================
 def precisa_dados_dinamicos(pergunta: str) -> bool:
     termos = [
         "preço", "cotação", "arroba", "bezerro", "boi gordo",
@@ -94,7 +112,10 @@ def precisa_dados_dinamicos(pergunta: str) -> bool:
     ]
     return any(termo in pergunta.lower() for termo in termos)
 
-async def buscar_web(pergunta: str) -> str | None:
+# ============================================
+# Busca na web via Serper.dev
+# ============================================
+async def buscar_web(pergunta: str) -> Optional[str]:
     if not SERPER_API_KEY:
         return None
     url = "https://google.serper.dev/search"
@@ -115,27 +136,33 @@ async def buscar_web(pergunta: str) -> str | None:
         print(f"Erro na busca web: {e}")
         return None
 
+# ============================================
+# Memória cache (em dicionário)
+# ============================================
 class MemoriaFazenda:
-    def __init__(self, fazenda_id):
+    def __init__(self, fazenda_id: str):
         self.fazenda_id = fazenda_id
         self.cache = {}
-    def obter_cache(self, pergunta):
+    def obter_cache(self, pergunta: str) -> Optional[dict]:
         h = hashlib.md5(pergunta.encode()).hexdigest()
         if h in self.cache:
             ts, resp = self.cache[h]
             if datetime.now().timestamp() - ts < 3600:
                 return resp
         return None
-    def salvar_cache(self, pergunta, resposta):
+    def salvar_cache(self, pergunta: str, resposta: dict):
         h = hashlib.md5(pergunta.encode()).hexdigest()
         self.cache[h] = (datetime.now().timestamp(), resposta)
 
 memorias = {}
-def get_memoria(fazenda_id):
+def get_memoria(fazenda_id: str):
     if fazenda_id not in memorias:
         memorias[fazenda_id] = MemoriaFazenda(fazenda_id)
     return memorias[fazenda_id]
 
+# ============================================
+# Endpoint principal
+# ============================================
 class Pergunta(BaseModel):
     texto: str
     fazenda_id: str = "demo_fazenda"
@@ -152,8 +179,10 @@ async def nura(pergunta: Pergunta):
     if cached:
         return cached
 
-    rag_contexto = "\n".join(busca_rag(pergunta.texto, top_k=5)) if busca_rag(pergunta.texto) else ""
+    # RAG técnico (apenas se habilitado)
+    rag_contexto = "\n".join(busca_rag(pergunta.texto, top_k=5)) if ENABLE_RAG else ""
 
+    # Busca web para dados dinâmicos
     web_contexto = None
     if precisa_dados_dinamicos(pergunta.texto):
         web_resultados = await buscar_web(pergunta.texto)
@@ -162,6 +191,7 @@ async def nura(pergunta: Pergunta):
         else:
             web_contexto = "[NÃO FOI POSSÍVEL OBTER DADOS ATUALIZADOS. Peça ao usuário o preço da arroba, localização ou outros dados necessários.]"
 
+    # Monta o prompt final
     prompt = f"""Você é a NURA, consultora técnica e de mercado do PecuariaTech.
 
 **CONHECIMENTO TÉCNICO PERMANENTE (RAG):**
@@ -196,7 +226,13 @@ async def nura(pergunta: Pergunta):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro na Groq: {e}")
 
-    resposta_final = {"resposta": resposta, "metadata": {"fonte": "rag+web" if web_contexto else "rag"}}
+    resposta_final = {
+        "resposta": resposta,
+        "metadata": {
+            "fonte": "rag+web" if web_contexto else ("rag" if rag_contexto else "llm"),
+            "rag_ativado": ENABLE_RAG
+        }
+    }
     memoria.salvar_cache(pergunta.texto, resposta_final)
     return resposta_final
 
@@ -205,6 +241,6 @@ async def health():
     return {
         "status": "ok",
         "modelo": MODELO_GROQ,
-        "rag_carregado": rag_index is not None,
+        "rag_carregado": rag_index is not None and ENABLE_RAG,
         "busca_web_disponivel": bool(SERPER_API_KEY)
     }
