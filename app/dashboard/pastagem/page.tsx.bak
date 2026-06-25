@@ -1,0 +1,39 @@
+"use client";
+
+import { useDashboard } from "../DashboardContext";
+
+export const dynamic = 'force-dynamic';
+
+export default function PastagemPage() {
+  const { data, loading } = useDashboard();
+
+  if (loading) {
+    return <div className="animate-pulse text-[#A7F3D0]/60">Carregando dados da pastagem...</div>;
+  }
+
+  const areaTotal = (data as any)?.area_total_ha || 0;
+  const lotacao = data?.lotacao || 0;
+  const scorePi = data?.score_pi || 0;
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold text-white">Central PecuariaTech – Pastagem</h1>
+      <p className="text-[#A7F3D0]/60">Gestão nutricional e estratégica de pastagens</p>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-[#1A3F2A]/60 rounded-2xl p-6 border border-[#34D399]/20">
+          <p className="text-sm text-[#A7F3D0]/50">Área Total (ha)</p>
+          <p className="text-2xl font-bold text-white">{areaTotal.toFixed(1)}</p>
+        </div>
+        <div className="bg-[#1A3F2A]/60 rounded-2xl p-6 border border-[#34D399]/20">
+          <p className="text-sm text-[#A7F3D0]/50">Lotação (UA/ha)</p>
+          <p className="text-2xl font-bold text-white">{lotacao.toFixed(2)}</p>
+        </div>
+        <div className="bg-[#1A3F2A]/60 rounded-2xl p-6 border border-[#34D399]/20">
+          <p className="text-sm text-[#A7F3D0]/50">Score π</p>
+          <p className="text-2xl font-bold text-white">{scorePi.toFixed(1)}</p>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,47 +1,122 @@
-// app/api/rebanho/route.ts
-import { NextResponse } from "next/server";
+﻿// app/api/rebanho/route.ts
+// PecuariaTech – API Rebanho Premium
+
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function getSupabaseServer() {
+function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !anon) {
-    throw new Error(
-      "Supabase env vars missing: NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY"
-    );
-  }
-
-  return createClient(url, anon, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error("❌ Supabase env vars missing");
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 }
 
-export async function GET() {
+function respond(data: any, message?: string, status = 200) {
+  return NextResponse.json({
+    ok: status < 400,
+    message: message || (status < 400 ? "Operacao concluida" : "Erro na operacao"),
+    data,
+    timestamp: new Date().toISOString(),
+  }, { status });
+}
+
+export async function GET(req: NextRequest) {
   try {
-    const supabase = getSupabaseServer();
-
-    const { data, error } = await supabase
-      .from("animal_rastreabilidade_view")
-      .select("*")
-      .order("animal_id", { ascending: true });
-
+    const { searchParams } = new URL(req.url);
+    const user_id = searchParams.get("user_id");
+    const limit = parseInt(searchParams.get("limit") || "100");
+    const supabase = getSupabase();
+    let query = supabase.from("vw_rebanho").select("*");
+    if (user_id) query = query.eq("user_id", user_id);
+    const { data, error } = await query.limit(limit);
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      console.error("[Rebanho GET] Erro:", error);
+      return respond(null, error.message, 500);
     }
-
-    return NextResponse.json({ ok: true, rows: data ?? [] }, { status: 200 });
+    return respond(data || []);
   } catch (err: any) {
-    return NextResponse.json(
-      { ok: false, error: err?.message ?? "Unknown error" },
-      { status: 500 }
-    );
+    console.error("[Rebanho GET] Excecao:", err);
+    return respond(null, err?.message || "Erro interno", 500);
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { nome, peso_inicial, user_id, data_entrada, lote, brinco_id, status, ganho_medio_diario } = body;
+    if (!nome || !peso_inicial || !user_id) {
+      return respond(null, "Campos obrigatorios: nome, peso_inicial, user_id", 400);
+    }
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from("rebanho")
+      .insert({
+        id: crypto.randomUUID(),
+        nome,
+        peso_inicial: parseFloat(peso_inicial),
+        peso_atual: parseFloat(peso_inicial),
+        user_id,
+        data_entrada: data_entrada || new Date().toISOString().split("T")[0],
+        lote: lote || null,
+        brinco_id: brinco_id || null,
+        status: status || "ativo",
+        ganho_medio_diario: ganho_medio_diario || null,
+      })
+      .select()
+      .single();
+    if (error) {
+      console.error("[Rebanho POST] Erro:", error);
+      return respond(null, error.message, 500);
+    }
+    return respond(data, "Animal adicionado", 201);
+  } catch (err: any) {
+    console.error("[Rebanho POST] Excecao:", err);
+    return respond(null, err?.message || "Erro ao adicionar animal", 500);
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, ...updates } = body;
+    if (!id) return respond(null, "ID do animal e obrigatorio", 400);
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from("rebanho")
+      .update({ ...updates })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) {
+      console.error("[Rebanho PUT] Erro:", error);
+      return respond(null, error.message, 500);
+    }
+    return respond(data, "Animal atualizado", 200);
+  } catch (err: any) {
+    console.error("[Rebanho PUT] Excecao:", err);
+    return respond(null, err?.message || "Erro ao atualizar", 500);
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) return respond(null, "ID do animal e obrigatorio", 400);
+    const supabase = getSupabase();
+    const { error } = await supabase.from("rebanho").delete().eq("id", id);
+    if (error) {
+      console.error("[Rebanho DELETE] Erro:", error);
+      return respond(null, error.message, 500);
+    }
+    return respond({ id }, "Animal removido", 200);
+  } catch (err: any) {
+    console.error("[Rebanho DELETE] Excecao:", err);
+    return respond(null, err?.message || "Erro ao remover", 500);
   }
 }

@@ -11,531 +11,115 @@ type Props = {
 };
 
 export default function EngordaExecutivePanel({
-
   total = 0,
-
   margem = 0,
-
   risco = "BAIXO",
-
   pi = 94,
-
   compliance = 96,
-
   esg = "VERDE",
-
   alertas = [],
-
 }: Props) {
-
   return (
-
-    <section className="space-y-5">
-
-      {/* =====================================================
-          HERO EXECUTIVO
-      ===================================================== */}
-
-      <div
-        className="
-          relative
-          overflow-hidden
-          rounded-[22px]
-          border
-          border-emerald-400/10
-          bg-gradient-to-br
-          from-[#03140d]
-          via-[#062117]
-          to-[#0b2d1f]
-          p-5
-          xl:p-6
-          shadow-[0_10px_38px_rgba(0,0,0,0.16)]
-        "
-      >
-
-        <div
-          className="
-            absolute
-            inset-0
-            bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.04),transparent_35%)]
-          "
-        />
-
-        <div
-          className="
-            relative
-            z-10
-            grid
-            gap-5
-            lg:grid-cols-[1.2fr_0.8fr]
-          "
-        >
-
-          {/* =====================================================
-              LEFT
-          ===================================================== */}
-
+    <div className="space-y-6">
+      {/* HERO EXECUTIVO */}
+      <div className="relative overflow-hidden rounded-2xl border border-[#34D399]/20 bg-gradient-to-br from-[#1A3F2A]/90 to-[#0F2A1A] p-6 md:p-8 shadow-xl">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.04),transparent_35%)]" />
+        <div className="relative z-10 grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-4">
-
-            <div
-              className="
-                inline-flex
-                items-center
-                rounded-full
-                border
-                border-emerald-400/15
-                bg-emerald-500/10
-                px-3
-                py-1.5
-                text-[9px]
-                font-black
-                uppercase
-                tracking-[0.28em]
-                text-emerald-200
-              "
-            >
+            <div className="inline-flex rounded-full border border-emerald-400/20 bg-emerald-500/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-200">
               Ultra Biological Engorda Runtime
             </div>
-
-            <div
-              className="
-                max-w-2xl
-                text-2xl
-                font-black
-                leading-tight
-                tracking-tight
-                text-white
-                xl:text-3xl
-              "
-            >
-              Governança Cognitiva da Engorda
-            </div>
-
-            <p
-              className="
-                max-w-2xl
-                text-sm
-                leading-7
-                text-emerald-50/80
-              "
-            >
-              Runtime executivo integrado ao
-              motor π cognitivo PecuariaTech,
-              com inteligência biológica,
-              eficiência nutricional,
-              projeção operacional,
-              rastreabilidade ESG
-              e monitoramento contínuo.
+            <h3 className="text-2xl font-black text-white">Governança Cognitiva da Engorda</h3>
+            <p className="text-[#A7F3D0]/60 text-sm max-w-2xl">
+              Runtime executivo integrado ao motor π cognitivo PecuariaTech,
+              com inteligência biológica, eficiência nutricional, projeção operacional,
+              rastreabilidade ESG e monitoramento contínuo.
             </p>
-
-            {/* =====================================================
-                CHIPS
-            ===================================================== */}
-
-            <div
-              className="
-                flex
-                flex-wrap
-                gap-2
-              "
-            >
-
-              {[
-                "π ENGINE",
-                "GMD AI",
-                "FEED AI",
-                "RISK AI",
-                "TRACEABILITY",
-                "ESG",
-                "BIOLOGICAL AI",
-              ].map((item) => (
-
-                <div
-                  key={item}
-                  className="
-                    rounded-full
-                    border
-                    border-emerald-400/10
-                    bg-emerald-500/5
-                    px-3
-                    py-1.5
-                    text-[10px]
-                    font-bold
-                    tracking-[0.12em]
-                    text-emerald-100
-                  "
-                >
+            <div className="flex flex-wrap gap-2">
+              {["π ENGINE", "GMD AI", "FEED AI", "RISK AI", "TRACEABILITY", "ESG", "BIOLOGICAL AI"].map((item) => (
+                <span key={item} className="rounded-full border border-[#34D399]/10 bg-[#34D399]/5 px-3 py-1 text-[10px] font-bold text-[#A7F3D0]/70">
                   {item}
-                </div>
-
+                </span>
               ))}
-
             </div>
-
           </div>
 
-          {/* =====================================================
-              RIGHT
-          ===================================================== */}
-
-          <div
-            className="
-              grid
-              gap-3
-              sm:grid-cols-2
-            "
-          >
-
-            <MetricCard
-              label="Score π"
-              value={pi}
-            />
-
-            <MetricCard
-              label="Risco"
-              value={risco}
-            />
-
-            <MetricCard
-              label="Compliance"
-              value={`${compliance}%`}
-            />
-
-            <MetricCard
-              label="ESG"
-              value={esg}
-            />
-
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-[#34D399]/10 bg-[#0F2A1A]/50 p-4 text-center">
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A7F3D0]/50">Score π</div>
+              <div className="text-3xl font-bold text-white">{pi}</div>
+            </div>
+            <div className="rounded-xl border border-[#34D399]/10 bg-[#0F2A1A]/50 p-4 text-center">
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A7F3D0]/50">Risco</div>
+              <div className={`text-2xl font-bold ${risco === "BAIXO" ? "text-green-400" : risco === "MODERADO" ? "text-yellow-400" : "text-red-400"}`}>
+                {risco}
+              </div>
+            </div>
+            <div className="rounded-xl border border-[#34D399]/10 bg-[#0F2A1A]/50 p-4 text-center">
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A7F3D0]/50">Compliance</div>
+              <div className="text-3xl font-bold text-white">{compliance}%</div>
+            </div>
+            <div className="rounded-xl border border-[#34D399]/10 bg-[#0F2A1A]/50 p-4 text-center">
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A7F3D0]/50">ESG</div>
+              <div className="text-3xl font-bold text-[#34D399]">{esg}</div>
+            </div>
           </div>
-
         </div>
-
       </div>
 
-      {/* =====================================================
-          KPI GRID
-      ===================================================== */}
-
-      <div
-        className="
-          grid
-          gap-4
-          xl:grid-cols-3
-        "
-      >
-
-        <KpiCard
-          title="Animais em Engorda"
-          value={String(total)}
-          description="
-            Lotes monitorados pelo runtime cognitivo.
-          "
-        />
-
-        <KpiCard
-          title="Margem Média"
-          value={`R$ ${margem}`}
-          description="
-            Resultado operacional médio projetado.
-          "
-        />
-
-        <KpiCard
-          title="Governança ESG"
-          value={esg}
-          description="
-            Conformidade ambiental integrada.
-          "
-        />
-
+      {/* KPI GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-2xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-5">
+          <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-wider">Animais em Engorda</div>
+          <div className="text-3xl font-bold text-white">{total}</div>
+          <div className="text-xs text-[#A7F3D0]/40 mt-1">Lotes monitorados</div>
+        </div>
+        <div className="rounded-2xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-5">
+          <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-wider">Margem Média</div>
+          <div className="text-3xl font-bold text-white">R$ {margem.toFixed(0)}</div>
+          <div className="text-xs text-[#A7F3D0]/40 mt-1">Resultado operacional</div>
+        </div>
+        <div className="rounded-2xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-5">
+          <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-wider">Governança ESG</div>
+          <div className="text-3xl font-bold text-[#34D399]">{esg}</div>
+          <div className="text-xs text-[#A7F3D0]/40 mt-1">Conformidade ambiental</div>
+        </div>
       </div>
 
-      {/* =====================================================
-          ALERTAS
-      ===================================================== */}
+      {/* ALERTAS */}
+      {(alertas.length > 0 || true) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {(alertas.length > 0 ? alertas : [
+            "Conversão alimentar acima do ideal.",
+            "Ganho de peso abaixo do ótimo.",
+            "Pressão térmica elevada.",
+            "Ajustar estratégia nutricional.",
+          ]).map((alerta, idx) => (
+            <div key={idx} className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-3 text-sm text-yellow-400">
+              {alerta}
+            </div>
+          ))}
+        </div>
+      )}
 
-      <div
-        className="
-          grid
-          gap-3
-          lg:grid-cols-2
-        "
-      >
-
-        {(alertas.length
-          ? alertas
-          : [
-              "Conversão alimentar acima do ideal.",
-              "Ganho de peso abaixo do ótimo.",
-              "Pressão térmica elevada.",
-              "Ajustar estratégia nutricional.",
-            ]
-        ).map((alerta) => (
-
-          <div
-            key={alerta}
-            className="
-              rounded-xl
-              border
-              border-amber-300/30
-              bg-amber-50/90
-              px-4
-              py-3
-              text-sm
-              font-medium
-              text-amber-900
-            "
-          >
-            {alerta}
-          </div>
-
-        ))}
-
+      {/* CENÁRIOS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-2xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-5">
+          <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-wider">Cenário Ótimo</div>
+          <div className="text-lg font-bold text-white">Maior margem</div>
+          <p className="text-[#A7F3D0]/60 text-sm mt-2">Estratégia focada em eficiência alimentar e maximização operacional.</p>
+        </div>
+        <div className="rounded-2xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-5">
+          <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-wider">Cenário Seguro</div>
+          <div className="text-lg font-bold text-white">Menor risco</div>
+          <p className="text-[#A7F3D0]/60 text-sm mt-2">Estratégia balanceada priorizando estabilidade sanitária e previsibilidade.</p>
+        </div>
+        <div className="rounded-2xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-5">
+          <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-wider">Cenário Rápido</div>
+          <div className="text-lg font-bold text-white">Maior giro</div>
+          <p className="text-[#A7F3D0]/60 text-sm mt-2">Estratégia voltada à aceleração de giro e liquidez operacional.</p>
+        </div>
       </div>
-
-      {/* =====================================================
-          CENÁRIOS π
-      ===================================================== */}
-
-      <div
-        className="
-          grid
-          gap-4
-          xl:grid-cols-3
-        "
-      >
-
-        <ScenarioCard
-          title="Cenário ÓTIMO"
-          subtitle="Maior margem"
-          description="
-            Estratégia focada em eficiência alimentar
-            e maximização operacional.
-          "
-        />
-
-        <ScenarioCard
-          title="Cenário SEGURO"
-          subtitle="Menor risco"
-          description="
-            Estratégia balanceada priorizando
-            estabilidade sanitária e previsibilidade.
-          "
-        />
-
-        <ScenarioCard
-          title="Cenário RÁPIDO"
-          subtitle="Maior giro"
-          description="
-            Estratégia voltada à aceleração
-            de giro e liquidez operacional.
-          "
-        />
-
-      </div>
-
-    </section>
-  );
-}
-
-/* =========================================================
-   KPI CARD
-========================================================= */
-
-function KpiCard({
-
-  title,
-
-  value,
-
-  description,
-
-}: {
-
-  title: string;
-
-  value: string;
-
-  description: string;
-}) {
-
-  return (
-
-    <div
-      className="
-        rounded-[22px]
-        border
-        border-slate-200
-        bg-white
-        p-5
-        shadow-sm
-      "
-    >
-
-      <div
-        className="
-          text-[10px]
-          font-black
-          uppercase
-          tracking-[0.2em]
-          text-emerald-700
-        "
-      >
-        {title}
-      </div>
-
-      <div
-        className="
-          mt-3
-          text-3xl
-          font-black
-          text-slate-950
-        "
-      >
-        {value}
-      </div>
-
-      <p
-        className="
-          mt-3
-          text-sm
-          leading-6
-          text-slate-600
-        "
-      >
-        {description}
-      </p>
-
-    </div>
-  );
-}
-
-/* =========================================================
-   METRIC CARD
-========================================================= */
-
-function MetricCard({
-
-  label,
-
-  value,
-
-}: {
-
-  label: string;
-
-  value: any;
-}) {
-
-  return (
-
-    <div
-      className="
-        rounded-[20px]
-        border
-        border-emerald-400/10
-        bg-white/5
-        p-4
-        backdrop-blur
-      "
-    >
-
-      <div
-        className="
-          text-[9px]
-          font-black
-          uppercase
-          tracking-[0.22em]
-          text-emerald-200
-        "
-      >
-        {label}
-      </div>
-
-      <div
-        className="
-          mt-2
-          text-3xl
-          font-black
-          text-white
-        "
-      >
-        {value}
-      </div>
-
-    </div>
-  );
-}
-
-/* =========================================================
-   SCENARIO CARD
-========================================================= */
-
-function ScenarioCard({
-
-  title,
-
-  subtitle,
-
-  description,
-
-}: {
-
-  title: string;
-
-  subtitle: string;
-
-  description: string;
-}) {
-
-  return (
-
-    <div
-      className="
-        rounded-[22px]
-        border
-        border-slate-200
-        bg-white
-        p-5
-        shadow-sm
-      "
-    >
-
-      <div
-        className="
-          text-[10px]
-          font-black
-          uppercase
-          tracking-[0.2em]
-          text-emerald-700
-        "
-      >
-        {subtitle}
-      </div>
-
-      <div
-        className="
-          mt-2
-          text-2xl
-          font-black
-          leading-tight
-          text-slate-950
-        "
-      >
-        {title}
-      </div>
-
-      <p
-        className="
-          mt-3
-          text-sm
-          leading-7
-          text-slate-600
-        "
-      >
-        {description}
-      </p>
-
     </div>
   );
 }

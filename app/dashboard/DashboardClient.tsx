@@ -1,569 +1,235 @@
 "use client";
 
-// CAMINHO: app/dashboard/DashboardClient.tsx
-// PecuariaTech
-// Dashboard Executivo Agro Premium Biológico
-// Verde Fazenda Tecnológica
-// Next.js 16 + TypeScript strict
-
-import CFOAIInsights
-from "@/app/components/cfo/CFOAIInsights";
+import { DashboardProvider, useDashboard } from "./DashboardContext";
+import {
+  LineChart,
+  Line,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  Radar,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+} from "recharts";
+import {
+  TrendingUp,
+  DollarSign,
+  Activity,
+  Gauge,
+  Shield,
+  Sparkles,
+  CheckCircle,
+  AlertCircle,
+  BarChart3,
+  PieChart,
+  AlertTriangle,
+} from "lucide-react";
+import Link from "next/link";
+import ExportPDF from "./components/ExportPDF";
 
 export default function DashboardClient() {
+  const userId = "96a1a441-c0f6-43b2-9cb7-4fadc17fd261";
 
   return (
+    <DashboardProvider userId={userId}>
+      <DashboardContent />
+    </DashboardProvider>
+  );
+}
 
-    <div className="space-y-10">
+function DashboardContent() {
+  const { data, loading, error } = useDashboard();
 
-      {/* ================================================= */}
-      {/* HERO */}
-      {/* ================================================= */}
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0F2A1A]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-4 border-[#34D399] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[#A7F3D0]/60 text-sm font-medium">Carregando dados cognitivos...</p>
+        </div>
+      </div>
+    );
+  }
 
-      <section
-        className="
-          relative
-          overflow-hidden
-          rounded-[36px]
-          border
-          border-[#D8F3DC]/10
-          bg-gradient-to-br
-          from-[#3B7D57]
-          via-[#4D9A6D]
-          to-[#2F6B4B]
-          p-8
-          xl:p-12
-          shadow-[0_0_90px_rgba(34,197,94,0.16)]
-        "
-      >
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0F2A1A] p-6">
+        <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-8 max-w-2xl text-center">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white">Erro ao carregar dados</h2>
+          <p className="text-red-300/70 mt-2">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
-        {/* FX */}
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0F2A1A] p-6">
+        <div className="bg-[#1A3F2A]/60 border border-[#34D399]/20 rounded-2xl p-8 max-w-2xl text-center">
+          <p className="text-[#A7F3D0]/60">Nenhum dado disponível no momento.</p>
+        </div>
+      </div>
+    );
+  }
 
-        <div
-          className="
-            absolute
-            right-[-140px]
-            top-[-140px]
-            h-[360px]
-            w-[360px]
-            rounded-full
-            bg-[#DCFCE7]/20
-            blur-3xl
-          "
-        />
+  const radarData = [
+    { pilar: "Governança", valor: data.governanca || 0 },
+    { pilar: "ESG", valor: data.esg || 0 },
+    { pilar: "Rastreabilidade", valor: data.rastreabilidade || 0 },
+    { pilar: "Maturidade Digital", valor: data.maturidade_digital || 0 },
+    { pilar: "Compliance", valor: data.compliance || 0 },
+    { pilar: "Capital Intelectual", valor: data.capital_intelectual || 0 },
+  ];
 
-        <div
-          className="
-            absolute
-            bottom-[-140px]
-            left-[-140px]
-            h-[360px]
-            w-[360px]
-            rounded-full
-            bg-[#86EFAC]/15
-            blur-3xl
-          "
-        />
+  const historicoScore = [
+    { mes: "Jan", valor: 30 },
+    { mes: "Fev", valor: 35 },
+    { mes: "Mar", valor: data.score_pi ? data.score_pi - 10 : 38 },
+    { mes: "Abr", valor: data.score_pi ? data.score_pi - 5 : 42 },
+    { mes: "Mai", valor: data.score_pi ? data.score_pi - 2 : 45 },
+    { mes: "Jun", valor: data.score_pi ?? 48 },
+  ];
 
-        {/* CONTENT */}
+  const temDadosICBC = radarData.some((item) => item.valor > 0);
 
-        <div className="relative z-10">
+  const alertas = [];
+  if (data.governanca < 40) alertas.push("⚠️ Governança abaixo de 40 – reforçar estrutura de gestão.");
+  if (data.lotacao < 0.5) alertas.push("⚠️ Lotação abaixo do potencial – aumentar ocupação.");
+  if (data.margem < 30) alertas.push("⚠️ Margem caiu – revisar estrutura de custos.");
+  if (data.score_pi < 50) alertas.push("⚠️ Score π abaixo de 50 – atenção à performance geral.");
+  if (data.capital_score < 60) alertas.push("⚠️ Capital Score baixo – fortalecer pilares do ICBC.");
+  if (alertas.length === 0) alertas.push("✅ Todas as métricas dentro do esperado. Operação estável.");
 
-          {/* STATUS */}
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0F2A1A] via-[#1A3F2A] to-[#0F2A1A] p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <header className="relative overflow-hidden rounded-3xl border border-[#34D399]/20 bg-gradient-to-br from-[#1A3F2A]/90 to-[#0F2A1A] p-6 md:p-10 shadow-2xl shadow-[#34D399]/5">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#34D399]/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#10B981]/10 rounded-full blur-3xl" />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-6 h-6 text-[#34D399]" />
+                <span className="text-xs font-black uppercase tracking-[0.3em] text-[#34D399]/80">Runtime Executivo Ativo</span>
+              </div>
+              <h1 className="text-3xl md:text-5xl font-black text-white mt-2 tracking-tight">PecuariaTech Intelligence Center</h1>
+              <p className="text-[#A7F3D0]/70 mt-1 text-lg">Visão Executiva 360° da Fazenda</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6 bg-[#0F2A1A]/60 backdrop-blur-sm rounded-2xl border border-[#34D399]/10 px-6 py-4">
+                <div className="text-center">
+                  <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-widest">Score π</div>
+                  <div className="text-3xl font-black text-white">{data.score_pi?.toFixed(1) ?? 0}</div>
+                </div>
+                <div className="w-px h-10 bg-[#34D399]/20" />
+                <div className="text-center">
+                  <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-widest">Capital Score</div>
+                  <div className="text-3xl font-black text-[#34D399]">{data.capital_score?.toFixed(1) ?? 0}</div>
+                </div>
+                <div className="w-px h-10 bg-[#34D399]/20" />
+                <div className="text-center">
+                  <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-widest">ROI</div>
+                  <div className="text-3xl font-black text-white">{data.roi?.toFixed(1) ?? 0}%</div>
+                </div>
+                <div className="w-px h-10 bg-[#34D399]/20" />
+                <div className="text-center">
+                  <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-widest">GMD</div>
+                  <div className="text-3xl font-black text-white">{data.gmd?.toFixed(3) ?? 0} kg/dia</div>
+                </div>
+              </div>
+              <ExportPDF dados={data} titulo="Dashboard Executivo" />
+            </div>
+          </div>
+        </header>
 
-          <div
-            className="
-              inline-flex
-              items-center
-              gap-3
-              rounded-full
-              border
-              border-[#DCFCE7]/20
-              bg-[#74C69D]/25
-              px-5
-              py-3
-              text-xs
-              font-black
-              uppercase
-              tracking-[0.28em]
-              text-[#F0FFF4]
-              backdrop-blur-xl
-            "
-          >
-
-            <div
-              className="
-                h-3
-                w-3
-                rounded-full
-                bg-[#DCFCE7]
-                animate-pulse
-              "
-            />
-
-            Runtime Executivo Online
-
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="rounded-3xl border border-[#34D399]/10 bg-[#1A3F2A]/60 backdrop-blur-sm p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <PieChart className="w-5 h-5 text-[#34D399]" />
+                ICBC 360 – Radar Executivo
+              </h3>
+              {!temDadosICBC && <span className="text-xs text-[#A7F3D0]/40">Aguardando dados...</span>}
+            </div>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={radarData}>
+                  <PolarGrid stroke="#2A5A3A" />
+                  <PolarAngleAxis dataKey="pilar" tick={{ fill: "#A7F3D0", fontSize: 11 }} />
+                  <Radar name="Capital Score" dataKey="valor" stroke="#34D399" fill="#34D399" fillOpacity={0.3} />
+                  <Tooltip contentStyle={{ backgroundColor: "#1A3F2A", borderColor: "#34D399/30", borderRadius: "12px", color: "#fff" }} formatter={(value: number) => value.toFixed(1)} />
+                  <Legend />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="text-xs text-[#A7F3D0]/40 text-center mt-2">Pilares do Capital Intelectual (0–100)</p>
           </div>
 
-          {/* TITLE */}
+          <div className="rounded-3xl border border-[#34D399]/10 bg-[#1A3F2A]/60 backdrop-blur-sm p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-[#34D399]" />
+                Evolução do Score π
+              </h3>
+              <span className="text-xs text-[#A7F3D0]/40">Últimos 6 meses</span>
+            </div>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={historicoScore}>
+                  <Line type="monotone" dataKey="valor" stroke="#34D399" strokeWidth={3} dot={{ fill: "#34D399", strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Tooltip contentStyle={{ backgroundColor: "#1A3F2A", borderColor: "#34D399/30", borderRadius: "12px", color: "#fff" }} formatter={(value: number) => `${value.toFixed(1)}%`} />
+                  <Legend />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="text-xs text-[#A7F3D0]/40 text-center mt-2">Tendência baseada nos dados do DTO</p>
+          </div>
+        </section>
 
-          <h1
-            className="
-              mt-8
-              max-w-5xl
-              text-4xl
-              font-black
-              leading-tight
-              text-white
-              xl:text-7xl
-            "
-          >
-            PecuariaTech
-            <br />
-            Gestão Inteligente
-          </h1>
+        <section className="flex flex-wrap gap-3 justify-center md:justify-start">
+          <Link href="/dashboard/financeiro" className="inline-flex items-center gap-2 px-5 py-3 bg-[#34D399]/10 border border-[#34D399]/30 text-[#34D399] rounded-xl hover:bg-[#34D399]/20 transition text-sm font-medium">
+            <DollarSign className="w-4 h-4" /> Financeiro
+          </Link>
+          <Link href="/dashboard/rebanho" className="inline-flex items-center gap-2 px-5 py-3 bg-[#34D399]/10 border border-[#34D399]/30 text-[#34D399] rounded-xl hover:bg-[#34D399]/20 transition text-sm font-medium">
+            <Activity className="w-4 h-4" /> Rebanho
+          </Link>
+          <Link href="/dashboard/pastagem" className="inline-flex items-center gap-2 px-5 py-3 bg-[#34D399]/10 border border-[#34D399]/30 text-[#34D399] rounded-xl hover:bg-[#34D399]/20 transition text-sm font-medium">
+            <Gauge className="w-4 h-4" /> Pastagem
+          </Link>
+          <Link href="/dashboard/engorda" className="inline-flex items-center gap-2 px-5 py-3 bg-[#34D399]/10 border border-[#34D399]/30 text-[#34D399] rounded-xl hover:bg-[#34D399]/20 transition text-sm font-medium">
+            <TrendingUp className="w-4 h-4" /> Engorda
+          </Link>
+          <Link href="/dashboard/cfo" className="inline-flex items-center gap-2 px-5 py-3 bg-[#34D399]/10 border border-[#34D399]/30 text-[#34D399] rounded-xl hover:bg-[#34D399]/20 transition text-sm font-medium">
+            <BarChart3 className="w-4 h-4" /> CFO
+          </Link>
+        </section>
 
-          {/* SUBTITLE */}
+        <section className="rounded-3xl border border-[#34D399]/10 bg-[#1A3F2A]/60 backdrop-blur-sm p-6 shadow-xl">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+            <AlertTriangle className="w-5 h-5 text-[#34D399]" />
+            Alertas Cognitivos
+          </h3>
+          <div className="space-y-2">
+            {alertas.map((alerta, index) => (
+              <div key={index} className="flex items-start gap-3 p-3 rounded-xl bg-[#0F2A1A]/40 border border-[#34D399]/10">
+                <span className="text-[#34D399]">•</span>
+                <span className="text-[#A7F3D0]/80 text-sm">{alerta}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
-          <p
-            className="
-              mt-6
-              max-w-4xl
-              text-base
-              leading-8
-              text-[#F0FFF4]
-              xl:text-lg
-            "
-          >
-            Plataforma operacional cognitiva integrada
-            ao financeiro, rebanho, pastagem,
-            engorda e inteligência estratégica
-            da operação pecuária.
-          </p>
-
-        </div>
-
-      </section>
-
-      {/* ================================================= */}
-      {/* KPI GRID */}
-      {/* ================================================= */}
-
-      <section>
-
-        <div
-          className="
-            grid
-            grid-cols-1
-            gap-5
-            sm:grid-cols-2
-            xl:grid-cols-4
-          "
-        >
-
-          <KpiCard
-            titulo="Receita Estrutural"
-            valor="R$ 1.240.000"
-            color="emerald"
-          />
-
-          <KpiCard
-            titulo="Pressão de Caixa"
-            valor="R$ 482.000"
-            color="amber"
-          />
-
-          <KpiCard
-            titulo="Conversão Operacional"
-            valor="R$ 758.000"
-            color="cyan"
-          />
-
-          <KpiCard
-            titulo="Risco Estrutural"
-            valor="BAIXO"
-            color="lime"
-          />
-
-        </div>
-
-      </section>
-
-      {/* ================================================= */}
-      {/* CFO PREMIUM */}
-      {/* ================================================= */}
-
-      <section>
-
-        <CFOAIInsights />
-
-      </section>
-
-      {/* ================================================= */}
-      {/* PLANOS */}
-      {/* ================================================= */}
-
-      <section
-        className="
-          rounded-[36px]
-          border
-          border-[#D8F3DC]/10
-          bg-gradient-to-br
-          from-[#2F6B4B]
-          via-[#4D9A6D]
-          to-[#3B7D57]
-          p-8
-          xl:p-10
-          shadow-[0_0_70px_rgba(34,197,94,0.14)]
-        "
-      >
-
-        {/* HEADER */}
-
-        <div className="max-w-4xl">
-
-          <h2
-            className="
-              text-3xl
-              font-black
-              text-white
-              xl:text-4xl
-            "
-          >
-            Ecossistema PecuariaTech
-          </h2>
-
-          <p
-            className="
-              mt-5
-              text-base
-              leading-8
-              text-[#F0FFF4]
-              xl:text-lg
-            "
-          >
-            Arquitetura progressiva para produtores,
-            gestores, operações empresariais e
-            inteligência financeira cognitiva.
-          </p>
-
-        </div>
-
-        {/* GRID */}
-
-        <div
-          className="
-            mt-10
-            grid
-            grid-cols-1
-            gap-6
-            md:grid-cols-2
-            2xl:grid-cols-5
-          "
-        >
-
-          <Plano
-            nome="Básico"
-            descricao="Organização operacional inicial."
-            preco="R$ 31,75/mês"
-            itens={[
-              "Dashboard essencial",
-              "Controle bovino",
-              "Pastagem básica",
-              "Relatório mensal",
-            ]}
-          />
-
-          <Plano
-            nome="Profissional"
-            descricao="Leitura financeira operacional."
-            preco="R$ 52,99/mês"
-            itens={[
-              "Relatórios financeiros",
-              "Indicadores operacionais",
-              "Análise evolutiva",
-              "Performance estrutural",
-            ]}
-          />
-
-          <Plano
-            nome="Ultra"
-            destaque
-            descricao="Camada cognitiva avançada."
-            preco="R$ 106,09/mês"
-            itens={[
-              "IA pecuária",
-              "Alertas inteligentes",
-              "Conversão operacional",
-              "Motor analítico",
-            ]}
-          />
-
-          <Plano
-            nome="Empresarial"
-            descricao="Gestão multioperações."
-            preco="R$ 159,19/mês"
-            itens={[
-              "Multi-fazendas",
-              "Equipes",
-              "Governança",
-              "Gestão integrada",
-            ]}
-          />
-
-          <Plano
-            nome="Dominus 360°"
-            descricao="CFO cognitivo completo."
-            preco="R$ 318,49/mês"
-            itens={[
-              "EBITDA",
-              "Valuation",
-              "CFO AI",
-              "Inteligência financeira",
-            ]}
-          />
-
-        </div>
-
-        {/* CTA */}
-
-        <div className="mt-12">
-
-          <a
-            href="/planos"
-            className="
-              inline-flex
-              items-center
-              justify-center
-              rounded-2xl
-              bg-[#5FB981]
-              px-8
-              py-4
-              text-base
-              font-black
-              text-white
-              transition-all
-              duration-300
-              hover:bg-[#74C69D]
-              hover:scale-[1.02]
-            "
-          >
-            Ver detalhes dos planos
-          </a>
-
-        </div>
-
-      </section>
-
-    </div>
-  );
-}
-
-/* ===================================================== */
-/* KPI CARD */
-/* ===================================================== */
-
-function KpiCard({
-  titulo,
-  valor,
-  color,
-}: {
-  titulo: string;
-  valor: string;
-  color:
-    | "emerald"
-    | "amber"
-    | "cyan"
-    | "lime";
-}) {
-
-  const colors = {
-    emerald: "text-[#DCFCE7]",
-    amber: "text-amber-100",
-    cyan: "text-cyan-100",
-    lime: "text-lime-100",
-  };
-
-  return (
-
-    <div
-      className="
-        rounded-[28px]
-        border
-        border-[#D8F3DC]/10
-        bg-gradient-to-br
-        from-[#4D9A6D]
-        via-[#5FB981]
-        to-[#3B7D57]
-        p-6
-        shadow-[0_0_35px_rgba(34,197,94,0.12)]
-      "
-    >
-
-      <div
-        className="
-          text-xs
-          uppercase
-          tracking-[0.24em]
-          text-[#ECFDF5]
-        "
-      >
-        {titulo}
+        <footer className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[#34D399]/10">
+          <div className="flex items-center gap-6 text-xs text-[#A7F3D0]/50">
+            <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4 text-[#34D399]" /> Dados em tempo real</span>
+            <span className="flex items-center gap-1"><Activity className="w-4 h-4 text-[#34D399]" /> Motor π ativo</span>
+            <span className="flex items-center gap-1"><Shield className="w-4 h-4 text-[#34D399]" /> ICBC 360 online</span>
+          </div>
+          <div className="text-xs text-[#A7F3D0]/30">Última atualização: {data.timestamp ? new Date(data.timestamp).toLocaleString() : "agora"}</div>
+        </footer>
       </div>
-
-      <div
-        className={`
-          mt-5
-          break-words
-          text-3xl
-          font-black
-          leading-tight
-          xl:text-4xl
-          ${colors[color]}
-        `}
-      >
-        {valor}
-      </div>
-
-    </div>
-  );
-}
-
-/* ===================================================== */
-/* PLANO */
-/* ===================================================== */
-
-function Plano({
-  nome,
-  descricao,
-  itens,
-  preco,
-  destaque,
-}: {
-  nome: string;
-  descricao: string;
-  itens: string[];
-  preco: string;
-  destaque?: boolean;
-}) {
-
-  return (
-
-    <div
-      className={`
-        rounded-[28px]
-        border
-        p-6
-        transition-all
-        duration-300
-        hover:-translate-y-1
-        ${
-          destaque
-            ? `
-              border-[#DCFCE7]/30
-              bg-[#74C69D]/25
-            `
-            : `
-              border-[#D8F3DC]/10
-              bg-[#3B7D57]/70
-            `
-        }
-      `}
-    >
-
-      <div
-        className="
-          flex
-          items-center
-          justify-between
-        "
-      >
-
-        <h3
-          className="
-            text-2xl
-            font-black
-            text-white
-          "
-        >
-          {nome}
-        </h3>
-
-        {destaque && (
-
-          <span
-            className="
-              rounded-full
-              bg-[#DCFCE7]/20
-              px-3
-              py-1
-              text-xs
-              font-black
-              uppercase
-              tracking-[0.20em]
-              text-[#F0FFF4]
-            "
-          >
-            Ultra
-          </span>
-
-        )}
-
-      </div>
-
-      <p
-        className="
-          mt-4
-          text-sm
-          leading-7
-          text-[#F0FFF4]
-        "
-      >
-        {descricao}
-      </p>
-
-      <ul
-        className="
-          mt-6
-          space-y-3
-          text-sm
-          text-white
-        "
-      >
-
-        {itens.map((item) => (
-
-          <li
-            key={item}
-            className="
-              flex
-              items-start
-              gap-3
-            "
-          >
-
-            <span className="text-[#DCFCE7]">
-              ✓
-            </span>
-
-            {item}
-
-          </li>
-
-        ))}
-
-      </ul>
-
-      <div
-        className="
-          mt-8
-          text-2xl
-          font-black
-          text-[#DCFCE7]
-        "
-      >
-        {preco}
-      </div>
-
     </div>
   );
 }

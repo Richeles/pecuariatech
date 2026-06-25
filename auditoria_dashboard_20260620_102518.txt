@@ -1,0 +1,59 @@
+============================================================
+PECUARIATECH – AUDITORIA ESTRUTURAL DO DASHBOARD
+Data: 06/20/2026 10:25:22
+============================================================
+
+1. LAYOUT PRINCIPAL (app/[lang]/dashboard/layout.tsx)
+  ? Arquivo não encontrado : ERRO
+
+2. DASHBOARDCLIENT (app/dashboard/DashboardClient.tsx)
+  ? Arquivo encontrado : OK
+  ? DashboardProvider e useDashboard : OK
+  ?? Recharts (gráficos) : FALTA
+  ? Cards KPI : OK
+  ? Radar ICBC : OK
+  ? Linha Score p : OK
+
+3. DASHBOARDCONTEXT (app/dashboard/DashboardContext.tsx)
+  ? Arquivo encontrado : OK
+  ? DashboardProvider : OK
+  ? useDashboard : OK
+  ? export default : OK
+  ? Tipo DashboardDTO : OK
+
+4. SIDEBAR (app/dashboard/components/Sidebar.tsx)
+  ? Arquivo encontrado : OK
+
+5. RE-EXPORTS DOS MÓDULOS (app/[lang]/dashboard/[modulo]/page.tsx)
+
+6. PÁGINAS DOS MÓDULOS (app/dashboard/[modulo]/page.tsx)
+
+7. LANGUAGE SWITCHER
+  ? Componente encontrado : OK
+
+8. SENTRY (Observabilidade)
+  ?? Configuração não encontrada : FALTA
+
+9. VIEWS SUPABASE (referência)
+  Views esperadas (11):
+    - vw_financeiro_resumo
+    - vw_rebanho
+    - vw_pastagem
+    - vw_engorda
+    - vw_sanidade
+    - vw_esg
+    - vw_governanca
+    - vw_rastreabilidade
+    - vw_maturidade_digital
+    - vw_compliance
+    - vw_capital_intelectual
+
+10. ENDPOINT PYTHON (/api/pi/dashboard/{user_id})
+
+============================================================
+FIM DA AUDITORIA
+============================================================
+
+?? Relatório salvo em: auditoria_dashboard_20260620_102518.txt
+?? Backup criado em: backup_consolidacao_20260620_102518
+

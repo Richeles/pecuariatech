@@ -1,0 +1,673 @@
+﻿========================================
+PECUARIATECH – INVENTÁRIO COMPLETO
+Data: 06/21/2026 13:13:43
+========================================
+
+1. ÁRVORE COMPLETA DO DASHBOARD
+----------------------------------------
+📁 app\dashboard\admin
+
+📁 app\dashboard\ai
+
+📁 app\dashboard\assinatura
+
+📁 app\dashboard\cfo
+
+📁 app\dashboard\components
+
+📁 app\dashboard\engorda
+
+📁 app\dashboard\financeiro
+
+📁 app\dashboard\nura
+
+📁 app\dashboard\pastagem
+
+📁 app\dashboard\rebanho
+   📄 DashboardClient.tsx – 06/20/2026 00:28:09
+   📄 DashboardClient.tsx.bak – 06/20/2026 00:28:09
+   📄 DashboardContext.tsx – 06/20/2026 01:13:26
+   📄 Fix-PecuariaTech.ps1 – 04/17/2026 10:47:55
+   📄 layout.tsx – 06/20/2026 16:33:07
+   📄 layout.tsx.old – 05/29/2026 22:12:34
+   📄 page.tsx – 05/29/2026 22:12:34
+   📄 page.tsx.bak – 05/29/2026 22:12:34
+   📄 remove-duplicados.ps1 – 04/17/2026 10:47:55
+
+📁 app\dashboard\admin\assinaturas
+
+📁 app\dashboard\admin\planos
+
+📁 app\dashboard\admin\usuarios
+   📄 page.tsx – 05/09/2026 18:47:01
+   📄 page.tsx – 04/17/2026 10:47:55
+   📄 page.tsx – 04/17/2026 10:47:55
+   📄 page.tsx – 04/17/2026 10:47:55
+
+📁 app\dashboard\ai\components
+   📄 PAIAICenter.tsx – 05/29/2026 22:12:34
+
+📁 app\dashboard\assinatura\plano
+   📄 page.tsx – 05/09/2026 00:09:02
+   📄 page.tsx – 04/17/2026 10:47:55
+   📄 PlanoClient.tsx – 05/03/2026 23:41:00
+
+📁 app\dashboard\cfo\recomendacoes
+   📄 CFOInsightsClient.tsx – 06/20/2026 22:20:27
+   📄 page.tsx – 06/20/2026 16:05:59
+   📄 page.tsx.bak – 06/20/2026 16:05:59
+   📄 page.tsx – 04/17/2026 10:47:55
+   📄 CardCFO.tsx – 04/17/2026 10:47:55
+   📄 CardUltraCFO.tsx – 04/17/2026 10:47:55
+   📄 CFOAutonomo.tsx – 04/17/2026 10:47:55
+   📄 CFOIndicators.tsx – 04/17/2026 10:47:55
+   📄 CFOInsights.tsx – 04/17/2026 10:47:55
+   📄 FinanceiroChart.tsx – 04/17/2026 10:47:55
+   📄 GraficoFinanceiro.tsx – 04/17/2026 10:47:55
+   📄 Sidebar.tsx – 06/20/2026 00:46:38
+
+📁 app\dashboard\engorda\components
+
+📁 app\dashboard\engorda\novo
+
+📁 app\dashboard\engorda\nutricao
+   📄 page.tsx – 06/20/2026 16:04:42
+   📄 page.tsx.bak – 06/20/2026 16:04:42
+
+📁 app\dashboard\engorda\components\cognitivo
+   📄 EngordaClient.tsx – 06/20/2026 22:16:51
+   📄 CentroCognitivoEngorda.tsx – 05/29/2026 22:12:34
+   📄 EngordaExecutivePanel.tsx – 05/29/2026 22:12:34
+   📄 page.tsx – 06/19/2026 22:23:04
+   📄 page.tsx – 05/09/2026 18:59:07
+
+📁 app\dashboard\financeiro\components
+
+📁 app\dashboard\financeiro\dre
+
+📁 app\dashboard\financeiro\novo
+   📄 FinanceiroClient.tsx – 05/29/2026 22:12:34
+   📄 page.tsx – 06/20/2026 16:27:47
+   📄 page.tsx.bak – 06/20/2026 16:27:47
+   📄 FinanceiroClient.tsx – 06/20/2026 22:17:22
+   📄 DreClient.tsx – 05/09/2026 00:05:24
+   📄 page.tsx – 04/17/2026 10:47:55
+   📄 page.tsx – 06/19/2026 22:23:04
+   📄 page.tsx – 06/14/2026 11:32:41
+   📄 page.tsx.bak – 06/14/2026 11:32:41
+
+📁 app\dashboard\pastagem\components
+
+📁 app\dashboard\pastagem\novo
+   📄 page.tsx – 06/20/2026 16:03:00
+   📄 page.tsx.bak – 06/20/2026 16:03:00
+   📄 PastagemClient.tsx – 05/29/2026 22:12:34
+
+📁 app\dashboard\pastagem\components\ui
+   📄 PastagemClient.tsx – 06/20/2026 22:13:44
+   📄 PastagemErrorBoundary.tsx – 04/17/2026 10:47:55
+   📄 PastagemSafe.tsx – 04/17/2026 10:47:55
+   📄 UltraBiologicoPastagem.tsx – 05/29/2026 22:12:35
+   📄 PastagemAIInsights.tsx – 05/29/2026 22:12:35
+   📄 PastagemAlertasCard.tsx – 05/29/2026 22:12:35
+   📄 PastagemPiquetesTable.tsx – 05/29/2026 22:12:35
+   📄 PastagemResumoCard.tsx – 05/29/2026 22:12:35
+   📄 PastagemTriangulo360.tsx – 05/29/2026 22:12:35
+   📄 page.tsx – 06/19/2026 22:23:03
+
+📁 app\dashboard\rebanho\components
+
+📁 app\dashboard\rebanho\novo
+   📄 page.tsx – 06/20/2026 23:48:48
+   📄 page.tsx.bak – 06/20/2026 23:48:48
+
+📁 app\dashboard\rebanho\components\cognitivo
+   📄 RebanhoCards.tsx – 04/17/2026 10:47:55
+   📄 RebanhoClient.tsx – 06/20/2026 23:39:36
+   📄 RebanhoEmpty.tsx – 04/17/2026 10:47:55
+   📄 RebanhoSanidadePainel.tsx – 04/17/2026 10:47:55
+   📄 RebanhoTabela.tsx – 04/17/2026 10:47:55
+   📄 CentroCognitivoRebanho.tsx – 05/29/2026 22:12:35
+   📄 RebanhoExecutivePanel.tsx – 05/29/2026 22:12:35
+   📄 page.tsx – 06/19/2026 22:23:03
+
+2. ÁRVORE COMPLETA DAS APIS
+----------------------------------------
+📁 app\api\admin
+
+📁 app\api\ai
+
+📁 app\api\assinatura
+
+📁 app\api\assinaturas
+
+📁 app\api\auth
+
+📁 app\api\cfo
+
+📁 app\api\checkout
+
+📁 app\api\clima
+
+📁 app\api\cron
+
+📁 app\api\dashboard
+
+📁 app\api\engorda
+
+📁 app\api\financeiro
+
+📁 app\api\ia
+
+📁 app\api\inteligencia
+
+📁 app\api\lang
+
+📁 app\api\mercadopago
+
+📁 app\api\mp-test
+
+📁 app\api\nura
+
+📁 app\api\nutricao
+
+📁 app\api\pastagem
+
+📁 app\api\pecuariatech
+
+📁 app\api\planilhas
+
+📁 app\api\planos
+
+📁 app\api\rebanho
+
+📁 app\api\relatorio
+
+📁 app\api\sentry-example-api
+
+📁 app\api\telegram
+
+📁 app\api\teste
+
+📁 app\api\trial
+
+📁 app\api\ultra
+
+📁 app\api\ultrachat
+
+📁 app\api\webhook
+
+📁 app\api\webhooks
+
+📁 app\api\admin\assinaturas
+
+📁 app\api\admin\me
+
+📁 app\api\admin\planos
+
+📁 app\api\admin\usuarios
+
+📁 app\api\admin\_lib
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 isAdmin.ts – 04/17/2026 10:47:54
+
+📁 app\api\ai\cfo
+
+📁 app\api\ai\pastagem
+
+📁 app\api\ai\rebanho
+   📄 route.ts – 05/29/2026 22:12:34
+   📄 route.ts – 05/29/2026 22:12:34
+   📄 route.ts – 05/29/2026 22:12:34
+
+📁 app\api\assinatura\status
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+
+📁 app\api\assinaturas\alterar
+
+📁 app\api\assinaturas\me
+
+📁 app\api\assinaturas\plano
+
+📁 app\api\assinaturas\status
+
+📁 app\api\assinaturas\status-server
+
+📁 app\api\assinaturas\trial
+
+📁 app\api\assinaturas\trocar-plano
+
+📁 app\api\assinaturas\vincular
+
+📁 app\api\assinaturas\virada-ciclo
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 05/29/2026 22:12:34
+   📄 route.ts – 05/09/2026 22:58:07
+
+📁 app\api\assinaturas\trial\status
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+
+📁 app\api\auth\login
+   📄 route.ts – 06/01/2026 07:29:45
+
+📁 app\api\cfo\alertas
+
+📁 app\api\cfo\decisoes
+
+📁 app\api\cfo\historico-v2
+
+📁 app\api\cfo\indicadores
+
+📁 app\api\cfo\ultra
+   📄 route.ts – 06/19/2026 17:09:10
+
+📁 app\api\cfo\alertas\avaliar
+
+📁 app\api\cfo\alertas\enviar
+
+📁 app\api\cfo\alertas\enviar-v2
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+
+📁 app\api\cfo\decisoes\latest
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+
+📁 app\api\cfo\ultra\avaliar
+
+📁 app\api\cfo\ultra\monitorar
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+
+📁 app\api\checkout\preference
+
+📁 app\api\checkout\start
+
+📁 app\api\checkout\webhook
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 06/06/2026 20:45:18
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:54
+   📄 route.ts – 04/17/2026 10:47:55
+
+📁 app\api\cron\ipca
+
+📁 app\api\cron\pricing
+   📄 route.ts – 04/29/2026 15:30:30
+   📄 route.ts – 04/29/2026 23:38:11
+
+📁 app\api\dashboard\kpis
+   📄 route.ts – 06/19/2026 01:10:10
+   📄 route.ts – 04/17/2026 10:47:55
+
+📁 app\api\engorda\especialistas
+
+📁 app\api\engorda\projecao
+
+📁 app\api\engorda\status
+
+📁 app\api\engorda\ultra
+   📄 route.ts – 06/19/2026 20:13:35
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 05/29/2026 22:12:34
+   📄 route.ts – 04/17/2026 10:47:55
+
+📁 app\api\financeiro\basico
+
+📁 app\api\financeiro\fluxo
+
+📁 app\api\financeiro\indicadores-avancados
+
+📁 app\api\financeiro\planilha
+
+📁 app\api\financeiro\profissional
+
+📁 app\api\financeiro\ultra
+   📄 route.ts – 06/19/2026 17:09:06
+   📄 route.ts – 05/29/2026 22:12:34
+   📄 route.ts – 04/23/2026 23:32:58
+   📄 route.ts – 05/03/2026 23:25:21
+   📄 route.ts – 05/29/2026 22:12:34
+   📄 route.ts – 05/29/2026 22:12:34
+   📄 route.ts – 05/29/2026 22:12:34
+
+📁 app\api\ia\alertas
+
+📁 app\api\ia\animal
+
+📁 app\api\ia\lote
+   📄 route.ts – 04/17/2026 10:47:55
+
+📁 app\api\ia\animal\[id]
+   📄 route.ts – 05/09/2026 00:13:29
+
+📁 app\api\ia\lote\[id]
+   📄 route.ts – 05/09/2026 00:17:36
+
+📁 app\api\inteligencia\financeiro
+
+📁 app\api\inteligencia\status
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/23/2026 23:58:01
+   📄 route.ts – 05/29/2026 22:12:34
+
+📁 app\api\mercadopago\webhook
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+
+📁 app\api\nura\checkout-lead
+   📄 route.ts – 06/14/2026 19:32:23
+   📄 route.ts – 05/31/2026 16:15:16
+
+📁 app\api\nutricao\aplicacoes
+
+📁 app\api\nutricao\custo-dia
+
+📁 app\api\nutricao\itens
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+
+📁 app\api\pastagem\status
+   📄 route.ts – 06/19/2026 20:13:33
+   📄 route.ts – 04/23/2026 16:43:55
+
+📁 app\api\pecuariatech\cfo
+
+📁 app\api\pecuariatech\cfo\interpretar
+   📄 route.ts – 04/17/2026 10:47:55
+
+📁 app\api\planilhas\animal
+
+📁 app\api\planilhas\lote
+
+📁 app\api\planilhas\rebanho
+
+📁 app\api\planilhas\animal\[id]
+   📄 route.ts – 05/09/2026 00:22:35
+
+📁 app\api\planilhas\lote\[id]
+   📄 route.ts – 05/09/2026 00:24:47
+   📄 route.ts – 04/17/2026 10:47:55
+
+📁 app\api\planos\precos
+
+📁 app\api\planos\recomendacao
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+
+📁 app\api\rebanho\analytics
+
+📁 app\api\rebanho\cadastrar
+
+📁 app\api\rebanho\detalhes
+
+📁 app\api\rebanho\editar
+
+📁 app\api\rebanho\excluir
+
+📁 app\api\rebanho\listar
+
+📁 app\api\rebanho\peso
+
+📁 app\api\rebanho\resumo
+
+📁 app\api\rebanho\sanidade
+   📄 route.ts – 06/19/2026 17:09:04
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+
+📁 app\api\relatorio\pdf
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 05/29/2026 22:12:34
+
+📁 app\api\telegram\webhook
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 05/06/2026 09:33:46
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+
+📁 app\api\ultrachat\cfo
+
+📁 app\api\ultrachat\cfo\indicadores
+   📄 route.ts – 04/17/2026 10:47:55
+   📄 route.ts – 04/17/2026 10:47:55
+
+📁 app\api\webhook\mercadopago
+   📄 route.ts – 06/10/2026 18:54:06
+
+📁 app\api\webhooks\mercadopago
+   📄 route.ts – 05/29/2026 22:12:34
+
+3. ARQUIVOS .TSX DO DASHBOARD
+----------------------------------------📄 app\dashboard\admin\assinaturas\page.tsx
+📄 app\dashboard\admin\planos\page.tsx
+📄 app\dashboard\admin\usuarios\page.tsx
+📄 app\dashboard\admin\page.tsx
+📄 app\dashboard\ai\components\PAIAICenter.tsx
+📄 app\dashboard\assinatura\plano\page.tsx
+📄 app\dashboard\assinatura\plano\PlanoClient.tsx
+📄 app\dashboard\assinatura\page.tsx
+📄 app\dashboard\cfo\recomendacoes\page.tsx
+📄 app\dashboard\cfo\CFOInsightsClient.tsx
+📄 app\dashboard\cfo\page.tsx
+📄 app\dashboard\components\CardCFO.tsx
+📄 app\dashboard\components\CardUltraCFO.tsx
+📄 app\dashboard\components\CFOAutonomo.tsx
+📄 app\dashboard\components\CFOIndicators.tsx
+📄 app\dashboard\components\CFOInsights.tsx
+📄 app\dashboard\components\FinanceiroChart.tsx
+📄 app\dashboard\components\GraficoFinanceiro.tsx
+📄 app\dashboard\components\Sidebar.tsx
+📄 app\dashboard\engorda\components\cognitivo\CentroCognitivoEngorda.tsx
+📄 app\dashboard\engorda\components\cognitivo\EngordaExecutivePanel.tsx
+📄 app\dashboard\engorda\components\EngordaClient.tsx
+📄 app\dashboard\engorda\novo\page.tsx
+📄 app\dashboard\engorda\nutricao\page.tsx
+📄 app\dashboard\engorda\page.tsx
+📄 app\dashboard\financeiro\components\FinanceiroClient.tsx
+📄 app\dashboard\financeiro\dre\DreClient.tsx
+📄 app\dashboard\financeiro\dre\page.tsx
+📄 app\dashboard\financeiro\novo\page.tsx
+📄 app\dashboard\financeiro\FinanceiroClient.tsx
+📄 app\dashboard\financeiro\page.tsx
+📄 app\dashboard\nura\page.tsx
+📄 app\dashboard\pastagem\components\ui\PastagemAIInsights.tsx
+📄 app\dashboard\pastagem\components\ui\PastagemAlertasCard.tsx
+📄 app\dashboard\pastagem\components\ui\PastagemPiquetesTable.tsx
+📄 app\dashboard\pastagem\components\ui\PastagemResumoCard.tsx
+📄 app\dashboard\pastagem\components\ui\PastagemTriangulo360.tsx
+📄 app\dashboard\pastagem\components\PastagemClient.tsx
+📄 app\dashboard\pastagem\components\PastagemErrorBoundary.tsx
+📄 app\dashboard\pastagem\components\PastagemSafe.tsx
+📄 app\dashboard\pastagem\components\UltraBiologicoPastagem.tsx
+📄 app\dashboard\pastagem\novo\page.tsx
+📄 app\dashboard\pastagem\page.tsx
+📄 app\dashboard\pastagem\PastagemClient.tsx
+📄 app\dashboard\rebanho\components\cognitivo\CentroCognitivoRebanho.tsx
+📄 app\dashboard\rebanho\components\cognitivo\RebanhoExecutivePanel.tsx
+📄 app\dashboard\rebanho\components\RebanhoCards.tsx
+📄 app\dashboard\rebanho\components\RebanhoClient.tsx
+📄 app\dashboard\rebanho\components\RebanhoEmpty.tsx
+📄 app\dashboard\rebanho\components\RebanhoSanidadePainel.tsx
+📄 app\dashboard\rebanho\components\RebanhoTabela.tsx
+📄 app\dashboard\rebanho\novo\page.tsx
+📄 app\dashboard\rebanho\page.tsx
+📄 app\dashboard\DashboardClient.tsx
+📄 app\dashboard\DashboardContext.tsx
+📄 app\dashboard\layout.tsx
+📄 app\dashboard\page.tsx
+
+4. COMPONENTES OPERACIONAIS – BUSCA POR PALAVRAS-CHAVE
+----------------------------------------
+✅ Piquetes – ENCONTRADO
+   PastagemClient.tsx:   qtd_piquetes?: any;
+   PastagemClient.tsx:     qtd_piquetes:
+   PastagemClient.tsx:       safeNumber(raw.qtd_piquetes),
+   PastagemClient.tsx: function normalizePiquetes(
+   PastagemClient.tsx:     piquetesRaw,
+   PastagemClient.tsx:     setPiquetesRaw,
+   PastagemClient.tsx:         setPiquetesRaw(
+   PastagemClient.tsx:             json?.piquetes
+   PastagemClient.tsx:             ? json.piquetes
+   PastagemClient.tsx:   const piquetes =
+   PastagemClient.tsx:         normalizePiquetes(
+   PastagemClient.tsx:           piquetesRaw
+   PastagemClient.tsx:       [piquetesRaw]
+   PastagemClient.tsx:           piquetes={piquetes}
+
+❌ Cadastro – NÃO ENCONTRADO
+
+❌ Tabela – NÃO ENCONTRADO
+
+✅ Animal – ENCONTRADO
+   page.tsx:       <p className="text-[#A7F3D0]/60">Performance e conversão animal</p>
+
+❌ Receitas – NÃO ENCONTRADO
+
+✅ Despesas – ENCONTRADO
+   FinanceiroClient.tsx:   despesas: number;
+   FinanceiroClient.tsx:             titulo: "Despesas",
+   FinanceiroClient.tsx:               resumo?.despesas
+
+❌ Fluxo – NÃO ENCONTRADO
+
+❌ Movimentação – NÃO ENCONTRADO
+
+❌ Lotes – NÃO ENCONTRADO
+
+❌ Confinamento – NÃO ENCONTRADO
+
+✅ Sanidade – ENCONTRADO
+   page.tsx:             <p>Especialista em rebanho, pastagem, nutrição, sanidade, genética, financeiro e mercado.</p>
+
+❌ Vacinação – NÃO ENCONTRADO
+
+❌ Histórico – NÃO ENCONTRADO
+
+❌ Pesagem – NÃO ENCONTRADO
+
+5. CHAMADAS DE API NO FRONTEND
+----------------------------------------page.tsx:       const res = await fetch(
+CardUltraCFO.tsx:     fetch("/api/financeiro/cfo/autonomo", {
+CFOAutonomo.tsx:         const res = await fetch("/api/financeiro/cfo/autonomo", {
+CFOIndicators.tsx:           fetch("/api/financeiro/ebitda", { credentials: "include" }),
+CFOIndicators.tsx:           fetch("/api/financeiro/tendencia", { credentials: "include" }),
+CFOInsights.tsx:         const res = await fetch("/api/financeiro/cfo/decisao", {
+FinanceiroChart.tsx:       const res = await fetch("/api/financeiro/dre", {
+FinanceiroClient.tsx:           await fetch(
+page.tsx:       const res = await fetch("/api/nura", {
+PastagemClient.tsx:           await fetch(
+PastagemClient.tsx:             await fetch(
+
+6. ARQUIVOS DE CADA MÓDULO
+----------------------------------------
+📁 app/dashboard/financeiro
+   📄 FinanceiroClient.tsx – 05/29/2026 22:12:34
+   📄 page.tsx – 06/20/2026 16:27:47
+   📄 page.tsx.bak – 06/20/2026 16:27:47
+   📄 FinanceiroClient.tsx – 06/20/2026 22:17:22
+   📄 DreClient.tsx – 05/09/2026 00:05:24
+   📄 page.tsx – 04/17/2026 10:47:55
+   📄 page.tsx – 06/19/2026 22:23:04
+
+📁 app/dashboard/rebanho
+   📄 page.tsx – 06/20/2026 23:48:48
+   📄 page.tsx.bak – 06/20/2026 23:48:48
+   📄 RebanhoCards.tsx – 04/17/2026 10:47:55
+   📄 RebanhoClient.tsx – 06/20/2026 23:39:36
+   📄 RebanhoEmpty.tsx – 04/17/2026 10:47:55
+   📄 RebanhoSanidadePainel.tsx – 04/17/2026 10:47:55
+   📄 RebanhoTabela.tsx – 04/17/2026 10:47:55
+   📄 CentroCognitivoRebanho.tsx – 05/29/2026 22:12:35
+   📄 RebanhoExecutivePanel.tsx – 05/29/2026 22:12:35
+   📄 page.tsx – 06/19/2026 22:23:03
+
+📁 app/dashboard/pastagem
+   📄 page.tsx – 06/20/2026 16:03:00
+   📄 page.tsx.bak – 06/20/2026 16:03:00
+   📄 PastagemClient.tsx – 05/29/2026 22:12:34
+   📄 PastagemClient.tsx – 06/20/2026 22:13:44
+   📄 PastagemErrorBoundary.tsx – 04/17/2026 10:47:55
+   📄 PastagemSafe.tsx – 04/17/2026 10:47:55
+   📄 UltraBiologicoPastagem.tsx – 05/29/2026 22:12:35
+   📄 PastagemAIInsights.tsx – 05/29/2026 22:12:35
+   📄 PastagemAlertasCard.tsx – 05/29/2026 22:12:35
+   📄 PastagemPiquetesTable.tsx – 05/29/2026 22:12:35
+   📄 PastagemResumoCard.tsx – 05/29/2026 22:12:35
+   📄 PastagemTriangulo360.tsx – 05/29/2026 22:12:35
+   📄 page.tsx – 06/19/2026 22:23:03
+
+📁 app/dashboard/engorda
+   📄 page.tsx – 06/20/2026 16:04:42
+   📄 page.tsx.bak – 06/20/2026 16:04:42
+   📄 EngordaClient.tsx – 06/20/2026 22:16:51
+   📄 CentroCognitivoEngorda.tsx – 05/29/2026 22:12:34
+   📄 EngordaExecutivePanel.tsx – 05/29/2026 22:12:34
+   📄 page.tsx – 06/19/2026 22:23:04
+   📄 page.tsx – 05/09/2026 18:59:07
+
+📁 app/dashboard/cfo
+   📄 CFOInsightsClient.tsx – 06/20/2026 22:20:27
+   📄 page.tsx – 06/20/2026 16:05:59
+   📄 page.tsx.bak – 06/20/2026 16:05:59
+   📄 page.tsx – 04/17/2026 10:47:55
+
+7. RESPOSTAS DA API /api/dashboard (PROXY)
+----------------------------------------✅ /api/dashboard – OK (status 200)
+📄 Resposta: {"user_id":"96a1a441-c0f6-43b2-9cb7-4fadc17fd261","timestamp":"2026-06-21T16:13:48.905995","modo_operacao":"real","fonte_dados":"supabase","sincronizado_em":"2026-06-21T16:13:48.906014","execution_ms":891,"schema_version":"1.0.0","api_version":"v1","cache_hit":false,"roi":551.79,"margem":84.66,"ebitda":730000,"gmd":1.283,"lotacao":0.04,"score_pi":100,"capital_score":80.35,"governanca":85,"esg":74,"rastreabilidade":91,"maturidade_digital":68,"compliance":80,"capital_intelectual":79,"risco_estrutural":"baixo","quantidade":6,"peso_medio":436.6666666666667,"area_total_ha":135.25}
+
+8. RESPOSTAS DA API PYTHON (DTO)
+----------------------------------------✅ Python API – OK (status 200)
+📄 Resposta: {"user_id":"96a1a441-c0f6-43b2-9cb7-4fadc17fd261","timestamp":"2026-06-21T16:13:50.195789","modo_operacao":"real","fonte_dados":"supabase","sincronizado_em":"2026-06-21T16:13:50.195807","execution_ms":566,"schema_version":"1.0.0","api_version":"v1","cache_hit":false,"roi":551.79,"margem":84.66,"ebitda":730000,"gmd":1.283,"lotacao":0.04,"score_pi":100,"capital_score":80.35,"governanca":85.0,"esg":74.0,"rastreabilidade":91.0,"maturidade_digital":68.0,"compliance":80.0,"capital_intelectual":79.0,"risco_estrutural":"baixo","quantidade":6,"peso_medio":436.6666666666667,"area_total_ha":135.25}
+
+9. STATUS FINAL – TRIÂNGULO 360
+----------------------------------------
+Y – DADOS (Supabase, Views, Repositórios)
+   Status: ✅ FUNCIONANDO
+
+π – MOTOR (Cálculos)
+   Status: ✅ FUNCIONANDO
+
+ICBC – CAPITAL
+   Status: ✅ FUNCIONANDO
+
+DTO – DASHBOARD
+   Status: ✅ FUNCIONANDO
+
+X – EXPERIÊNCIA EXECUTIVA
+   Status: ⏳ RELIGAÇÃO PENDENTE
+   - Pastagem: ⏳ Aguardando
+   - Financeiro: ⏳ Aguardando
+   - Rebanho: ⏳ Aguardando
+   - Engorda: ⏳ Aguardando
+   - CFO: ⏳ Aguardando
+
+Z – GOVERNANÇA
+   Status: ✅ FUNCIONANDO
+
+========================================
+FIM DO RELATÓRIO
+========================================

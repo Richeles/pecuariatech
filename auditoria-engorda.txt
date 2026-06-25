@@ -1,0 +1,31 @@
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\engorda\page.tsx =====
+import { useDashboard } from "../DashboardContext";
+export default function EngordaPage() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\engorda\components\EngordaClient.tsx =====
+import React, {
+} from "react";
+import { createClient }
+from "@/app/lib/supabase-browser";
+import EngordaExecutivePanel
+from "./cognitivo/EngordaExecutivePanel";
+export default function EngordaClient() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\engorda\components\cognitivo\CentroCognitivoEngorda.tsx =====
+export default function CentroCognitivoEngorda({
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\engorda\components\cognitivo\EngordaExecutivePanel.tsx =====
+export default function EngordaExecutivePanel({
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\engorda\novo\page.tsx =====
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2, CheckCircle, AlertCircle, TrendingUp, Beef, Wheat, Droplets, Ruler, Calendar, ArrowLeft } from "lucide-react";
+export default function NovoLote() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\engorda\nutricao\page.tsx =====
+import { cookies } from "next/headers";
+export const dynamic =
+export const runtime =
+export default async function NutricaoDashboard() {

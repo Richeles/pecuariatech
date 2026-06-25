@@ -1,0 +1,36 @@
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\rebanho\page.tsx =====
+import { useDashboard } from "../DashboardContext";
+export default function RebanhoPage() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\rebanho\components\RebanhoCards.tsx =====
+export default function RebanhoCards() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\rebanho\components\RebanhoClient.tsx =====
+import { useEffect, useMemo, useState } from "react";
+import RebanhoSanidadePainel
+from "./RebanhoSanidadePainel";
+import CentroCognitivoRebanho
+from "./cognitivo/CentroCognitivoRebanho";
+export default function RebanhoClient() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\rebanho\components\RebanhoEmpty.tsx =====
+export default function RebanhoEmpty() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\rebanho\components\RebanhoSanidadePainel.tsx =====
+export default function RebanhoSanidadePainel({
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\rebanho\components\RebanhoTabela.tsx =====
+export default function RebanhoTabela() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\rebanho\components\cognitivo\CentroCognitivoRebanho.tsx =====
+export default function CentroCognitivoRebanho({
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\rebanho\components\cognitivo\RebanhoExecutivePanel.tsx =====
+export default function RebanhoExecutivePanel() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\rebanho\novo\page.tsx =====
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2, CheckCircle, AlertCircle, Tag, Weight, Calendar, Users, Ruler, MapPin, ArrowLeft } from "lucide-react";
+export default function NovoAnimal() {

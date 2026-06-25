@@ -1,146 +1,31 @@
-// app/[lang]/dashboard/layout.tsx
-// PecuariaTech Dashboard Layout
-// Next.js 16 + SSR + Multilanguage
-
+import { DashboardProvider } from "@/app/dashboard/DashboardContext";
 import Sidebar from "@/app/dashboard/components/Sidebar";
-import LanguageSwitcher from "@/app/components/LanguageSwitcher";
-import { t } from "@/app/lib/i18n";
+import LanguageSwitcher from "@/app/components/i18n/LanguageSwitcher";
+import { ReactNode } from "react";
 
-export default async function DashboardLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
+export const dynamic = 'force-dynamic';   // ← ADICIONE ESTA LINHA
 
-  params: Promise<{
-    lang: string;
-  }>;
-}) {
+interface DashboardLayoutProps {
+  children: ReactNode;
+  params: Promise<{ lang: string }>;
+}
 
-  // ======================================
-  // NEXT 16 PARAMS
-  // ======================================
-
+export default async function DashboardLayout({ children, params }: DashboardLayoutProps) {
   const { lang } = await params;
-
-  // ======================================
-  // NORMALIZAÇÃO
-  // ======================================
-
-  const safeLang =
-    lang === "es"
-      ? "es"
-      : "pt";
-
-  // ======================================
-  // LAYOUT
-  // ======================================
+  const safeLang = lang === "es" ? "es" : "pt";
+  const userId = "96a1a441-c0f6-43b2-9cb7-4fadc17fd261";
 
   return (
-
-    <div
-      className="
-        flex
-        min-h-screen
-        bg-gradient-to-br
-        from-[#e7f0ea]
-        via-[#edf5ef]
-        to-[#dce9e1]
-      "
-    >
-
-      {/* SIDEBAR */}
-
-      <Sidebar lang={safeLang} />
-
-      {/* CONTENT */}
-
-      <div
-        className="
-          flex
-          flex-1
-          flex-col
-        "
-      >
-
-        {/* HEADER */}
-
-        <header
-          className="
-            sticky
-            top-0
-            z-40
-            flex
-            items-center
-            justify-between
-            border-b
-            border-[#cfe1d5]
-            bg-[#f4faf6]/95
-            px-8
-            py-5
-            backdrop-blur-xl
-            shadow-[0_2px_12px_rgba(0,0,0,0.04)]
-          "
-        >
-
-          {/* TITLES */}
-
-          <div>
-
-            <h1
-              className="
-                text-3xl
-                font-black
-                tracking-tight
-                text-[#173222]
-              "
-            >
-              PecuariaTech
-            </h1>
-
-            <p
-              className="
-                mt-1
-                text-sm
-                font-medium
-                tracking-wide
-                text-[#4f6d58]
-              "
-            >
-              Gestão Inteligente
-            </p>
-
-          </div>
-
-          {/* ACTIONS */}
-
-          <div
-            className="
-              flex
-              items-center
-              gap-4
-            "
-          >
-
+    <DashboardProvider userId={userId}>
+      <div className="flex min-h-screen bg-[#0F2A1A]">
+        <Sidebar lang={safeLang} />
+        <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+          <div className="flex justify-end mb-4">
             <LanguageSwitcher />
-
           </div>
-
-        </header>
-
-        {/* MAIN */}
-
-        <main
-          className="
-            flex-1
-            overflow-y-auto
-          "
-        >
           {children}
         </main>
-
       </div>
-
-    </div>
+    </DashboardProvider>
   );
 }

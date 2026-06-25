@@ -5,7 +5,31 @@
 # PAI AI MASTER ORCHESTRATOR
 # =========================================================
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import Response
+from dotenv import load_dotenv
+
+# =========================================================
+# CARREGA VARIÁVEIS DE AMBIENTE ANTES DE QUALQUER IMPORTAÇÃO
+# =========================================================
+load_dotenv()
+
+# =========================================================
+# DASHBOARD DTO - TRIÂNGULO 360
+# =========================================================
+from application.dashboard_application import gerar_dashboard_dto
+
+# =========================================================
+# RELATÓRIOS
+# =========================================================
+from reporting.pdf_report import gerar_pdf
+from reporting.excel_report import gerar_excel
+from reporting.executive_report import gerar_executive_report
+
+# =========================================================
+# HISTÓRICO ICBC
+# =========================================================
+from equacao_y.icbc_historico_repository import obter_icbc_historico
 
 # =========================================================
 # OPTIONAL ENGINES
@@ -687,3 +711,81 @@ def health():
         "python_runtime":
             "OPERACIONAL",
     }
+
+# =========================================================
+# DASHBOARD DTO - TRIÂNGULO 360 PREMIUM ULTRA
+# =========================================================
+
+@app.get("/api/pi/dashboard/{user_id}")
+async def get_dashboard(user_id: str):
+    """
+    Endpoint do DashboardDTO Universal.
+    Retorna todos os indicadores do Motor π, ICBC 360 e Score π.
+    Integra Y (Verdade) → π (Motor) → ICBC (Capital) → DTO (Dashboard).
+    """
+    try:
+        dto = await gerar_dashboard_dto(user_id)
+        return dto
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =========================================================
+# RELATÓRIOS - PDF, EXCEL, EXECUTIVE
+# =========================================================
+
+@app.get("/api/reports/pdf/{user_id}")
+async def download_pdf(user_id: str):
+    """
+    Gera relatório PDF do dashboard.
+    """
+    try:
+        dto = await gerar_dashboard_dto(user_id)
+        pdf_bytes = gerar_pdf(dto)
+        return Response(content=pdf_bytes, media_type="application/pdf",
+                        headers={"Content-Disposition": f"attachment; filename=dashboard_{user_id}.pdf"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/reports/excel/{user_id}")
+async def download_excel(user_id: str):
+    """
+    Gera relatório Excel do dashboard.
+    """
+    try:
+        dto = await gerar_dashboard_dto(user_id)
+        excel_bytes = gerar_excel(dto)
+        return Response(content=excel_bytes, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        headers={"Content-Disposition": f"attachment; filename=dashboard_{user_id}.xlsx"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/reports/executive/{user_id}")
+async def get_executive_report(user_id: str):
+    """
+    Retorna resumo executivo em texto.
+    """
+    try:
+        dto = await gerar_dashboard_dto(user_id)
+        texto = gerar_executive_report(dto)
+        return {"texto": texto}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =========================================================
+# HISTÓRICO ICBC
+# =========================================================
+
+@app.get("/api/icbc/historico/{user_id}")
+async def historico_icbc(user_id: str):
+    """
+    Retorna a evolução mensal do ICBC, caixa e dívida.
+    """
+    try:
+        dados = await obter_icbc_historico(user_id)
+        return dados
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =========================================================
+# FIM DO RUNTIME
+# =========================================================

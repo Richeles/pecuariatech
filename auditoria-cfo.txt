@@ -1,0 +1,15 @@
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\cfo\CFOInsightsClient.tsx =====
+import React, {
+} from "react";
+import {
+} from "@/app/lib/inteligencia/cfoEngine";
+export default function CFOInsightsClient() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\cfo\page.tsx =====
+import { useDashboard } from "../DashboardContext";
+export default function CFOPage() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\cfo\recomendacoes\page.tsx =====
+import { useEffect, useState } from "react";
+export default function RecomendacoesCFO() {

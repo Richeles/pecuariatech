@@ -1,600 +1,120 @@
 "use client";
 
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
-/* =========================================================
-   TYPES
-========================================================= */
-
-type RuntimeAI = {
-  runtime?: string;
-  advisory?: string[];
-  diagnostico?: {
-    score_estrutural?: number;
-  };
-};
-
-type Alerta = {
-  tipo:
-    | "critico"
-    | "atencao"
-    | "info";
-
-  titulo: string;
-
-  detalhe: string;
-};
-
-type Piquete = {
-  piquete_id: string;
-
-  nome: string;
-
-  area_ha: number | null;
-
-  tipo_pasto: string | null;
-
-  capacidade_ua: number | null;
-
-  status: string | null;
-
-  ultima_movimentacao:
-    | string
-    | null;
-};
-
-type ApiResp = {
-  ok: boolean;
-
-  fonte?: string;
-
-  error?: string;
-
-  kpis?: {
-    total_piquetes: number;
-
-    disponiveis: number;
-
-    ocupados: number;
-
-    area_total_ha: number;
-
-    capacidade_total_ua: number;
-
-    taxa_ocupacao: number;
-  };
-
-  alertas?: Alerta[];
-
-  piquetes?: Piquete[];
-};
-
-/* =========================================================
-   BADGE
-========================================================= */
-
-function badge(
-  tipo: Alerta["tipo"]
-) {
-
-  if (tipo === "critico") {
-
-    return `
-      bg-red-500/10
-      text-red-300
-      border-red-500/30
-    `;
-  }
-
-  if (tipo === "atencao") {
-
-    return `
-      bg-yellow-500/10
-      text-yellow-200
-      border-yellow-500/30
-    `;
-  }
-
-  return `
-    bg-emerald-500/10
-    text-emerald-200
-    border-emerald-500/30
-  `;
-}
-
-/* =========================================================
-   COMPONENT
-========================================================= */
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useDashboard } from "../../DashboardContext";
+import PastagemPiquetesTable from "./PastagemPiquetesTable";
+import PastagemResumoCard from "./PastagemResumoCard";
+import PastagemAIInsights from "./PastagemAIInsights";
+import PastagemAlertasCard from "./PastagemAlertasCard";
+import PastagemTriangulo360 from "./PastagemTriangulo360";
 
 export default function PastagemClient() {
-
-  const [
-    loading,
-    setLoading,
-  ] =
-    useState(true);
-
-  const [
-    erro,
-    setErro,
-  ] =
-    useState<
-      string | null
-    >(null);
-
-  const [
-    data,
-    setData,
-  ] =
-    useState<
-      ApiResp | null
-    >(null);
-
-  const [
-    runtimeAI,
-    setRuntimeAI,
-  ] =
-    useState<
-      RuntimeAI | null
-    >(null);
-
-  const [
-    busca,
-    setBusca,
-  ] =
-    useState("");
-
-  /* =====================================================
-     LOAD
-  ===================================================== */
-
-  async function carregar() {
-
-    setLoading(true);
-
-    setErro(null);
-
-    try {
-
-      const res =
-        await fetch(
-          "/api/pastagem/status",
-          {
-            cache:
-              "no-store",
-          }
-        );
-
-      const json =
-        await res.json();
-
-      if (!json.ok) {
-
-        throw new Error(
-          json.error ||
-          "Falha na API."
-        );
-      }
-
-      setData(json);
-
-      try {
-
-        const ai =
-          await fetch(
-            "/api/ai/pastagem",
-            {
-              cache:
-                "no-store",
-            }
-          );
-
-        const aiJson =
-          await ai.json();
-
-        setRuntimeAI(
-          aiJson
-        );
-
-      } catch {
-
-        setRuntimeAI(
-          null
-        );
-      }
-
-    } catch (
-      e: any
-    ) {
-
-      setErro(
-        e?.message ||
-        "Erro inesperado."
-      );
-
-    } finally {
-
-      setLoading(
-        false
-      );
-    }
-  }
-
-  /* =====================================================
-     INIT
-  ===================================================== */
-
-  useEffect(() => {
-
-    carregar();
-
-  }, []);
-
-  /* =====================================================
-     FILTER
-  ===================================================== */
-
-  const piquetes =
-    useMemo(() => {
-
-      const rows =
-        data?.piquetes ||
-        [];
-
-      if (!busca) {
-        return rows;
-      }
-
-      return rows.filter(
-        (p) => {
-
-          const s =
-            `
-              ${p.nome}
-              ${p.status}
-              ${p.tipo_pasto}
-            `
-              .toLowerCase();
-
-          return s.includes(
-            busca.toLowerCase()
-          );
-        }
-      );
-
-    }, [
-      data,
-      busca,
-    ]);
-
-  /* =====================================================
-     KPI
-  ===================================================== */
-
-  const k =
-    data?.kpis;
-
-  /* =====================================================
-     PI SCORE
-  ===================================================== */
-
-  const piScore =
-    runtimeAI
-      ?.diagnostico
-      ?.score_estrutural ||
-    94;
-
-  const piColor =
-    piScore >= 80
-      ? "text-[#f3fff7]"
-      : piScore >= 60
-      ? "text-yellow-300"
-      : "text-red-300";
-
-  /* =====================================================
-     LOADING
-  ===================================================== */
+  const router = useRouter();
+  const { data, loading } = useDashboard();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   if (loading) {
-
     return (
-
-      <div
-        className="
-          p-10
-          text-[#b7d6c2]
-        "
-      >
-
-        Inicializando runtime cognitivo...
-
+      <div className="flex items-center justify-center min-h-[60vh] bg-[#0F2A1A]">
+        <div className="animate-pulse text-[#A7F3D0]/60">Carregando dados da pastagem...</div>
       </div>
     );
   }
 
-  /* =====================================================
-     ERROR
-  ===================================================== */
+  const areaTotal = (data as any)?.area_total_ha ?? 0;
+  const lotacao = data?.lotacao ?? 0;
+  const scorePi = data?.score_pi ?? 0;
+  const capitalScore = data?.capital_score ?? 0;
+  const risco = data?.risco_estrutural?.toUpperCase() ?? "N/D";
 
-  if (erro) {
-
-    return (
-
-      <div
-        className="
-          p-10
-          text-red-300
-        "
-      >
-
-        {erro}
-
-      </div>
-    );
-  }
-
-  /* =====================================================
-     RENDER
-  ===================================================== */
+  const refresh = () => setRefreshKey((prev) => prev + 1);
 
   return (
-
-    <div
-      className="
-        min-h-screen
-        bg-[#14281f]
-        text-[#f3fff7]
-        p-6
-      "
-    >
-
-      {/* =====================================================
-          TITLE
-      ===================================================== */}
-
-      <div className="mb-10">
-
-        <h1
-          className="
-            text-5xl
-            font-black
-            tracking-tight
-            text-[#f3fff7]
-          "
-        >
-          Pastagem
-        </h1>
-
-        <p
-          className="
-            mt-3
-            text-lg
-            text-[#b7d6c2]
-          "
-        >
-          Gestão operacional das áreas,
-          pressão de pastejo
-          e risco produtivo.
-        </p>
-
-      </div>
-
-      {/* =====================================================
-          RUNTIME PREMIUM
-      ===================================================== */}
-
-      <div
-        className="
-          relative
-          overflow-hidden
-          rounded-[42px]
-          border
-          border-[#355845]
-          bg-gradient-to-r
-          from-[#173126]
-          via-[#1d3b2d]
-          to-[#173126]
-          p-10
-          shadow-[0_25px_80px_rgba(0,0,0,0.28)]
-          mb-10
-        "
-      >
-
-        {/* Glow */}
-
-        <div
-          className="
-            absolute
-            inset-0
-            bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.06),transparent_40%)]
-          "
-        />
-
-        {/* Content */}
-
-        <div
-          className="
-            relative
-            z-10
-            flex
-            items-center
-            justify-between
-            gap-6
-          "
-        >
-
-          {/* LEFT */}
-
-          <div>
-
-            <div
-              className="
-                text-4xl
-                font-black
-                tracking-tight
-                text-[#f3fff7]
-              "
-            >
-              Runtime Cognitivo Online
-            </div>
-
-            <div
-              className="
-                mt-3
-                text-lg
-                font-semibold
-                text-[#b7d6c2]
-              "
-            >
-              Symbiosis Python +
-              Cofatores Triangulares ativos.
-            </div>
-
-          </div>
-
-          {/* RIGHT */}
-
-          <div
-            className="
-              rounded-full
-              border
-              border-[#4f9b68]
-              bg-[#214734]
-              px-6
-              py-3
-              backdrop-blur
-              shadow-lg
-            "
-          >
-
-            <div
-              className="
-                flex
-                items-center
-                gap-3
-              "
-            >
-
-              <div
-                className="
-                  h-3
-                  w-3
-                  rounded-full
-                  bg-[#52b788]
-                  animate-pulse
-                "
-              />
-
-              <div
-                className="
-                  text-sm
-                  font-black
-                  tracking-[0.2em]
-                  text-[#f3fff7]
-                "
-              >
-                ONLINE
+    <div className="min-h-screen bg-gradient-to-br from-[#0F2A1A] via-[#1A3F2A] to-[#0F2A1A] p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* HEADER EXECUTIVO */}
+        <div className="relative overflow-hidden rounded-3xl border border-[#34D399]/20 bg-gradient-to-br from-[#1A3F2A]/90 to-[#0F2A1A] p-6 md:p-10 shadow-2xl shadow-[#34D399]/5">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#34D399]/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#10B981]/10 rounded-full blur-3xl" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="inline-flex rounded-full border border-emerald-400/20 bg-emerald-500/10 px-4 py-1.5 text-xs font-black tracking-[0.25em] text-emerald-200">
+                ULTRA BIOLOGICAL COGNITIVE RUNTIME
               </div>
-
+              <h1 className="text-3xl md:text-5xl font-black text-white mt-4 tracking-tight">
+                Central PecuariaTech – Pastagem
+              </h1>
+              <p className="text-[#A7F3D0]/70 mt-2 max-w-3xl">
+                Gestão nutricional e estratégica de pastagens com inteligência cognitiva
+              </p>
             </div>
 
+            <div className="flex items-center gap-3">
+              <Link
+                href="/dashboard/pastagem/novo"
+                className="px-4 py-2 rounded-xl bg-[#34D399] text-[#0F2A1A] font-bold hover:bg-[#10B981] transition shadow-lg shadow-[#34D399]/30 flex items-center gap-2"
+              >
+                ➕ Novo Piquete
+              </Link>
+              <span className="inline-flex rounded-full bg-emerald-500/20 px-4 py-1.5 text-xs font-bold text-emerald-100">
+                ● ONLINE
+              </span>
+            </div>
           </div>
-
         </div>
 
-      </div>
-
-      {/* =====================================================
-          KPI GRID
-      ===================================================== */}
-
-      <div
-        className="
-          grid
-          grid-cols-1
-          md:grid-cols-5
-          gap-5
-          mb-10
-        "
-      >
-
-        {[
-          [
-            "Piquetes",
-            k?.total_piquetes,
-          ],
-
-          [
-            "Disponíveis",
-            k?.disponiveis,
-          ],
-
-          [
-            "Ocupados",
-            k?.ocupados,
-          ],
-
-          [
-            "Área (ha)",
-            k?.area_total_ha,
-          ],
-
-          [
-            "UA Total",
-            k?.capacidade_total_ua,
-          ],
-
-        ].map(
-          (
-            item,
-            idx
-          ) => (
-
-            <div
-              key={idx}
-              className="
-                rounded-[28px]
-                border
-                border-[#355845]
-                bg-[#1a3327]
-                p-6
-                shadow-xl
-              "
-            >
-
-              <div
-                className="
-                  text-xs
-                  font-bold
-                  uppercase
-                  tracking-[0.2em]
-                  text-[#8eb59d]
-                "
-              >
-                {item[0]}
-              </div>
-
-              <div
-                className={`
-                  mt-4
-                  text-5xl
-                  font-black
-                  ${piColor}
-                `}
-              >
-                {item[1] || 0}
-              </div>
-
+        {/* KPIs EXECUTIVOS */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="rounded-2xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-5">
+            <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-wider">Área Total</div>
+            <div className="text-3xl font-bold text-white mt-1">{areaTotal.toFixed(1)} ha</div>
+            <div className="text-xs text-[#A7F3D0]/40 mt-1">
+              {areaTotal > 100 ? "ÁREA EXTENSA" : "ÁREA MODERADA"}
             </div>
-          )
-        )}
+          </div>
+          <div className="rounded-2xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-5">
+            <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-wider">Lotação</div>
+            <div className="text-3xl font-bold text-white mt-1">{lotacao.toFixed(2)} UA/ha</div>
+            <div className="text-xs text-[#A7F3D0]/40 mt-1">
+              {lotacao < 0.5 ? "POTENCIAL DE EXPANSÃO" : lotacao < 1 ? "LOTAÇÃO ADEQUADA" : "ATENÇÃO À LOTAÇÃO"}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-5">
+            <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-wider">Score π</div>
+            <div className="text-3xl font-bold text-white mt-1">{scorePi.toFixed(1)}</div>
+            <div className="text-xs text-[#A7F3D0]/40 mt-1">
+              {scorePi > 80 ? "EXCELENTE" : scorePi > 60 ? "BOM" : "ATENÇÃO"}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-5">
+            <div className="text-xs text-[#A7F3D0]/50 uppercase tracking-wider">Risco</div>
+            <div className={`text-3xl font-bold mt-1 ${risco === "BAIXO" ? "text-green-400" : risco === "MODERADO" ? "text-yellow-400" : "text-red-400"}`}>
+              {risco}
+            </div>
+            <div className="text-xs text-[#A7F3D0]/40 mt-1">
+              {risco === "BAIXO" ? "RISCO CONTROLADO" : "ATENÇÃO"}
+            </div>
+          </div>
+        </div>
 
+        {/* RESUMO DA PASTAGEM */}
+        <PastagemResumoCard />
+
+        {/* TABELA DE PIQUETES COM AÇÕES */}
+        <PastagemPiquetesTable key={refreshKey} onRefresh={refresh} />
+
+        {/* INSIGHTS E ALERTAS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <PastagemAIInsights />
+          <PastagemAlertasCard />
+        </div>
+
+        {/* TRIÂNGULO 360 */}
+        <PastagemTriangulo360 />
       </div>
-
     </div>
   );
 }

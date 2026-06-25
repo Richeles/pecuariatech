@@ -1,0 +1,55 @@
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\pastagem\page.tsx =====
+import { useDashboard } from "../DashboardContext";
+export default function PastagemPage() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\pastagem\PastagemClient.tsx =====
+import { useEffect, useMemo, useState } from "react";
+import PastagemErrorBoundary
+from "./components/PastagemErrorBoundary";
+import UltraBiologicoPastagem
+from "./components/UltraBiologicoPastagem";
+export default function PastagemClient() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\pastagem\components\PastagemClient.tsx =====
+import React, {
+} from "react";
+export default function PastagemClient() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\pastagem\components\PastagemErrorBoundary.tsx =====
+import React from "react";
+export default class PastagemErrorBoundary extends React.Component<Props, State> {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\pastagem\components\PastagemSafe.tsx =====
+import PastagemErrorBoundary from "./PastagemErrorBoundary";
+import PastagemClient from "../PastagemClient";
+export default function PastagemSafe() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\pastagem\components\UltraBiologicoPastagem.tsx =====
+import PastagemResumoCard from "./ui/PastagemResumoCard";
+import PastagemPiquetesTable from "./ui/PastagemPiquetesTable";
+import PastagemAlertasCard from "./ui/PastagemAlertasCard";
+import PastagemTriangulo360 from "./ui/PastagemTriangulo360";
+import PastagemAIInsights from "./ui/PastagemAIInsights";
+export default function UltraBiologicoPastagem({
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\pastagem\components\ui\PastagemAIInsights.tsx =====
+export default function PastagemAIInsights() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\pastagem\components\ui\PastagemAlertasCard.tsx =====
+export default function PastagemAlertasCard({
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\pastagem\components\ui\PastagemPiquetesTable.tsx =====
+export default function PastagemPiquetesTable({
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\pastagem\components\ui\PastagemResumoCard.tsx =====
+export default function PastagemResumoCard({
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\pastagem\components\ui\PastagemTriangulo360.tsx =====
+export default function PastagemTriangulo360({
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\pastagem\novo\page.tsx =====
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2, CheckCircle, AlertCircle, MapPin, Leaf, Sprout, Droplet, Sun, Ruler, ArrowLeft } from "lucide-react";
+export default function NovoPiquete() {

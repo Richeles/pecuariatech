@@ -1,32 +1,16 @@
-import { Suspense } from "react";
+"use client";
+
+import { useDashboard } from "../DashboardContext";
 import RebanhoClient from "./components/RebanhoClient";
 
+export const dynamic = 'force-dynamic';
+
 export default function RebanhoPage() {
-  return (
-    <main className="p-10 max-w-7xl mx-auto space-y-12">
+  const { data, loading } = useDashboard();
+  
+  if (loading) {
+    return <div className="p-10 text-[#A7F3D0]/60">Carregando dados do rebanho...</div>;
+  }
 
-      {/* ================= HEADER ================= */}
-      <header>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Rebanho
-        </h1>
-
-        <p className="text-gray-500 mt-1">
-          Visão consolidada do rebanho via rastreabilidade inteligente
-        </p>
-      </header>
-
-      {/* ================= CONTEÚDO ================= */}
-      <Suspense
-        fallback={
-          <p className="text-sm text-gray-500">
-            Carregando rebanho…
-          </p>
-        }
-      >
-        <RebanhoClient />
-      </Suspense>
-
-    </main>
-  );
+  return <RebanhoClient />;
 }

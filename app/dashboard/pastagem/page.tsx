@@ -1,64 +1,16 @@
-// app/dashboard/pastagem/page.tsx
+"use client";
 
-import React, { Suspense } from "react";
-import PastagemSafe from "./components/PastagemSafe";
+import { useDashboard } from "../DashboardContext";
+import PastagemClient from "./components/PastagemClient";
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export default function PastagemPage() {
+  const { data, loading } = useDashboard();
+  
+  if (loading) {
+    return <div className="p-10 text-[#A7F3D0]/60">Carregando dados da pastagem...</div>;
+  }
 
-  return (
-
-    <main className="p-10 max-w-7xl mx-auto space-y-12">
-
-      {/* ================= HEADER ================= */}
-
-      <header className="space-y-3">
-
-        <h1
-          className="
-            text-4xl
-            font-black
-            tracking-tight
-            text-[#183a2d]
-          "
-        >
-          Pastagem
-        </h1>
-
-        <p
-          className="
-            text-base
-            leading-relaxed
-            text-[#567564]
-          "
-        >
-          Gestão operacional das áreas,
-          pressão de pastejo e risco produtivo
-        </p>
-
-      </header>
-
-      {/* ================= CONTEÚDO ================= */}
-
-      <Suspense
-        fallback={
-          <p
-            className="
-              text-sm
-              font-medium
-              text-[#567564]
-            "
-          >
-            Carregando Pastagem…
-          </p>
-        }
-      >
-
-        <PastagemSafe />
-
-      </Suspense>
-
-    </main>
-  );
+  return <PastagemClient />;
 }

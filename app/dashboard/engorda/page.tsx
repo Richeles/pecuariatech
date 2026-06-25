@@ -1,26 +1,16 @@
-// app/dashboard/engorda/page.tsx
+"use client";
 
+import { useDashboard } from "../DashboardContext";
 import EngordaClient from "./components/EngordaClient";
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export default function EngordaPage() {
-  return (
-    <main className="p-10 max-w-7xl mx-auto space-y-12">
+  const { data, loading } = useDashboard();
+  
+  if (loading) {
+    return <div className="p-10 text-[#A7F3D0]/60">Carregando dados da engorda...</div>;
+  }
 
-      {/* ================= HEADER ================= */}
-      <header>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Engorda ULTRA
-        </h1>
-        <p className="text-gray-500 mt-1">
-          Motor π com 3 cenários (ÓTIMO / SEGURO / RÁPIDO), ranking executivo e alertas.
-        </p>
-      </header>
-
-      {/* ================= CONTEÚDO ================= */}
-      <EngordaClient />
-
-    </main>
-  );
+  return <EngordaClient />;
 }

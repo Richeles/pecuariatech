@@ -1,0 +1,28 @@
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\financeiro\FinanceiroClient.tsx =====
+import {
+} from "react";
+export default function FinanceiroClient() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\financeiro\page.tsx =====
+import { useDashboard } from "../DashboardContext";
+export default function FinanceiroPage() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\financeiro\components\FinanceiroClient.tsx =====
+export default function FinanceiroClient({ resumo, dre }: Props) {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\financeiro\dre\DreClient.tsx =====
+import { useEffect, useState } from "react";
+import { createClient } from "@/app/lib/supabase-browser";
+export default function DreClient() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\financeiro\dre\page.tsx =====
+import { Suspense } from "react";
+import DreClient from "./DreClient";
+export default function DrePage() {
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\financeiro\novo\page.tsx =====
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2, CheckCircle, AlertCircle, DollarSign, TrendingUp, TrendingDown, Calendar, Tag, ArrowLeft } from "lucide-react";
+export default function NovoFinanceiro() {

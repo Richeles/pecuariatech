@@ -1,0 +1,53 @@
+﻿RELATÓRIO ESTRUTURAL - PECUARIATECH
+==================================
+Data: 06/21/2026 11:11:17
+==================================
+
+1. ARQUIVOS ALTERADOS
+--------------------
+📄 app/dashboard/financeiro/page.tsx
+   Última modificação: 06/20/2026 16:27:47
+
+📄 app/dashboard/rebanho/page.tsx
+   Última modificação: 06/20/2026 23:48:48
+
+📄 app/dashboard/pastagem/page.tsx
+   Última modificação: 06/20/2026 16:03:00
+
+📄 app/dashboard/engorda/page.tsx
+   Última modificação: 06/20/2026 16:04:42
+
+📄 app/dashboard/cfo/page.tsx
+   Última modificação: 06/20/2026 16:05:59
+
+📄 app/dashboard/DashboardContext.tsx
+   Última modificação: 06/20/2026 01:13:26
+
+📄 app/api/dashboard/route.ts
+   Última modificação: 06/19/2026 01:10:10
+
+
+2. CHAMADAS DE API
+--------------------
+page.tsx:       const res = await fetch(
+CardUltraCFO.tsx:     fetch("/api/financeiro/cfo/autonomo", {
+CFOAutonomo.tsx:         const res = await fetch("/api/financeiro/cfo/autonomo", {
+CFOIndicators.tsx:           fetch("/api/financeiro/ebitda", { credentials: "include" }),
+CFOIndicators.tsx:           fetch("/api/financeiro/tendencia", { credentials: "include" }),
+CFOInsights.tsx:         const res = await fetch("/api/financeiro/cfo/decisao", {
+FinanceiroChart.tsx:       const res = await fetch("/api/financeiro/dre", {
+FinanceiroClient.tsx:           await fetch(
+page.tsx:       const res = await fetch("/api/nura", {
+PastagemClient.tsx:           await fetch(
+PastagemClient.tsx:             await fetch(
+
+
+3. COMPONENTES OPERACIONAIS
+-------------------------
+❌ Tabela Rebanho - NÃO ENCONTRADO
+❌ Cadastro Animal - NÃO ENCONTRADO
+✅ Piquetes - ENCONTRADO
+❌ Fluxo Caixa - NÃO ENCONTRADO
+❌ Movimentações Financeiras - NÃO ENCONTRADO
+❌ Lotes Engorda - NÃO ENCONTRADO
+

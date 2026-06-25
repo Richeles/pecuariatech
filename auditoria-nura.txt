@@ -1,0 +1,4 @@
+
+===== C:\Users\riche\pecuariatech-clean\app\dashboard\nura\page.tsx =====
+import { useState, useRef, useEffect } from "react";
+export default function NuraPage() {

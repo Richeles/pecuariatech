@@ -1,0 +1,51 @@
+﻿========================================
+ARQUIVOS DOS MÓDULOS OPERACIONAIS
+Data: 06/21/2026 16:09:57
+========================================
+
+📁 app/dashboard/pastagem
+   📄 PastagemAIInsights.tsx – 05/29/2026 22:12:35
+   📄 PastagemAlertasCard.tsx – 05/29/2026 22:12:35
+   📄 PastagemPiquetesTable.tsx – 05/29/2026 22:12:35
+   📄 PastagemResumoCard.tsx – 05/29/2026 22:12:35
+   📄 PastagemTriangulo360.tsx – 05/29/2026 22:12:35
+   📄 PastagemClient.tsx – 06/20/2026 22:13:44
+   📄 PastagemErrorBoundary.tsx – 04/17/2026 10:47:55
+   📄 PastagemSafe.tsx – 04/17/2026 10:47:55
+   📄 UltraBiologicoPastagem.tsx – 05/29/2026 22:12:35
+   📄 page.tsx – 06/19/2026 22:23:03
+   📄 page.tsx – 06/20/2026 16:03:00
+   📄 PastagemClient.tsx – 05/29/2026 22:12:34
+
+📁 app/dashboard/rebanho
+   📄 CentroCognitivoRebanho.tsx – 05/29/2026 22:12:35
+   📄 RebanhoExecutivePanel.tsx – 05/29/2026 22:12:35
+   📄 RebanhoCards.tsx – 04/17/2026 10:47:55
+   📄 RebanhoClient.tsx – 06/20/2026 23:39:36
+   📄 RebanhoEmpty.tsx – 04/17/2026 10:47:55
+   📄 RebanhoSanidadePainel.tsx – 04/17/2026 10:47:55
+   📄 RebanhoTabela.tsx – 04/17/2026 10:47:55
+   📄 page.tsx – 06/19/2026 22:23:03
+   📄 page.tsx – 06/20/2026 23:48:48
+
+📁 app/dashboard/financeiro
+   📄 FinanceiroClient.tsx – 06/20/2026 22:17:22
+   📄 DreClient.tsx – 05/09/2026 00:05:24
+   📄 page.tsx – 04/17/2026 10:47:55
+   📄 page.tsx – 06/19/2026 22:23:04
+   📄 FinanceiroClient.tsx – 05/29/2026 22:12:34
+   📄 page.tsx – 06/20/2026 16:27:47
+
+📁 app/dashboard/engorda
+   📄 CentroCognitivoEngorda.tsx – 05/29/2026 22:12:34
+   📄 EngordaExecutivePanel.tsx – 05/29/2026 22:12:34
+   📄 EngordaClient.tsx – 06/20/2026 22:16:51
+   📄 page.tsx – 06/19/2026 22:23:04
+   📄 page.tsx – 05/09/2026 18:59:07
+   📄 page.tsx – 06/20/2026 16:04:42
+
+📁 app/dashboard/cfo
+   📄 page.tsx – 04/17/2026 10:47:55
+   📄 CFOInsightsClient.tsx – 06/20/2026 22:20:27
+   📄 page.tsx – 06/20/2026 16:05:59
+

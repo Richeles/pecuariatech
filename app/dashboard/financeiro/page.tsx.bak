@@ -1,0 +1,54 @@
+"use client";
+
+import { useDashboard } from "../DashboardContext";
+
+export const dynamic = 'force-dynamic';
+
+export default function FinanceiroPage() {
+  const { data, loading } = useDashboard();
+
+  if (loading) {
+    return <div className="animate-pulse text-[#A7F3D0]/60">Carregando dados financeiros...</div>;
+  }
+
+  const roi = data?.roi || 0;
+  const margem = data?.margem || 0;
+  const ebitda = data?.ebitda || 0;
+  const scorePi = data?.score_pi || 0;
+  const capitalScore = data?.capital_score || 0;
+  const risco = data?.risco_estrutural || "N/D";
+
+  return (
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold text-white">Financeiro Inteligente</h1>
+      <p className="text-[#A7F3D0]/60">Runtime financeiro cognitivo com dados em tempo real</p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="bg-[#1A3F2A]/60 rounded-2xl p-6 border border-[#34D399]/20">
+          <p className="text-sm text-[#A7F3D0]/50">ROI</p>
+          <p className="text-2xl font-bold text-white">{roi.toFixed(1)}%</p>
+        </div>
+        <div className="bg-[#1A3F2A]/60 rounded-2xl p-6 border border-[#34D399]/20">
+          <p className="text-sm text-[#A7F3D0]/50">Margem</p>
+          <p className="text-2xl font-bold text-white">{margem.toFixed(1)}%</p>
+        </div>
+        <div className="bg-[#1A3F2A]/60 rounded-2xl p-6 border border-[#34D399]/20">
+          <p className="text-sm text-[#A7F3D0]/50">EBITDA</p>
+          <p className="text-2xl font-bold text-white">R$ {ebitda.toLocaleString()}</p>
+        </div>
+        <div className="bg-[#1A3F2A]/60 rounded-2xl p-6 border border-[#34D399]/20">
+          <p className="text-sm text-[#A7F3D0]/50">Score π</p>
+          <p className="text-2xl font-bold text-white">{scorePi.toFixed(1)}</p>
+        </div>
+        <div className="bg-[#1A3F2A]/60 rounded-2xl p-6 border border-[#34D399]/20">
+          <p className="text-sm text-[#A7F3D0]/50">Capital Score</p>
+          <p className="text-2xl font-bold text-[#34D399]">{capitalScore.toFixed(1)}</p>
+        </div>
+        <div className={`bg-[#1A3F2A]/60 rounded-2xl p-6 border ${risco === "baixo" ? "border-green-500/20" : risco === "moderado" ? "border-yellow-500/20" : "border-red-500/20"}`}>
+          <p className="text-sm text-[#A7F3D0]/50">Risco</p>
+          <p className={`text-2xl font-bold ${risco === "baixo" ? "text-green-400" : risco === "moderado" ? "text-yellow-400" : "text-red-400"}`}>{risco.toUpperCase()}</p>
+        </div>
+      </div>
+    </div>
+  );
+}

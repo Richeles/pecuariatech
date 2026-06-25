@@ -1,0 +1,22 @@
+﻿"use client";
+import { useDashboard } from "../DashboardContext";
+export const dynamic = 'force-dynamic';
+export default function RebanhoPage() {
+  const { data, loading } = useDashboard();
+  if (loading) return <div className='p-10 text-slate-500'>Carregando...</div>;
+  const qtd = (data as any)?.quantidade || 0;
+  const peso = (data as any)?.peso_medio || 0;
+  const gmd = data?.gmd || 0;
+  const risco = data?.risco_estrutural?.toUpperCase() || "N/D";
+  return (
+    <div className='space-y-6 p-8'>
+      <h1 className='text-3xl font-bold text-white'>Central PecuariaTech – Rebanho</h1>
+      <div className='grid grid-cols-4 gap-4'>
+        <div className='bg-[#1A3F2A]/60 rounded-2xl p-6 border border-[#34D399]/20'><p className='text-sm text-[#A7F3D0]/50'>Quantidade</p><p className='text-2xl font-bold text-white'>{qtd}</p></div>
+        <div className='bg-[#1A3F2A]/60 rounded-2xl p-6 border border-[#34D399]/20'><p className='text-sm text-[#A7F3D0]/50'>Peso Médio (kg)</p><p className='text-2xl font-bold text-white'>{peso.toFixed(1)}</p></div>
+        <div className='bg-[#1A3F2A]/60 rounded-2xl p-6 border border-[#34D399]/20'><p className='text-sm text-[#A7F3D0]/50'>GMD (kg/dia)</p><p className='text-2xl font-bold text-white'>{gmd.toFixed(3)}</p></div>
+        <div className='bg-[#1A3F2A]/60 rounded-2xl p-6 border border-[#34D399]/20'><p className='text-sm text-[#A7F3D0]/50'>Risco</p><p className='text-2xl font-bold text-white'>{risco}</p></div>
+      </div>
+    </div>
+  );
+}
