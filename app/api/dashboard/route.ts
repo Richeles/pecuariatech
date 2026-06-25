@@ -20,15 +20,16 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const pythonApi = process.env.PYTHON_API || "http://127.0.0.1:8001";
+    // ✅ CORREÇÃO: agora usa PYTHON_API_URL (mesmo nome da variável na Vercel)
+    const pythonApi = process.env.PYTHON_API_URL || "https://pecuariatech-python-fs6m.onrender.com";
     const url = `${pythonApi}/api/pi/dashboard/${finalUserId}`;
 
     console.log(`[Proxy] 🔍 Buscando dados para user_id: ${finalUserId}`);
     console.log(`[Proxy] 📡 URL: ${url}`);
 
-    // ⏱️ Timeout de 10 segundos (evita travamentos)
+    // ⏱️ Timeout aumentado para 15 segundos (Render gratuito pode ser lento)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     const response = await fetch(url, {
       headers: { "Cache-Control": "no-cache" },
@@ -80,7 +81,7 @@ export async function GET(req: NextRequest) {
     // 🔥 Timeout (AbortError)
     if (error?.name === "AbortError") {
       return NextResponse.json(
-        { error: "Timeout ao buscar dados do Python (10s)" },
+        { error: "Timeout ao buscar dados do Python (15s)" },
         { status: 504 }
       );
     }
