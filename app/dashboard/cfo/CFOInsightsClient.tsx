@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useDashboard } from "../DashboardContext";
 import {
   RadarChart,
@@ -34,7 +35,7 @@ export default function CFOInsightsClient() {
   const interpretacaoRisco = risco === "BAIXO" ? "RISCO CONTROLADO" : risco === "MODERADO" ? "ATENÇÃO" : "CRÍTICO";
 
   // ============================================================
-  // 2. INDICADORES DE TENDÊNCIA (simulados para demonstração)
+  // 2. INDICADORES DE TENDÊNCIA
   // ============================================================
   const tendenciaROI = roi > 500 ? "↑ +12%" : roi > 300 ? "↑ +8%" : "→ Estável";
   const tendenciaMargem = margem > 80 ? "↑ +5%" : margem > 50 ? "↑ +3%" : "→ Estável";
@@ -42,7 +43,7 @@ export default function CFOInsightsClient() {
   const tendenciaGMD = gmd > 1.2 ? "↑ +0.08" : gmd > 0.8 ? "→ +0.02" : "↓ -0.05";
 
   // ============================================================
-  // 3. RADAR FINANCEIRO (dados para o gráfico)
+  // 3. RADAR FINANCEIRO
   // ============================================================
   const radarData = [
     { pilar: "ROI", valor: Math.min(roi / 10, 100) },
@@ -62,6 +63,31 @@ export default function CFOInsightsClient() {
       : roi > 50 && margem > 30
       ? "📈 A operação está gerando bom retorno. Considere otimizar custos para aumentar a margem e alcançar patamares superiores."
       : "⚠️ A rentabilidade está abaixo do esperado. Recomenda-se revisar a estrutura de custos e buscar eficiência operacional.";
+
+  // ============================================================
+  // EXPORTAÇÃO RELATÓRIO COMPLETO
+  // ============================================================
+  const exportarRelatorio = async () => {
+    try {
+      const res = await fetch("/api/relatorio/excel-completo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: data?.user_id || "96a1a441-c0f6-43b2-9cb7-4fadc17fd261",
+          dados: data,
+        }),
+      });
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `relatorio_completo_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.click();
+    } catch (error) {
+      console.error("Erro ao exportar:", error);
+      alert("Erro ao gerar relatório. Tente novamente.");
+    }
+  };
 
   if (loading) {
     return (
@@ -218,7 +244,7 @@ export default function CFOInsightsClient() {
         <p className="mt-3 text-[#A7F3D0]/80 text-lg leading-relaxed">{recomendacao}</p>
       </div>
 
-      {/* CFO COGNITIVO BIOFINANCEIRO (mantido) */}
+      {/* CFO COGNITIVO BIOFINANCEIRO + EXPORTAÇÃO E CONTAS */}
       <div className="rounded-3xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-8 shadow-xl">
         <h3 className="text-sm font-black tracking-[0.25em] text-[#34D399]">CFO Cognitivo BioFinanceiro</h3>
         <p className="mt-3 text-[#A7F3D0]/70">
@@ -238,6 +264,21 @@ export default function CFOInsightsClient() {
           <span className="flex items-center gap-1">
             <span className="text-[#34D399]">✅</span> Score π: {scorePi.toFixed(1)}
           </span>
+        </div>
+
+        {/* BOTÕES DE EXPORTAÇÃO E CONTAS */}
+        <div className="mt-6 flex flex-wrap gap-4 border-t border-[#34D399]/10 pt-6">
+          <button
+            onClick={exportarRelatorio}
+            className="px-4 py-2 rounded-xl bg-[#34D399] text-[#0F2A1A] font-bold hover:bg-[#10B981] transition shadow-lg shadow-[#34D399]/30 text-sm flex items-center gap-2"
+          >
+            📊 Exportar Relatório Financeiro Completo
+          </button>
+          <Link href="/dashboard/financeiro/contas">
+            <button className="px-4 py-2 rounded-xl bg-[#FBBF24] text-[#0F2A1A] font-bold hover:bg-[#F59E0B] transition text-sm flex items-center gap-2">
+              💳 Gerenciar Contas
+            </button>
+          </Link>
         </div>
       </div>
     </section>
