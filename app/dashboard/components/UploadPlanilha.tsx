@@ -1,8 +1,6 @@
-// app/dashboard/components/UploadPlanilha.tsx
 "use client";
 
 import { useState } from "react";
-import * as XLSX from "xlsx";
 
 type Props = {
   tipo: "rebanho" | "financeiro" | "pastagem" | "engorda";
@@ -17,27 +15,18 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   const [mensagem, setMensagem] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
 
-  const processarArquivo = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: "array" });
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(firstSheet);
-        setPreview(json);
-        setMensagem(`📄 ${json.length} registros encontrados.`);
-      } catch (error) {
-        setMensagem("❌ Erro ao ler o arquivo. Verifique o formato.");
-        console.error(error);
-      }
-    };
-    reader.readAsArrayBuffer(file);
+  const processarArquivo = async (file: File) => {
+    // Para Excel, o preview é feito no frontend (XLSX).
+    // Para PDF, vamos enviar para a API e obter o preview.
+    // Mas para simplificar, vamos apenas exibir uma mensagem.
+    setArquivo(file);
+    setMensagem(`📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB) - aguardando importação.`);
+    // Podemos tentar ler Excel localmente para preview, mas manteremos simples.
   };
 
   const handleUpload = async () => {
-    if (preview.length === 0) {
-      setMensagem("❌ Nenhum dado para enviar.");
+    if (!arquivo) {
+      setMensagem("❌ Selecione um arquivo primeiro.");
       return;
     }
 
@@ -46,25 +35,25 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
       const supabase = (await import("@/app/lib/supabase-browser")).createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
-      const res = await fetch("/api/planilha-operacional", {
+      const formData = new FormData();
+      formData.append("file", arquivo);
+      formData.append("tipo", tipo);
+      formData.append("user_id", user?.id || "96a1a441-c0f6-43b2-9cb7-4fadc17fd261");
+
+      const res = await fetch("/api/upload-arquivo", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tipo,
-          dados: preview,
-          user_id: user?.id || "96a1a441-c0f6-43b2-9cb7-4fadc17fd261",
-        }),
+        body: formData,
       });
 
       const result = await res.json();
       if (res.ok) {
-        setMensagem(`✅ ${result.processados || preview.length} registros importados!`);
+        setMensagem(`✅ ${result.inseridos || 0} registros importados!`);
         setPreview([]);
         setArquivo(null);
         if (onSuccess) onSuccess();
       } else {
-        setMensagem(`❌ Erro: ${result.message || "Falha ao importar"}`);
-        if (onError) onError(result.message);
+        setMensagem(`❌ Erro: ${result.error || "Falha ao importar"}`);
+        if (onError) onError(result.error);
       }
     } catch (error) {
       console.error("Erro ao importar:", error);
@@ -94,15 +83,12 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
           <div className="border-2 border-dashed border-[#34D399]/20 rounded-xl p-4 text-center hover:border-[#34D399]/40 transition cursor-pointer">
             <input
               type="file"
-              accept=".xlsx,.xls,.csv"
+              accept=".xlsx,.xls,.csv,.pdf"
               className="hidden"
               id={`upload-${tipo}`}
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) {
-                  setArquivo(file);
-                  processarArquivo(file);
-                }
+                if (file) processarArquivo(file);
               }}
             />
             <label htmlFor={`upload-${tipo}`} className="cursor-pointer block">
@@ -110,27 +96,24 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
               <p className="text-[#A7F3D0]/60 text-sm">
                 {arquivo ? arquivo.name : `Clique para selecionar planilha ${tiposMap[tipo]}`}
               </p>
-              <p className="text-xs text-[#A7F3D0]/40 mt-1">Formatos: .xlsx, .xls, .csv</p>
+              <p className="text-xs text-[#A7F3D0]/40 mt-1">Formatos: .xlsx, .xls, .csv, .pdf</p>
             </label>
           </div>
 
-          {preview.length > 0 && (
-            <div className="bg-[#0F2A1A]/30 rounded-xl p-3 max-h-48 overflow-auto">
+          {arquivo && (
+            <div className="bg-[#0F2A1A]/30 rounded-xl p-3">
               <p className="text-xs text-[#A7F3D0]/60">{mensagem}</p>
-              <div className="mt-2 text-xs text-[#A7F3D0]/40">
-                <span className="font-medium text-white">Preview:</span> {preview.length} registros
-                <button
-                  onClick={handleUpload}
-                  disabled={loading}
-                  className="ml-4 px-4 py-1 rounded-lg bg-[#34D399] text-[#0F2A1A] font-bold hover:bg-[#10B981] transition disabled:opacity-50 text-xs"
-                >
-                  {loading ? "⏳ Importando..." : "🚀 Importar"}
-                </button>
-              </div>
+              <button
+                onClick={handleUpload}
+                disabled={loading}
+                className="mt-2 px-4 py-2 rounded-lg bg-[#34D399] text-[#0F2A1A] font-bold hover:bg-[#10B981] transition disabled:opacity-50 text-sm"
+              >
+                {loading ? "⏳ Importando..." : "🚀 Importar"}
+              </button>
             </div>
           )}
 
-          {mensagem && !preview.length && (
+          {mensagem && !arquivo && (
             <p className="text-xs text-[#A7F3D0]/60">{mensagem}</p>
           )}
         </div>
