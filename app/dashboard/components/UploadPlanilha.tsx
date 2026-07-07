@@ -68,7 +68,7 @@ type Props = {
 // COMPONENTE PRINCIPAL – IMPLANTAR FAZENDA (EQUAÇÃO X)
 // ============================================================
 export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
-  const { refreshData } = useDashboard();
+  // REMOVIDO: const { refreshData } = useDashboard();
 
   const [loading, setLoading] = useState(false);
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -152,17 +152,16 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   }, []);
 
   // ============================================================
-  // VALIDAÇÃO DE FORMATO (APENAS PARA EXPERIÊNCIA)
+  // VALIDAÇÃO DE FORMATO
   // ============================================================
   const isFormatoPermitido = (nome: string) => {
     const ext = nome.split('.').pop()?.toLowerCase();
-    // CSV é permitido em todos os planos (ou pode ser restrito a partir do Pro)
     if (plano === "starter") return ext === "xlsx" || ext === "xls" || ext === "csv";
     return ext === "xlsx" || ext === "xls" || ext === "pdf" || ext === "csv";
   };
 
   // ============================================================
-  // HANDLE UPLOAD – APENAS ENCAMINHA PARA O MOTOR π
+  // HANDLE UPLOAD
   // ============================================================
   const handleUpload = async () => {
     if (!arquivo) {
@@ -203,17 +202,12 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
       formData.append("user_id", user?.id || "96a1a441-c0f6-43b2-9cb7-4fadc17fd261");
       formData.append("plano", plano);
 
-      console.log("📤 [X] Enviando para o Motor π:", arquivo.name);
-
       const res = await fetch("/api/upload-arquivo", {
         method: "POST",
         body: formData,
       });
 
-      console.log("📥 [X] Status HTTP:", res.status);
-
       const result = await res.json();
-      console.log("📦 [X] Resposta do Motor π:", result);
 
       if (res.ok) {
         setEtapas(etapasIniciais.map((e) => ({ ...e, status: "concluido" })));
@@ -275,16 +269,12 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         setImplantacaoConcluida(true);
         setMensagem(dados.mensagem);
 
+        // ============================================================
+        // LIMPA CACHE E RECARREGA A PÁGINA (FALLBACK GARANTIDO)
+        // ============================================================
         if (typeof window !== "undefined") {
           sessionStorage.removeItem("dashboard_cache");
           localStorage.removeItem("dashboard_cache");
-        }
-
-        if (refreshData && typeof refreshData === "function") {
-          await refreshData();
-          console.log("[X] Dashboards atualizados via contexto.");
-        } else {
-          console.warn("[X] refreshData não disponível. Recarregando página como fallback.");
           window.location.reload();
         }
 
@@ -303,7 +293,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   };
 
   // ============================================================
-  // RENDERIZAÇÃO – IMPLANTAÇÃO CONCLUÍDA (EQUAÇÃO X)
+  // RENDERIZAÇÃO – IMPLANTAÇÃO CONCLUÍDA
   // ============================================================
   if (implantacaoConcluida && resposta) {
     const { auditoria, modulos, especialistas, proximas_acoes } = resposta;
@@ -527,7 +517,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   }
 
   // ============================================================
-  // FORMULÁRIO DE IMPLANTAÇÃO (EQUAÇÃO X)
+  // FORMULÁRIO DE IMPLANTAÇÃO
   // ============================================================
   return (
     <div className="bg-[#1A3F2A]/60 rounded-3xl border border-[#34D399]/20 p-6 backdrop-blur-sm">
