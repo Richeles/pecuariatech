@@ -12,7 +12,6 @@ from equacao_y.maturidade_digital_repository import obter_maturidade_digital
 from equacao_y.compliance_repository import obter_compliance
 from equacao_y.capital_intelectual_repository import obter_capital_intelectual
 
-from motor_pi.financeiro import calcular_roi, calcular_margem, calcular_ebitda
 from motor_pi.biologico import calcular_gmd
 from motor_pi.operacional import calcular_lotacao
 from motor_pi.score_pi import calcular_score_pi
@@ -25,7 +24,6 @@ cache = {}
 async def gerar_dashboard_dto(user_id: str) -> dict:
     start_time = time.time()
     
-    # 🔍 LOG TEMPORÁRIO: Início
     print(f"[DTO] Iniciando para user_id: {user_id}")
     
     # Buscar dados das views
@@ -41,19 +39,32 @@ async def gerar_dashboard_dto(user_id: str) -> dict:
     compliance = await obter_compliance(user_id) or {}
     capital = await obter_capital_intelectual(user_id) or {}
     
-    # 🔍 LOG TEMPORÁRIO: Dados brutos do Rebanho
     print(f"[DTO] Rebanho: quantidade={rebanho.get('quantidade', 0)}, peso_medio={rebanho.get('peso_medio', 0)}")
     print(f"[DTO] Pastagem: area_total_ha={pastagem.get('area_total_ha', 0)}")
     
-    # 1. Cálculos do Motor π
-    receita = financeiro.get('receita', 0)
-    despesa = financeiro.get('despesa', 0)
-    despesa_op = financeiro.get('despesa_operacional', 0)
+    # ============================================================
+    # CÁLCULO FINANCEIRO DIRETO (SEM FUNÇÕES EXTERNAS)
+    # ============================================================
+    receita_bruta = financeiro.get('receita_bruta', 0)
+    custo_operacional = financeiro.get('custo_operacional', 0)
+    lucro_liquido = financeiro.get('lucro_liquido', 0)
+    ebitda_val = financeiro.get('ebitda', 0)
     
-    roi = calcular_roi(receita, despesa)
-    margem = calcular_margem(receita, despesa)
-    ebitda = calcular_ebitda(receita, despesa_op)
+    # Cálculo direto do ROI e Margem
+    if receita_bruta > 0:
+        roi = (lucro_liquido / receita_bruta) * 100
+        margem = ((receita_bruta - custo_operacional) / receita_bruta) * 100
+    else:
+        roi = 0.0
+        margem = 0.0
     
+    ebitda = ebitda_val  # já é o lucro líquido (R$)
+    
+    print(f"[DTO] Dados financeiros: receita_bruta={receita_bruta}, custo={custo_operacional}, lucro={lucro_liquido}, roi={roi}, margem={margem}, ebitda={ebitda}")
+    
+    # ============================================================
+    # GMD e Lotação
+    # ============================================================
     gmd = calcular_gmd(
         engorda.get('peso_final_medio', 0),
         engorda.get('peso_inicial_medio', 0),
@@ -65,7 +76,9 @@ async def gerar_dashboard_dto(user_id: str) -> dict:
         pastagem.get('area_total_ha', 0)
     )
     
-    # Scores individuais para o Score π
+    # ============================================================
+    # SCORE π
+    # ============================================================
     financeiro_score = (roi + margem) / 2 if (roi + margem) > 0 else 0
     biologico_score = min((gmd / 1.5) * 100, 100) if gmd > 0 else 0
     operacional_score = min((lotacao / 2.0) * 100, 100) if lotacao > 0 else 0
@@ -78,7 +91,9 @@ async def gerar_dashboard_dto(user_id: str) -> dict:
         sanidade_score, esg_score, governanca_score
     )
     
-    # 2. ICBC 360
+    # ============================================================
+    # ICBC 360
+    # ============================================================
     icbc_result = await calcular_icbc(
         governanca_score,
         esg_score,
@@ -88,7 +103,9 @@ async def gerar_dashboard_dto(user_id: str) -> dict:
         capital.get('score', 0) or 0
     )
     
-    # 3. Montar DTO (COM CAMPOS EXTRAS)
+    # ============================================================
+    # DTO
+    # ============================================================
     dto = DashboardDTO(
         user_id=user_id,
         roi=roi,
@@ -105,13 +122,11 @@ async def gerar_dashboard_dto(user_id: str) -> dict:
         compliance=icbc_result['compliance'],
         capital_intelectual=icbc_result['capital_intelectual'],
         risco_estrutural=icbc_result['risco_estrutural'],
-        # ✅ NOVOS CAMPOS PARA REBANHO E PASTAGEM
         quantidade=rebanho.get('quantidade', 0),
         peso_medio=rebanho.get('peso_medio', 0),
         area_total_ha=pastagem.get('area_total_ha', 0),
     )
     
-    # 🔍 LOG TEMPORÁRIO: Dados finais do DTO
     print(f"[DTO] DTO final: quantidade={dto.quantidade}, peso_medio={dto.peso_medio}, area_total_ha={dto.area_total_ha}")
     print(f"[DTO] DTO final: roi={dto.roi}, gmd={dto.gmd}, score_pi={dto.score_pi}")
     

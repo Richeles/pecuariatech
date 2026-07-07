@@ -250,6 +250,8 @@ export async function GET() {
 
         expires_at: null,
 
+        dias_restantes: 365, // dias restantes para admin (valor simbólico)
+
         reason:
           "admin_email_override",
       });
@@ -319,6 +321,8 @@ export async function GET() {
         is_admin: true,
 
         expires_at: null,
+
+        dias_restantes: 365,
 
         reason:
           "admin_override",
@@ -409,6 +413,9 @@ export async function GET() {
 
         reason:
           "no_subscription",
+
+        plano: "starter",      // fallback para quem não tem assinatura
+        dias_restantes: 0,
       });
     }
 
@@ -471,6 +478,19 @@ export async function GET() {
       );
 
     // =====================================================
+    // DIAS RESTANTES
+    // =====================================================
+
+    let diasRestantes = 0;
+    if (assinatura.expires_at) {
+      const hoje = new Date();
+      const expiresAt = new Date(assinatura.expires_at);
+      if (expiresAt > hoje) {
+        diasRestantes = Math.max(0, Math.ceil((expiresAt.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)));
+      }
+    }
+
+    // =====================================================
     // RESPONSE
     // =====================================================
 
@@ -490,6 +510,8 @@ export async function GET() {
       expires_at:
         assinatura.expires_at
         ?? null,
+
+      dias_restantes: diasRestantes,
 
       reason: "ok",
     });
