@@ -7,3 +7,5 @@ requests==2.31.0
 httpx
 reportlab
 openpyxl
+pandas==2.2.2
+pdfplumber==0.10.3
