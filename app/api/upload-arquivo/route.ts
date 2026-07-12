@@ -1,22 +1,17 @@
 // app/api/upload-arquivo/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-// ============================================================
-// CONFIGURAÇÕES
-// ============================================================
-const PYTHON_API_URL = process.env.PYTHON_API_URL || "https://pecuariatech-motor-pi.onrender.com";
-const TIMEOUT_MS = 60000; // 60 segundos (cold start do Render pode demorar)
+export const runtime = 'nodejs'; // 🔥 FORÇA NODE.JS (NÃO EDGE)
 
-// ============================================================
-// ENDPOINT DE UPLOAD – GATEWAY PARA O MOTOR π
-// ============================================================
+const PYTHON_API_URL = process.env.PYTHON_API_URL || "https://pecuariatech-motor-pi.onrender.com";
+const TIMEOUT_MS = 60000;
+
+console.log("✅ Rota /api/upload-arquivo carregada"); // Log de inicialização
+
 export async function POST(req: NextRequest) {
   console.log("🔍 [Upload] 1 - Recebi requisição POST");
 
   try {
-    // ============================================================
-    // ETAPA 1: Ler FormData
-    // ============================================================
     const formData = await req.formData();
     console.log("🔍 [Upload] 2 - FormData lido com sucesso");
 
@@ -32,7 +27,6 @@ export async function POST(req: NextRequest) {
       plano,
     });
 
-    // Validação rápida
     if (!file) {
       console.warn("⚠️ [Upload] Arquivo não enviado");
       return NextResponse.json(
@@ -55,9 +49,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ============================================================
-    // ETAPA 2: Preparar FormData para o Python
-    // ============================================================
     const pythonForm = new FormData();
     pythonForm.append("file", file);
     pythonForm.append("tipo", tipo);
@@ -67,9 +58,6 @@ export async function POST(req: NextRequest) {
     const pythonUrl = `${PYTHON_API_URL}/api/importar/arquivo`;
     console.log(`🔍 [Upload] 4 - Chamando Python: ${pythonUrl}`);
 
-    // ============================================================
-    // ETAPA 3: Chamar o Motor π com timeout
-    // ============================================================
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
@@ -82,13 +70,9 @@ export async function POST(req: NextRequest) {
 
     console.log(`🔍 [Upload] 5 - Python respondeu com status: ${response.status}`);
 
-    // ============================================================
-    // ETAPA 4: Ler a resposta (mesmo se for erro)
-    // ============================================================
     const responseText = await response.text();
     console.log(`🔍 [Upload] 6 - Corpo da resposta (primeiros 500 chars):`, responseText.slice(0, 500));
 
-    // Tenta parsear como JSON
     let data;
     try {
       data = JSON.parse(responseText);
@@ -96,9 +80,6 @@ export async function POST(req: NextRequest) {
       data = { error: "Resposta não é JSON", raw: responseText };
     }
 
-    // ============================================================
-    // ETAPA 5: Retornar resposta
-    // ============================================================
     if (!response.ok) {
       console.error(`❌ [Upload] Python retornou erro ${response.status}:`, data);
       return NextResponse.json(
@@ -111,16 +92,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ============================================================
-    // ETAPA 6: Sucesso
-    // ============================================================
     console.log("✅ [Upload] Upload concluído com sucesso");
     return NextResponse.json(data);
 
   } catch (error: any) {
     console.error("❌ [Upload] ERRO no gateway:", error?.message || error);
 
-    // Timeout (abort)
     if (error?.name === "AbortError") {
       return NextResponse.json(
         {
