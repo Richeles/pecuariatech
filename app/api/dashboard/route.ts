@@ -1,6 +1,11 @@
 // app/api/dashboard/route.ts
-// Next.js API Route – Proxy para o Python Runtime
+// Next.js API Route – Proxy para o Python Runtime com Cache e Fallback
 import { NextRequest, NextResponse } from "next/server";
+
+// Cache em memória (última resposta válida)
+let cachedData: any = null;
+let cacheTimestamp: number = 0;
+const CACHE_TTL = 60 * 1000; // 60 segundos
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now();
@@ -20,80 +25,110 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // ✅ CORREÇÃO: agora usa PYTHON_API_URL (mesmo nome da variável na Vercel)
     const pythonApi = process.env.PYTHON_API_URL || "https://pecuariatech-python-fs6m.onrender.com";
     const url = `${pythonApi}/api/pi/dashboard/${finalUserId}`;
 
     console.log(`[Proxy] 🔍 Buscando dados para user_id: ${finalUserId}`);
     console.log(`[Proxy] 📡 URL: ${url}`);
 
-    // ⏱️ Timeout aumentado para 15 segundos (Render gratuito pode ser lento)
+    // ⏱️ Timeout aumentado para 20 segundos (mas com fallback)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-    const response = await fetch(url, {
-      headers: { "Cache-Control": "no-cache" },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    const elapsed = Date.now() - startTime;
-    console.log(`[Proxy] ⏱️ Tempo: ${elapsed}ms | Status: ${response.status}`);
-
-    // ❌ Se o Python retornou erro
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "Sem corpo");
-      console.error(`[Proxy] ❌ Python erro ${response.status}: ${errorText}`);
-      return NextResponse.json(
-        { error: `Python retornou ${response.status}`, details: errorText },
-        { status: response.status }
-      );
-    }
-
-    // ✅ Parse seguro do JSON (evita erro se o Python retornar HTML)
-    let data;
     try {
-      data = await response.json();
-    } catch (parseError) {
-      console.error("[Proxy] ❌ JSON inválido:", parseError);
+      const response = await fetch(url, {
+        headers: { "Cache-Control": "no-cache" },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[Proxy] ⏱️ Tempo: ${elapsed}ms | Status: ${response.status}`);
+
+      // ❌ Se o Python retornou erro
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => "Sem corpo");
+        console.error(`[Proxy] ❌ Python erro ${response.status}: ${errorText}`);
+
+        // 🔄 Fallback para cache (se disponível e válido)
+        if (cachedData && (Date.now() - cacheTimestamp) < CACHE_TTL) {
+          console.log(`[Proxy] 🔄 Usando cache (válido) devido a erro do Python`);
+          return NextResponse.json(cachedData);
+        }
+        // Se cache expirado ou inexistente, retorna erro controlado
+        return NextResponse.json(
+          { error: `Python retornou ${response.status}`, details: errorText },
+          { status: response.status }
+        );
+      }
+
+      // ✅ Parse seguro do JSON
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error("[Proxy] ❌ JSON inválido:", parseError);
+        // Fallback para cache se disponível
+        if (cachedData && (Date.now() - cacheTimestamp) < CACHE_TTL) {
+          console.log(`[Proxy] 🔄 Usando cache (válido) devido a JSON inválido`);
+          return NextResponse.json(cachedData);
+        }
+        return NextResponse.json(
+          { error: "Resposta do Python não é JSON válido" },
+          { status: 500 }
+        );
+      }
+
+      // ✅ Fallback para schema_version
+      if (!data.schema_version) {
+        data.schema_version = "1.0.0";
+        data.api_version = "v1";
+      }
+
+      // 📊 Log resumido
+      console.log(`[Proxy] ✅ Dados: user_id=${data.user_id}, score_pi=${data.score_pi}, gmd=${data.gmd}`);
+
+      // 🔄 Atualiza o cache com a nova resposta válida
+      cachedData = data;
+      cacheTimestamp = Date.now();
+
+      return NextResponse.json(data);
+
+    } catch (error: any) {
+      // Timeout (AbortError) ou erro de rede
+      clearTimeout(timeoutId);
+      const elapsed = Date.now() - startTime;
+      console.error(`[Proxy] ❌ ERRO (${elapsed}ms):`, error?.message || error);
+
+      // 🔄 FALLBACK OBRIGATÓRIO: se houver cache, retorna ele (mesmo que expirado)
+      if (cachedData) {
+        const idade = Date.now() - cacheTimestamp;
+        console.log(`[Proxy] 🔄 Fallback para cache (idade: ${idade}ms)`);
+        // Adiciona um header indicando que é cache
+        const response = NextResponse.json(cachedData);
+        response.headers.set('X-Cache-Status', 'stale');
+        return response;
+      }
+
+      // 🚫 Se não há cache, retorna 503 (NUNCA 504)
       return NextResponse.json(
-        { error: "Resposta do Python não é JSON válido" },
-        { status: 500 }
-      );
-    }
-
-    // ✅ Fallback para schema_version (evita erro no frontend)
-    if (!data.schema_version) {
-      data.schema_version = "1.0.0";
-      data.api_version = "v1";
-    }
-
-    // 📊 Log resumido dos dados (apenas campos principais)
-    console.log(`[Proxy] ✅ Dados: user_id=${data.user_id}, score_pi=${data.score_pi}, gmd=${data.gmd}, quantidade=${data.quantidade}`);
-
-    return NextResponse.json(data);
-
-  } catch (error: any) {
-    const elapsed = Date.now() - startTime;
-    console.error(`[Proxy] ❌ ERRO (${elapsed}ms):`, error?.message || error);
-
-    // 🔥 Timeout (AbortError)
-    if (error?.name === "AbortError") {
-      return NextResponse.json(
-        { error: "Timeout ao buscar dados do Python (15s)" },
-        { status: 504 }
-      );
-    }
-
-    // 🔥 Erro de rede (Python desligado)
-    if (error?.code === "ECONNREFUSED") {
-      return NextResponse.json(
-        { error: "Python não está rodando na porta 8001" },
+        { 
+          error: "Serviço temporariamente indisponível. Tente novamente.", 
+          status: "DEGRADED" 
+        },
         { status: 503 }
       );
     }
 
+  } catch (error: any) {
+    // Erro externo (ex: problema no parsing da URL)
+    console.error("[Proxy] ❌ ERRO EXTERNO:", error?.message || error);
+    // Último recurso: se houver cache, usa ele
+    if (cachedData) {
+      console.log("[Proxy] 🔄 Fallback para cache (erro externo)");
+      return NextResponse.json(cachedData);
+    }
     return NextResponse.json(
       { error: `Erro interno: ${error?.message || "Desconhecido"}` },
       { status: 500 }
