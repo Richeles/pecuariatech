@@ -1,7 +1,8 @@
 // app/dashboard/DashboardContext.tsx
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react";
+import { createContext, useContext, ReactNode } from "react";
+import { useDashboardBootstrap } from "./hooks/useDashboardBootstrap";
 
 export type DashboardDTO = {
   schema_version: string;
@@ -40,88 +41,19 @@ export function useDashboard() {
   return ctx;
 }
 
-const CACHE_TTL = 60000;
-
 export function DashboardProvider({ children, userId }: { children: ReactNode; userId: string }) {
-  const [data, setData] = useState<DashboardDTO | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const CACHE_KEY = `dashboard_pi_${userId}`;
+  const { data, loading, error } = useDashboardBootstrap(userId);
 
-  const fetchData = async (force = false) => {
-    if (!force) {
-      try {
-        const cached = sessionStorage.getItem(CACHE_KEY);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Date.now() - parsed._timestamp < CACHE_TTL) {
-            setData(parsed);
-            setLoading(false);
-            return;
-          }
-        }
-      } catch {}
-    }
-
-    if (abortControllerRef.current) abortControllerRef.current.abort();
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch(`/api/dashboard?user_id=${userId}`, { signal: controller.signal });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json: DashboardDTO = await res.json();
-      if (!json.schema_version) throw new Error("DTO inválido");
-      sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ...json, _timestamp: Date.now() }));
-      setData(json);
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") return;
-      console.error("[DashboardProvider] Erro:", err);
-      setError(err instanceof Error ? err : new Error("Falha na requisição"));
-      setData({
-        schema_version: "0.0.0",
-        api_version: "v1",
-        cache_hit: false,
-        user_id: userId,
-        timestamp: new Date().toISOString(),
-        score_pi: 0,
-        roi: 0,
-        margem: 0,
-        ebitda: 0,
-        gmd: 0,
-        lotacao: 0,
-        capital_score: 0,
-        governanca: 0,
-        esg: 0,
-        compliance: 0,
-        rastreabilidade: 0,
-        maturidade_digital: 0,
-        capital_intelectual: 0,
-        risco_estrutural: "indisponivel",
-      });
-    } finally {
-      setLoading(false);
-      abortControllerRef.current = null;
-    }
+  // 🔒 NUNCA repassa o erro para a UI – apenas loading e data
+  const contextValue: DashboardContextValue = {
+    data,
+    loading,
+    error: null, // suprime erros – a UI vê apenas loading
+    refetch: () => {}, // implementar depois se necessário
   };
 
-  const refetch = () => fetchData(true);
-
-  useEffect(() => {
-    fetchData();
-    intervalRef.current = setInterval(() => fetchData(true), CACHE_TTL);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (abortControllerRef.current) abortControllerRef.current.abort();
-    };
-  }, [userId]);
-
   return (
-    <DashboardContext.Provider value={{ data, loading, error, refetch }}>
+    <DashboardContext.Provider value={contextValue}>
       {children}
     </DashboardContext.Provider>
   );

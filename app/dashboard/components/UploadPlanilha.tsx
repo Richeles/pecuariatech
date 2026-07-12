@@ -68,13 +68,15 @@ type Props = {
 // COMPONENTE PRINCIPAL – IMPLANTAR FAZENDA (EQUAÇÃO X)
 // ============================================================
 export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
-  // REMOVIDO: const { refreshData } = useDashboard();
-
   const [loading, setLoading] = useState(false);
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [mensagem, setMensagem] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
   const [modoOrigem, setModoOrigem] = useState<"excel" | "pdf" | "csv" | null>(null);
+
+  // Estados isolados para o upload – não afetam o Dashboard
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const [resposta, setResposta] = useState<RespostaPython | null>(null);
   const [implantacaoConcluida, setImplantacaoConcluida] = useState(false);
@@ -161,7 +163,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   };
 
   // ============================================================
-  // HANDLE UPLOAD
+  // HANDLE UPLOAD – ISOLADO, NUNCA RECARREGA O DASHBOARD
   // ============================================================
   const handleUpload = async () => {
     if (!arquivo) {
@@ -174,6 +176,9 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
       return;
     }
 
+    // Reset dos estados locais
+    setUploadError(null);
+    setUploadSuccess(false);
     setLoading(true);
     setMensagem("");
     setResposta(null);
@@ -268,25 +273,25 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         setResposta(dados);
         setImplantacaoConcluida(true);
         setMensagem(dados.mensagem);
+        setUploadSuccess(true);
 
-        // ============================================================
-        // LIMPA CACHE E RECARREGA A PÁGINA (FALLBACK GARANTIDO)
-        // ============================================================
-        if (typeof window !== "undefined") {
-          sessionStorage.removeItem("dashboard_cache");
-          localStorage.removeItem("dashboard_cache");
-          window.location.reload();
-        }
+        // 🔒 REMOVIDO: window.location.reload()
+        // O Dashboard NUNCA é recarregado por causa do upload.
+        // Apenas o estado local do componente é atualizado.
 
         if (onSuccess) onSuccess();
       } else {
-        setMensagem(`❌ Erro do Motor π: ${result.error || "Falha na importação"}`);
+        const errorMsg = result.error || result.detail || "Falha na importação";
+        setUploadError(errorMsg);
+        setMensagem(`❌ ${errorMsg}`);
         setEtapas(etapasIniciais.map((e) => ({ ...e, status: "erro" })));
-        if (onError) onError(result.error);
+        if (onError) onError(errorMsg);
       }
     } catch (error) {
       console.error("[X] Erro no envio:", error);
-      setMensagem("❌ Erro de conexão com o Motor π. Verifique se o servidor Python está rodando.");
+      const errorMsg = "Erro de conexão com o Motor π. Verifique se o servidor Python está rodando.";
+      setUploadError(errorMsg);
+      setMensagem(`❌ ${errorMsg}`);
       setEtapas(etapas.map((e) => ({ ...e, status: "erro" })));
     }
     setLoading(false);
@@ -506,6 +511,8 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
               setArquivo(null);
               setEtapas([]);
               setModoOrigem(null);
+              setUploadError(null);
+              setUploadSuccess(false);
             }}
             className="w-full px-4 py-3 rounded-xl bg-[#34D399]/10 border border-[#34D399]/20 text-[#A7F3D0] font-bold hover:bg-[#34D399]/20 transition text-sm col-span-2 md:col-span-1"
           >
@@ -546,6 +553,8 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
                   setModoOrigem("excel");
                   setArquivo(null);
                   setMensagem("");
+                  setUploadError(null);
+                  setUploadSuccess(false);
                 }}
                 className={`p-4 rounded-xl border-2 text-center transition ${
                   modoOrigem === "excel"
@@ -564,6 +573,8 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
                   setModoOrigem("pdf");
                   setArquivo(null);
                   setMensagem("");
+                  setUploadError(null);
+                  setUploadSuccess(false);
                 }}
                 className={`p-4 rounded-xl border-2 text-center transition ${
                   modoOrigem === "pdf"
@@ -585,6 +596,8 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
                   setModoOrigem("csv");
                   setArquivo(null);
                   setMensagem("");
+                  setUploadError(null);
+                  setUploadSuccess(false);
                 }}
                 className={`p-4 rounded-xl border-2 text-center transition ${
                   modoOrigem === "csv"
@@ -630,6 +643,8 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
                     setMensagem("");
                     setResposta(null);
                     setEtapas([]);
+                    setUploadError(null);
+                    setUploadSuccess(false);
                   }
                 }}
               />
