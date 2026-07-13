@@ -6,7 +6,10 @@ import pandas as pd
 import io
 import re
 from datetime import datetime
-import pdfplumber
+import uuid
+import csv
+import chardet
+import time
 from supabase_client import supabase
 
 # =========================================================
@@ -32,7 +35,7 @@ try:
     from reporting.pdf_report import gerar_pdf
     from reporting.excel_report import gerar_excel
     from reporting.executive_report import gerar_executive_report
-except:
+except ImportError:
     logger.warning("Módulos de relatório não encontrados. Usando fallback.")
     def gerar_pdf(dto): return b""
     def gerar_excel(dto): return b""
@@ -43,7 +46,7 @@ except:
 # =========================================================
 try:
     from equacao_y.icbc_historico_repository import obter_icbc_historico
-except:
+except ImportError:
     logger.warning("icbc_historico_repository não encontrado.")
     async def obter_icbc_historico(user_id): return {"message": "Histórico ICBC não disponível"}
 
@@ -52,27 +55,27 @@ except:
 # =========================================================
 try:
     from engine_risk import calcular_risco
-except:
+except ImportError:
     def calcular_risco(payload): return {"status": "fallback"}
 
 try:
     from engine_pastagem import analisar_pastagem
-except:
+except ImportError:
     def analisar_pastagem(payload): return {"status": "fallback", "advisory": ["Pastagem runtime fallback."]}
 
 try:
     from engine_clima import analisar_clima
-except:
+except ImportError:
     def analisar_clima(payload): return {"status": "fallback", "advisory": ["Climate runtime fallback."]}
 
 try:
     from engine_rebanho import correlacionar_rebanho
-except:
+except ImportError:
     def correlacionar_rebanho(payload): return {"risco": "baixo", "advisory": ["Rebanho runtime fallback."]}
 
 try:
     from engine_pai_ai import correlacionar_global
-except:
+except ImportError:
     def correlacionar_global(payload):
         return {
             "governanca": "ESTAVEL",
@@ -96,34 +99,141 @@ app = FastAPI(
 )
 
 # =========================================================
-# UNIVERSAL IMPORTER (NOVO MÓDULO – EQUAÇÃO Z)
+# UNIVERSAL IMPORTER – VALIDAÇÃO Ω (5 CAMADAS) + MELHORIAS
 # =========================================================
 class UniversalImporter:
-    @staticmethod
-    def detectar(nome_arquivo: str, conteudo: bytes) -> dict:
-        ext = nome_arquivo.split('.')[-1].lower()
-        if ext in ('xlsx', 'xls'):
-            return {"formato": "excel", "extensao": ext}
-        elif ext == 'pdf':
-            return {"formato": "pdf", "extensao": ext}
-        elif ext == 'csv':
-            return {"formato": "csv", "extensao": ext}
-        else:
-            return {"formato": "unknown", "extensao": ext}
+    MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 
     @staticmethod
-    def ler(conteudo: bytes, formato: str):
+    def normalizar_extensao(nome_arquivo: str) -> str:
+        return nome_arquivo.split('.')[-1].lower() if '.' in nome_arquivo else ''
+
+    @staticmethod
+    def assinatura(conteudo: bytes) -> str:
+        if conteudo.startswith(b'%PDF'):
+            return 'pdf'
+        elif conteudo.startswith(b'PK\x03\x04'):
+            return 'zip'
+        elif conteudo.startswith(b'\xD0\xCF\x11\xE0'):
+            return 'xls'
+        elif conteudo.startswith(b'\xEF\xBB\xBF') or b',' in conteudo[:1024] or b';' in conteudo[:1024]:
+            return 'csv'
+        else:
+            try:
+                texto = conteudo[:1024].decode('utf-8', errors='ignore')
+                if ',' in texto or ';' in texto or '\t' in texto:
+                    return 'csv'
+            except:
+                pass
+            return 'unknown'
+
+    @staticmethod
+    def detectar(nome_arquivo: str, conteudo: bytes) -> dict:
+        ext = UniversalImporter.normalizar_extensao(nome_arquivo)
+        assinatura = UniversalImporter.assinatura(conteudo)
+
+        if assinatura == 'pdf':
+            return {"formato": "pdf", "extensao": ext, "valido": True}
+        elif assinatura == 'xls':
+            if ext == 'xls':
+                return {"formato": "excel", "extensao": ext, "valido": True, "engine": "xlrd"}
+            else:
+                return {"formato": "unknown", "extensao": ext, "valido": False, "erro": "Arquivo .xls esperado, mas extensão é ." + ext}
+        elif assinatura == 'zip':
+            try:
+                import openpyxl
+                openpyxl.load_workbook(io.BytesIO(conteudo))
+                return {"formato": "excel", "extensao": ext, "valido": True, "engine": "openpyxl"}
+            except ImportError:
+                return {"formato": "unknown", "extensao": ext, "valido": False, "erro": "openpyxl não instalado"}
+            except:
+                return {"formato": "unknown", "extensao": ext, "valido": False, "erro": "Arquivo ZIP não é XLSX válido"}
+        elif assinatura == 'csv':
+            return {"formato": "csv", "extensao": ext, "valido": True}
+        else:
+            if ext in ('xlsx', 'xls'):
+                try:
+                    import openpyxl
+                    openpyxl.load_workbook(io.BytesIO(conteudo))
+                    return {"formato": "excel", "extensao": ext, "valido": True, "engine": "openpyxl"}
+                except:
+                    pass
+                if ext == 'xls':
+                    return {"formato": "excel", "extensao": ext, "valido": True, "engine": "xlrd"}
+            elif ext == 'pdf':
+                return {"formato": "pdf", "extensao": ext, "valido": True}
+            elif ext in ('csv', 'txt'):
+                return {"formato": "csv", "extensao": ext, "valido": True}
+            return {"formato": "unknown", "extensao": ext, "valido": False, "erro": "Arquivo não reconhecido"}
+
+    @staticmethod
+    def ler(conteudo: bytes, formato: str, engine: str = None):
         if formato == "excel":
-            df = pd.read_excel(io.BytesIO(conteudo), engine='openpyxl')
-            return df.to_dict(orient='records')
+            if engine == "openpyxl":
+                df = pd.read_excel(io.BytesIO(conteudo), engine='openpyxl')
+                return df.to_dict(orient='records')
+            elif engine == "xlrd":
+                df = pd.read_excel(io.BytesIO(conteudo), engine='xlrd')
+                return df.to_dict(orient='records')
+            else:
+                try:
+                    df = pd.read_excel(io.BytesIO(conteudo), engine='openpyxl')
+                except:
+                    df = pd.read_excel(io.BytesIO(conteudo), engine='xlrd')
+                return df.to_dict(orient='records')
+
         elif formato == "pdf":
-            with pdfplumber.open(io.BytesIO(conteudo)) as pdf:
-                texto = "".join(page.extract_text() or "" for page in pdf.pages)
-            linhas = [l.strip() for l in texto.split('\n') if l.strip()]
-            return {"texto": texto, "linhas": linhas}
+            try:
+                import pdfplumber
+                with pdfplumber.open(io.BytesIO(conteudo)) as pdf:
+                    texto = "".join(page.extract_text() or "" for page in pdf.pages)
+                linhas = [l.strip() for l in texto.split('\n') if l.strip()]
+                if not texto.strip():
+                    logger.warning("PDF sem texto (provavelmente escaneado)")
+                return {"texto": texto, "linhas": linhas}
+            except ImportError:
+                raise Exception("pdfplumber não instalado")
+            except Exception as e:
+                try:
+                    import PyPDF2
+                    reader = PyPDF2.PdfReader(io.BytesIO(conteudo))
+                    texto = "".join(page.extract_text() or "" for page in reader.pages)
+                    linhas = [l.strip() for l in texto.split('\n') if l.strip()]
+                    if not texto.strip():
+                        logger.warning("PDF sem texto (provavelmente escaneado) – PyPDF2 também não extraiu texto")
+                    return {"texto": texto, "linhas": linhas}
+                except ImportError:
+                    raise Exception(f"Falha ao ler PDF: {e} (PyPDF2 não instalado)")
+                except:
+                    raise Exception(f"Falha ao ler PDF: {e}")
+
         elif formato == "csv":
-            texto = conteudo.decode('utf-8', errors='ignore')
-            return {"texto": texto, "linhas": texto.splitlines()}
+            encoding = chardet.detect(conteudo)['encoding'] or 'utf-8'
+            for enc in [encoding, 'utf-8', 'latin1', 'cp1252']:
+                try:
+                    texto = conteudo.decode(enc)
+                    linhas = texto.splitlines()
+                    if len(linhas) > 1:
+                        separador = ','
+                        primeira_linha = linhas[0]
+                        if ';' in primeira_linha and ',' not in primeira_linha:
+                            separador = ';'
+                        elif '\t' in primeira_linha:
+                            separador = '\t'
+                        elif '|' in primeira_linha:
+                            separador = '|'
+                        else:
+                            try:
+                                import csv
+                                sniffer = csv.Sniffer()
+                                separador = sniffer.sniff(texto).delimiter
+                            except:
+                                separador = ','
+                        return {"linhas": linhas, "separador": separador, "encoding": enc}
+                except:
+                    continue
+            raise Exception("Não foi possível decodificar o arquivo CSV")
+
         else:
             return []
 
@@ -146,11 +256,12 @@ class UniversalImporter:
                             "categoria": str(row.get('categoria', '')).strip(),
                             "data_lancamento": str(data)
                         })
-                except Exception as e:
+                except (ValueError, KeyError, TypeError) as e:
                     logger.exception(f"[Normalizador Excel] Erro na linha {idx}: {row} | Erro: {e}")
                     continue
         elif formato == "pdf":
-            for idx, linha in enumerate(dados_brutos.get('linhas', [])):
+            linhas = dados_brutos.get('linhas', [])
+            for idx, linha in enumerate(linhas):
                 try:
                     match = re.search(r'(\d+[.,]?\d*)\s*$', linha)
                     if match:
@@ -164,26 +275,14 @@ class UniversalImporter:
                                 "categoria": "",
                                 "data_lancamento": datetime.now().strftime("%Y-%m-%d")
                             })
-                except Exception as e:
+                except (ValueError, IndexError) as e:
                     logger.exception(f"[Normalizador PDF] Erro na linha {idx}: {linha} | Erro: {e}")
                     continue
         elif formato == "csv":
-            # dados_brutos é um dicionário com 'linhas'
             linhas = dados_brutos.get('linhas', [])
+            separador = dados_brutos.get('separador', ',')
             if not linhas:
                 return []
-
-            # Detecta automaticamente o separador
-            import csv
-            try:
-                texto_completo = "\n".join(linhas)
-                sniffer = csv.Sniffer()
-                separador = sniffer.sniff(texto_completo).delimiter
-                logger.info(f"[Normalizador CSV] Separador detectado: '{separador}'")
-            except:
-                separador = ','  # fallback
-                logger.warning("[Normalizador CSV] Não foi possível detectar separador, usando vírgula como fallback.")
-
             cabecalho = [c.strip().lower() for c in linhas[0].split(separador)]
             for idx, linha in enumerate(linhas[1:]):
                 try:
@@ -200,7 +299,7 @@ class UniversalImporter:
                                 "categoria": "",
                                 "data_lancamento": datetime.now().strftime("%Y-%m-%d")
                             })
-                except Exception as e:
+                except (ValueError, IndexError) as e:
                     logger.exception(f"[Normalizador CSV] Erro na linha {idx+1}: {linha} | Erro: {e}")
                     continue
         return resultados
@@ -224,11 +323,12 @@ class UniversalImporter:
 
     @staticmethod
     def persistir(user_id: str, movimentacoes: list) -> dict:
-        inseridos = 0
-        erros = 0
-        for idx, item in enumerate(movimentacoes):
-            try:
-                result = supabase.table("movimentacoes").insert({
+        if not movimentacoes:
+            return {"inseridos": 0, "erros": 0}
+        try:
+            registros = []
+            for item in movimentacoes:
+                registros.append({
                     "user_id": user_id,
                     "descricao": item["descricao"],
                     "tipo": item["tipo"],
@@ -236,19 +336,50 @@ class UniversalImporter:
                     "categoria": item.get("categoria", ""),
                     "data_lancamento": item.get("data_lancamento", datetime.now().strftime("%Y-%m-%d")),
                     "criado_em": datetime.now().isoformat()
-                }).execute()
-                if result.data:
-                    inseridos += 1
-                else:
+                })
+            result = supabase.table("movimentacoes").insert(registros).execute()
+            if result.data:
+                return {"inseridos": len(result.data), "erros": 0}
+            else:
+                inseridos = 0
+                erros = 0
+                for item in registros:
+                    try:
+                        r = supabase.table("movimentacoes").insert(item).execute()
+                        if r.data:
+                            inseridos += 1
+                        else:
+                            erros += 1
+                    except:
+                        erros += 1
+                return {"inseridos": inseridos, "erros": erros}
+        except Exception as e:
+            logger.exception(f"[Persistencia] Erro em lote: {e}")
+            inseridos = 0
+            erros = 0
+            for idx, item in enumerate(movimentacoes):
+                try:
+                    result = supabase.table("movimentacoes").insert({
+                        "user_id": user_id,
+                        "descricao": item["descricao"],
+                        "tipo": item["tipo"],
+                        "valor": item["valor"],
+                        "categoria": item.get("categoria", ""),
+                        "data_lancamento": item.get("data_lancamento", datetime.now().strftime("%Y-%m-%d")),
+                        "criado_em": datetime.now().isoformat()
+                    }).execute()
+                    if result.data:
+                        inseridos += 1
+                    else:
+                        erros += 1
+                        logger.error(f"[Persistencia] Falha ao inserir linha {idx+1}: {item}")
+                except Exception as e2:
+                    logger.exception(f"[Persistencia] Erro na linha {idx+1}: {item} | Erro: {e2}")
                     erros += 1
-                    logger.error(f"[Persistencia] Falha ao inserir linha {idx+1}: {item}")
-            except Exception as e:
-                logger.exception(f"[Persistencia] Erro na linha {idx+1}: {item} | Erro: {e}")
-                erros += 1
-        return {"inseridos": inseridos, "erros": erros}
+            return {"inseridos": inseridos, "erros": erros}
 
     @staticmethod
-    def gerar_auditoria(arquivo: str, movimentacoes: list, inseridos: int, erros: int) -> dict:
+    def gerar_auditoria(arquivo: str, formato: str, movimentacoes: list, inseridos: int, erros: int) -> dict:
         total_receitas = sum(m['valor'] for m in movimentacoes if m['tipo'] == 'receita')
         total_despesas = sum(m['valor'] for m in movimentacoes if m['tipo'] == 'despesa')
         lucro = total_receitas - total_despesas
@@ -257,7 +388,7 @@ class UniversalImporter:
         return {
             "mensagem": "✅ Implantação concluída!",
             "arquivo": arquivo,
-            "formato": arquivo.split('.')[-1].upper(),
+            "formato": formato.upper(),
             "tamanho": "0 KB",
             "planilhas_encontradas": 1,
             "lancamentos_estimados": len(movimentacoes),
@@ -307,7 +438,7 @@ class UniversalImporter:
         }
 
 # =========================================================
-# ENDPOINT DE IMPORTAÇÃO – MOTOR π + UNIVERSAL IMPORTER (COM LOGS DETALHADOS)
+# ENDPOINT DE IMPORTAÇÃO – COM LOGS ESTRUTURADOS (VERSÃO 9.9/10)
 # =========================================================
 @app.post("/api/importar/arquivo")
 async def importar_arquivo(
@@ -316,103 +447,170 @@ async def importar_arquivo(
     tipo: str = Form("financeiro"),
     plano: str = Form("starter")
 ):
+    request_id = uuid.uuid4().hex[:8]
+    start_time = time.time()
+
     logger.info("=" * 60)
-    logger.info("[Importador] ✅ Requisição recebida")
-    logger.info(f"[Importador] Arquivo: {file.filename}")
-    logger.info(f"[Importador] User ID: {user_id}")
-    logger.info(f"[Importador] Tipo: {tipo}")
-    logger.info(f"[Importador] Plano: {plano}")
+    logger.info(f"[{request_id}] 🚀 INÍCIO – Importador Universal")
+    logger.info(f"[{request_id}] 📁 Arquivo: {file.filename}")
+    logger.info(f"[{request_id}] 📄 Content-Type: {file.content_type}")
+    logger.info(f"[{request_id}] 👤 User: {user_id}")
+    logger.info(f"[{request_id}] 🏷️ Tipo: {tipo}")
+    logger.info(f"[{request_id}] 📦 Plano: {plano}")
     logger.info("=" * 60)
 
     try:
-        # ---- LER ARQUIVO ----
-        logger.info("[Importador] 📖 Lendo arquivo...")
+        # ---- 1. LER ARQUIVO ----
+        logger.info(f"[{request_id}] 📖 1. Lendo arquivo...")
         conteudo = await file.read()
-        logger.info(f"[Importador] Tamanho: {len(conteudo)} bytes")
+        tamanho = len(conteudo)
+        logger.info(f"[{request_id}] 📏 Tamanho: {tamanho} bytes")
 
-        # ---- DETECTAR FORMATO ----
-        logger.info("[Importador] 🔍 Detectando formato...")
+        # ---- VALIDAÇÃO DE TAMANHO ----
+        if tamanho == 0:
+            logger.error(f"[{request_id}] ❌ Arquivo vazio")
+            return JSONResponse(
+                {"error": "Arquivo vazio", "request_id": request_id},
+                status_code=400
+            )
+        if tamanho > UniversalImporter.MAX_FILE_SIZE:
+            logger.error(f"[{request_id}] ❌ Arquivo excede {UniversalImporter.MAX_FILE_SIZE//1024//1024}MB")
+            return JSONResponse(
+                {"error": f"Arquivo excede o limite de {UniversalImporter.MAX_FILE_SIZE//1024//1024}MB", "request_id": request_id},
+                status_code=413
+            )
+        logger.info(f"[{request_id}] ✅ Leitura concluída")
+
+        # ---- 2. DETECTAR FORMATO ----
+        logger.info(f"[{request_id}] 🔍 2. Detectando formato...")
         info = UniversalImporter.detectar(file.filename, conteudo)
-        logger.info(f"[Importador] Formato detectado: {info}")
-        if info["formato"] == "unknown":
-            logger.error(f"[Importador] ❌ Formato não reconhecido: {info}")
-            return JSONResponse({"error": f"Formato não reconhecido: {info['extensao']}"}, status_code=400)
+        logger.info(f"[{request_id}] 📋 Formato detectado: {info}")
+        if info["formato"] == "unknown" or not info.get("valido", False):
+            logger.error(f"[{request_id}] ❌ Formato não reconhecido: {info}")
+            return JSONResponse(
+                {"error": f"Formato não reconhecido: {info.get('extensao', 'desconhecido')}", "request_id": request_id},
+                status_code=400
+            )
+        logger.info(f"[{request_id}] ✅ Formato aceito: {info['formato']} (engine: {info.get('engine', 'auto')})")
 
-        # ---- LER DADOS BRUTOS ----
-        logger.info("[Importador] 📊 Lendo dados brutos...")
+        # ---- 3. LER DADOS BRUTOS ----
+        logger.info(f"[{request_id}] 📊 3. Lendo dados brutos...")
         try:
-            dados_brutos = UniversalImporter.ler(conteudo, info["formato"])
+            engine = info.get("engine")
+            dados_brutos = UniversalImporter.ler(conteudo, info["formato"], engine=engine)
             if isinstance(dados_brutos, list):
-                logger.info(f"[Importador] Dados brutos lidos: {len(dados_brutos)} linhas")
+                qtde = len(dados_brutos)
+                logger.info(f"[{request_id}] ✅ {qtde} linhas (lista)")
             else:
                 linhas = dados_brutos.get('linhas', []) if isinstance(dados_brutos, dict) else []
-                logger.info(f"[Importador] Dados brutos lidos: {len(linhas)} linhas (estrutura complexa)")
+                logger.info(f"[{request_id}] ✅ {len(linhas)} linhas (estrutura complexa)")
         except Exception as e:
-            logger.exception(f"[Importador] ❌ Falha na leitura: {e}")
-            return JSONResponse({"error": f"Erro ao ler arquivo: {str(e)}"}, status_code=400)
+            logger.exception(f"[{request_id}] ❌ Falha na leitura: {e}")
+            return JSONResponse(
+                {"error": f"Erro ao ler arquivo: {str(e)}", "request_id": request_id},
+                status_code=400
+            )
 
         if not dados_brutos:
-            logger.error("[Importador] ❌ Nenhum dado encontrado após leitura.")
-            return JSONResponse({"error": "Nenhum dado encontrado no arquivo."}, status_code=400)
+            logger.error(f"[{request_id}] ❌ Nenhum dado encontrado")
+            return JSONResponse(
+                {"error": "Nenhum dado encontrado no arquivo.", "request_id": request_id},
+                status_code=400
+            )
 
-        # ---- NORMALIZAR ----
-        logger.info("[Importador] 📊 Normalizando dados...")
+        # ---- 4. NORMALIZAR ----
+        logger.info(f"[{request_id}] 🔄 4. Normalizando dados...")
         try:
             movimentacoes = UniversalImporter.normalizar(dados_brutos, info["formato"])
-            logger.info(f"[Importador] Movimentações normalizadas: {len(movimentacoes)} registros")
+            logger.info(f"[{request_id}] ✅ {len(movimentacoes)} registros normalizados")
             if movimentacoes:
-                logger.info(f"[Importador] Primeiro registro: {movimentacoes[0]}")
+                logger.info(f"[{request_id}] 📌 Primeiro registro: {movimentacoes[0]}")
         except Exception as e:
-            logger.exception(f"[Importador] ❌ Falha na normalização: {e}")
-            return JSONResponse({"error": f"Erro ao normalizar dados: {str(e)}"}, status_code=400)
+            logger.exception(f"[{request_id}] ❌ Falha na normalização: {e}")
+            return JSONResponse(
+                {"error": f"Erro ao normalizar dados: {str(e)}", "request_id": request_id},
+                status_code=400
+            )
 
         if not movimentacoes:
-            logger.error("[Importador] ❌ Nenhuma movimentação válida após normalização.")
-            return JSONResponse({"error": "Nenhuma movimentação válida encontrada."}, status_code=400)
+            logger.error(f"[{request_id}] ❌ Nenhuma movimentação válida")
+            return JSONResponse(
+                {"error": "Nenhuma movimentação válida encontrada.", "request_id": request_id},
+                status_code=400
+            )
 
-        # ---- VALIDAR ----
-        logger.info("[Importador] ✅ Validando dados...")
+        # ---- 5. VALIDAR ----
+        logger.info(f"[{request_id}] ✅ 5. Validando dados...")
         try:
             mov_validas, erros_validacao = UniversalImporter.validar(movimentacoes)
-            logger.info(f"[Importador] Validação: {len(mov_validas)} válidas, {len(erros_validacao)} erros")
+            logger.info(f"[{request_id}] ✅ {len(mov_validas)} válidas, {len(erros_validacao)} erros")
             if erros_validacao:
-                logger.warning(f"[Importador] Erros de validação (primeiros 5): {erros_validacao[:5]}")
+                logger.warning(f"[{request_id}] ⚠️ Erros de validação: {erros_validacao[:3]}")
         except Exception as e:
-            logger.exception(f"[Importador] ❌ Falha na validação: {e}")
-            return JSONResponse({"error": f"Erro ao validar dados: {str(e)}"}, status_code=400)
+            logger.exception(f"[{request_id}] ❌ Falha na validação: {e}")
+            return JSONResponse(
+                {"error": f"Erro ao validar dados: {str(e)}", "request_id": request_id},
+                status_code=400
+            )
 
         if not mov_validas:
-            logger.error(f"[Importador] ❌ Nenhum registro válido. Erros: {erros_validacao[:5]}")
-            return JSONResponse({"error": f"Erros de validação: {erros_validacao[:3]}"}, status_code=400)
+            logger.error(f"[{request_id}] ❌ Nenhum registro válido")
+            return JSONResponse(
+                {"error": f"Erros de validação: {erros_validacao[:3]}", "request_id": request_id},
+                status_code=400
+            )
 
-        # ---- PERSISTIR ----
-        logger.info("[Importador] 💾 Persistindo no Supabase...")
+        # ---- 6. PERSISTIR ----
+        logger.info(f"[{request_id}] 💾 6. Persistindo no Supabase...")
         try:
             resultado = UniversalImporter.persistir(user_id, mov_validas)
-            logger.info(f"[Importador] Persistência: {resultado['inseridos']} inseridos, {resultado['erros']} erros")
+            logger.info(f"[{request_id}] ✅ {resultado['inseridos']} inseridos, {resultado['erros']} erros")
         except Exception as e:
-            logger.exception(f"[Importador] ❌ Falha na persistência: {e}")
-            return JSONResponse({"error": f"Erro ao persistir dados: {str(e)}"}, status_code=400)
+            logger.exception(f"[{request_id}] ❌ Falha na persistência: {e}")
+            return JSONResponse(
+                {"error": f"Erro ao persistir dados: {str(e)}", "request_id": request_id},
+                status_code=400
+            )
 
-        # ---- GERAR RELATÓRIO ----
-        logger.info("[Importador] 📈 Gerando auditoria...")
+        # ---- 7. CONSULTAR VIEW (AUDITORIA) ----
+        logger.info(f"[{request_id}] 👁️ 7. Consultando View...")
+        try:
+            view_result = supabase.table("vw_financeiro_resumo").select("*", count="exact").eq("user_id", user_id).execute()
+            view_count = view_result.count if hasattr(view_result, 'count') else len(view_result.data)
+            logger.info(f"[{request_id}] ✅ View retornou {view_count} registros para o usuário {user_id}")
+        except Exception as e:
+            logger.warning(f"[{request_id}] ⚠️ Erro ao consultar View: {e}")
+
+        # ---- 8. GERAR RELATÓRIO ----
+        logger.info(f"[{request_id}] 📈 8. Gerando auditoria...")
         try:
             relatorio = UniversalImporter.gerar_auditoria(
                 arquivo=file.filename,
+                formato=info["formato"],
                 movimentacoes=mov_validas,
                 inseridos=resultado["inseridos"],
                 erros=resultado["erros"] + len(erros_validacao)
             )
+            logger.info(f"[{request_id}] ✅ Auditoria gerada")
         except Exception as e:
-            logger.exception(f"[Importador] ❌ Falha ao gerar auditoria: {e}")
-            return JSONResponse({"error": f"Erro ao gerar relatório: {str(e)}"}, status_code=500)
+            logger.exception(f"[{request_id}] ❌ Falha ao gerar auditoria: {e}")
+            return JSONResponse(
+                {"error": f"Erro ao gerar relatório: {str(e)}", "request_id": request_id},
+                status_code=500
+            )
 
-        logger.info(f"[Importador] ✅ Processamento concluído com sucesso. Inseridos: {resultado['inseridos']}")
+        elapsed = round(time.time() - start_time, 2)
+        logger.info(f"[{request_id}] ✅ Processamento concluído em {elapsed}s")
+        logger.info("=" * 60)
         return JSONResponse(relatorio)
 
     except Exception as e:
-        logger.exception(f"[Importador] 💥 ERRO INESPERADO: {e}")
-        return JSONResponse({"error": str(e)}, status_code=500)
+        logger.exception(f"[{request_id}] 💥 ERRO INESPERADO: {e}")
+        return JSONResponse(
+            {"error": "Falha interna no processamento", "request_id": request_id},
+            status_code=500
+        )
+
 
 # =========================================================
 # ROTAS ORIGINAIS – DASHBOARD DTO

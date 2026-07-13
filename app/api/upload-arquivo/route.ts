@@ -1,119 +1,216 @@
 // app/api/upload-arquivo/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 
-export const runtime = 'nodejs'; // 🔥 FORÇA NODE.JS (NÃO EDGE)
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-const PYTHON_API_URL = process.env.PYTHON_API_URL || "https://pecuariatech-motor-pi.onrender.com";
 const TIMEOUT_MS = 60000;
 
-console.log("✅ Rota /api/upload-arquivo carregada"); // Log de inicialização
+const PYTHON_API_URL =
+  process.env.PYTHON_API_URL ||
+  "https://pecuariatech-motor-pi.onrender.com";
+
+console.log("==========================================");
+console.log("✅ API Upload carregada");
+console.log("Runtime:", runtime);
+console.log("Python:", PYTHON_API_URL);
+console.log("==========================================");
 
 export async function POST(req: NextRequest) {
-  console.log("🔍 [Upload] 1 - Recebi requisição POST");
+  const requestId = randomUUID().substring(0, 8);
+  const start = Date.now();
+
+  console.log(``);
+  console.log(`==============================`);
+  console.log(`[${requestId}] NOVO UPLOAD`);
+  console.log(`==============================`);
 
   try {
+    if (!PYTHON_API_URL) {
+      console.error(`[${requestId}] PYTHON_API_URL não configurada`);
+
+      return NextResponse.json(
+        {
+          error: "PYTHON_API_URL não configurada",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    console.log(`[${requestId}] Lendo FormData...`);
+
     const formData = await req.formData();
-    console.log("🔍 [Upload] 2 - FormData lido com sucesso");
 
     const file = formData.get("file") as File | null;
     const tipo = formData.get("tipo") as string | null;
     const userId = formData.get("user_id") as string | null;
-    const plano = formData.get("plano") as string | null;
+    const plano = formData.get("plano") as string |null;
 
-    console.log("🔍 [Upload] 3 - Campos recebidos:", {
-      file: file ? `${file.name} (${file.size} bytes)` : "null",
+    console.log(`[${requestId}] Dados recebidos`);
+
+    console.table({
+      arquivo: file?.name,
+      tamanho: file?.size,
+      mime: file?.type,
       tipo,
       userId,
       plano,
     });
 
-    if (!file) {
-      console.warn("⚠️ [Upload] Arquivo não enviado");
+    if (!file)
       return NextResponse.json(
-        { error: "Arquivo não enviado", detail: "Nenhum arquivo foi anexado." },
+        { error: "Arquivo não enviado" },
         { status: 400 }
       );
-    }
-    if (!tipo) {
-      console.warn("⚠️ [Upload] Tipo não informado");
+
+    if (!tipo)
       return NextResponse.json(
-        { error: "Tipo não informado", detail: "O campo 'tipo' é obrigatório." },
+        { error: "Tipo obrigatório" },
         { status: 400 }
       );
-    }
-    if (!userId) {
-      console.warn("⚠️ [Upload] user_id não informado");
+
+    if (!userId)
       return NextResponse.json(
-        { error: "user_id não informado", detail: "O campo 'user_id' é obrigatório." },
+        { error: "user_id obrigatório" },
         { status: 400 }
       );
-    }
 
     const pythonForm = new FormData();
+
     pythonForm.append("file", file);
     pythonForm.append("tipo", tipo);
     pythonForm.append("user_id", userId);
-    if (plano) pythonForm.append("plano", plano);
 
-    const pythonUrl = `${PYTHON_API_URL}/api/importar/arquivo`;
-    console.log(`🔍 [Upload] 4 - Chamando Python: ${pythonUrl}`);
+    if (plano)
+      pythonForm.append("plano", plano);
+
+    const url = `${PYTHON_API_URL}/api/importar/arquivo`;
+
+    console.log(`[${requestId}] URL Python`);
+    console.log(url);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    const response = await fetch(pythonUrl, {
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, TIMEOUT_MS);
+
+    console.log(`[${requestId}] Enviando arquivo ao Motor π`);
+
+    const response = await fetch(url, {
       method: "POST",
       body: pythonForm,
       signal: controller.signal,
+      cache: "no-store",
     });
-    clearTimeout(timeoutId);
 
-    console.log(`🔍 [Upload] 5 - Python respondeu com status: ${response.status}`);
+    clearTimeout(timeout);
 
-    const responseText = await response.text();
-    console.log(`🔍 [Upload] 6 - Corpo da resposta (primeiros 500 chars):`, responseText.slice(0, 500));
+    const tempo = Date.now() - start;
 
-    let data;
+    console.log(
+      `[${requestId}] Python respondeu (${response.status}) em ${tempo}ms`
+    );
+
+    const body = await response.text();
+
+    console.log(
+      `[${requestId}] Primeiros 500 caracteres`
+    );
+
+    console.log(body.substring(0, 500));
+
+    let json: any;
+
     try {
-      data = JSON.parse(responseText);
+      json = JSON.parse(body);
     } catch {
-      data = { error: "Resposta não é JSON", raw: responseText };
+      json = {
+        raw: body,
+      };
     }
 
     if (!response.ok) {
-      console.error(`❌ [Upload] Python retornou erro ${response.status}:`, data);
+      console.error(`[${requestId}] Erro vindo do Motor π`);
+
       return NextResponse.json(
         {
-          error: data.error || data.detail || `Motor π retornou ${response.status}`,
-          detail: data.detail || data.message || data.raw || "Erro no processamento",
-          traceback: data.traceback || null,
+          error:
+            json.error ??
+            json.detail ??
+            "Erro no Motor π",
+
+          detail:
+            json.detail ??
+            json.message ??
+            json.raw ??
+            "",
+
+          traceback:
+            json.traceback ?? null,
         },
-        { status: response.status }
+        {
+          status: response.status,
+        }
       );
     }
 
-    console.log("✅ [Upload] Upload concluído com sucesso");
-    return NextResponse.json(data);
+    console.log(`[${requestId}] Upload concluído`);
+
+    return NextResponse.json(json);
 
   } catch (error: any) {
-    console.error("❌ [Upload] ERRO no gateway:", error?.message || error);
 
-    if (error?.name === "AbortError") {
+    console.error(`[${requestId}] ERRO GERAL`);
+
+    console.error(error);
+
+    if (error.name === "AbortError") {
+
       return NextResponse.json(
         {
-          error: "Tempo limite excedido",
-          detail: `O Motor π demorou mais de ${TIMEOUT_MS / 1000} segundos para processar o arquivo. Tente novamente.`,
+          error: "Timeout",
+
+          detail: `Motor π demorou mais de ${TIMEOUT_MS / 1000}s`,
         },
-        { status: 504 }
+        {
+          status: 504,
+        }
       );
+
+    }
+
+    if (
+      error.code === "ECONNREFUSED" ||
+      error.code === "ENOTFOUND"
+    ) {
+
+      return NextResponse.json(
+        {
+          error: "Motor π indisponível",
+
+          detail: error.message,
+        },
+        {
+          status: 503,
+        }
+      );
+
     }
 
     return NextResponse.json(
       {
-        error: "Erro interno no gateway",
-        detail: error?.message || "Erro desconhecido",
+        error: "Erro interno",
+
+        detail: error.message,
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
