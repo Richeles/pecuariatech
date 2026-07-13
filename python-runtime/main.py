@@ -307,7 +307,7 @@ class UniversalImporter:
         }
 
 # =========================================================
-# ENDPOINT DE IMPORTAÇÃO – MOTOR π + UNIVERSAL IMPORTER (COM LOGS)
+# ENDPOINT DE IMPORTAÇÃO – MOTOR π + UNIVERSAL IMPORTER (COM LOGS DETALHADOS)
 # =========================================================
 @app.post("/api/importar/arquivo")
 async def importar_arquivo(
@@ -316,26 +316,30 @@ async def importar_arquivo(
     tipo: str = Form("financeiro"),
     plano: str = Form("starter")
 ):
-    try:
-        logger.info(f"[Importador] ✅ Arquivo recebido: {file.filename} | User: {user_id} | Plano: {plano}")
-        conteudo = await file.read()
-        logger.info(f"[Importador] Tamanho do arquivo: {len(conteudo)} bytes")
+    logger.info("=" * 60)
+    logger.info("[Importador] ✅ Requisição recebida")
+    logger.info(f"[Importador] Arquivo: {file.filename}")
+    logger.info(f"[Importador] User ID: {user_id}")
+    logger.info(f"[Importador] Tipo: {tipo}")
+    logger.info(f"[Importador] Plano: {plano}")
+    logger.info("=" * 60)
 
-        # ============================================================
-        # 1. DETECTAR FORMATO
-        # ============================================================
-        logger.info("[Importador] 🔍 Iniciando detecção de formato...")
+    try:
+        # ---- LER ARQUIVO ----
+        logger.info("[Importador] 📖 Lendo arquivo...")
+        conteudo = await file.read()
+        logger.info(f"[Importador] Tamanho: {len(conteudo)} bytes")
+
+        # ---- DETECTAR FORMATO ----
+        logger.info("[Importador] 🔍 Detectando formato...")
         info = UniversalImporter.detectar(file.filename, conteudo)
         logger.info(f"[Importador] Formato detectado: {info}")
-
         if info["formato"] == "unknown":
             logger.error(f"[Importador] ❌ Formato não reconhecido: {info}")
             return JSONResponse({"error": f"Formato não reconhecido: {info['extensao']}"}, status_code=400)
 
-        # ============================================================
-        # 2. LER ARQUIVO
-        # ============================================================
-        logger.info("[Importador] 📖 Iniciando leitura do arquivo...")
+        # ---- LER DADOS BRUTOS ----
+        logger.info("[Importador] 📊 Lendo dados brutos...")
         try:
             dados_brutos = UniversalImporter.ler(conteudo, info["formato"])
             if isinstance(dados_brutos, list):
@@ -351,10 +355,8 @@ async def importar_arquivo(
             logger.error("[Importador] ❌ Nenhum dado encontrado após leitura.")
             return JSONResponse({"error": "Nenhum dado encontrado no arquivo."}, status_code=400)
 
-        # ============================================================
-        # 3. NORMALIZAR
-        # ============================================================
-        logger.info("[Importador] 📊 Iniciando normalização...")
+        # ---- NORMALIZAR ----
+        logger.info("[Importador] 📊 Normalizando dados...")
         try:
             movimentacoes = UniversalImporter.normalizar(dados_brutos, info["formato"])
             logger.info(f"[Importador] Movimentações normalizadas: {len(movimentacoes)} registros")
@@ -368,13 +370,11 @@ async def importar_arquivo(
             logger.error("[Importador] ❌ Nenhuma movimentação válida após normalização.")
             return JSONResponse({"error": "Nenhuma movimentação válida encontrada."}, status_code=400)
 
-        # ============================================================
-        # 4. VALIDAR
-        # ============================================================
-        logger.info("[Importador] ✅ Iniciando validação...")
+        # ---- VALIDAR ----
+        logger.info("[Importador] ✅ Validando dados...")
         try:
             mov_validas, erros_validacao = UniversalImporter.validar(movimentacoes)
-            logger.info(f"[Importador] Validação concluída: {len(mov_validas)} válidas, {len(erros_validacao)} erros")
+            logger.info(f"[Importador] Validação: {len(mov_validas)} válidas, {len(erros_validacao)} erros")
             if erros_validacao:
                 logger.warning(f"[Importador] Erros de validação (primeiros 5): {erros_validacao[:5]}")
         except Exception as e:
@@ -385,20 +385,16 @@ async def importar_arquivo(
             logger.error(f"[Importador] ❌ Nenhum registro válido. Erros: {erros_validacao[:5]}")
             return JSONResponse({"error": f"Erros de validação: {erros_validacao[:3]}"}, status_code=400)
 
-        # ============================================================
-        # 5. PERSISTIR
-        # ============================================================
-        logger.info("[Importador] 💾 Iniciando persistência no Supabase...")
+        # ---- PERSISTIR ----
+        logger.info("[Importador] 💾 Persistindo no Supabase...")
         try:
             resultado = UniversalImporter.persistir(user_id, mov_validas)
-            logger.info(f"[Importador] Persistência concluída: {resultado['inseridos']} inseridos, {resultado['erros']} erros")
+            logger.info(f"[Importador] Persistência: {resultado['inseridos']} inseridos, {resultado['erros']} erros")
         except Exception as e:
             logger.exception(f"[Importador] ❌ Falha na persistência: {e}")
             return JSONResponse({"error": f"Erro ao persistir dados: {str(e)}"}, status_code=400)
 
-        # ============================================================
-        # 6. GERAR RELATÓRIO
-        # ============================================================
+        # ---- GERAR RELATÓRIO ----
         logger.info("[Importador] 📈 Gerando auditoria...")
         try:
             relatorio = UniversalImporter.gerar_auditoria(
