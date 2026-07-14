@@ -429,25 +429,78 @@ class UniversalImporter:
             "erros": erros
         }
 
-    # --- REBANHO ---
+    # --- REBANHO (CORRIGIDO COM SEPARADOR DETECTADO) ---
     @staticmethod
     def normalizar_rebanho(dados_brutos, formato: str) -> list:
         resultados = []
-        for row in dados_brutos:
+        if formato == "csv" and isinstance(dados_brutos, dict):
+            linhas = dados_brutos.get('linhas', [])
+            separador = dados_brutos.get('separador', ',')
+            if not linhas:
+                logger.warning("[Rebanho] CSV vazio")
+                return []
             try:
-                resultados.append({
-                    "brinco": str(row.get("brinco") or "").strip(),
-                    "lote": str(row.get("lote") or "").strip(),
-                    "sexo": str(row.get("sexo") or "").strip(),
-                    "raca": str(row.get("raca") or "").strip(),
-                    "peso_entrada": float(row.get("peso_entrada") or 0),
-                    "peso_atual": float(row.get("peso_atual") or 0),
-                    "gmd": float(row.get("gmd") or 0),
-                    "data_vacina": str(row.get("data_vacina") or ""),
-                    "piquete_atual": str(row.get("piquete_atual") or "").strip()
-                })
+                logger.info(f"[Rebanho] Processando CSV: {len(linhas)} linhas, separador='{separador}'")
+                reader = csv.reader(linhas, delimiter=separador)
+                cabecalho = [c.strip().lower() for c in next(reader)]
+                logger.info(f"[Rebanho] Cabeçalho: {cabecalho}")
+                for row in reader:
+                    if len(row) < len(cabecalho):
+                        continue
+                    try:
+                        # Extrai os campos pelo índice
+                        brinco = row[cabecalho.index("brinco")].strip() if "brinco" in cabecalho else ""
+                        lote = row[cabecalho.index("lote")].strip() if "lote" in cabecalho else ""
+                        sexo = row[cabecalho.index("sexo")].strip() if "sexo" in cabecalho else ""
+                        raca = row[cabecalho.index("raca")].strip() if "raca" in cabecalho else ""
+                        peso_entrada = float(row[cabecalho.index("peso_entrada")].strip() or 0) if "peso_entrada" in cabecalho else 0
+                        peso_atual = float(row[cabecalho.index("peso_atual")].strip() or 0) if "peso_atual" in cabecalho else 0
+                        gmd = float(row[cabecalho.index("gmd")].strip() or 0) if "gmd" in cabecalho else 0
+                        data_vacina = row[cabecalho.index("data_vacina")].strip() if "data_vacina" in cabecalho else ""
+                        piquete_atual = row[cabecalho.index("piquete_atual")].strip() if "piquete_atual" in cabecalho else ""
+
+                        if brinco and peso_entrada > 0:
+                            resultados.append({
+                                "brinco": brinco,
+                                "lote": lote,
+                                "sexo": sexo,
+                                "raca": raca,
+                                "peso_entrada": peso_entrada,
+                                "peso_atual": peso_atual,
+                                "gmd": gmd,
+                                "data_vacina": data_vacina,
+                                "piquete_atual": piquete_atual
+                            })
+                        else:
+                            logger.debug(f"[Rebanho] Linha ignorada (brinco ou peso inválido): {row}")
+                    except ValueError as ve:
+                        logger.warning(f"[Rebanho] Valor inválido na linha: {row} | Erro: {ve}")
+                    except Exception as e:
+                        logger.exception(f"[Rebanho] Erro na linha: {row} | Erro: {e}")
+                logger.info(f"[Rebanho] Extraídos {len(resultados)} animais válidos")
             except Exception as e:
-                logger.exception(f"[Rebanho] Erro na linha: {e}")
+                logger.exception(f"[Rebanho] Erro ao processar CSV: {e}")
+        else:
+            # Excel / PDF
+            for row in dados_brutos:
+                try:
+                    brinco = str(row.get("brinco") or "").strip()
+                    peso_entrada = float(row.get("peso_entrada") or 0)
+                    if brinco and peso_entrada > 0:
+                        resultados.append({
+                            "brinco": brinco,
+                            "lote": str(row.get("lote") or "").strip(),
+                            "sexo": str(row.get("sexo") or "").strip(),
+                            "raca": str(row.get("raca") or "").strip(),
+                            "peso_entrada": peso_entrada,
+                            "peso_atual": float(row.get("peso_atual") or 0),
+                            "gmd": float(row.get("gmd") or 0),
+                            "data_vacina": str(row.get("data_vacina") or ""),
+                            "piquete_atual": str(row.get("piquete_atual") or "").strip()
+                        })
+                except Exception as e:
+                    logger.exception(f"[Rebanho] Erro na linha: {e}")
+            logger.info(f"[Rebanho] Extraídos {len(resultados)} animais (Excel/PDF)")
         return resultados
 
     @staticmethod
@@ -492,21 +545,60 @@ class UniversalImporter:
             "modulos": {"rebanho": True, "dashboard": True, "views": True}
         }
 
-    # --- PASTAGEM ---
+    # --- PASTAGEM (CORRIGIDO COM SEPARADOR DETECTADO) ---
     @staticmethod
     def normalizar_pastagem(dados_brutos, formato: str) -> list:
         resultados = []
-        for row in dados_brutos:
+        if formato == "csv" and isinstance(dados_brutos, dict):
+            linhas = dados_brutos.get('linhas', [])
+            separador = dados_brutos.get('separador', ',')
+            if not linhas:
+                logger.warning("[Pastagem] CSV vazio")
+                return []
             try:
-                resultados.append({
-                    "piquete": str(row.get("piquete") or "").strip(),
-                    "area_ha": float(row.get("area_ha") or 0),
-                    "lotacao_ua": float(row.get("lotacao_ua") or 0),
-                    "forragem": float(row.get("forragem") or 0),
-                    "ultimo_manejo": str(row.get("ultimo_manejo") or "")
-                })
+                logger.info(f"[Pastagem] Processando CSV: {len(linhas)} linhas, separador='{separador}'")
+                reader = csv.reader(linhas, delimiter=separador)
+                cabecalho = [c.strip().lower() for c in next(reader)]
+                logger.info(f"[Pastagem] Cabeçalho: {cabecalho}")
+                for row in reader:
+                    if len(row) < len(cabecalho):
+                        continue
+                    try:
+                        piquete = row[cabecalho.index("piquete")].strip() if "piquete" in cabecalho else ""
+                        area_ha = float(row[cabecalho.index("area_ha")].strip() or 0) if "area_ha" in cabecalho else 0
+                        if piquete and area_ha > 0:
+                            resultados.append({
+                                "piquete": piquete,
+                                "area_ha": area_ha,
+                                "lotacao_ua": float(row[cabecalho.index("lotacao_ua")].strip() or 0) if "lotacao_ua" in cabecalho else 0,
+                                "forragem": float(row[cabecalho.index("forragem")].strip() or 0) if "forragem" in cabecalho else 0,
+                                "ultimo_manejo": row[cabecalho.index("ultimo_manejo")].strip() if "ultimo_manejo" in cabecalho else ""
+                            })
+                        else:
+                            logger.debug(f"[Pastagem] Linha ignorada (piquete ou área inválida): {row}")
+                    except ValueError as ve:
+                        logger.warning(f"[Pastagem] Valor inválido na linha: {row} | Erro: {ve}")
+                    except Exception as e:
+                        logger.exception(f"[Pastagem] Erro na linha: {row} | Erro: {e}")
+                logger.info(f"[Pastagem] Extraídos {len(resultados)} pastagens válidas")
             except Exception as e:
-                logger.exception(f"[Pastagem] Erro na linha: {e}")
+                logger.exception(f"[Pastagem] Erro ao processar CSV: {e}")
+        else:
+            for row in dados_brutos:
+                try:
+                    piquete = str(row.get("piquete") or "").strip()
+                    area_ha = float(row.get("area_ha") or 0)
+                    if piquete and area_ha > 0:
+                        resultados.append({
+                            "piquete": piquete,
+                            "area_ha": area_ha,
+                            "lotacao_ua": float(row.get("lotacao_ua") or 0),
+                            "forragem": float(row.get("forragem") or 0),
+                            "ultimo_manejo": str(row.get("ultimo_manejo") or "")
+                        })
+                except Exception as e:
+                    logger.exception(f"[Pastagem] Erro na linha: {e}")
+            logger.info(f"[Pastagem] Extraídos {len(resultados)} pastagens (Excel/PDF)")
         return resultados
 
     @staticmethod
@@ -551,23 +643,64 @@ class UniversalImporter:
             "modulos": {"pastagem": True, "dashboard": True, "views": True}
         }
 
-    # --- ENGORDA ---
+    # --- ENGORDA (CORRIGIDO COM SEPARADOR DETECTADO) ---
     @staticmethod
     def normalizar_engorda(dados_brutos, formato: str) -> list:
         resultados = []
-        for row in dados_brutos:
+        if formato == "csv" and isinstance(dados_brutos, dict):
+            linhas = dados_brutos.get('linhas', [])
+            separador = dados_brutos.get('separador', ',')
+            if not linhas:
+                logger.warning("[Engorda] CSV vazio")
+                return []
             try:
-                resultados.append({
-                    "lote": str(row.get("lote") or "").strip(),
-                    "peso_inicial": float(row.get("peso_inicial") or 0),
-                    "peso_atual": float(row.get("peso_atual") or 0),
-                    "gmd": float(row.get("gmd") or 0),
-                    "dias_cocho": int(row.get("dias_cocho") or 0),
-                    "conversao": float(row.get("conversao") or 0),
-                    "status": str(row.get("status") or "ativo").strip()
-                })
+                logger.info(f"[Engorda] Processando CSV: {len(linhas)} linhas, separador='{separador}'")
+                reader = csv.reader(linhas, delimiter=separador)
+                cabecalho = [c.strip().lower() for c in next(reader)]
+                logger.info(f"[Engorda] Cabeçalho: {cabecalho}")
+                for row in reader:
+                    if len(row) < len(cabecalho):
+                        continue
+                    try:
+                        lote = row[cabecalho.index("lote")].strip() if "lote" in cabecalho else ""
+                        peso_inicial = float(row[cabecalho.index("peso_inicial")].strip() or 0) if "peso_inicial" in cabecalho else 0
+                        if lote and peso_inicial > 0:
+                            resultados.append({
+                                "lote": lote,
+                                "peso_inicial": peso_inicial,
+                                "peso_atual": float(row[cabecalho.index("peso_atual")].strip() or 0) if "peso_atual" in cabecalho else 0,
+                                "gmd": float(row[cabecalho.index("gmd")].strip() or 0) if "gmd" in cabecalho else 0,
+                                "dias_cocho": int(row[cabecalho.index("dias_cocho")].strip() or 0) if "dias_cocho" in cabecalho else 0,
+                                "conversao": float(row[cabecalho.index("conversao")].strip() or 0) if "conversao" in cabecalho else 0,
+                                "status": row[cabecalho.index("status")].strip() if "status" in cabecalho else "ativo"
+                            })
+                        else:
+                            logger.debug(f"[Engorda] Linha ignorada (lote ou peso inicial inválido): {row}")
+                    except ValueError as ve:
+                        logger.warning(f"[Engorda] Valor inválido na linha: {row} | Erro: {ve}")
+                    except Exception as e:
+                        logger.exception(f"[Engorda] Erro na linha: {row} | Erro: {e}")
+                logger.info(f"[Engorda] Extraídos {len(resultados)} lotes válidos")
             except Exception as e:
-                logger.exception(f"[Engorda] Erro na linha: {e}")
+                logger.exception(f"[Engorda] Erro ao processar CSV: {e}")
+        else:
+            for row in dados_brutos:
+                try:
+                    lote = str(row.get("lote") or "").strip()
+                    peso_inicial = float(row.get("peso_inicial") or 0)
+                    if lote and peso_inicial > 0:
+                        resultados.append({
+                            "lote": lote,
+                            "peso_inicial": peso_inicial,
+                            "peso_atual": float(row.get("peso_atual") or 0),
+                            "gmd": float(row.get("gmd") or 0),
+                            "dias_cocho": int(row.get("dias_cocho") or 0),
+                            "conversao": float(row.get("conversao") or 0),
+                            "status": str(row.get("status") or "ativo").strip()
+                        })
+                except Exception as e:
+                    logger.exception(f"[Engorda] Erro na linha: {e}")
+            logger.info(f"[Engorda] Extraídos {len(resultados)} lotes (Excel/PDF)")
         return resultados
 
     @staticmethod
