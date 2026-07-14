@@ -99,7 +99,7 @@ app = FastAPI(
 )
 
 # =========================================================
-# UNIVERSAL IMPORTER – VALIDAÇÃO Ω (5 CAMADAS) + MELHORIAS
+# UNIVERSAL IMPORTER – MULTI-TIPO (FINANCEIRO, REBANHO, PASTAGEM, ENGORDA)
 # =========================================================
 class UniversalImporter:
     MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
@@ -233,12 +233,16 @@ class UniversalImporter:
                 except:
                     continue
             raise Exception("Não foi possível decodificar o arquivo CSV")
-
         else:
             return []
 
+    # ============================================================
+    # NORMALIZADORES E PERSISTÊNCIAS POR TIPO
+    # ============================================================
+
+    # --- FINANCEIRO ---
     @staticmethod
-    def normalizar(dados_brutos, formato: str) -> list:
+    def normalizar_financeiro(dados_brutos, formato: str) -> list:
         resultados = []
         if formato == "excel":
             for idx, row in enumerate(dados_brutos):
@@ -257,7 +261,7 @@ class UniversalImporter:
                             "data_lancamento": str(data)
                         })
                 except (ValueError, KeyError, TypeError) as e:
-                    logger.exception(f"[Normalizador Excel] Erro na linha {idx}: {row} | Erro: {e}")
+                    logger.exception(f"[Financeiro] Erro na linha {idx}: {row} | Erro: {e}")
                     continue
         elif formato == "pdf":
             linhas = dados_brutos.get('linhas', [])
@@ -276,7 +280,7 @@ class UniversalImporter:
                                 "data_lancamento": datetime.now().strftime("%Y-%m-%d")
                             })
                 except (ValueError, IndexError) as e:
-                    logger.exception(f"[Normalizador PDF] Erro na linha {idx}: {linha} | Erro: {e}")
+                    logger.exception(f"[Financeiro PDF] Erro na linha {idx}: {linha} | Erro: {e}")
                     continue
         elif formato == "csv":
             linhas = dados_brutos.get('linhas', [])
@@ -300,12 +304,12 @@ class UniversalImporter:
                                 "data_lancamento": datetime.now().strftime("%Y-%m-%d")
                             })
                 except (ValueError, IndexError) as e:
-                    logger.exception(f"[Normalizador CSV] Erro na linha {idx+1}: {linha} | Erro: {e}")
+                    logger.exception(f"[Financeiro CSV] Erro na linha {idx+1}: {linha} | Erro: {e}")
                     continue
         return resultados
 
     @staticmethod
-    def validar(movimentacoes: list) -> tuple:
+    def validar_financeiro(movimentacoes: list) -> tuple:
         validas = []
         erros = []
         for idx, item in enumerate(movimentacoes):
@@ -322,7 +326,7 @@ class UniversalImporter:
         return validas, erros
 
     @staticmethod
-    def persistir(user_id: str, movimentacoes: list) -> dict:
+    def persistir_financeiro(user_id: str, movimentacoes: list) -> dict:
         if not movimentacoes:
             return {"inseridos": 0, "erros": 0}
         try:
@@ -354,7 +358,7 @@ class UniversalImporter:
                         erros += 1
                 return {"inseridos": inseridos, "erros": erros}
         except Exception as e:
-            logger.exception(f"[Persistencia] Erro em lote: {e}")
+            logger.exception(f"[Financeiro] Erro em lote: {e}")
             inseridos = 0
             erros = 0
             for idx, item in enumerate(movimentacoes):
@@ -372,25 +376,24 @@ class UniversalImporter:
                         inseridos += 1
                     else:
                         erros += 1
-                        logger.error(f"[Persistencia] Falha ao inserir linha {idx+1}: {item}")
+                        logger.error(f"[Financeiro] Falha ao inserir linha {idx+1}: {item}")
                 except Exception as e2:
-                    logger.exception(f"[Persistencia] Erro na linha {idx+1}: {item} | Erro: {e2}")
+                    logger.exception(f"[Financeiro] Erro na linha {idx+1}: {item} | Erro: {e2}")
                     erros += 1
             return {"inseridos": inseridos, "erros": erros}
 
     @staticmethod
-    def gerar_auditoria(arquivo: str, formato: str, movimentacoes: list, inseridos: int, erros: int) -> dict:
+    def gerar_auditoria_financeiro(arquivo: str, formato: str, movimentacoes: list, inseridos: int, erros: int) -> dict:
         total_receitas = sum(m['valor'] for m in movimentacoes if m['tipo'] == 'receita')
         total_despesas = sum(m['valor'] for m in movimentacoes if m['tipo'] == 'despesa')
         lucro = total_receitas - total_despesas
         roi = (lucro / total_receitas * 100) if total_receitas > 0 else 0
 
         return {
-            "mensagem": "✅ Implantação concluída!",
+            "mensagem": "✅ Dados financeiros importados com sucesso!",
             "arquivo": arquivo,
             "formato": formato.upper(),
             "tamanho": "0 KB",
-            "planilhas_encontradas": 1,
             "lancamentos_estimados": len(movimentacoes),
             "periodo_inicio": "2026-01-01",
             "periodo_fim": "2026-06-30",
@@ -418,27 +421,199 @@ class UniversalImporter:
             "centro_custo": "Alimentação",
             "fonte_receita": "Venda de bovinos",
             "recomendacao": "Otimizar custos operacionais.",
-            "modulos": {
-                "financeiro": True,
-                "dashboard": True,
-                "views": True,
-                "motor_pi": True,
-                "linha_tempo": True,
-                "planilha_operacional": True,
-                "especialistas": True
-            },
+            "modulos": {"financeiro": True, "dashboard": True, "views": True, "motor_pi": True},
             "especialistas": ["CFO Inteligente", "Veterinário Digital"],
-            "proximas_acoes": [
-                "Abrir Dashboard Financeiro",
-                "Ver recomendações do CFO"
-            ],
+            "proximas_acoes": ["Abrir Dashboard Financeiro", "Ver recomendações do CFO"],
             "ia_usada": False,
             "inseridos": inseridos,
             "erros": erros
         }
 
+    # --- REBANHO ---
+    @staticmethod
+    def normalizar_rebanho(dados_brutos, formato: str) -> list:
+        resultados = []
+        for row in dados_brutos:
+            try:
+                resultados.append({
+                    "brinco": str(row.get("brinco") or "").strip(),
+                    "lote": str(row.get("lote") or "").strip(),
+                    "sexo": str(row.get("sexo") or "").strip(),
+                    "raca": str(row.get("raca") or "").strip(),
+                    "peso_entrada": float(row.get("peso_entrada") or 0),
+                    "peso_atual": float(row.get("peso_atual") or 0),
+                    "gmd": float(row.get("gmd") or 0),
+                    "data_vacina": str(row.get("data_vacina") or ""),
+                    "piquete_atual": str(row.get("piquete_atual") or "").strip()
+                })
+            except Exception as e:
+                logger.exception(f"[Rebanho] Erro na linha: {e}")
+        return resultados
+
+    @staticmethod
+    def validar_rebanho(animais: list) -> tuple:
+        validos = []
+        erros = []
+        for idx, animal in enumerate(animais):
+            if not animal.get("brinco"):
+                erros.append(f"Linha {idx+1}: brinco ausente")
+                continue
+            if animal.get("peso_entrada", 0) <= 0:
+                erros.append(f"Linha {idx+1}: peso_entrada inválido")
+                continue
+            validos.append(animal)
+        return validos, erros
+
+    @staticmethod
+    def persistir_rebanho(user_id: str, animais: list) -> dict:
+        if not animais:
+            return {"inseridos": 0, "erros": 0}
+        inseridos = 0
+        for animal in animais:
+            try:
+                supabase.table("animais").insert({
+                    "user_id": user_id,
+                    **animal,
+                    "criado_em": datetime.now().isoformat()
+                }).execute()
+                inseridos += 1
+            except Exception as e:
+                logger.exception(f"[Rebanho] Erro ao inserir animal: {e}")
+        return {"inseridos": inseridos, "erros": len(animais) - inseridos}
+
+    @staticmethod
+    def gerar_auditoria_rebanho(arquivo: str, animais: list, inseridos: int, erros: int) -> dict:
+        return {
+            "mensagem": "✅ Dados de rebanho importados com sucesso!",
+            "arquivo": arquivo,
+            "animais_importados": len(animais),
+            "inseridos": inseridos,
+            "erros": erros,
+            "modulos": {"rebanho": True, "dashboard": True, "views": True}
+        }
+
+    # --- PASTAGEM ---
+    @staticmethod
+    def normalizar_pastagem(dados_brutos, formato: str) -> list:
+        resultados = []
+        for row in dados_brutos:
+            try:
+                resultados.append({
+                    "piquete": str(row.get("piquete") or "").strip(),
+                    "area_ha": float(row.get("area_ha") or 0),
+                    "lotacao_ua": float(row.get("lotacao_ua") or 0),
+                    "forragem": float(row.get("forragem") or 0),
+                    "ultimo_manejo": str(row.get("ultimo_manejo") or "")
+                })
+            except Exception as e:
+                logger.exception(f"[Pastagem] Erro na linha: {e}")
+        return resultados
+
+    @staticmethod
+    def validar_pastagem(pastagens: list) -> tuple:
+        validos = []
+        erros = []
+        for idx, p in enumerate(pastagens):
+            if not p.get("piquete"):
+                erros.append(f"Linha {idx+1}: piquete ausente")
+                continue
+            if p.get("area_ha", 0) <= 0:
+                erros.append(f"Linha {idx+1}: area_ha inválido")
+                continue
+            validos.append(p)
+        return validos, erros
+
+    @staticmethod
+    def persistir_pastagem(user_id: str, pastagens: list) -> dict:
+        if not pastagens:
+            return {"inseridos": 0, "erros": 0}
+        inseridos = 0
+        for p in pastagens:
+            try:
+                supabase.table("pastagens").insert({
+                    "user_id": user_id,
+                    **p,
+                    "criado_em": datetime.now().isoformat()
+                }).execute()
+                inseridos += 1
+            except Exception as e:
+                logger.exception(f"[Pastagem] Erro ao inserir pastagem: {e}")
+        return {"inseridos": inseridos, "erros": len(pastagens) - inseridos}
+
+    @staticmethod
+    def gerar_auditoria_pastagem(arquivo: str, pastagens: list, inseridos: int, erros: int) -> dict:
+        return {
+            "mensagem": "✅ Dados de pastagem importados com sucesso!",
+            "arquivo": arquivo,
+            "pastagens_importadas": len(pastagens),
+            "inseridos": inseridos,
+            "erros": erros,
+            "modulos": {"pastagem": True, "dashboard": True, "views": True}
+        }
+
+    # --- ENGORDA ---
+    @staticmethod
+    def normalizar_engorda(dados_brutos, formato: str) -> list:
+        resultados = []
+        for row in dados_brutos:
+            try:
+                resultados.append({
+                    "lote": str(row.get("lote") or "").strip(),
+                    "peso_inicial": float(row.get("peso_inicial") or 0),
+                    "peso_atual": float(row.get("peso_atual") or 0),
+                    "gmd": float(row.get("gmd") or 0),
+                    "dias_cocho": int(row.get("dias_cocho") or 0),
+                    "conversao": float(row.get("conversao") or 0),
+                    "status": str(row.get("status") or "ativo").strip()
+                })
+            except Exception as e:
+                logger.exception(f"[Engorda] Erro na linha: {e}")
+        return resultados
+
+    @staticmethod
+    def validar_engorda(lotes: list) -> tuple:
+        validos = []
+        erros = []
+        for idx, l in enumerate(lotes):
+            if not l.get("lote"):
+                erros.append(f"Linha {idx+1}: lote ausente")
+                continue
+            if l.get("peso_inicial", 0) <= 0:
+                erros.append(f"Linha {idx+1}: peso_inicial inválido")
+                continue
+            validos.append(l)
+        return validos, erros
+
+    @staticmethod
+    def persistir_engorda(user_id: str, lotes: list) -> dict:
+        if not lotes:
+            return {"inseridos": 0, "erros": 0}
+        inseridos = 0
+        for l in lotes:
+            try:
+                supabase.table("lotes_engorda").insert({
+                    "user_id": user_id,
+                    **l,
+                    "criado_em": datetime.now().isoformat()
+                }).execute()
+                inseridos += 1
+            except Exception as e:
+                logger.exception(f"[Engorda] Erro ao inserir lote: {e}")
+        return {"inseridos": inseridos, "erros": len(lotes) - inseridos}
+
+    @staticmethod
+    def gerar_auditoria_engorda(arquivo: str, lotes: list, inseridos: int, erros: int) -> dict:
+        return {
+            "mensagem": "✅ Dados de engorda importados com sucesso!",
+            "arquivo": arquivo,
+            "lotes_importados": len(lotes),
+            "inseridos": inseridos,
+            "erros": erros,
+            "modulos": {"engorda": True, "dashboard": True, "views": True}
+        }
+
 # =========================================================
-# ENDPOINT DE IMPORTAÇÃO – COM LOGS ESTRUTURADOS (VERSÃO 9.9/10)
+# ENDPOINT DE IMPORTAÇÃO – MULTI-TIPO (ROTEAMENTO POR TIPO)
 # =========================================================
 @app.post("/api/importar/arquivo")
 async def importar_arquivo(
@@ -466,20 +641,12 @@ async def importar_arquivo(
         tamanho = len(conteudo)
         logger.info(f"[{request_id}] 📏 Tamanho: {tamanho} bytes")
 
-        # ---- VALIDAÇÃO DE TAMANHO ----
         if tamanho == 0:
             logger.error(f"[{request_id}] ❌ Arquivo vazio")
-            return JSONResponse(
-                {"error": "Arquivo vazio", "request_id": request_id},
-                status_code=400
-            )
+            return JSONResponse({"error": "Arquivo vazio", "request_id": request_id}, status_code=400)
         if tamanho > UniversalImporter.MAX_FILE_SIZE:
-            logger.error(f"[{request_id}] ❌ Arquivo excede {UniversalImporter.MAX_FILE_SIZE//1024//1024}MB")
-            return JSONResponse(
-                {"error": f"Arquivo excede o limite de {UniversalImporter.MAX_FILE_SIZE//1024//1024}MB", "request_id": request_id},
-                status_code=413
-            )
-        logger.info(f"[{request_id}] ✅ Leitura concluída")
+            logger.error(f"[{request_id}] ❌ Arquivo excede limite de 50MB")
+            return JSONResponse({"error": f"Arquivo excede o limite de 50MB", "request_id": request_id}, status_code=413)
 
         # ---- 2. DETECTAR FORMATO ----
         logger.info(f"[{request_id}] 🔍 2. Detectando formato...")
@@ -487,10 +654,7 @@ async def importar_arquivo(
         logger.info(f"[{request_id}] 📋 Formato detectado: {info}")
         if info["formato"] == "unknown" or not info.get("valido", False):
             logger.error(f"[{request_id}] ❌ Formato não reconhecido: {info}")
-            return JSONResponse(
-                {"error": f"Formato não reconhecido: {info.get('extensao', 'desconhecido')}", "request_id": request_id},
-                status_code=400
-            )
+            return JSONResponse({"error": f"Formato não reconhecido: {info.get('extensao', 'desconhecido')}", "request_id": request_id}, status_code=400)
         logger.info(f"[{request_id}] ✅ Formato aceito: {info['formato']} (engine: {info.get('engine', 'auto')})")
 
         # ---- 3. LER DADOS BRUTOS ----
@@ -506,111 +670,86 @@ async def importar_arquivo(
                 logger.info(f"[{request_id}] ✅ {len(linhas)} linhas (estrutura complexa)")
         except Exception as e:
             logger.exception(f"[{request_id}] ❌ Falha na leitura: {e}")
-            return JSONResponse(
-                {"error": f"Erro ao ler arquivo: {str(e)}", "request_id": request_id},
-                status_code=400
-            )
+            return JSONResponse({"error": f"Erro ao ler arquivo: {str(e)}", "request_id": request_id}, status_code=400)
 
         if not dados_brutos:
             logger.error(f"[{request_id}] ❌ Nenhum dado encontrado")
-            return JSONResponse(
-                {"error": "Nenhum dado encontrado no arquivo.", "request_id": request_id},
-                status_code=400
-            )
+            return JSONResponse({"error": "Nenhum dado encontrado no arquivo.", "request_id": request_id}, status_code=400)
 
-        # ---- 4. NORMALIZAR ----
-        logger.info(f"[{request_id}] 🔄 4. Normalizando dados...")
-        try:
-            movimentacoes = UniversalImporter.normalizar(dados_brutos, info["formato"])
-            logger.info(f"[{request_id}] ✅ {len(movimentacoes)} registros normalizados")
-            if movimentacoes:
-                logger.info(f"[{request_id}] 📌 Primeiro registro: {movimentacoes[0]}")
-        except Exception as e:
-            logger.exception(f"[{request_id}] ❌ Falha na normalização: {e}")
-            return JSONResponse(
-                {"error": f"Erro ao normalizar dados: {str(e)}", "request_id": request_id},
-                status_code=400
-            )
-
-        if not movimentacoes:
-            logger.error(f"[{request_id}] ❌ Nenhuma movimentação válida")
-            return JSONResponse(
-                {"error": "Nenhuma movimentação válida encontrada.", "request_id": request_id},
-                status_code=400
-            )
-
-        # ---- 5. VALIDAR ----
-        logger.info(f"[{request_id}] ✅ 5. Validando dados...")
-        try:
-            mov_validas, erros_validacao = UniversalImporter.validar(movimentacoes)
-            logger.info(f"[{request_id}] ✅ {len(mov_validas)} válidas, {len(erros_validacao)} erros")
-            if erros_validacao:
-                logger.warning(f"[{request_id}] ⚠️ Erros de validação: {erros_validacao[:3]}")
-        except Exception as e:
-            logger.exception(f"[{request_id}] ❌ Falha na validação: {e}")
-            return JSONResponse(
-                {"error": f"Erro ao validar dados: {str(e)}", "request_id": request_id},
-                status_code=400
-            )
-
-        if not mov_validas:
-            logger.error(f"[{request_id}] ❌ Nenhum registro válido")
-            return JSONResponse(
-                {"error": f"Erros de validação: {erros_validacao[:3]}", "request_id": request_id},
-                status_code=400
-            )
-
-        # ---- 6. PERSISTIR ----
-        logger.info(f"[{request_id}] 💾 6. Persistindo no Supabase...")
-        try:
-            resultado = UniversalImporter.persistir(user_id, mov_validas)
-            logger.info(f"[{request_id}] ✅ {resultado['inseridos']} inseridos, {resultado['erros']} erros")
-        except Exception as e:
-            logger.exception(f"[{request_id}] ❌ Falha na persistência: {e}")
-            return JSONResponse(
-                {"error": f"Erro ao persistir dados: {str(e)}", "request_id": request_id},
-                status_code=400
-            )
-
-        # ---- 7. CONSULTAR VIEW (AUDITORIA) ----
-        logger.info(f"[{request_id}] 👁️ 7. Consultando View...")
-        try:
-            view_result = supabase.table("vw_financeiro_resumo").select("*", count="exact").eq("user_id", user_id).execute()
-            view_count = view_result.count if hasattr(view_result, 'count') else len(view_result.data)
-            logger.info(f"[{request_id}] ✅ View retornou {view_count} registros para o usuário {user_id}")
-        except Exception as e:
-            logger.warning(f"[{request_id}] ⚠️ Erro ao consultar View: {e}")
-
-        # ---- 8. GERAR RELATÓRIO ----
-        logger.info(f"[{request_id}] 📈 8. Gerando auditoria...")
-        try:
-            relatorio = UniversalImporter.gerar_auditoria(
+        # ---- ROTEAMENTO POR TIPO ----
+        if tipo == "financeiro":
+            logger.info(f"[{request_id}] 💰 Processando dados financeiros...")
+            movimentacoes = UniversalImporter.normalizar_financeiro(dados_brutos, info["formato"])
+            mov_validas, erros_validacao = UniversalImporter.validar_financeiro(movimentacoes)
+            if not mov_validas:
+                logger.error(f"[{request_id}] ❌ Nenhum registro financeiro válido")
+                return JSONResponse({"error": "Nenhum registro financeiro válido.", "request_id": request_id}, status_code=400)
+            resultado = UniversalImporter.persistir_financeiro(user_id, mov_validas)
+            relatorio = UniversalImporter.gerar_auditoria_financeiro(
                 arquivo=file.filename,
                 formato=info["formato"],
                 movimentacoes=mov_validas,
                 inseridos=resultado["inseridos"],
                 erros=resultado["erros"] + len(erros_validacao)
             )
-            logger.info(f"[{request_id}] ✅ Auditoria gerada")
-        except Exception as e:
-            logger.exception(f"[{request_id}] ❌ Falha ao gerar auditoria: {e}")
-            return JSONResponse(
-                {"error": f"Erro ao gerar relatório: {str(e)}", "request_id": request_id},
-                status_code=500
+
+        elif tipo == "rebanho":
+            logger.info(f"[{request_id}] 🐄 Processando dados de rebanho...")
+            animais = UniversalImporter.normalizar_rebanho(dados_brutos, info["formato"])
+            animais_validos, erros_validacao = UniversalImporter.validar_rebanho(animais)
+            if not animais_validos:
+                logger.error(f"[{request_id}] ❌ Nenhum animal válido")
+                return JSONResponse({"error": "Nenhum animal válido.", "request_id": request_id}, status_code=400)
+            resultado = UniversalImporter.persistir_rebanho(user_id, animais_validos)
+            relatorio = UniversalImporter.gerar_auditoria_rebanho(
+                arquivo=file.filename,
+                animais=animais_validos,
+                inseridos=resultado["inseridos"],
+                erros=resultado["erros"] + len(erros_validacao)
             )
 
+        elif tipo == "pastagem":
+            logger.info(f"[{request_id}] 🌿 Processando dados de pastagem...")
+            pastagens = UniversalImporter.normalizar_pastagem(dados_brutos, info["formato"])
+            pastagens_validas, erros_validacao = UniversalImporter.validar_pastagem(pastagens)
+            if not pastagens_validas:
+                logger.error(f"[{request_id}] ❌ Nenhuma pastagem válida")
+                return JSONResponse({"error": "Nenhuma pastagem válida.", "request_id": request_id}, status_code=400)
+            resultado = UniversalImporter.persistir_pastagem(user_id, pastagens_validas)
+            relatorio = UniversalImporter.gerar_auditoria_pastagem(
+                arquivo=file.filename,
+                pastagens=pastagens_validas,
+                inseridos=resultado["inseridos"],
+                erros=resultado["erros"] + len(erros_validacao)
+            )
+
+        elif tipo == "engorda":
+            logger.info(f"[{request_id}] 🥩 Processando dados de engorda...")
+            lotes = UniversalImporter.normalizar_engorda(dados_brutos, info["formato"])
+            lotes_validos, erros_validacao = UniversalImporter.validar_engorda(lotes)
+            if not lotes_validos:
+                logger.error(f"[{request_id}] ❌ Nenhum lote válido")
+                return JSONResponse({"error": "Nenhum lote válido.", "request_id": request_id}, status_code=400)
+            resultado = UniversalImporter.persistir_engorda(user_id, lotes_validos)
+            relatorio = UniversalImporter.gerar_auditoria_engorda(
+                arquivo=file.filename,
+                lotes=lotes_validos,
+                inseridos=resultado["inseridos"],
+                erros=resultado["erros"] + len(erros_validacao)
+            )
+
+        else:
+            logger.error(f"[{request_id}] ❌ Tipo '{tipo}' não suportado")
+            return JSONResponse({"error": f"Tipo '{tipo}' não suportado", "request_id": request_id}, status_code=400)
+
         elapsed = round(time.time() - start_time, 2)
-        logger.info(f"[{request_id}] ✅ Processamento concluído em {elapsed}s")
+        logger.info(f"[{request_id}] ✅ Processamento concluído em {elapsed}s | Inseridos: {resultado['inseridos']}")
         logger.info("=" * 60)
         return JSONResponse(relatorio)
 
     except Exception as e:
         logger.exception(f"[{request_id}] 💥 ERRO INESPERADO: {e}")
-        return JSONResponse(
-            {"error": "Falha interna no processamento", "request_id": request_id},
-            status_code=500
-        )
-
+        return JSONResponse({"error": "Falha interna no processamento", "request_id": request_id}, status_code=500)
 
 # =========================================================
 # ROTAS ORIGINAIS – DASHBOARD DTO
