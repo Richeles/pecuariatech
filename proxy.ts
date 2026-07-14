@@ -9,6 +9,11 @@ import { NextRequest, NextResponse } from "next/server";
 ========================================================= */
 
 export async function proxy(request: NextRequest) {
+  // 🔥 Ignorar requisições OPTIONS (preflight CORS)
+  if (request.method === "OPTIONS") {
+    return NextResponse.next();
+  }
+
   const pathname = request.nextUrl.pathname;
 
   console.log("🛰️ PROXY:", pathname);
