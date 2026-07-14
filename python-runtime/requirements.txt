@@ -4,7 +4,10 @@ supabase==2.0.3
 python-dotenv==1.0.0
 python-multipart==0.0.6
 requests==2.31.0
+httpx
 reportlab
 openpyxl
 pandas==2.2.3
 pdfplumber==0.10.3
+chardet==5.2.0
+PyPDF2==3.0.1
