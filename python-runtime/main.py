@@ -429,54 +429,49 @@ class UniversalImporter:
             "erros": erros
         }
 
-    # --- REBANHO (CORRIGIDO COM SEPARADOR DETECTADO) ---
+    # --- REBANHO (com logs detalhados e separador detectado) ---
     @staticmethod
     def normalizar_rebanho(dados_brutos, formato: str) -> list:
         resultados = []
         if formato == "csv" and isinstance(dados_brutos, dict):
             linhas = dados_brutos.get('linhas', [])
             separador = dados_brutos.get('separador', ',')
+            logger.info(f"[Rebanho] CSV recebido: {len(linhas)} linhas, separador='{separador}'")
             if not linhas:
                 logger.warning("[Rebanho] CSV vazio")
                 return []
             try:
-                logger.info(f"[Rebanho] Processando CSV: {len(linhas)} linhas, separador='{separador}'")
+                # Mostra as primeiras 3 linhas para diagnóstico
+                for i, linha in enumerate(linhas[:3]):
+                    logger.info(f"[Rebanho] Linha {i}: {linha}")
                 reader = csv.reader(linhas, delimiter=separador)
                 cabecalho = [c.strip().lower() for c in next(reader)]
                 logger.info(f"[Rebanho] Cabeçalho: {cabecalho}")
-                for row in reader:
+                for idx, row in enumerate(reader):
                     if len(row) < len(cabecalho):
+                        logger.warning(f"[Rebanho] Linha {idx} ignorada (colunas insuficientes): {row}")
                         continue
                     try:
-                        # Extrai os campos pelo índice
                         brinco = row[cabecalho.index("brinco")].strip() if "brinco" in cabecalho else ""
-                        lote = row[cabecalho.index("lote")].strip() if "lote" in cabecalho else ""
-                        sexo = row[cabecalho.index("sexo")].strip() if "sexo" in cabecalho else ""
-                        raca = row[cabecalho.index("raca")].strip() if "raca" in cabecalho else ""
                         peso_entrada = float(row[cabecalho.index("peso_entrada")].strip() or 0) if "peso_entrada" in cabecalho else 0
-                        peso_atual = float(row[cabecalho.index("peso_atual")].strip() or 0) if "peso_atual" in cabecalho else 0
-                        gmd = float(row[cabecalho.index("gmd")].strip() or 0) if "gmd" in cabecalho else 0
-                        data_vacina = row[cabecalho.index("data_vacina")].strip() if "data_vacina" in cabecalho else ""
-                        piquete_atual = row[cabecalho.index("piquete_atual")].strip() if "piquete_atual" in cabecalho else ""
-
                         if brinco and peso_entrada > 0:
                             resultados.append({
                                 "brinco": brinco,
-                                "lote": lote,
-                                "sexo": sexo,
-                                "raca": raca,
+                                "lote": row[cabecalho.index("lote")].strip() if "lote" in cabecalho else "",
+                                "sexo": row[cabecalho.index("sexo")].strip() if "sexo" in cabecalho else "",
+                                "raca": row[cabecalho.index("raca")].strip() if "raca" in cabecalho else "",
                                 "peso_entrada": peso_entrada,
-                                "peso_atual": peso_atual,
-                                "gmd": gmd,
-                                "data_vacina": data_vacina,
-                                "piquete_atual": piquete_atual
+                                "peso_atual": float(row[cabecalho.index("peso_atual")].strip() or 0) if "peso_atual" in cabecalho else 0,
+                                "gmd": float(row[cabecalho.index("gmd")].strip() or 0) if "gmd" in cabecalho else 0,
+                                "data_vacina": row[cabecalho.index("data_vacina")].strip() if "data_vacina" in cabecalho else "",
+                                "piquete_atual": row[cabecalho.index("piquete_atual")].strip() if "piquete_atual" in cabecalho else ""
                             })
                         else:
-                            logger.debug(f"[Rebanho] Linha ignorada (brinco ou peso inválido): {row}")
+                            logger.debug(f"[Rebanho] Linha {idx} ignorada (brinco ou peso inválido): {row}")
                     except ValueError as ve:
-                        logger.warning(f"[Rebanho] Valor inválido na linha: {row} | Erro: {ve}")
+                        logger.warning(f"[Rebanho] Linha {idx} valor inválido: {row} | Erro: {ve}")
                     except Exception as e:
-                        logger.exception(f"[Rebanho] Erro na linha: {row} | Erro: {e}")
+                        logger.exception(f"[Rebanho] Linha {idx} erro: {row} | Erro: {e}")
                 logger.info(f"[Rebanho] Extraídos {len(resultados)} animais válidos")
             except Exception as e:
                 logger.exception(f"[Rebanho] Erro ao processar CSV: {e}")
@@ -545,23 +540,26 @@ class UniversalImporter:
             "modulos": {"rebanho": True, "dashboard": True, "views": True}
         }
 
-    # --- PASTAGEM (CORRIGIDO COM SEPARADOR DETECTADO) ---
+    # --- PASTAGEM (com logs detalhados) ---
     @staticmethod
     def normalizar_pastagem(dados_brutos, formato: str) -> list:
         resultados = []
         if formato == "csv" and isinstance(dados_brutos, dict):
             linhas = dados_brutos.get('linhas', [])
             separador = dados_brutos.get('separador', ',')
+            logger.info(f"[Pastagem] CSV recebido: {len(linhas)} linhas, separador='{separador}'")
             if not linhas:
                 logger.warning("[Pastagem] CSV vazio")
                 return []
             try:
-                logger.info(f"[Pastagem] Processando CSV: {len(linhas)} linhas, separador='{separador}'")
+                for i, linha in enumerate(linhas[:3]):
+                    logger.info(f"[Pastagem] Linha {i}: {linha}")
                 reader = csv.reader(linhas, delimiter=separador)
                 cabecalho = [c.strip().lower() for c in next(reader)]
                 logger.info(f"[Pastagem] Cabeçalho: {cabecalho}")
-                for row in reader:
+                for idx, row in enumerate(reader):
                     if len(row) < len(cabecalho):
+                        logger.warning(f"[Pastagem] Linha {idx} ignorada (colunas insuficientes): {row}")
                         continue
                     try:
                         piquete = row[cabecalho.index("piquete")].strip() if "piquete" in cabecalho else ""
@@ -575,11 +573,11 @@ class UniversalImporter:
                                 "ultimo_manejo": row[cabecalho.index("ultimo_manejo")].strip() if "ultimo_manejo" in cabecalho else ""
                             })
                         else:
-                            logger.debug(f"[Pastagem] Linha ignorada (piquete ou área inválida): {row}")
+                            logger.debug(f"[Pastagem] Linha {idx} ignorada (piquete ou área inválida): {row}")
                     except ValueError as ve:
-                        logger.warning(f"[Pastagem] Valor inválido na linha: {row} | Erro: {ve}")
+                        logger.warning(f"[Pastagem] Linha {idx} valor inválido: {row} | Erro: {ve}")
                     except Exception as e:
-                        logger.exception(f"[Pastagem] Erro na linha: {row} | Erro: {e}")
+                        logger.exception(f"[Pastagem] Linha {idx} erro: {row} | Erro: {e}")
                 logger.info(f"[Pastagem] Extraídos {len(resultados)} pastagens válidas")
             except Exception as e:
                 logger.exception(f"[Pastagem] Erro ao processar CSV: {e}")
@@ -643,23 +641,26 @@ class UniversalImporter:
             "modulos": {"pastagem": True, "dashboard": True, "views": True}
         }
 
-    # --- ENGORDA (CORRIGIDO COM SEPARADOR DETECTADO) ---
+    # --- ENGORDA (com logs detalhados) ---
     @staticmethod
     def normalizar_engorda(dados_brutos, formato: str) -> list:
         resultados = []
         if formato == "csv" and isinstance(dados_brutos, dict):
             linhas = dados_brutos.get('linhas', [])
             separador = dados_brutos.get('separador', ',')
+            logger.info(f"[Engorda] CSV recebido: {len(linhas)} linhas, separador='{separador}'")
             if not linhas:
                 logger.warning("[Engorda] CSV vazio")
                 return []
             try:
-                logger.info(f"[Engorda] Processando CSV: {len(linhas)} linhas, separador='{separador}'")
+                for i, linha in enumerate(linhas[:3]):
+                    logger.info(f"[Engorda] Linha {i}: {linha}")
                 reader = csv.reader(linhas, delimiter=separador)
                 cabecalho = [c.strip().lower() for c in next(reader)]
                 logger.info(f"[Engorda] Cabeçalho: {cabecalho}")
-                for row in reader:
+                for idx, row in enumerate(reader):
                     if len(row) < len(cabecalho):
+                        logger.warning(f"[Engorda] Linha {idx} ignorada (colunas insuficientes): {row}")
                         continue
                     try:
                         lote = row[cabecalho.index("lote")].strip() if "lote" in cabecalho else ""
@@ -675,11 +676,11 @@ class UniversalImporter:
                                 "status": row[cabecalho.index("status")].strip() if "status" in cabecalho else "ativo"
                             })
                         else:
-                            logger.debug(f"[Engorda] Linha ignorada (lote ou peso inicial inválido): {row}")
+                            logger.debug(f"[Engorda] Linha {idx} ignorada (lote ou peso inicial inválido): {row}")
                     except ValueError as ve:
-                        logger.warning(f"[Engorda] Valor inválido na linha: {row} | Erro: {ve}")
+                        logger.warning(f"[Engorda] Linha {idx} valor inválido: {row} | Erro: {ve}")
                     except Exception as e:
-                        logger.exception(f"[Engorda] Erro na linha: {row} | Erro: {e}")
+                        logger.exception(f"[Engorda] Linha {idx} erro: {row} | Erro: {e}")
                 logger.info(f"[Engorda] Extraídos {len(resultados)} lotes válidos")
             except Exception as e:
                 logger.exception(f"[Engorda] Erro ao processar CSV: {e}")
