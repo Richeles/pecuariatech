@@ -201,11 +201,25 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
       const supabase = (await import("@/app/lib/supabase-browser")).createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
+      // ============================================================
+      // 🔥 CORREÇÃO: FALLBACK PARA TIPO E PLANO
+      // ============================================================
+      const finalTipo = tipo || "financeiro";
+      const finalPlano = plano || "starter";
+      const finalUserId = user?.id || "96a1a441-c0f6-43b2-9cb7-4fadc17fd261";
+
       const formData = new FormData();
       formData.append("file", arquivo);
-      formData.append("tipo", tipo);
-      formData.append("user_id", user?.id || "96a1a441-c0f6-43b2-9cb7-4fadc17fd261");
-      formData.append("plano", plano);
+      formData.append("tipo", finalTipo);
+      formData.append("user_id", finalUserId);
+      formData.append("plano", finalPlano);
+
+      console.log("📤 Enviando FormData:", {
+        file: arquivo.name,
+        tipo: finalTipo,
+        userId: finalUserId,
+        plano: finalPlano,
+      });
 
       const res = await fetch("/api/upload-arquivo", {
         method: "POST",
@@ -275,10 +289,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         setMensagem(dados.mensagem);
         setUploadSuccess(true);
 
-        // 🔒 REMOVIDO: window.location.reload()
-        // O Dashboard NUNCA é recarregado por causa do upload.
-        // Apenas o estado local do componente é atualizado.
-
+        // 🔒 NUNCA recarrega o Dashboard
         if (onSuccess) onSuccess();
       } else {
         const errorMsg = result.error || result.detail || "Falha na importação";
