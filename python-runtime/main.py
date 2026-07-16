@@ -441,7 +441,6 @@ class UniversalImporter:
                 logger.warning("[Rebanho] CSV vazio")
                 return []
             try:
-                # Mostra as primeiras 3 linhas para diagnóstico
                 for i, linha in enumerate(linhas[:3]):
                     logger.info(f"[Rebanho] Linha {i}: {linha}")
                 reader = csv.reader(linhas, delimiter=separador)
@@ -746,14 +745,46 @@ class UniversalImporter:
             "modulos": {"engorda": True, "dashboard": True, "views": True}
         }
 
+    # ============================================================
+    # 🧠 INFERÊNCIA AUTOMÁTICA DE TIPO
+    # ============================================================
+    @staticmethod
+    def inferir_tipo(dados_brutos, formato: str) -> str:
+        """
+        Analisa o cabeçalho do arquivo e infere o módulo correto.
+        Retorna: 'financeiro', 'rebanho', 'pastagem' ou 'engorda'.
+        """
+        cabecalho = []
+        if formato == "csv":
+            if isinstance(dados_brutos, dict) and dados_brutos.get("linhas"):
+                linhas = dados_brutos["linhas"]
+                separador = dados_brutos.get("separador", ",")
+                cabecalho = [c.strip().lower() for c in linhas[0].split(separador)]
+        elif formato == "excel":
+            if isinstance(dados_brutos, list) and dados_brutos:
+                cabecalho = [c.lower() for c in dados_brutos[0].keys()]
+        else:
+            return "financeiro"
+
+        colunas = set(cabecalho)
+
+        # Ordem de verificação evita sobreposição
+        if {"brinco", "lote", "sexo", "raca", "peso_entrada"}.issubset(colunas):
+            return "rebanho"
+        if {"piquete", "area_ha", "lotacao_ua", "forragem"}.issubset(colunas):
+            return "pastagem"
+        if {"lote", "peso_inicial", "peso_atual", "gmd"}.issubset(colunas):
+            return "engorda"
+        return "financeiro"
+
 # =========================================================
-# ENDPOINT DE IMPORTAÇÃO – MULTI-TIPO (ROTEAMENTO POR TIPO)
+# ENDPOINT DE IMPORTAÇÃO – MULTI-TIPO (COM INFERÊNCIA AUTOMÁTICA)
 # =========================================================
 @app.post("/api/importar/arquivo")
 async def importar_arquivo(
     file: UploadFile = File(...),
     user_id: str = Form(...),
-    tipo: str = Form("financeiro"),
+    tipo: str = Form("auto"),   # agora o padrão é "auto" → inferência ativada
     plano: str = Form("starter")
 ):
     request_id = uuid.uuid4().hex[:8]
@@ -764,7 +795,7 @@ async def importar_arquivo(
     logger.info(f"[{request_id}] 📁 Arquivo: {file.filename}")
     logger.info(f"[{request_id}] 📄 Content-Type: {file.content_type}")
     logger.info(f"[{request_id}] 👤 User: {user_id}")
-    logger.info(f"[{request_id}] 🏷️ Tipo: {tipo}")
+    logger.info(f"[{request_id}] 🏷️ Tipo recebido: {tipo}")
     logger.info(f"[{request_id}] 📦 Plano: {plano}")
     logger.info("=" * 60)
 
@@ -809,6 +840,14 @@ async def importar_arquivo(
         if not dados_brutos:
             logger.error(f"[{request_id}] ❌ Nenhum dado encontrado")
             return JSONResponse({"error": "Nenhum dado encontrado no arquivo.", "request_id": request_id}, status_code=400)
+
+        # ---- 4. INFERIR TIPO (se "auto") ----
+        if tipo == "auto" or not tipo:
+            tipo_inferido = UniversalImporter.inferir_tipo(dados_brutos, info["formato"])
+            logger.info(f"[{request_id}] 🤖 Tipo inferido automaticamente: {tipo_inferido}")
+            tipo = tipo_inferido
+        else:
+            logger.info(f"[{request_id}] 📌 Tipo definido manualmente: {tipo}")
 
         # ---- ROTEAMENTO POR TIPO ----
         if tipo == "financeiro":
