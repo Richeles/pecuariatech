@@ -27,8 +27,6 @@ logger = logging.getLogger(__name__)
 # DASHBOARD DTO - TRIÂNGULO 360 (ORIGINAL)
 # =========================================================
 from application.dashboard_application import gerar_dashboard_dto
-from core.omega.kernel import OmegaKernel
-
 
 # =========================================================
 # RELATÓRIOS (ORIGINAL)
@@ -786,72 +784,149 @@ class UniversalImporter:
 async def importar_arquivo(
     file: UploadFile = File(...),
     user_id: str = Form(...),
-    tipo: str = Form("auto"),
+    tipo: str = Form("auto"),   # agora o padrão é "auto" → inferência ativada
     plano: str = Form("starter")
 ):
     request_id = uuid.uuid4().hex[:8]
     start_time = time.time()
 
     logger.info("=" * 60)
-    logger.info(f"[{request_id}] 🚀 INÍCIO – Importador Universal com Ω")
+    logger.info(f"[{request_id}] 🚀 INÍCIO – Importador Universal")
     logger.info(f"[{request_id}] 📁 Arquivo: {file.filename}")
+    logger.info(f"[{request_id}] 📄 Content-Type: {file.content_type}")
     logger.info(f"[{request_id}] 👤 User: {user_id}")
     logger.info(f"[{request_id}] 🏷️ Tipo recebido: {tipo}")
+    logger.info(f"[{request_id}] 📦 Plano: {plano}")
     logger.info("=" * 60)
 
     try:
+        # ---- 1. LER ARQUIVO ----
+        logger.info(f"[{request_id}] 📖 1. Lendo arquivo...")
         conteudo = await file.read()
         tamanho = len(conteudo)
+        logger.info(f"[{request_id}] 📏 Tamanho: {tamanho} bytes")
+
         if tamanho == 0:
+            logger.error(f"[{request_id}] ❌ Arquivo vazio")
             return JSONResponse({"error": "Arquivo vazio", "request_id": request_id}, status_code=400)
         if tamanho > UniversalImporter.MAX_FILE_SIZE:
-            return JSONResponse({"error": "Arquivo excede limite de 50MB", "request_id": request_id}, status_code=413)
+            logger.error(f"[{request_id}] ❌ Arquivo excede limite de 50MB")
+            return JSONResponse({"error": f"Arquivo excede o limite de 50MB", "request_id": request_id}, status_code=413)
 
+        # ---- 2. DETECTAR FORMATO ----
+        logger.info(f"[{request_id}] 🔍 2. Detectando formato...")
         info = UniversalImporter.detectar(file.filename, conteudo)
-        if info["formato"] == "unknown" or not info.get("valido"):
-            return JSONResponse({"error": f"Formato não reconhecido", "request_id": request_id}, status_code=400)
+        logger.info(f"[{request_id}] 📋 Formato detectado: {info}")
+        if info["formato"] == "unknown" or not info.get("valido", False):
+            logger.error(f"[{request_id}] ❌ Formato não reconhecido: {info}")
+            return JSONResponse({"error": f"Formato não reconhecido: {info.get('extensao', 'desconhecido')}", "request_id": request_id}, status_code=400)
+        logger.info(f"[{request_id}] ✅ Formato aceito: {info['formato']} (engine: {info.get('engine', 'auto')})")
 
-        engine = info.get("engine")
-        dados_brutos = UniversalImporter.ler(conteudo, info["formato"], engine=engine)
+        # ---- 3. LER DADOS BRUTOS ----
+        logger.info(f"[{request_id}] 📊 3. Lendo dados brutos...")
+        try:
+            engine = info.get("engine")
+            dados_brutos = UniversalImporter.ler(conteudo, info["formato"], engine=engine)
+            if isinstance(dados_brutos, list):
+                qtde = len(dados_brutos)
+                logger.info(f"[{request_id}] ✅ {qtde} linhas (lista)")
+            else:
+                linhas = dados_brutos.get('linhas', []) if isinstance(dados_brutos, dict) else []
+                logger.info(f"[{request_id}] ✅ {len(linhas)} linhas (estrutura complexa)")
+        except Exception as e:
+            logger.exception(f"[{request_id}] ❌ Falha na leitura: {e}")
+            return JSONResponse({"error": f"Erro ao ler arquivo: {str(e)}", "request_id": request_id}, status_code=400)
+
         if not dados_brutos:
-            return JSONResponse({"error": "Nenhum dado encontrado.", "request_id": request_id}, status_code=400)
+            logger.error(f"[{request_id}] ❌ Nenhum dado encontrado")
+            return JSONResponse({"error": "Nenhum dado encontrado no arquivo.", "request_id": request_id}, status_code=400)
 
-        # ========== CAMADA Ω ==========
-        kernel = OmegaKernel()
-        kernel.boot()
-        resultado_omega = kernel.processar(
-            user_id=user_id,
-            conteudo=conteudo,
-            formato=info["formato"],
-            filename=file.filename,
-            dados_brutos=dados_brutos,
-            tipo=tipo  # "auto" aciona inferência automática
-        )
+        # ---- 4. INFERIR TIPO (se "auto") ----
+        if tipo == "auto" or not tipo:
+            tipo_inferido = UniversalImporter.inferir_tipo(dados_brutos, info["formato"])
+            logger.info(f"[{request_id}] 🤖 Tipo inferido automaticamente: {tipo_inferido}")
+            tipo = tipo_inferido
+        else:
+            logger.info(f"[{request_id}] 📌 Tipo definido manualmente: {tipo}")
 
-        facts = resultado_omega["facts"]
-        tipo_final = facts.get("tipo", {}).get("value", "financeiro")
-        inseridos = facts.get("inseridos", {}).get("value", 0)
-        erros = facts.get("erros", {}).get("value", 0)
-        proj = resultado_omega["projection"]
+        # ---- ROTEAMENTO POR TIPO ----
+        if tipo == "financeiro":
+            logger.info(f"[{request_id}] 💰 Processando dados financeiros...")
+            movimentacoes = UniversalImporter.normalizar_financeiro(dados_brutos, info["formato"])
+            mov_validas, erros_validacao = UniversalImporter.validar_financeiro(movimentacoes)
+            if not mov_validas:
+                logger.error(f"[{request_id}] ❌ Nenhum registro financeiro válido")
+                return JSONResponse({"error": "Nenhum registro financeiro válido.", "request_id": request_id}, status_code=400)
+            resultado = UniversalImporter.persistir_financeiro(user_id, mov_validas)
+            relatorio = UniversalImporter.gerar_auditoria_financeiro(
+                arquivo=file.filename,
+                formato=info["formato"],
+                movimentacoes=mov_validas,
+                inseridos=resultado["inseridos"],
+                erros=resultado["erros"] + len(erros_validacao)
+            )
 
-        # Monta relatório de resposta
-        relatorio = {
-            "mensagem": f"✅ Dados de {tipo_final} importados com sucesso!",
-            "arquivo": file.filename,
-            "tipo_detectado": tipo_final,
-            "inseridos": inseridos,
-            "erros": erros,
-            "modulos": {tipo_final: True, "dashboard": True, "views": True},
-            "projection": proj
-        }
+        elif tipo == "rebanho":
+            logger.info(f"[{request_id}] 🐄 Processando dados de rebanho...")
+            animais = UniversalImporter.normalizar_rebanho(dados_brutos, info["formato"])
+            animais_validos, erros_validacao = UniversalImporter.validar_rebanho(animais)
+            if not animais_validos:
+                logger.error(f"[{request_id}] ❌ Nenhum animal válido")
+                return JSONResponse({"error": "Nenhum animal válido.", "request_id": request_id}, status_code=400)
+            resultado = UniversalImporter.persistir_rebanho(user_id, animais_validos)
+            relatorio = UniversalImporter.gerar_auditoria_rebanho(
+                arquivo=file.filename,
+                animais=animais_validos,
+                inseridos=resultado["inseridos"],
+                erros=resultado["erros"] + len(erros_validacao)
+            )
+
+        elif tipo == "pastagem":
+            logger.info(f"[{request_id}] 🌿 Processando dados de pastagem...")
+            pastagens = UniversalImporter.normalizar_pastagem(dados_brutos, info["formato"])
+            pastagens_validas, erros_validacao = UniversalImporter.validar_pastagem(pastagens)
+            if not pastagens_validas:
+                logger.error(f"[{request_id}] ❌ Nenhuma pastagem válida")
+                return JSONResponse({"error": "Nenhuma pastagem válida.", "request_id": request_id}, status_code=400)
+            resultado = UniversalImporter.persistir_pastagem(user_id, pastagens_validas)
+            relatorio = UniversalImporter.gerar_auditoria_pastagem(
+                arquivo=file.filename,
+                pastagens=pastagens_validas,
+                inseridos=resultado["inseridos"],
+                erros=resultado["erros"] + len(erros_validacao)
+            )
+
+        elif tipo == "engorda":
+            logger.info(f"[{request_id}] 🥩 Processando dados de engorda...")
+            lotes = UniversalImporter.normalizar_engorda(dados_brutos, info["formato"])
+            lotes_validos, erros_validacao = UniversalImporter.validar_engorda(lotes)
+            if not lotes_validos:
+                logger.error(f"[{request_id}] ❌ Nenhum lote válido")
+                return JSONResponse({"error": "Nenhum lote válido.", "request_id": request_id}, status_code=400)
+            resultado = UniversalImporter.persistir_engorda(user_id, lotes_validos)
+            relatorio = UniversalImporter.gerar_auditoria_engorda(
+                arquivo=file.filename,
+                lotes=lotes_validos,
+                inseridos=resultado["inseridos"],
+                erros=resultado["erros"] + len(erros_validacao)
+            )
+
+        else:
+            logger.error(f"[{request_id}] ❌ Tipo '{tipo}' não suportado")
+            return JSONResponse({"error": f"Tipo '{tipo}' não suportado", "request_id": request_id}, status_code=400)
 
         elapsed = round(time.time() - start_time, 2)
-        logger.info(f"[{request_id}] ✅ Processamento Ω concluído em {elapsed}s")
+        logger.info(f"[{request_id}] ✅ Processamento concluído em {elapsed}s | Inseridos: {resultado['inseridos']}")
+        logger.info("=" * 60)
         return JSONResponse(relatorio)
 
     except Exception as e:
-        logger.exception(f"[{request_id}] 💥 ERRO: {e}")
+        logger.exception(f"[{request_id}] 💥 ERRO INESPERADO: {e}")
         return JSONResponse({"error": "Falha interna no processamento", "request_id": request_id}, status_code=500)
+
+# =========================================================
+# ROTAS ORIGINAIS – DASHBOARD DTO
+# =========================================================
 @app.get("/api/pi/dashboard/{user_id}")
 async def get_dashboard(user_id: str):
     try:
