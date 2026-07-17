@@ -834,55 +834,9 @@ async def importar_arquivo(
         erros = facts.get("erros", {}).get("value", 0)
         proj = resultado_omega["projection"]
 
-        # Monta relatório de resposta (formato completo para front-end)
-        tipo_final = facts.get("tipo", {}).get("value", "financeiro")
-        inseridos = facts.get("inseridos", {}).get("value", 0)
-        erros = facts.get("erros", {}).get("value", 0)
-        proj = resultado_omega["projection"]
-
-        canonical = kernel.center.read("canonical_model") or []
-
+        # Monta relatório de resposta
         relatorio = {
             "mensagem": f"✅ Dados de {tipo_final} importados com sucesso!",
-            "arquivo": file.filename,
-            "formato": info["formato"].upper(),
-            "tamanho": f"{tamanho} bytes",
-            "planilhas_encontradas": 1,
-            "lancamentos_estimados": len(canonical),
-            "periodo_inicio": "—",
-            "periodo_fim": "—",
-            "documento_tipo": "Planilha",
-            "confianca_documento": 95,
-            "indice_implantacao": 85,
-            "confiabilidade": 90,
-            "qualidade_documento": 88,
-            "cobertura_financeira": 80,
-            "tempo_processamento": f"{elapsed}s",
-            "receitas": sum(1 for r in canonical if r.get("tipo") == "receita") if tipo_final == "financeiro" else 0,
-            "despesas": sum(1 for r in canonical if r.get("tipo") == "despesa") if tipo_final == "financeiro" else 0,
-            "categorias": len(set(r.get("categoria", "") for r in canonical)),
-            "duplicidades": 0,
-            "inconsistencias": erros,
-            "confianca_ia": 0,
-            "auditoria": {
-                "receita_total": sum(r.get("valor", 0) for r in canonical if r.get("tipo") == "receita") if tipo_final == "financeiro" else 0,
-                "despesa_total": sum(r.get("valor", 0) for r in canonical if r.get("tipo") == "despesa") if tipo_final == "financeiro" else 0,
-                "lucro": 0,
-                "roi": 0,
-            },
-            "risco": "Baixo",
-            "oportunidade": "Aumentar margem",
-            "centro_custo": "Alimentação",
-            "fonte_receita": "Venda de bovinos",
-            "recomendacao": "Otimizar custos operacionais.",
-            "modulos": {tipo_final: True, "dashboard": True, "views": True, "motor_pi": True},
-            "especialistas": ["CFO Inteligente", "Veterinário Digital"],
-            "proximas_acoes": ["Abrir Dashboard Financeiro", "Ver recomendações do CFO"],
-            "ia_usada": False,
-            "inseridos": inseridos,
-            "erros": erros,
-            "projection": proj
-        } importados com sucesso!",
             "arquivo": file.filename,
             "tipo_detectado": tipo_final,
             "inseridos": inseridos,

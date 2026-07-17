@@ -202,9 +202,9 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
       const { data: { user } } = await supabase.auth.getUser();
 
       // ============================================================
-      // 🔥 CORREÇÃO: FALLBACK PARA TIPO E PLANO
+      // 🔥 CORREÇÃO: DETECÇÃO AUTOMÁTICA (tipo "auto")
       // ============================================================
-      const finalTipo = tipo || "financeiro";
+      const finalTipo = tipo || "auto";   // ALTERADO para "auto"
       const finalPlano = plano || "starter";
       const finalUserId = user?.id || "96a1a441-c0f6-43b2-9cb7-4fadc17fd261";
 
@@ -221,7 +221,10 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         plano: finalPlano,
       });
 
-      const res = await fetch("/api/upload-arquivo", {
+      // ============================================================
+      // 🔥 CORREÇÃO: Endpoint do Motor Ω
+      // ============================================================
+      const res = await fetch("/api/importar/arquivo", {   // ALTERADO para a rota certa
         method: "POST",
         body: formData,
       });
