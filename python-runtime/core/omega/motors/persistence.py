@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from supabase_client import supabase  # ajuste o import conforme seu projeto
+from supabase_client import supabase
 
 logger = logging.getLogger(__name__)
 
@@ -27,14 +27,35 @@ class PersistenceMotor:
 
         inseridos = 0
         erros = 0
-        for registro in canonical:
+        BATCH_SIZE = 100
+
+        # Insere em lotes para evitar timeout
+        for i in range(0, len(canonical), BATCH_SIZE):
+            batch = canonical[i:i + BATCH_SIZE]
+            payload = []
+            for registro in batch:
+                payload.append({
+                    "user_id": user_id,
+                    **registro,
+                    "criado_em": datetime.now().isoformat()
+                })
             try:
-                payload = {"user_id": user_id, **registro, "criado_em": datetime.now().isoformat()}
                 supabase.table(table).insert(payload).execute()
-                inseridos += 1
+                inseridos += len(batch)
             except Exception as e:
-                logger.exception(f"Erro ao inserir em {table}: {e}")
-                erros += 1
+                logger.exception(f"Erro no lote {i}: {e}")
+                # Fallback: tenta inserir um a um no lote problemático
+                for registro in batch:
+                    try:
+                        supabase.table(table).insert({
+                            "user_id": user_id,
+                            **registro,
+                            "criado_em": datetime.now().isoformat()
+                        }).execute()
+                        inseridos += 1
+                    except Exception as e2:
+                        logger.exception(f"Falha individual: {e2}")
+                        erros += 1
 
         center.publish("inseridos", inseridos, confidence=1.0, source="persistence")
         center.publish("erros", erros, confidence=1.0, source="persistence")
