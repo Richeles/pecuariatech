@@ -18,7 +18,7 @@ import {
 } from "recharts";
 
 export default function LinhaDoTempo() {
-  const { data, loading } = useDashboard();
+  const { data, loading, dashboardRefreshKey } = useDashboard();
   const [periodo, setPeriodo] = useState("6");
   const [historico, setHistorico] = useState<any[]>([]);
 
@@ -48,7 +48,7 @@ export default function LinhaDoTempo() {
     }));
 
     setHistorico([...historicoSimulado, atual]);
-  }, [data]);
+  }, [data]);  // Já depende dos dados, que mudam com dashboardRefreshKey
 
   if (loading) {
     return (
@@ -60,9 +60,7 @@ export default function LinhaDoTempo() {
 
   const filtered = historico.slice(-parseInt(periodo));
 
-  // ============================================================
-  // 1. BADGES DE INTERPRETAÇÃO
-  // ============================================================
+  // ... resto das interpretações e gráficos (inalterado)
   const ultimo = filtered[filtered.length - 1];
   const primeiro = filtered[0];
   const tendenciaScore = ultimo && primeiro ? ultimo.score_pi - primeiro.score_pi : 0;
@@ -83,9 +81,6 @@ export default function LinhaDoTempo() {
       ? "📈 A operação está estável com leve crescimento. Considere acelerar investimentos em áreas de maior retorno."
       : "⚠️ Identificamos queda em indicadores-chave. Recomenda-se revisar custos e estratégia operacional.";
 
-  // ============================================================
-  // 2. CARDS DE TENDÊNCIA
-  // ============================================================
   const cardsTendencia = [
     {
       titulo: "Score π",
@@ -114,7 +109,7 @@ export default function LinhaDoTempo() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0F2A1A] via-[#1A3F2A] to-[#0F2A1A] p-4 md:p-8">
+    <div key={dashboardRefreshKey} className="min-h-screen bg-gradient-to-br from-[#0F2A1A] via-[#1A3F2A] to-[#0F2A1A] p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* HEADER EXECUTIVO */}
         <div className="rounded-2xl border border-[#34D399]/20 bg-gradient-to-br from-[#1A3F2A]/90 to-[#0F2A1A] p-6 shadow-xl">
@@ -292,7 +287,6 @@ export default function LinhaDoTempo() {
                 />
                 <Legend />
                 <Bar dataKey="gmd" fill="#34D399" name="GMD (kg/dia)" yAxisId="left" />
-                {/* ✅ COR DA LOTAÇÃO AJUSTADA: rosa → roxo premium */}
                 <Bar dataKey="lotacao" fill="#A78BFA" name="Lotação (UA/ha)" yAxisId="right" />
               </BarChart>
             </ResponsiveContainer>

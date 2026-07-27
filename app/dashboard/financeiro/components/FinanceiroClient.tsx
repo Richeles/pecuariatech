@@ -14,7 +14,8 @@ import {
 } from "recharts";
 
 export default function FinanceiroClient() {
-  const { data, loading } = useDashboard();
+  // ✅ Agora inclui dashboardRefreshKey para reagir a uploads de qualquer módulo
+  const { data, loading, dashboardRefreshKey } = useDashboard();
 
   // Dados reais do DTO
   const roi = data?.roi ?? 0;
@@ -89,7 +90,7 @@ export default function FinanceiroClient() {
   }
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-8" key={dashboardRefreshKey}>
       {/* HEADER EXECUTIVO */}
       <div className="relative overflow-hidden rounded-[40px] border border-emerald-500/20 bg-gradient-to-br from-[#03140d] via-[#072117] to-[#0b2d1f] p-10 shadow-[0_30px_120px_rgba(0,0,0,0.45)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.12),transparent_35%)]" />

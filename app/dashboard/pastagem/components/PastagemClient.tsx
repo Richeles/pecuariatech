@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDashboard } from "../../DashboardContext";
@@ -12,8 +12,13 @@ import PastagemTriangulo360 from "./PastagemTriangulo360";
 
 export default function PastagemClient() {
   const router = useRouter();
-  const { data, loading } = useDashboard();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const { data, loading, dashboardRefreshKey, triggerDashboardRefresh } = useDashboard();
+  const [localRefreshKey, setLocalRefreshKey] = useState(0);
+
+  // Recarrega localmente sempre que o contexto sinalizar um novo upload
+  useEffect(() => {
+    setLocalRefreshKey((prev) => prev + 1);
+  }, [dashboardRefreshKey]);
 
   if (loading) {
     return (
@@ -29,7 +34,11 @@ export default function PastagemClient() {
   const capitalScore = data?.capital_score ?? 0;
   const risco = data?.risco_estrutural?.toUpperCase() ?? "N/D";
 
-  const refresh = () => setRefreshKey((prev) => prev + 1);
+  const refresh = () => {
+    setLocalRefreshKey((prev) => prev + 1);
+    // Opcional: notificar outros módulos se for uma ação local que afeta o sistema
+    // triggerDashboardRefresh();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F2A1A] via-[#1A3F2A] to-[#0F2A1A] p-4 md:p-8">
@@ -101,19 +110,19 @@ export default function PastagemClient() {
         </div>
 
         {/* RESUMO DA PASTAGEM */}
-        <PastagemResumoCard />
+        <PastagemResumoCard key={localRefreshKey} />
 
         {/* TABELA DE PIQUETES COM AÇÕES */}
-        <PastagemPiquetesTable key={refreshKey} onRefresh={refresh} />
+        <PastagemPiquetesTable key={localRefreshKey} onRefresh={refresh} />
 
         {/* INSIGHTS E ALERTAS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <PastagemAIInsights />
-          <PastagemAlertasCard />
+          <PastagemAIInsights key={localRefreshKey} />
+          <PastagemAlertasCard key={localRefreshKey} />
         </div>
 
         {/* TRIÂNGULO 360 */}
-        <PastagemTriangulo360 />
+        <PastagemTriangulo360 key={localRefreshKey} />
       </div>
     </div>
   );

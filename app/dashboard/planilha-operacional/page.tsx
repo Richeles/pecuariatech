@@ -1,17 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
+import { useDashboard } from "../DashboardContext";
+import { createClient } from "@/app/lib/supabase-browser";
 
 export default function PlanilhaOperacional() {
   const router = useRouter();
+  const { triggerDashboardRefresh } = useDashboard();
   const [loading, setLoading] = useState(false);
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [preview, setPreview] = useState<any[]>([]);
   const [tipoDado, setTipoDado] = useState<string>("rebanho");
   const [mensagem, setMensagem] = useState<string>("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [user, setUser] = useState<any>(null);
+
+  // Obtém o usuário logado
+  useEffect(() => {
+    async function loadUser() {
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+      setUser(data?.user);
+    }
+    loadUser();
+  }, []);
 
   const processarArquivo = (file: File) => {
     const reader = new FileReader();
@@ -37,6 +51,11 @@ export default function PlanilhaOperacional() {
       return;
     }
 
+    if (!user?.id) {
+      setMensagem("❌ Usuário não autenticado. Faça login novamente.");
+      return;
+    }
+
     setLoading(true);
     setStatus("loading");
 
@@ -47,7 +66,7 @@ export default function PlanilhaOperacional() {
         body: JSON.stringify({
           tipo: tipoDado,
           dados: preview,
-          user_id: "96a1a441-c0f6-43b2-9cb7-4fadc17fd261",
+          user_id: user.id,   // ✅ ID real da sessão
         }),
       });
 
@@ -56,6 +75,10 @@ export default function PlanilhaOperacional() {
       if (response.ok) {
         setStatus("success");
         setMensagem(`✅ ${result.processados || preview.length} registros importados com sucesso!`);
+
+        // Força a atualização de todos os dashboards antes de redirecionar
+        triggerDashboardRefresh();
+
         setTimeout(() => {
           router.push("/pt/dashboard");
           router.refresh();
@@ -119,6 +142,7 @@ export default function PlanilhaOperacional() {
           </div>
         </div>
 
+        {/* resto igual */}
         <div className="rounded-2xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-6">
           <div className="space-y-4">
             <div>

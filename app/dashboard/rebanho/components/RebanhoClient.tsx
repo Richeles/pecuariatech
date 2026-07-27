@@ -60,18 +60,25 @@ type AnimalUI = {
 ========================================================= */
 
 export default function RebanhoClient() {
-  const { data, loading: dtoLoading } = useDashboard();
+  const { data, loading: dtoLoading, dashboardRefreshKey } = useDashboard();
 
   const [rows, setRows] = useState<ApiRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [runtimeAI, setRuntimeAI] = useState<RuntimeAI | null>(null);
+  const [localRefreshKey, setLocalRefreshKey] = useState(0);
+
+  // Atualiza localmente sempre que um upload for concluído (dashboardRefreshKey muda)
+  useEffect(() => {
+    setLocalRefreshKey((prev) => prev + 1);
+  }, [dashboardRefreshKey]);
 
   useEffect(() => {
     let ativo = true;
 
     async function load() {
+      setLoading(true);
       try {
         const res = await fetch("/api/rebanho", {
           cache: "no-store",
@@ -109,7 +116,7 @@ export default function RebanhoClient() {
 
     load();
     return () => { ativo = false; };
-  }, []);
+  }, [dashboardRefreshKey, localRefreshKey]); // ← recarrega quando há novo upload
 
   const animals = useMemo<AnimalUI[]>(() => {
     if (!rows?.length) return [];
@@ -250,16 +257,18 @@ export default function RebanhoClient() {
 
         {/* CENTRO COGNITIVO */}
         <CentroCognitivoRebanho
+          key={localRefreshKey}
           diagnostico={runtimeAI?.diagnostico}
           advisory={runtimeAI?.advisory || []}
           decisao={runtimeAI?.decisao_recomendada}
         />
 
         {/* CADASTRO ANIMAL */}
-        <CadastroAnimal />
+        <CadastroAnimal key={localRefreshKey} />
 
         {/* SANIDADE */}
         <RebanhoSanidadePainel
+          key={localRefreshKey}
           total={resumo.total}
           semLocalizacao={resumo.semLocalizacao}
           semPeso={resumo.semPeso}
