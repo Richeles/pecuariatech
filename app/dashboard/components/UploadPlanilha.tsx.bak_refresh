@@ -88,7 +88,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   >([]);
   const [showUpgrade, setShowUpgrade] = useState(false);
 
-  const { triggerDashboardRefresh } = useDashboard(); // <-- para forçar atualização após upload
+  const { refreshPastagens } = useDashboard(); // <-- para forçar atualização após upload
 
   // ============================================================
   // MAPEAMENTO DE PLANOS (EQUAÇÃO Z – GOVERNANÇA)
@@ -295,7 +295,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         setUploadSuccess(true);
 
         if (onSuccess) onSuccess();          // callback original
-        if (triggerDashboardRefresh) triggerDashboardRefresh();  // ⬅️ força atualização do Dashboard
+        if (refreshPastagens) refreshPastagens();  // ⬅️ força atualização do Dashboard
       } else {
         const errorMsg = result.error || result.detail || "Falha na importação";
         setUploadError(errorMsg);
