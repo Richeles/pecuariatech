@@ -1,7 +1,7 @@
 // app/dashboard/DashboardContext.tsx
 "use client";
 
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 import { useDashboardBootstrap } from "./hooks/useDashboardBootstrap";
 
 export type DashboardDTO = {
@@ -31,6 +31,8 @@ type DashboardContextValue = {
   loading: boolean;
   error: Error | null;
   refetch: () => void;
+  dashboardRefreshKey: number;          // ← NOVO
+  triggerDashboardRefresh: () => void;  // ← NOVO
 };
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
@@ -44,12 +46,18 @@ export function useDashboard() {
 export function DashboardProvider({ children, userId }: { children: ReactNode; userId: string }) {
   const { data, loading, error } = useDashboardBootstrap(userId);
 
+  // Estado e função para forçar refresh de todos os dashboards
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
+  const triggerDashboardRefresh = () => setDashboardRefreshKey(prev => prev + 1);
+
   // 🔒 NUNCA repassa o erro para a UI – apenas loading e data
   const contextValue: DashboardContextValue = {
     data,
     loading,
     error: null, // suprime erros – a UI vê apenas loading
     refetch: () => {}, // implementar depois se necessário
+    dashboardRefreshKey,          // ← NOVO
+    triggerDashboardRefresh,      // ← NOVO
   };
 
   return (

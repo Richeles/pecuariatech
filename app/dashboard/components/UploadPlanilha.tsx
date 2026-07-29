@@ -59,7 +59,7 @@ type RespostaPython = {
 type Plano = "starter" | "pro" | "master" | "dominus";
 
 type Props = {
-  tipo: "rebanho" | "financeiro" | "pastagem" | "engorda";
+  tipo: "rebanho" | "financeiro" | "pastagem" | "engorda" | "auto";
   onSuccess?: () => void;
   onError?: (msg: string) => void;
 };

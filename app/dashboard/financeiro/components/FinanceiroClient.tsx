@@ -106,7 +106,7 @@ export default function FinanceiroClient() {
       </div>
 
       {/* IMPORTAÇÃO DE DADOS – AGORA COM DETECÇÃO AUTOMÁTICA DE TIPO */}
-      <UploadPlanilha />
+      <UploadPlanilha tipo="auto" />
 
       {/* KPI GRID COM BADGES E TENDÊNCIAS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
