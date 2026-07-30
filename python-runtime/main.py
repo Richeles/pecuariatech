@@ -29,7 +29,6 @@ logger = logging.getLogger(__name__)
 from application.dashboard_application import gerar_dashboard_dto
 from core.omega.kernel import OmegaKernel
 
-
 # =========================================================
 # RELATÓRIOS (ORIGINAL)
 # =========================================================
@@ -835,12 +834,10 @@ async def importar_arquivo(
         proj = resultado_omega["projection"]
 
         # Monta relatório de resposta (formato completo para front-end)
-        tipo_final = facts.get("tipo", {}).get("value", "financeiro")
-        inseridos = facts.get("inseridos", {}).get("value", 0)
-        erros = facts.get("erros", {}).get("value", 0)
-        proj = resultado_omega["projection"]
-
         canonical = kernel.center.read("canonical_model") or []
+
+        # ⚡ CORREÇÃO: elapsed movido para ANTES do relatorio
+        elapsed = round(time.time() - start_time, 2)
 
         relatorio = {
             "mensagem": f"✅ Dados de {tipo_final} importados com sucesso!",
@@ -882,22 +879,19 @@ async def importar_arquivo(
             "inseridos": inseridos,
             "erros": erros,
             "projection": proj
-        } importados com sucesso!",
-            "arquivo": file.filename,
-            "tipo_detectado": tipo_final,
-            "inseridos": inseridos,
-            "erros": erros,
-            "modulos": {tipo_final: True, "dashboard": True, "views": True},
-            "projection": proj
         }
 
-        elapsed = round(time.time() - start_time, 2)
         logger.info(f"[{request_id}] ✅ Processamento Ω concluído em {elapsed}s")
         return JSONResponse(relatorio)
 
     except Exception as e:
         logger.exception(f"[{request_id}] 💥 ERRO: {e}")
         return JSONResponse({"error": "Falha interna no processamento", "request_id": request_id}, status_code=500)
+
+
+# =========================================================
+# ROTAS ORIGINAIS – DASHBOARD DTO
+# =========================================================
 @app.get("/api/pi/dashboard/{user_id}")
 async def get_dashboard(user_id: str):
     try:
