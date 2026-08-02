@@ -859,7 +859,7 @@ async def importar_arquivo(
             "despesas": sum(1 for r in canonical if r.get("tipo") == "despesa") if tipo_final == "financeiro" else 0,
             "categorias": len(set(r.get("categoria", "") for r in canonical)),
             "duplicidades": 0,
-            "inconsistencias": erros,
+            "inconsistencia": erros,   # ← CORRIGIDO: nome singular
             "confianca_ia": 0,
             "auditoria": {
                 "receita_total": sum(r.get("valor", 0) for r in canonical if r.get("tipo") == "receita") if tipo_final == "financeiro" else 0,
@@ -872,7 +872,15 @@ async def importar_arquivo(
             "centro_custo": "Alimentação",
             "fonte_receita": "Venda de bovinos",
             "recomendacao": "Otimizar custos operacionais.",
-            "modulos": {tipo_final: True, "dashboard": True, "views": True, "motor_pi": True},
+            "modulos": {   # ← CORRIGIDO: todas as chaves fixas
+                "financeiro": tipo_final == "financeiro",
+                "dashboard": True,
+                "views": True,
+                "motor_pi": True,
+                "linha_tempo": True,
+                "planilha_operacional": True,
+                "especialistas": True
+            },
             "especialistas": ["CFO Inteligente", "Veterinário Digital"],
             "proximas_acoes": ["Abrir Dashboard Financeiro", "Ver recomendações do CFO"],
             "ia_usada": False,
