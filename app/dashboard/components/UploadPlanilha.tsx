@@ -123,6 +123,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   useEffect(() => {
     const fetchPlano = async () => {
       try {
+        // 🔁 Tentar via API primeiro
         const res = await fetch("/api/assinaturas/status");
         if (res.ok) {
           const data = await res.json();
@@ -133,14 +134,32 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
             return;
           }
         }
+
+        // ⚡ Fallback de sessão (igual ao upload)
         const supabase = (await import("@/app/lib/supabase-browser")).createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        let user = null;
+
+        const { data } = await supabase.auth.getUser();
+        user = data?.user ?? null;
+
+        if (!user) {
+          const { data: { session } } = await supabase.auth.getSession();
+          user = session?.user ?? null;
+        }
+
+        if (!user) {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          const { data } = await supabase.auth.getUser();
+          user = data?.user ?? null;
+        }
+
         if (user) {
           const { data } = await supabase
             .from("assinaturas")
             .select("plano")
             .eq("user_id", user.id)
             .maybeSingle();
+
           if (data?.plano) {
             const mapeado = mapearPlano(data.plano);
             setPlano(mapeado.codigo);
@@ -151,6 +170,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         console.error("Erro ao buscar plano:", error);
       }
     };
+
     fetchPlano();
   }, []);
 
@@ -198,20 +218,43 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
     setEtapas(etapasIniciais);
 
     try {
+      // -------------------------------------------------------
+      // OBTENÇÃO RESILIENTE DO USUÁRIO (fallback de sessão)
+      // -------------------------------------------------------
       const supabase = (await import("@/app/lib/supabase-browser")).createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      let user = null;
 
-      // ⚠️ Se não houver usuário logado, não faz upload
+      try {
+        const { data } = await supabase.auth.getUser();
+        user = data?.user ?? null;
+
+        // fallback pela sessão
+        if (!user) {
+          const { data: { session } } = await supabase.auth.getSession();
+          user = session?.user ?? null;
+        }
+
+        // pequena espera caso o cookie ainda esteja sendo restaurado
+        if (!user) {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          const { data } = await supabase.auth.getUser();
+          user = data?.user ?? null;
+        }
+      } catch (err) {
+        console.error("Erro obtendo usuário:", err);
+      }
+
       if (!user?.id) {
         setUploadError("Usuário não autenticado.");
-        setMensagem("❌ Faça login novamente para continuar.");
+        setMensagem("❌ Sua sessão expirou. Faça login novamente.");
         setEtapas(etapasIniciais.map((e) => ({ ...e, status: "erro" })));
+        setLoading(false);
         return;
       }
 
+      const finalUserId = user.id;
       const finalTipo = tipo || "auto";
       const finalPlano = plano || "starter";
-      const finalUserId = user.id;   // somente o ID real da sessão, sem fallback fixo
 
       const formData = new FormData();
       formData.append("file", arquivo);
@@ -231,7 +274,13 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         body: formData,
       });
 
-      const result = await res.json();
+      // ✅ 2. VALIDAR RESPOSTA DA API
+      let result: any = {};
+      try {
+        result = await res.json();
+      } catch {
+        throw new Error("Resposta inválida do servidor.");
+      }
 
       if (res.ok) {
         setEtapas(etapasIniciais.map((e) => ({ ...e, status: "concluido" })));
@@ -308,7 +357,9 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
       const errorMsg = "Erro de conexão com o Motor π. Verifique se o servidor Python está rodando.";
       setUploadError(errorMsg);
       setMensagem(`❌ ${errorMsg}`);
-      setEtapas(etapas.map((e) => ({ ...e, status: "erro" })));
+
+      // ✅ 3. USAR etapasIniciais (não o estado etapas)
+      setEtapas(etapasIniciais.map((e) => ({ ...e, status: "erro" })));
     }
     setLoading(false);
   };
