@@ -88,7 +88,27 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   >([]);
   const [showUpgrade, setShowUpgrade] = useState(false);
 
-  const { triggerDashboardRefresh } = useDashboard(); // <-- para forçar atualização após upload
+  const { triggerDashboardRefresh } = useDashboard();
+
+  // ============================================================
+  // ESTADO DE AUTENTICAÇÃO
+  // ============================================================
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const supabase = (await import("@/app/lib/supabase-browser")).createClient();
+        const { data } = await supabase.auth.getSession();
+        setIsAuthenticated(!!data?.session?.user);
+        console.log("🔵 [Auth check] isAuthenticated:", !!data?.session?.user);
+      } catch (err) {
+        console.error("❌ Erro ao verificar autenticação:", err);
+        setIsAuthenticated(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   // ============================================================
   // MAPEAMENTO DE PLANOS (EQUAÇÃO Z – GOVERNANÇA)
@@ -123,7 +143,6 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   useEffect(() => {
     const fetchPlano = async () => {
       try {
-        // 🔁 Tentar via API primeiro
         const res = await fetch("/api/assinaturas/status");
         if (res.ok) {
           const data = await res.json();
@@ -134,32 +153,25 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
             return;
           }
         }
-
-        // ⚡ Fallback de sessão (igual ao upload)
         const supabase = (await import("@/app/lib/supabase-browser")).createClient();
         let user = null;
-
         const { data } = await supabase.auth.getUser();
         user = data?.user ?? null;
-
         if (!user) {
           const { data: { session } } = await supabase.auth.getSession();
           user = session?.user ?? null;
         }
-
         if (!user) {
           await new Promise((resolve) => setTimeout(resolve, 300));
           const { data } = await supabase.auth.getUser();
           user = data?.user ?? null;
         }
-
         if (user) {
           const { data } = await supabase
             .from("assinaturas")
             .select("plano")
             .eq("user_id", user.id)
             .maybeSingle();
-
           if (data?.plano) {
             const mapeado = mapearPlano(data.plano);
             setPlano(mapeado.codigo);
@@ -170,7 +182,6 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         console.error("Erro ao buscar plano:", error);
       }
     };
-
     fetchPlano();
   }, []);
 
@@ -184,18 +195,24 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   };
 
   // ============================================================
-  // HANDLE UPLOAD – ISOLADO, NUNCA RECARREGA O DASHBOARD
+  // HANDLE UPLOAD – COM LOGS DE DEPURAÇÃO
   // ============================================================
   const handleUpload = async () => {
+    console.log("🔵 1 - handleUpload iniciado");
+
     if (!arquivo) {
       setMensagem("❌ Selecione um arquivo primeiro.");
+      console.log("🔴 2 - Sem arquivo, abortando");
       return;
     }
+    console.log("🔵 2 - Arquivo:", arquivo.name);
 
     if (!isFormatoPermitido(arquivo.name)) {
       setMensagem(`❌ O formato não é permitido no plano ${nomePlano}.`);
+      console.log("🔴 3 - Formato não permitido, abortando");
       return;
     }
+    console.log("🔵 3 - Formato permitido");
 
     setUploadError(null);
     setUploadSuccess(false);
@@ -219,33 +236,79 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
 
     try {
       // -------------------------------------------------------
-      // OBTENÇÃO RESILIENTE DO USUÁRIO (fallback de sessão)
+      // OBTENÇÃO DO USUÁRIO (priorizando getSession)
       // -------------------------------------------------------
+      console.log("🔵 4 - Obtendo usuário...");
       const supabase = (await import("@/app/lib/supabase-browser")).createClient();
       let user = null;
 
       try {
-        const { data } = await supabase.auth.getUser();
-        user = data?.user ?? null;
-
-        // fallback pela sessão
-        if (!user) {
-          const { data: { session } } = await supabase.auth.getSession();
-          user = session?.user ?? null;
+        // 1. Tentar getSession() primeiro (renova token se necessário)
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (!sessionError && sessionData?.session?.user) {
+          user = sessionData.session.user;
+          console.log("🔵 4a - Usuário obtido via getSession:", user.id);
+        } else {
+          console.log("⚠️ 4a - getSession falhou:", sessionError?.message || "sem sessão");
         }
 
-        // pequena espera caso o cookie ainda esteja sendo restaurado
+        // 2. Se falhou, tentar refreshSession()
         if (!user) {
-          await new Promise((resolve) => setTimeout(resolve, 300));
-          const { data } = await supabase.auth.getUser();
-          user = data?.user ?? null;
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          if (!refreshError && refreshData?.session?.user) {
+            user = refreshData.session.user;
+            console.log("🔵 4b - Usuário obtido via refreshSession:", user.id);
+          } else {
+            console.log("⚠️ 4b - refreshSession falhou:", refreshError?.message || "sem sessão");
+          }
         }
+
+        // 3. Último recurso: getUser()
+        if (!user) {
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          if (!userError && userData?.user) {
+            user = userData.user;
+            console.log("🔵 4c - Usuário obtido via getUser:", user.id);
+          } else {
+            console.log("⚠️ 4c - getUser falhou:", userError?.message || "sem usuário");
+          }
+        }
+
+        // 4. Aguardar e tentar novamente (caso o cookie esteja sendo restaurado)
+        if (!user) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const { data: retryData } = await supabase.auth.getSession();
+          user = retryData?.session?.user ?? null;
+          if (user) {
+            console.log("🔵 4d - Usuário obtido via retry (getSession):", user.id);
+          } else {
+            console.log("⚠️ 4d - retry também falhou");
+          }
+        }
+
+        // ============================================================
+        // FALLBACK OPCIONAL VIA API (descomente se necessário)
+        // ============================================================
+        // if (!user) {
+        //   console.log("🔵 4e - Tentando fallback via /api/auth/me");
+        //   const apiRes = await fetch("/api/auth/me");
+        //   if (apiRes.ok) {
+        //     const data = await apiRes.json();
+        //     if (data?.user) {
+        //       user = data.user;
+        //       console.log("🔵 4e - Usuário obtido via API:", user.id);
+        //     }
+        //   } else {
+        //     console.log("⚠️ 4e - Fallback via API falhou:", apiRes.status);
+        //   }
+        // }
+
       } catch (err) {
         console.error("❌ Erro ao obter usuário do Supabase:", err);
       }
 
       if (!user?.id) {
-        console.warn("⚠️ Nenhum usuário encontrado após fallback de sessão.");
+        console.log("🔴 5 - Usuário não encontrado – abortando upload.");
         setUploadError("Usuário não autenticado.");
         setMensagem("❌ Sua sessão expirou. Faça login novamente.");
         setEtapas(etapasIniciais.map((e) => ({ ...e, status: "erro" })));
@@ -257,28 +320,32 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
       const finalTipo = tipo || "auto";
       const finalPlano = plano || "starter";
 
-      const formData = new FormData();
-      formData.append("file", arquivo);
-      formData.append("tipo", finalTipo);
-      formData.append("user_id", finalUserId);
-      formData.append("plano", finalPlano);
-
-      console.log("📤 Enviando FormData:", {
+      console.log("🔵 6 - Montando FormData para:", {
         file: arquivo.name,
         tipo: finalTipo,
         userId: finalUserId,
         plano: finalPlano,
       });
 
-      const res = await fetch("/api/importar/arquivo", {
+      const formData = new FormData();
+      formData.append("file", arquivo);
+      formData.append("tipo", finalTipo);
+      formData.append("user_id", finalUserId);
+      formData.append("plano", finalPlano);
+
+      console.log("🔵 7 - Iniciando fetch para /api/upload-arquivo");
+
+      const res = await fetch("/api/upload-arquivo", {
         method: "POST",
         body: formData,
       });
 
-      // ✅ 2. VALIDAR RESPOSTA DA API
+      console.log("🔵 8 - Fetch retornou status:", res.status);
+
       let result: any = {};
       try {
         result = await res.json();
+        console.log("🔵 9 - Resposta JSON recebida:", result);
       } catch {
         throw new Error("Resposta inválida do servidor.");
       }
@@ -306,7 +373,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
           despesas: result.despesas || 0,
           categorias: result.categorias || 0,
           duplicidades: result.duplicidades || 0,
-          inconsistencia: result.inconsistencia || 0,   // 🔧 Corrigido: backend agora retorna "inconsistencia" (singular)
+          inconsistencia: result.inconsistencia || 0,
           confianca_ia: result.confianca_ia || 0,
           auditoria: {
             receita_total: result.auditoria?.receita_total || 0,
@@ -344,22 +411,22 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         setMensagem(dados.mensagem);
         setUploadSuccess(true);
 
-        if (onSuccess) onSuccess();          // callback original
-        if (triggerDashboardRefresh) triggerDashboardRefresh();  // ⬅️ força atualização do Dashboard
+        if (onSuccess) onSuccess();
+        if (triggerDashboardRefresh) triggerDashboardRefresh();
+        console.log("✅ Upload concluído com sucesso!");
       } else {
         const errorMsg = result.error || result.detail || "Falha na importação";
         setUploadError(errorMsg);
         setMensagem(`❌ ${errorMsg}`);
         setEtapas(etapasIniciais.map((e) => ({ ...e, status: "erro" })));
         if (onError) onError(errorMsg);
+        console.error("❌ Upload falhou:", errorMsg);
       }
     } catch (error) {
       console.error("[X] Erro no envio:", error);
       const errorMsg = "Erro de conexão com o Motor π. Verifique se o servidor Python está rodando.";
       setUploadError(errorMsg);
       setMensagem(`❌ ${errorMsg}`);
-
-      // ✅ 3. USAR etapasIniciais (não o estado etapas)
       setEtapas(etapasIniciais.map((e) => ({ ...e, status: "erro" })));
     }
     setLoading(false);
@@ -592,7 +659,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   }
 
   // ============================================================
-  // FORMULÁRIO DE IMPLANTAÇÃO (inalterado)
+  // FORMULÁRIO DE IMPLANTAÇÃO
   // ============================================================
   return (
     <div className="bg-[#1A3F2A]/60 rounded-3xl border border-[#34D399]/20 p-6 backdrop-blur-sm">
@@ -728,6 +795,19 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
             </div>
           )}
 
+          {/* FEEDBACK DE AUTENTICAÇÃO */}
+          {isAuthenticated === false && (
+            <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 text-center">
+              <p className="text-red-400 text-sm">Faça login para enviar arquivos.</p>
+              <button
+                onClick={() => (window.location.href = "/pt/login")}
+                className="mt-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition"
+              >
+                Fazer login
+              </button>
+            </div>
+          )}
+
           {etapas.length > 0 && (
             <div className="bg-[#0F2A1A]/30 rounded-xl p-4 space-y-1 border border-[#34D399]/10">
               {etapas.map((etapa) => (
@@ -755,7 +835,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
           {arquivo && !implantacaoConcluida && (
             <button
               onClick={handleUpload}
-              disabled={loading}
+              disabled={loading || isAuthenticated === false}
               className="w-full px-6 py-3 rounded-xl bg-[#34D399] text-[#0F2A1A] font-bold hover:bg-[#10B981] transition disabled:opacity-50 text-sm"
             >
               {loading ? "⏳ Processando..." : "🚀 Enviar para o Motor π"}
