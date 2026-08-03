@@ -241,10 +241,11 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
           user = data?.user ?? null;
         }
       } catch (err) {
-        console.error("Erro obtendo usuário:", err);
+        console.error("❌ Erro ao obter usuário do Supabase:", err);
       }
 
       if (!user?.id) {
+        console.warn("⚠️ Nenhum usuário encontrado após fallback de sessão.");
         setUploadError("Usuário não autenticado.");
         setMensagem("❌ Sua sessão expirou. Faça login novamente.");
         setEtapas(etapasIniciais.map((e) => ({ ...e, status: "erro" })));
@@ -305,7 +306,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
           despesas: result.despesas || 0,
           categorias: result.categorias || 0,
           duplicidades: result.duplicidades || 0,
-          inconsistencia: result.inconsistencias || 0,
+          inconsistencia: result.inconsistencia || 0,   // 🔧 Corrigido: backend agora retorna "inconsistencia" (singular)
           confianca_ia: result.confianca_ia || 0,
           auditoria: {
             receita_total: result.auditoria?.receita_total || 0,
