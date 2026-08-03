@@ -19,7 +19,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "user_id é obrigatório" }, { status: 400 });
     }
 
-    const pythonApi = process.env.PYTHON_API_URL || "https://pecuariatech-python-fs6m.onrender.com";
+    // 🔧 CORREÇÃO: URL do backend Python (Motor π) – substituído o endereço antigo
+    const pythonApi = process.env.PYTHON_API_URL || "https://pecuariatech-motor-pi.onrender.com";
     const url = `${pythonApi}/api/pi/dashboard/${finalUserId}`;
 
     const controller = new AbortController();
