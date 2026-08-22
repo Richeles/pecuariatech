@@ -463,7 +463,7 @@ class UniversalImporter:
                                 "peso_entrada": peso_entrada,
                                 "peso_atual": float(row[cabecalho.index("peso_atual")].strip() or 0) if "peso_atual" in cabecalho else 0,
                                 "gmd": float(row[cabecalho.index("gmd")].strip() or 0) if "gmd" in cabecalho else 0,
-                                "data_vacina": row[cabecalho.index("data_vacina")].strip() if "data_vacina" in cabecalho else "",
+                                "data_vacina": (row[cabecalho.index("data_vacina")].strip() or None) if "data_vacina" in cabecalho else None,
                                 "piquete_atual": row[cabecalho.index("piquete_atual")].strip() if "piquete_atual" in cabecalho else ""
                             })
                         else:
@@ -490,7 +490,7 @@ class UniversalImporter:
                             "peso_entrada": peso_entrada,
                             "peso_atual": float(row.get("peso_atual") or 0),
                             "gmd": float(row.get("gmd") or 0),
-                            "data_vacina": str(row.get("data_vacina") or ""),
+                            "data_vacina": str(row.get("data_vacina") or "").strip() or None,
                             "piquete_atual": str(row.get("piquete_atual") or "").strip()
                         })
                 except Exception as e:
