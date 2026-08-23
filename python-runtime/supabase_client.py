@@ -2,13 +2,15 @@ import os
 from supabase import create_client
 
 # =========================================================
-# DEFINIÇÃO DIRETA DAS CREDENCIAIS (fallback)
+# CREDENCIAIS DO SUPABASE
 # =========================================================
+# Localmente, carrega variáveis de um arquivo .env, quando existir.
+# Em produção (Render), usa as variáveis de ambiente configuradas
+# no serviço. Não há credenciais hardcoded no código.
 
-# Tenta carregar do .env, mas se falhar, usa valores fixos
 try:
     from dotenv import load_dotenv
-    load_dotenv(dotenv_path=r"C:\Users\riche\pecuariatech-clean\python-runtime\.env", encoding='utf-8')
+    load_dotenv()
 except Exception as e:
     print(f"⚠️ load_dotenv falhou: {e}")
 
@@ -16,18 +18,14 @@ except Exception as e:
 SUPABASE_URL = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-# Se não foram carregadas, usa os valores manuais
+# Falha explicitamente se a configuração estiver ausente
 if not SUPABASE_URL:
-    SUPABASE_URL = "https://kpzzekflqpoeccnqfkng.supabase.co"
-    print("✅ SUPABASE_URL definido manualmente")
+    raise RuntimeError("❌ NEXT_PUBLIC_SUPABASE_URL não configurada")
 
 if not SUPABASE_KEY:
-    SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtwenpla2ZscXBvZWNjbnFma25nIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDgwNzE1MiwiZXhwIjoyMDY2MzgzMTUyfQ.8zy_xc93iJVdrIPrdP-iy8XN9GlVWkE0epmrguca3iA"
-    print("✅ SUPABASE_KEY definido manualmente")
-
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise ValueError("❌ Credenciais do Supabase não definidas!")
+    raise RuntimeError("❌ SUPABASE_SERVICE_ROLE_KEY não configurada")
 
 # Cria o cliente
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 print("✅ Supabase client inicializado com sucesso!")
