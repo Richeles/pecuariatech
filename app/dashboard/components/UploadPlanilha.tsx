@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useDashboard } from "../DashboardContext";
 
 // ============================================================
-// TIPOS DA RESPOSTA DO MOTOR Ï€ (PYTHON)
+// TIPOS DA RESPOSTA DO MOTOR π (PYTHON)
 // ============================================================
 type RespostaPython = {
   mensagem: string;
@@ -65,7 +65,7 @@ type Props = {
 };
 
 // ============================================================
-// COMPONENTE PRINCIPAL â€“ IMPLANTAR FAZENDA (EQUAÃ‡ÃƒO X)
+// COMPONENTE PRINCIPAL – IMPLANTAR FAZENDA (EQUAÇÃO X)
 // ============================================================
 export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   const [loading, setLoading] = useState(false);
@@ -81,45 +81,25 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   const [implantacaoConcluida, setImplantacaoConcluida] = useState(false);
 
   const [plano, setPlano] = useState<Plano>("starter");
-  const [nomePlano, setNomePlano] = useState<string>("BÃ¡sico");
+  const [nomePlano, setNomePlano] = useState<string>("Básico");
 
   const [etapas, setEtapas] = useState<
     { id: number; label: string; status: "pendente" | "em_andamento" | "concluido" | "erro" }[]
   >([]);
   const [showUpgrade, setShowUpgrade] = useState(false);
 
-  const { triggerDashboardRefresh } = useDashboard();
+  const { triggerDashboardRefresh } = useDashboard(); // <-- para forçar atualização após upload
 
   // ============================================================
-  // ESTADO DE AUTENTICAÃ‡ÃƒO
-  // ============================================================
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const supabase = (await import("@/app/lib/supabase-browser")).createClient();
-        const { data } = await supabase.auth.getSession();
-        setIsAuthenticated(!!data?.session?.user);
-        console.log("ðŸ”µ [Auth check] isAuthenticated:", !!data?.session?.user);
-      } catch (err) {
-        console.error("âŒ Erro ao verificar autenticaÃ§Ã£o:", err);
-        setIsAuthenticated(false);
-      }
-    };
-    checkAuth();
-  }, []);
-
-  // ============================================================
-  // MAPEAMENTO DE PLANOS (EQUAÃ‡ÃƒO Z â€“ GOVERNANÃ‡A)
+  // MAPEAMENTO DE PLANOS (EQUAÇÃO Z – GOVERNANÇA)
   // ============================================================
   const mapearPlano = (nome: string): { codigo: Plano; exibicao: string } => {
     const lower = nome.toLowerCase().trim();
     switch (lower) {
-      case "bÃ¡sico":
+      case "básico":
       case "basico":
       case "starter":
-        return { codigo: "starter", exibicao: "BÃ¡sico" };
+        return { codigo: "starter", exibicao: "Básico" };
       case "profissional":
       case "pro":
         return { codigo: "pro", exibicao: "Profissional" };
@@ -130,19 +110,20 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
       case "business":
         return { codigo: "master", exibicao: "Empresarial" };
       case "dominus":
-      case "dominus 360Â°":
-        return { codigo: "dominus", exibicao: "Dominus 360Â°" };
+      case "dominus 360°":
+        return { codigo: "dominus", exibicao: "Dominus 360°" };
       default:
-        return { codigo: "starter", exibicao: "BÃ¡sico" };
+        return { codigo: "starter", exibicao: "Básico" };
     }
   };
 
   // ============================================================
-  // BUSCAR PLANO DO USUÃRIO (EQUAÃ‡ÃƒO Z)
+  // BUSCAR PLANO DO USUÁRIO (EQUAÇÃO Z)
   // ============================================================
   useEffect(() => {
     const fetchPlano = async () => {
       try {
+        // 🔁 Tentar via API primeiro
         const res = await fetch("/api/assinaturas/status");
         if (res.ok) {
           const data = await res.json();
@@ -153,25 +134,32 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
             return;
           }
         }
+
+        // ⚡ Fallback de sessão (igual ao upload)
         const supabase = (await import("@/app/lib/supabase-browser")).createClient();
         let user = null;
+
         const { data } = await supabase.auth.getUser();
         user = data?.user ?? null;
+
         if (!user) {
           const { data: { session } } = await supabase.auth.getSession();
           user = session?.user ?? null;
         }
+
         if (!user) {
           await new Promise((resolve) => setTimeout(resolve, 300));
           const { data } = await supabase.auth.getUser();
           user = data?.user ?? null;
         }
+
         if (user) {
           const { data } = await supabase
             .from("assinaturas")
             .select("plano")
             .eq("user_id", user.id)
             .maybeSingle();
+
           if (data?.plano) {
             const mapeado = mapearPlano(data.plano);
             setPlano(mapeado.codigo);
@@ -182,11 +170,12 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         console.error("Erro ao buscar plano:", error);
       }
     };
+
     fetchPlano();
   }, []);
 
   // ============================================================
-  // VALIDAÃ‡ÃƒO DE FORMATO
+  // VALIDAÇÃO DE FORMATO
   // ============================================================
   const isFormatoPermitido = (nome: string) => {
     const ext = nome.split('.').pop()?.toLowerCase();
@@ -195,24 +184,18 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   };
 
   // ============================================================
-  // HANDLE UPLOAD â€“ COM LOGS DE DEPURAÃ‡ÃƒO
+  // HANDLE UPLOAD – ISOLADO, NUNCA RECARREGA O DASHBOARD
   // ============================================================
   const handleUpload = async () => {
-    console.log("ðŸ”µ 1 - handleUpload iniciado");
-
     if (!arquivo) {
-      setMensagem("âŒ Selecione um arquivo primeiro.");
-      console.log("ðŸ”´ 2 - Sem arquivo, abortando");
+      setMensagem("❌ Selecione um arquivo primeiro.");
       return;
     }
-    console.log("ðŸ”µ 2 - Arquivo:", arquivo.name);
 
     if (!isFormatoPermitido(arquivo.name)) {
-      setMensagem(`âŒ O formato nÃ£o Ã© permitido no plano ${nomePlano}.`);
-      console.log("ðŸ”´ 3 - Formato nÃ£o permitido, abortando");
+      setMensagem(`❌ O formato não é permitido no plano ${nomePlano}.`);
       return;
     }
-    console.log("ðŸ”µ 3 - Formato permitido");
 
     setUploadError(null);
     setUploadSuccess(false);
@@ -222,95 +205,60 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
     setImplantacaoConcluida(false);
 
     const etapasIniciais = [
-      { id: 1, label: "ðŸ“¤ Recebendo arquivo", status: "em_andamento" as const },
-      { id: 2, label: "ðŸ§  Enviando ao Motor Ï€ (Python)", status: "pendente" as const },
-      { id: 3, label: "ðŸ” Detectando formato (EquaÃ§Ã£o Z)", status: "pendente" as const },
-      { id: 4, label: "ðŸ“– Lendo documento", status: "pendente" as const },
-      { id: 5, label: "ðŸ“Š Normalizando dados", status: "pendente" as const },
-      { id: 6, label: "âœ… Validando informaÃ§Ãµes", status: "pendente" as const },
-      { id: 7, label: "ðŸ’¾ Persistindo na EquaÃ§Ã£o Y", status: "pendente" as const },
-      { id: 8, label: "ðŸ“ˆ Gerando auditoria", status: "pendente" as const },
-      { id: 9, label: "ðŸ”„ Sincronizando Dashboards", status: "pendente" as const },
+      { id: 1, label: "📤 Recebendo arquivo", status: "em_andamento" as const },
+      { id: 2, label: "🧠 Enviando ao Motor π (Python)", status: "pendente" as const },
+      { id: 3, label: "🔍 Detectando formato (Equação Z)", status: "pendente" as const },
+      { id: 4, label: "📖 Lendo documento", status: "pendente" as const },
+      { id: 5, label: "📊 Normalizando dados", status: "pendente" as const },
+      { id: 6, label: "✅ Validando informações", status: "pendente" as const },
+      { id: 7, label: "💾 Persistindo na Equação Y", status: "pendente" as const },
+      { id: 8, label: "📈 Gerando auditoria", status: "pendente" as const },
+      { id: 9, label: "🔄 Sincronizando Dashboards", status: "pendente" as const },
     ];
     setEtapas(etapasIniciais);
 
     try {
       // -------------------------------------------------------
-      // OBTENÃ‡ÃƒO DO USUÃRIO (priorizando getSession)
+      // OBTENÇÃO RESILIENTE DO USUÁRIO (fallback de sessão)
       // -------------------------------------------------------
-      console.log("ðŸ”µ 4 - Obtendo usuÃ¡rio...");
       const supabase = (await import("@/app/lib/supabase-browser")).createClient();
       let user = null;
 
       try {
-        // 1. Tentar getSession() primeiro (renova token se necessÃ¡rio)
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        if (!sessionError && sessionData?.session?.user) {
-          user = sessionData.session.user;
-          console.log("ðŸ”µ 4a - UsuÃ¡rio obtido via getSession:", user.id);
-        } else {
-          console.log("âš ï¸ 4a - getSession falhou:", sessionError?.message || "sem sessÃ£o");
+        const { data } = await supabase.auth.getUser();
+        user = data?.user ?? null;
+
+        // fallback pela sessão
+        if (!user) {
+          const { data: { session } } = await supabase.auth.getSession();
+          user = session?.user ?? null;
         }
 
-        // 2. Se falhou, tentar refreshSession()
+        // pequena espera caso o cookie ainda esteja sendo restaurado
         if (!user) {
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          if (!refreshError && refreshData?.session?.user) {
-            user = refreshData.session.user;
-            console.log("ðŸ”µ 4b - UsuÃ¡rio obtido via refreshSession:", user.id);
-          } else {
-            console.log("âš ï¸ 4b - refreshSession falhou:", refreshError?.message || "sem sessÃ£o");
-          }
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          const { data } = await supabase.auth.getUser();
+          user = data?.user ?? null;
         }
 
-        // 3. Ãšltimo recurso: getUser()
         if (!user) {
-          const { data: userData, error: userError } = await supabase.auth.getUser();
-          if (!userError && userData?.user) {
-            user = userData.user;
-            console.log("ðŸ”µ 4c - UsuÃ¡rio obtido via getUser:", user.id);
-          } else {
-            console.log("âš ï¸ 4c - getUser falhou:", userError?.message || "sem usuÃ¡rio");
+          const apiRes = await fetch("/api/auth/session", {
+            cache: "no-store",
+          });
+
+          if (apiRes.ok) {
+            const data = await apiRes.json();
+            user = data?.user ?? null;
           }
         }
+      } catch (err) {
+        console.error("❌ Erro ao obter usuário do Supabase:", err);
+      }
 
-                // 4. Aguardar e tentar novamente (caso o cookie esteja sendo restaurado)
-        if (!user) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          const { data: retryData } = await supabase.auth.getSession();
-          user = retryData?.session?.user ?? null;
-          if (user) {
-            console.log("🔵 4d - Usuário obtido via retry (getSession):", user.id);
-          } else {
-            console.log("⚠️ 4d - retry também falhou");
-          }
-        }
-
-        // ============================================================
-        // FALLBACK VIA API (busca usuário via cookie do servidor)
-        // ============================================================
-        if (!user) {
-          console.log("🔵 4e - Tentando fallback via /api/auth/session");
-          try {
-            const apiRes = await fetch("/api/auth/session");
-            if (apiRes.ok) {
-              const data = await apiRes.json();
-              if (data?.user) {
-                user = data.user;
-                console.log("🔵 4e - Usuário obtido via API:", user.id);
-              } else {
-                console.log("⚠️ 4e - API retornou sem usuário");
-              }
-            } else {
-              console.log("⚠️ 4e - API falhou com status:", apiRes.status);
-            }
-          } catch (err) {
-            console.error("❌ 4e - Erro no fallback via API:", err);
-          }
-        }if (!user?.id) {
-        console.log("ðŸ”´ 5 - UsuÃ¡rio nÃ£o encontrado â€“ abortando upload.");
-        setUploadError("UsuÃ¡rio nÃ£o autenticado.");
-        setMensagem("âŒ Sua sessÃ£o expirou. FaÃ§a login novamente.");
+      if (!user?.id) {
+        console.warn("⚠️ Nenhum usuário encontrado após fallback de sessão.");
+        setUploadError("Usuário não autenticado.");
+        setMensagem("❌ Sua sessão expirou. Faça login novamente.");
         setEtapas(etapasIniciais.map((e) => ({ ...e, status: "erro" })));
         setLoading(false);
         return;
@@ -320,60 +268,56 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
       const finalTipo = tipo || "auto";
       const finalPlano = plano || "starter";
 
-      console.log("ðŸ”µ 6 - Montando FormData para:", {
-        file: arquivo.name,
-        tipo: finalTipo,
-        userId: finalUserId,
-        plano: finalPlano,
-      });
-
       const formData = new FormData();
       formData.append("file", arquivo);
       formData.append("tipo", finalTipo);
       formData.append("user_id", finalUserId);
       formData.append("plano", finalPlano);
 
-      console.log("ðŸ”µ 7 - Iniciando fetch para /api/upload-arquivo");
+      console.log("📤 Enviando FormData:", {
+        file: arquivo.name,
+        tipo: finalTipo,
+        userId: finalUserId,
+        plano: finalPlano,
+      });
 
-      const res = await fetch("/api/upload-arquivo", {
+      const res = await fetch("/api/importar/arquivo", {
         method: "POST",
         body: formData,
       });
 
-      console.log("ðŸ”µ 8 - Fetch retornou status:", res.status);
-
+      // ✅ 2. VALIDAR RESPOSTA DA API
       let result: any = {};
       try {
         result = await res.json();
-        console.log("ðŸ”µ 9 - Resposta JSON recebida:", result);
       } catch {
-        throw new Error("Resposta invÃ¡lida do servidor.");
+        throw new Error("Resposta inválida do servidor.");
       }
 
       if (res.ok) {
         setEtapas(etapasIniciais.map((e) => ({ ...e, status: "concluido" })));
 
         const dados: RespostaPython = {
-          mensagem: result.mensagem || "âœ… ImplantaÃ§Ã£o concluÃ­da!",
+          mensagem: result.mensagem || "✅ Implantação concluída!",
           arquivo: result.arquivo || arquivo.name,
           formato: result.formato || (arquivo.name.endsWith('.pdf') ? "PDF" : arquivo.name.endsWith('.csv') ? "CSV" : "Excel"),
-          tamanho: result.tamanho || "â€”",
+          tamanho: result.tamanho || "—",
           planilhas_encontradas: result.planilhas_encontradas || 0,
           lancamentos_estimados: result.lancamentos_estimados || 0,
-          periodo_inicio: result.periodo_inicio || "â€”",
-          periodo_fim: result.periodo_fim || "â€”",
-          documento_tipo: result.documento_tipo || "NÃ£o identificado",
+          periodo_inicio: result.periodo_inicio || "—",
+          periodo_fim: result.periodo_fim || "—",
+          documento_tipo: result.documento_tipo || "Não identificado",
           confianca_documento: result.confianca_documento || 0,
           indice_implantacao: result.indice_implantacao || 0,
           confiabilidade: result.confiabilidade || 0,
           qualidade_documento: result.qualidade_documento || 0,
           cobertura_financeira: result.cobertura_financeira || 0,
-          tempo_processamento: result.tempo_processamento || "â€”",
+          tempo_processamento: result.tempo_processamento || "—",
           receitas: result.receitas || 0,
           despesas: result.despesas || 0,
           categorias: result.categorias || 0,
           duplicidades: result.duplicidades || 0,
-          inconsistencia: result.inconsistencia || 0,
+          inconsistencia: result.inconsistencia || 0,   // 🔧 Corrigido: backend agora retorna "inconsistencia" (singular)
           confianca_ia: result.confianca_ia || 0,
           auditoria: {
             receita_total: result.auditoria?.receita_total || 0,
@@ -381,11 +325,11 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
             lucro: result.auditoria?.lucro || 0,
             roi: result.auditoria?.roi || 0,
           },
-          risco: result.risco || "â€”",
-          oportunidade: result.oportunidade || "â€”",
-          centro_custo: result.centro_custo || "â€”",
-          fonte_receita: result.fonte_receita || "â€”",
-          recomendacao: result.recomendacao || "â€”",
+          risco: result.risco || "—",
+          oportunidade: result.oportunidade || "—",
+          centro_custo: result.centro_custo || "—",
+          fonte_receita: result.fonte_receita || "—",
+          recomendacao: result.recomendacao || "—",
           modulos: {
             financeiro: result.modulos?.financeiro || false,
             dashboard: result.modulos?.dashboard || false,
@@ -398,7 +342,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
           especialistas: result.especialistas || [],
           proximas_acoes: result.proximas_acoes || [
             "Abrir Dashboard Financeiro",
-            "Ver recomendaÃ§Ãµes do CFO",
+            "Ver recomendações do CFO",
             "Explorar Linha do Tempo",
           ],
           ia_usada: result.ia_usada || false,
@@ -411,29 +355,29 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         setMensagem(dados.mensagem);
         setUploadSuccess(true);
 
-        if (onSuccess) onSuccess();
-        if (triggerDashboardRefresh) triggerDashboardRefresh();
-        console.log("âœ… Upload concluÃ­do com sucesso!");
+        if (onSuccess) onSuccess();          // callback original
+        if (triggerDashboardRefresh) triggerDashboardRefresh();  // ⬅️ força atualização do Dashboard
       } else {
-        const errorMsg = result.error || result.detail || "Falha na importaÃ§Ã£o";
+        const errorMsg = result.error || result.detail || "Falha na importação";
         setUploadError(errorMsg);
-        setMensagem(`âŒ ${errorMsg}`);
+        setMensagem(`❌ ${errorMsg}`);
         setEtapas(etapasIniciais.map((e) => ({ ...e, status: "erro" })));
         if (onError) onError(errorMsg);
-        console.error("âŒ Upload falhou:", errorMsg);
       }
     } catch (error) {
       console.error("[X] Erro no envio:", error);
-      const errorMsg = "Erro de conexÃ£o com o Motor Ï€. Verifique se o servidor Python estÃ¡ rodando.";
+      const errorMsg = "Erro de conexão com o Motor π. Verifique se o servidor Python está rodando.";
       setUploadError(errorMsg);
-      setMensagem(`âŒ ${errorMsg}`);
+      setMensagem(`❌ ${errorMsg}`);
+
+      // ✅ 3. USAR etapasIniciais (não o estado etapas)
       setEtapas(etapasIniciais.map((e) => ({ ...e, status: "erro" })));
     }
     setLoading(false);
   };
 
   // ============================================================
-  // RENDERIZAÃ‡ÃƒO â€“ IMPLANTAÃ‡ÃƒO CONCLUÃDA (inalterada)
+  // RENDERIZAÇÃO – IMPLANTAÇÃO CONCLUÍDA (inalterada)
   // ============================================================
   if (implantacaoConcluida && resposta) {
     const { auditoria, modulos, especialistas, proximas_acoes } = resposta;
@@ -441,28 +385,28 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
     return (
       <div className="bg-[#1A3F2A]/60 rounded-3xl border border-[#34D399]/30 p-8 backdrop-blur-sm space-y-6">
         <div className="text-center">
-          <div className="text-6xl">ðŸ†</div>
+          <div className="text-6xl">🏆</div>
           <h2 className="text-2xl font-bold text-white">FAZENDA IMPLANTADA</h2>
           <p className="text-sm text-[#A7F3D0]/60">{resposta.mensagem}</p>
           <p className="text-xs text-[#A7F3D0]/40">
-            Arquivo: {resposta.arquivo} â€¢ {resposta.formato} â€¢ {resposta.tamanho}
+            Arquivo: {resposta.arquivo} • {resposta.formato} • {resposta.tamanho}
           </p>
           {resposta.ia_usada && (
-            <p className="text-xs text-yellow-400/70">ðŸ§  IA Cognitiva auxiliou na interpretaÃ§Ã£o (EquaÃ§Ã£o Z).</p>
+            <p className="text-xs text-yellow-400/70">🧠 IA Cognitiva auxiliou na interpretação (Equação Z).</p>
           )}
           {resposta.inseridos > 0 && (
-            <p className="text-xs text-green-400/70">âœ… {resposta.inseridos} registros persistidos na EquaÃ§Ã£o Y.</p>
+            <p className="text-xs text-green-400/70">✅ {resposta.inseridos} registros persistidos na Equação Y.</p>
           )}
           {resposta.erros > 0 && (
-            <p className="text-xs text-red-400/70">âš ï¸ {resposta.erros} registros ignorados.</p>
+            <p className="text-xs text-red-400/70">⚠️ {resposta.erros} registros ignorados.</p>
           )}
         </div>
 
-        {/* ÃNDICES DE IMPLANTAÃ‡ÃƒO */}
+        {/* ÍNDICES DE IMPLANTAÇÃO */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
           <div className="bg-[#0F2A1A]/30 rounded-xl p-3 text-center border border-[#34D399]/10">
             <div className="text-2xl font-bold text-[#34D399]">{resposta.indice_implantacao}%</div>
-            <div className="text-xs text-[#A7F3D0]/60">ImplantaÃ§Ã£o</div>
+            <div className="text-xs text-[#A7F3D0]/60">Implantação</div>
           </div>
           <div className="bg-[#0F2A1A]/30 rounded-xl p-3 text-center border border-[#34D399]/10">
             <div className="text-2xl font-bold text-[#34D399]">{resposta.confiabilidade}%</div>
@@ -478,15 +422,15 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
           </div>
         </div>
 
-        {/* MÃ“DULOS IMPLANTADOS */}
+        {/* MÓDULOS IMPLANTADOS */}
         <div className="max-w-2xl mx-auto">
-          <p className="text-xs font-bold text-[#A7F3D0]/40 uppercase tracking-wider mb-2 text-center">MÃ³dulos Atualizados</p>
+          <p className="text-xs font-bold text-[#A7F3D0]/40 uppercase tracking-wider mb-2 text-center">Módulos Atualizados</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {[
               { key: "financeiro", label: "Financeiro" },
               { key: "dashboard", label: "Dashboard HUB" },
               { key: "views", label: "Views (Y)" },
-              { key: "motor_pi", label: "Motor Ï€" },
+              { key: "motor_pi", label: "Motor π" },
               { key: "linha_tempo", label: "Linha do Tempo" },
               { key: "planilha_operacional", label: "Planilha Operacional" },
               { key: "especialistas", label: "Especialistas", colSpan: true },
@@ -504,7 +448,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
                       : "text-yellow-400"
                   }
                 >
-                  {modulos[item.key as keyof typeof modulos] ? "âœ“" : "â³"}
+                  {modulos[item.key as keyof typeof modulos] ? "✓" : "⏳"}
                 </span>
                 <span className="text-xs text-[#A7F3D0]/80">{item.label}</span>
               </div>
@@ -526,13 +470,13 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
           </div>
         )}
 
-        {/* PRÃ“XIMAS AÃ‡Ã•ES */}
+        {/* PRÓXIMAS AÇÕES */}
         {proximas_acoes.length > 0 && (
           <div className="max-w-2xl mx-auto">
-            <p className="text-xs font-bold text-[#A7F3D0]/40 uppercase tracking-wider mb-2 text-center">PrÃ³ximas AÃ§Ãµes</p>
+            <p className="text-xs font-bold text-[#A7F3D0]/40 uppercase tracking-wider mb-2 text-center">Próximas Ações</p>
             <ul className="text-sm text-[#A7F3D0]/80 text-center space-y-1">
               {proximas_acoes.map((acao, idx) => (
-                <li key={idx}>âž¡ {acao}</li>
+                <li key={idx}>➡ {acao}</li>
               ))}
             </ul>
           </div>
@@ -540,7 +484,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
 
         {/* AUDITORIA */}
         <div className="bg-[#0F2A1A]/50 rounded-xl p-5 border border-[#34D399]/20 text-left max-w-2xl mx-auto">
-          <h3 className="text-sm font-bold text-[#34D399] mb-3">ðŸ“Š Auditoria do Motor Ï€</h3>
+          <h3 className="text-sm font-bold text-[#34D399] mb-3">📊 Auditoria do Motor π</h3>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="flex justify-between border-b border-[#34D399]/10 py-1">
               <span className="text-[#A7F3D0]/60">Receitas</span>
@@ -576,7 +520,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
             </div>
           </div>
           <div className="mt-3 p-3 bg-[#34D399]/10 rounded-lg border border-[#34D399]/20">
-            <p className="text-xs text-[#A7F3D0]/80">ðŸ’¡ RecomendaÃ§Ã£o do CFO (EquaÃ§Ã£o Z)</p>
+            <p className="text-xs text-[#A7F3D0]/80">💡 Recomendação do CFO (Equação Z)</p>
             <p className="text-sm text-white font-medium">{resposta.recomendacao}</p>
           </div>
         </div>
@@ -588,55 +532,55 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
               onClick={() => setShowUpgrade(!showUpgrade)}
               className="text-sm text-[#34D399] hover:text-[#10B981] transition underline"
             >
-              {showUpgrade ? "Ocultar upgrade" : "ðŸ”“ Migrar para Dominus 360Â°"}
+              {showUpgrade ? "Ocultar upgrade" : "🔓 Migrar para Dominus 360°"}
             </button>
             {showUpgrade && (
               <div className="mt-3 p-4 bg-[#0F2A1A]/50 rounded-xl border border-[#34D399]/20">
                 <p className="text-sm text-[#A7F3D0]/80">
-                  {plano === "starter" && "Atualize para Dominus 360Â° e tenha acesso a todos os recursos exclusivos."}
-                  {plano === "pro" && "Leve sua gestÃ£o ao prÃ³ximo nÃ­vel com o Dominus 360Â°."}
-                  {(plano === "master") && "VocÃª jÃ¡ estÃ¡ no topo, mas o Dominus 360Â° oferece ainda mais inteligÃªncia e automaÃ§Ã£o."}
+                  {plano === "starter" && "Atualize para Dominus 360° e tenha acesso a todos os recursos exclusivos."}
+                  {plano === "pro" && "Leve sua gestão ao próximo nível com o Dominus 360°."}
+                  {(plano === "master") && "Você já está no topo, mas o Dominus 360° oferece ainda mais inteligência e automação."}
                 </p>
                 <ul className="text-xs text-left list-disc list-inside text-[#A7F3D0]/60 mt-2 space-y-1">
-                  <li>âœ“ CFO AutÃ´nomo com IA preditiva</li>
-                  <li>âœ“ Suporte prioritÃ¡rio 24/7</li>
-                  <li>âœ“ RelatÃ³rios personalizados executivos</li>
-                  <li>âœ“ Auditoria contÃ­nua e recomendaÃ§Ãµes estratÃ©gicas</li>
-                  <li>âœ“ IntegraÃ§Ã£o total com Planilha Operacional e Linha do Tempo</li>
+                  <li>✓ CFO Autônomo com IA preditiva</li>
+                  <li>✓ Suporte prioritário 24/7</li>
+                  <li>✓ Relatórios personalizados executivos</li>
+                  <li>✓ Auditoria contínua e recomendações estratégicas</li>
+                  <li>✓ Integração total com Planilha Operacional e Linha do Tempo</li>
                 </ul>
                 <button className="mt-3 px-4 py-2 bg-[#34D399] text-[#0F2A1A] font-bold rounded-lg hover:bg-[#10B981] transition text-sm">
-                  Migrar para Dominus 360Â°
+                  Migrar para Dominus 360°
                 </button>
               </div>
             )}
           </div>
         )}
 
-        {/* NAVEGAÃ‡ÃƒO */}
+        {/* NAVEGAÇÃO */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto mt-4">
           <Link href="/pt/dashboard/financeiro">
             <button className="w-full px-4 py-3 rounded-xl bg-[#34D399] text-[#0F2A1A] font-bold hover:bg-[#10B981] transition text-sm">
-              ðŸ“Š Dashboard HUB
+              📊 Dashboard HUB
             </button>
           </Link>
           <Link href="/pt/dashboard/financeiro">
             <button className="w-full px-4 py-3 rounded-xl bg-[#34D399]/20 border border-[#34D399]/30 text-[#A7F3D0] font-bold hover:bg-[#34D399]/30 transition text-sm">
-              ðŸ’° Financeiro
+              💰 Financeiro
             </button>
           </Link>
           <Link href="/pt/dashboard/cfo">
             <button className="w-full px-4 py-3 rounded-xl bg-[#34D399]/20 border border-[#34D399]/30 text-[#A7F3D0] font-bold hover:bg-[#34D399]/30 transition text-sm">
-              ðŸ§  CFO Inteligente
+              🧠 CFO Inteligente
             </button>
           </Link>
           <Link href="/pt/dashboard/linha-do-tempo">
             <button className="w-full px-4 py-3 rounded-xl bg-[#34D399]/20 border border-[#34D399]/30 text-[#A7F3D0] font-bold hover:bg-[#34D399]/30 transition text-sm">
-              ðŸ“ˆ Linha do Tempo
+              📈 Linha do Tempo
             </button>
           </Link>
           <Link href="/pt/dashboard/planilha-operacional">
             <button className="w-full px-4 py-3 rounded-xl bg-[#34D399]/20 border border-[#34D399]/30 text-[#A7F3D0] font-bold hover:bg-[#34D399]/30 transition text-sm">
-              ðŸ“‹ Planilha Op.
+              📋 Planilha Op.
             </button>
           </Link>
           <button
@@ -651,7 +595,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
             }}
             className="w-full px-4 py-3 rounded-xl bg-[#34D399]/10 border border-[#34D399]/20 text-[#A7F3D0] font-bold hover:bg-[#34D399]/20 transition text-sm col-span-2 md:col-span-1"
           >
-            ðŸ”„ Nova ImplantaÃ§Ã£o
+            🔄 Nova Implantação
           </button>
         </div>
       </div>
@@ -659,7 +603,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
   }
 
   // ============================================================
-  // FORMULÃRIO DE IMPLANTAÃ‡ÃƒO
+  // FORMULÁRIO DE IMPLANTAÇÃO (inalterado)
   // ============================================================
   return (
     <div className="bg-[#1A3F2A]/60 rounded-3xl border border-[#34D399]/20 p-6 backdrop-blur-sm">
@@ -667,13 +611,13 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         onClick={() => setShowForm(!showForm)}
         className="text-sm font-bold text-[#34D399] hover:text-[#10B981] transition flex items-center gap-2"
       >
-        {showForm ? "âœ• Fechar" : "ðŸ—ï¸ Implantar Fazenda"}
+        {showForm ? "✕ Fechar" : "🏗️ Implantar Fazenda"}
       </button>
 
       {showForm && (
         <div className="mt-6 space-y-4">
           <p className="text-sm text-[#A7F3D0]/60">
-            Envie os documentos da sua fazenda para o Motor Ï€.
+            Envie os documentos da sua fazenda para o Motor π.
             <br />
             <span className="text-xs text-[#A7F3D0]/40">
               Plano atual: <span className="uppercase font-bold text-[#34D399]">{nomePlano}</span>
@@ -697,11 +641,11 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
                     : "border-[#34D399]/20 hover:border-[#34D399]/40"
                 }`}
               >
-                <div className="text-3xl">ðŸ“Š</div>
+                <div className="text-3xl">📊</div>
                 <div className={`text-sm font-bold ${modoOrigem === "excel" ? "text-[#34D399]" : "text-[#A7F3D0]/60"}`}>
                   Excel (.xlsx)
                 </div>
-                <div className="text-[8px] text-[#A7F3D0]/30">âœ“ DisponÃ­vel</div>
+                <div className="text-[8px] text-[#A7F3D0]/30">✓ Disponível</div>
               </button>
               <button
                 onClick={() => {
@@ -717,14 +661,14 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
                     : "border-[#34D399]/20 hover:border-[#34D399]/40"
                 } ${plano === "starter" ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={plano === "starter"}
-                title={plano === "starter" ? "DisponÃ­vel a partir do plano Profissional" : ""}
+                title={plano === "starter" ? "Disponível a partir do plano Profissional" : ""}
               >
-                <div className="text-3xl">ðŸ“„</div>
+                <div className="text-3xl">📄</div>
                 <div className={`text-sm font-bold ${modoOrigem === "pdf" ? "text-[#34D399]" : "text-[#A7F3D0]/60"}`}>
                   PDF Financeiro
                 </div>
-                {plano === "starter" && <div className="text-[8px] text-yellow-400/50">ðŸ”’ Upgrade</div>}
-                {plano !== "starter" && <div className="text-[8px] text-[#34D399]/50">âœ“ DisponÃ­vel</div>}
+                {plano === "starter" && <div className="text-[8px] text-yellow-400/50">🔒 Upgrade</div>}
+                {plano !== "starter" && <div className="text-[8px] text-[#34D399]/50">✓ Disponível</div>}
               </button>
               <button
                 onClick={() => {
@@ -740,16 +684,16 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
                     : "border-[#34D399]/20 hover:border-[#34D399]/40"
                 }`}
               >
-                <div className="text-3xl">ðŸ“‹</div>
+                <div className="text-3xl">📋</div>
                 <div className={`text-sm font-bold ${modoOrigem === "csv" ? "text-[#34D399]" : "text-[#A7F3D0]/60"}`}>
                   CSV
                 </div>
-                <div className="text-[8px] text-[#A7F3D0]/30">âœ“ DisponÃ­vel</div>
+                <div className="text-[8px] text-[#A7F3D0]/30">✓ Disponível</div>
               </button>
             </div>
             <div className="mt-3 p-3 bg-[#0F2A1A]/30 rounded-xl border border-dashed border-[#34D399]/10">
               <p className="text-xs text-[#A7F3D0]/30 text-center">
-                Em breve: ERP â€¢ Contabilidade â€¢ Cooperativa â€¢ Banco â€¢ API ContÃ¡bil
+                Em breve: ERP • Contabilidade • Cooperativa • Banco • API Contábil
               </p>
             </div>
           </div>
@@ -771,7 +715,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
                   const file = e.target.files?.[0];
                   if (file) {
                     if (!isFormatoPermitido(file.name)) {
-                      setMensagem(`âŒ O formato ${file.name.split('.').pop()} nÃ£o Ã© permitido no plano ${nomePlano}.`);
+                      setMensagem(`❌ O formato ${file.name.split('.').pop()} não é permitido no plano ${nomePlano}.`);
                       return;
                     }
                     setArquivo(file);
@@ -784,7 +728,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
                 }}
               />
               <label htmlFor="upload-arquivo" className="cursor-pointer block">
-                <div className="text-3xl mb-2">ðŸ“‚</div>
+                <div className="text-3xl mb-2">📂</div>
                 <p className="text-[#A7F3D0]/60 text-sm">
                   {arquivo ? arquivo.name : `Selecione o arquivo ${modoOrigem.toUpperCase()}`}
                 </p>
@@ -795,28 +739,15 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
             </div>
           )}
 
-          {/* FEEDBACK DE AUTENTICAÃ‡ÃƒO */}
-          {isAuthenticated === false && (
-            <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 text-center">
-              <p className="text-red-400 text-sm">FaÃ§a login para enviar arquivos.</p>
-              <button
-                onClick={() => (window.location.href = "/pt/login")}
-                className="mt-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition"
-              >
-                Fazer login
-              </button>
-            </div>
-          )}
-
           {etapas.length > 0 && (
             <div className="bg-[#0F2A1A]/30 rounded-xl p-4 space-y-1 border border-[#34D399]/10">
               {etapas.map((etapa) => (
                 <div key={etapa.id} className="flex items-center gap-2 text-xs text-[#A7F3D0]/60">
                   <span className="w-4">
-                    {etapa.status === "concluido" && "âœ…"}
-                    {etapa.status === "em_andamento" && "â³"}
-                    {etapa.status === "pendente" && "â¬œ"}
-                    {etapa.status === "erro" && "âŒ"}
+                    {etapa.status === "concluido" && "✅"}
+                    {etapa.status === "em_andamento" && "⏳"}
+                    {etapa.status === "pendente" && "⬜"}
+                    {etapa.status === "erro" && "❌"}
                   </span>
                   <span className={etapa.status === "concluido" ? "text-[#34D399]" : ""}>
                     {etapa.label}
@@ -835,10 +766,10 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
           {arquivo && !implantacaoConcluida && (
             <button
               onClick={handleUpload}
-              disabled={loading || isAuthenticated === false}
+              disabled={loading}
               className="w-full px-6 py-3 rounded-xl bg-[#34D399] text-[#0F2A1A] font-bold hover:bg-[#10B981] transition disabled:opacity-50 text-sm"
             >
-              {loading ? "â³ Processando..." : "ðŸš€ Enviar para o Motor Ï€"}
+              {loading ? "⏳ Processando..." : "🚀 Enviar para o Motor π"}
             </button>
           )}
         </div>
