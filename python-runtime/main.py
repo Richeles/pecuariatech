@@ -183,15 +183,27 @@ class UniversalImporter:
                     df = pd.read_excel(io.BytesIO(conteudo), engine='xlrd')
                 return df.to_dict(orient='records')
 
+        # =========================================================
+        # 🔥 Leitor PDF corrigido (extrai tabelas)
+        # =========================================================
         elif formato == "pdf":
             try:
                 import pdfplumber
                 with pdfplumber.open(io.BytesIO(conteudo)) as pdf:
-                    texto = "".join(page.extract_text() or "" for page in pdf.pages)
-                linhas = [l.strip() for l in texto.split('\n') if l.strip()]
+                    texto = "\n".join(page.extract_text() or "" for page in pdf.pages)
+                    tabelas = []
+                    for page in pdf.pages:
+                        page_tables = page.extract_tables()
+                        if page_tables:
+                            tabelas.extend(page_tables)
+                linhas = [l.strip() for l in texto.splitlines() if l.strip()]
                 if not texto.strip():
                     logger.warning("PDF sem texto (provavelmente escaneado)")
-                return {"texto": texto, "linhas": linhas}
+                return {
+                    "texto": texto,
+                    "linhas": linhas,
+                    "tabelas": tabelas,
+                }
             except ImportError:
                 raise Exception("pdfplumber não instalado")
             except Exception as e:
@@ -202,7 +214,7 @@ class UniversalImporter:
                     linhas = [l.strip() for l in texto.split('\n') if l.strip()]
                     if not texto.strip():
                         logger.warning("PDF sem texto (provavelmente escaneado) – PyPDF2 também não extraiu texto")
-                    return {"texto": texto, "linhas": linhas}
+                    return {"texto": texto, "linhas": linhas, "tabelas": []}
                 except ImportError:
                     raise Exception(f"Falha ao ler PDF: {e} (PyPDF2 não instalado)")
                 except:
@@ -475,8 +487,76 @@ class UniversalImporter:
                 logger.info(f"[Rebanho] Extraídos {len(resultados)} animais válidos")
             except Exception as e:
                 logger.exception(f"[Rebanho] Erro ao processar CSV: {e}")
+
+        # =========================================================
+        # 🔥 Processa tabelas extraídas do PDF
+        # =========================================================
+        elif formato == "pdf":
+            tabelas = dados_brutos.get("tabelas", []) if isinstance(dados_brutos, dict) else []
+            if not tabelas:
+                logger.warning("[Rebanho] PDF sem tabelas extraídas")
+                return []
+
+            tabela_rebanho = None
+            for tabela in tabelas:
+                if not tabela or len(tabela) < 2:
+                    continue
+                cabecalho_teste = [str(c or "").strip().lower() for c in tabela[0]]
+                if "brinco" in cabecalho_teste and "peso_entrada" in cabecalho_teste:
+                    tabela_rebanho = tabela
+                    break
+
+            if tabela_rebanho is None:
+                logger.warning("[Rebanho] Nenhuma tabela PDF compatível com rebanho encontrada")
+                return []
+
+            cabecalho = [str(c or "").strip().lower() for c in tabela_rebanho[0]]
+            logger.info(f"[Rebanho] Cabeçalho PDF: {cabecalho}")
+
+            def texto_coluna(row, nome):
+                if nome not in cabecalho:
+                    return ""
+                idx = cabecalho.index(nome)
+                return str(row[idx] if idx < len(row) and row[idx] is not None else "").strip()
+
+            def numero_coluna(row, nome):
+                valor = texto_coluna(row, nome)
+                if not valor:
+                    return 0.0
+                valor = valor.replace("R$", "").strip()
+                if "," in valor:
+                    valor = valor.replace(".", "").replace(",", ".")
+                else:
+                    valor = valor.replace(" ", "")
+                try:
+                    return float(valor)
+                except ValueError:
+                    return 0.0
+
+            for row in tabela_rebanho[1:]:
+                try:
+                    brinco = texto_coluna(row, "brinco")
+                    peso_entrada = numero_coluna(row, "peso_entrada")
+                    if not brinco or peso_entrada <= 0:
+                        continue
+                    resultados.append({
+                        "brinco": brinco,
+                        "lote": texto_coluna(row, "lote"),
+                        "sexo": texto_coluna(row, "sexo"),
+                        "raca": texto_coluna(row, "raca"),
+                        "peso_entrada": peso_entrada,
+                        "peso_atual": numero_coluna(row, "peso_atual"),
+                        "gmd": numero_coluna(row, "gmd"),
+                        "data_vacina": texto_coluna(row, "data_vacina") or None,
+                        "piquete_atual": texto_coluna(row, "piquete_atual"),
+                    })
+                except Exception as e:
+                    logger.warning(f"[Rebanho] Erro na linha PDF: {row} | {e}")
+            logger.info(f"[Rebanho] Extraídos {len(resultados)} animais do PDF")
+            return resultados
+
         else:
-            # Excel / PDF
+            # Excel
             for row in dados_brutos:
                 try:
                     brinco = str(row.get("brinco") or "").strip()
@@ -495,7 +575,7 @@ class UniversalImporter:
                         })
                 except Exception as e:
                     logger.exception(f"[Rebanho] Erro na linha: {e}")
-            logger.info(f"[Rebanho] Extraídos {len(resultados)} animais (Excel/PDF)")
+            logger.info(f"[Rebanho] Extraídos {len(resultados)} animais (Excel)")
         return resultados
 
     @staticmethod
