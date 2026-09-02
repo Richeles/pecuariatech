@@ -5,11 +5,12 @@ import logging
 import pandas as pd
 import io
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import csv
 import chardet
 import time
+import hashlib
 from supabase_client import supabase
 
 # =========================================================
@@ -22,6 +23,44 @@ load_dotenv()
 # =========================================================
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# =========================================================
+# RESONÂNCIA FRACTAL – OBSERVABILIDADE TRANSVERSAL
+# =========================================================
+class TraceResonance:
+    """
+    Observabilidade transversal temporária.
+    Não altera o fluxo funcional do sistema.
+    """
+
+    @staticmethod
+    def fingerprint(data):
+        raw = str(data).encode("utf-8", errors="ignore")
+        return hashlib.sha256(raw).hexdigest()[:12]
+
+    @staticmethod
+    def emit(trace_id, stage, status, count=None, data=None, extra=None):
+        payload = {
+            "trace_id": trace_id,
+            "stage": stage,
+            "status": status,
+            "count": count,
+            "fingerprint": TraceResonance.fingerprint(data) if data is not None else None,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "extra": extra or {},
+        }
+
+        logger.info(
+            f"[RESONANCE] "
+            f"trace={trace_id} "
+            f"stage={stage} "
+            f"status={status} "
+            f"count={count} "
+            f"fingerprint={payload['fingerprint']} "
+            f"extra={payload['extra']}"
+        )
+
+        return payload
 
 # =========================================================
 # DASHBOARD DTO - TRIÂNGULO 360 (ORIGINAL)
@@ -592,22 +631,78 @@ class UniversalImporter:
             validos.append(animal)
         return validos, erros
 
+    # 🔥 CORREÇÃO APLICADA AQUI – função persistir_rebanho instrumentada e com .select("*")
     @staticmethod
-    def persistir_rebanho(user_id: str, animais: list) -> dict:
+    def persistir_rebanho(user_id: str, animais: list, trace_id: str = None) -> dict:
+        """
+        Persiste animais no Supabase e emite ressonâncias do INSERT real.
+        Retorna dicionário com 'inseridos', 'erros' e 'detalhes'.
+        """
         if not animais:
-            return {"inseridos": 0, "erros": 0}
+            return {"inseridos": 0, "erros": 0, "detalhes": []}
+
         inseridos = 0
-        for animal in animais:
+        erros = 0
+        detalhes = []
+
+        for idx, animal in enumerate(animais):
+            if trace_id:
+                TraceResonance.emit(
+                    trace_id=trace_id,
+                    stage="INSERT_INICIO",
+                    status="RESONANDO",
+                    count=1,
+                    data=animal,
+                    extra={"index": idx},
+                )
+
             try:
-                supabase.table("animais").insert({
+                # 🔥 Correção: usar .select("*") para obter o registro inserido
+                result = supabase.table("animais").insert({
                     "user_id": user_id,
                     **animal,
-                    "criado_em": datetime.now().isoformat()
-                }).execute()
+                    "criado_em": datetime.now(timezone.utc).isoformat()
+                }).select("*").execute()
+
+                # Se chegou aqui, o INSERT foi aceito (sem exceção)
                 inseridos += 1
+
+                if trace_id:
+                    TraceResonance.emit(
+                        trace_id=trace_id,
+                        stage="INSERT_SUCESSO",
+                        status="RESONANDO",
+                        count=1,
+                        data=result.data[0] if result.data else animal,
+                        extra={"index": idx, "retorno_supabase": bool(result.data)},
+                    )
+
+                detalhes.append({
+                    "status": "ok",
+                    "animal": animal.get("brinco"),
+                    "dados": result.data,
+                })
+
             except Exception as e:
-                logger.exception(f"[Rebanho] Erro ao inserir animal: {e}")
-        return {"inseridos": inseridos, "erros": len(animais) - inseridos}
+                erros += 1
+
+                if trace_id:
+                    TraceResonance.emit(
+                        trace_id=trace_id,
+                        stage="INSERT_EXCECAO",
+                        status="PERSISTENCIA_FALHOU",
+                        count=0,
+                        data=animal,
+                        extra={"index": idx, "erro": str(e)},
+                    )
+
+                detalhes.append({
+                    "status": "erro",
+                    "animal": animal.get("brinco"),
+                    "motivo": str(e),
+                })
+
+        return {"inseridos": inseridos, "erros": erros, "detalhes": detalhes}
 
     @staticmethod
     def gerar_auditoria_rebanho(arquivo: str, animais: list, inseridos: int, erros: int) -> dict:
@@ -868,6 +963,8 @@ async def importar_arquivo(
     tipo: str = Form("auto"),
     plano: str = Form("starter")
 ):
+    # === RESONÂNCIA: trace_id único para este upload ===
+    trace_id = f"TRACE-{tipo.upper()}-{uuid.uuid4().hex[:8]}"
     request_id = uuid.uuid4().hex[:8]
     start_time = time.time()
 
@@ -876,7 +973,21 @@ async def importar_arquivo(
     logger.info(f"[{request_id}] 📁 Arquivo: {file.filename}")
     logger.info(f"[{request_id}] 👤 User: {user_id}")
     logger.info(f"[{request_id}] 🏷️ Tipo recebido: {tipo}")
+    logger.info(f"[{request_id}] 🔬 Trace: {trace_id}")
     logger.info("=" * 60)
+
+    # RESONÂNCIA: UPLOAD
+    TraceResonance.emit(
+        trace_id=trace_id,
+        stage="UPLOAD",
+        status="RESONANDO",
+        count=1,
+        extra={
+            "arquivo": file.filename,
+            "tipo": tipo,
+            "user_id": user_id,
+        },
+    )
 
     try:
         conteudo = await file.read()
@@ -894,6 +1005,28 @@ async def importar_arquivo(
         dados_brutos = UniversalImporter.ler(conteudo, info["formato"], engine=engine)
         if not dados_brutos:
             return JSONResponse({"error": "Nenhum dado encontrado.", "request_id": request_id}, status_code=400)
+
+        # RESONÂNCIA: EXTRAÇÃO – conta registros reais
+        quantidade_extraida = 0
+        if isinstance(dados_brutos, list):
+            quantidade_extraida = len(dados_brutos)
+        elif isinstance(dados_brutos, dict) and info["formato"] == "pdf":
+            tabelas = dados_brutos.get("tabelas", [])
+            for tabela in tabelas:
+                if tabela and len(tabela) > 1:
+                    quantidade_extraida += len(tabela) - 1  # exclui cabeçalho
+        elif isinstance(dados_brutos, dict):
+            quantidade_extraida = len(dados_brutos.get("linhas", [])) - 1  # exclui cabeçalho
+            if quantidade_extraida < 0:
+                quantidade_extraida = 0
+
+        TraceResonance.emit(
+            trace_id=trace_id,
+            stage="EXTRACAO",
+            status="RESONANDO",
+            count=quantidade_extraida,
+            data=dados_brutos,
+        )
 
         # ========== CAMADA Ω ==========
         kernel = OmegaKernel()
@@ -915,6 +1048,37 @@ async def importar_arquivo(
 
         # Monta relatório de resposta (formato completo para front-end)
         canonical = kernel.center.read("canonical_model") or []
+
+        # RESONÂNCIA: NORMALIZAÇÃO
+        TraceResonance.emit(
+            trace_id=trace_id,
+            stage="NORMALIZACAO",
+            status="RESONANDO" if canonical else "FALHA_CONVERSAO",
+            count=len(canonical),
+            data=canonical,
+        )
+
+        # RESONÂNCIA: CANONICAL MODEL
+        canonical_check = kernel.center.read("canonical_model") or []
+        TraceResonance.emit(
+            trace_id=trace_id,
+            stage="CANONICAL_MODEL",
+            status="RESONANDO" if canonical_check else "FALHA_CONVERSAO",
+            count=len(canonical_check),
+            data=canonical_check,
+        )
+
+        # RESONÂNCIA: PERSISTÊNCIA RESULTADO (baseado nos fatos do Ω)
+        TraceResonance.emit(
+            trace_id=trace_id,
+            stage="PERSISTENCIA_RESULTADO",
+            status="PERSISTENCIA_OK" if inseridos > 0 else "PERSISTENCIA_NAO_CONFIRMADA",
+            count=inseridos,
+            extra={
+                "erros": erros,
+                "total_enviado": len(canonical_check),
+            },
+        )
 
         # ⚡ CORREÇÃO: elapsed movido para ANTES do relatorio
         elapsed = round(time.time() - start_time, 2)
@@ -939,7 +1103,7 @@ async def importar_arquivo(
             "despesas": sum(1 for r in canonical if r.get("tipo") == "despesa") if tipo_final == "financeiro" else 0,
             "categorias": len(set(r.get("categoria", "") for r in canonical)),
             "duplicidades": 0,
-            "inconsistencia": erros,   # ← CORRIGIDO: nome singular
+            "inconsistencia": erros,
             "confianca_ia": 0,
             "auditoria": {
                 "receita_total": sum(r.get("valor", 0) for r in canonical if r.get("tipo") == "receita") if tipo_final == "financeiro" else 0,
@@ -952,7 +1116,7 @@ async def importar_arquivo(
             "centro_custo": "Alimentação",
             "fonte_receita": "Venda de bovinos",
             "recomendacao": "Otimizar custos operacionais.",
-            "modulos": {   # ← CORRIGIDO: todas as chaves fixas
+            "modulos": {
                 "financeiro": tipo_final == "financeiro",
                 "dashboard": True,
                 "views": True,
@@ -966,7 +1130,17 @@ async def importar_arquivo(
             "ia_usada": False,
             "inseridos": inseridos,
             "erros": erros,
-            "projection": proj
+            "projection": proj,
+            # === RESONÂNCIA: mapa transversal temporário ===
+            "trace_id": trace_id,
+            "ressonancia": {
+                "upload": 1,
+                "extracao": quantidade_extraida,
+                "normalizacao": len(canonical),
+                "canonical_model": len(canonical_check),
+                "persistencia_real": inseridos,
+                "erros": erros,
+            },
         }
 
         logger.info(f"[{request_id}] ✅ Processamento Ω concluído em {elapsed}s")
