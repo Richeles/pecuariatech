@@ -1,122 +1,97 @@
-﻿// app/api/rebanho/route.ts
-// PecuariaTech – API Rebanho Premium
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
-function getSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) throw new Error("❌ Supabase env vars missing");
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-  });
-}
-
-function respond(data: any, message?: string, status = 200) {
-  return NextResponse.json({
-    ok: status < 400,
-    message: message || (status < 400 ? "Operacao concluida" : "Erro na operacao"),
-    data,
-    timestamp: new Date().toISOString(),
-  }, { status });
-}
-
-export async function GET(req: NextRequest) {
+// =====================================================
+// GET /api/rebanho
+// Lista os animais do usuário autenticado (via sessão)
+// =====================================================
+export async function GET() {
   try {
-    const { searchParams } = new URL(req.url);
-    const user_id = searchParams.get("user_id");
-    const limit = parseInt(searchParams.get("limit") || "100");
-    const supabase = getSupabase();
-    let query = supabase.from("vw_rebanho").select("*");
-    if (user_id) query = query.eq("user_id", user_id);
-    const { data, error } = await query.limit(limit);
-    if (error) {
-      console.error("[Rebanho GET] Erro:", error);
-      return respond(null, error.message, 500);
-    }
-    return respond(data || []);
-  } catch (err: any) {
-    console.error("[Rebanho GET] Excecao:", err);
-    return respond(null, err?.message || "Erro interno", 500);
-  }
-}
+    const cookieStore = await cookies();
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const { nome, peso_inicial, user_id, data_entrada, lote, brinco_id, status, ganho_medio_diario } = body;
-    if (!nome || !peso_inicial || !user_id) {
-      return respond(null, "Campos obrigatorios: nome, peso_inicial, user_id", 400);
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            cookieStore.set(name, value, options);
+          },
+          remove(name: string, options: any) {
+            cookieStore.set(name, '', { ...options, maxAge: 0 });
+          },
+        },
+      }
+    );
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return NextResponse.json(
+        { ok: false, error: 'Usuário não autenticado' },
+        { status: 401 }
+      );
     }
-    const supabase = getSupabase();
+
     const { data, error } = await supabase
-      .from("rebanho")
-      .insert({
-        id: crypto.randomUUID(),
-        nome,
-        peso_inicial: parseFloat(peso_inicial),
-        peso_atual: parseFloat(peso_inicial),
-        user_id,
-        data_entrada: data_entrada || new Date().toISOString().split("T")[0],
-        lote: lote || null,
-        brinco_id: brinco_id || null,
-        status: status || "ativo",
-        ganho_medio_diario: ganho_medio_diario || null,
-      })
-      .select()
-      .single();
-    if (error) {
-      console.error("[Rebanho POST] Erro:", error);
-      return respond(null, error.message, 500);
-    }
-    return respond(data, "Animal adicionado", 201);
-  } catch (err: any) {
-    console.error("[Rebanho POST] Excecao:", err);
-    return respond(null, err?.message || "Erro ao adicionar animal", 500);
-  }
-}
+      .from('animais')
+      .select(
+        `
+        id,
+        brinco,
+        lote,
+        sexo,
+        raca,
+        peso_entrada,
+        peso_atual,
+        gmd,
+        data_vacina,
+        piquete_atual,
+        criado_em
+        `
+      )
+      .eq('user_id', user.id)
+      .order('criado_em', { ascending: false });
 
-export async function PUT(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const { id, ...updates } = body;
-    if (!id) return respond(null, "ID do animal e obrigatorio", 400);
-    const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from("rebanho")
-      .update({ ...updates })
-      .eq("id", id)
-      .select()
-      .single();
     if (error) {
-      console.error("[Rebanho PUT] Erro:", error);
-      return respond(null, error.message, 500);
+      console.error('Erro Supabase listar animais:', error);
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 400 }
+      );
     }
-    return respond(data, "Animal atualizado", 200);
-  } catch (err: any) {
-    console.error("[Rebanho PUT] Excecao:", err);
-    return respond(null, err?.message || "Erro ao atualizar", 500);
-  }
-}
 
-export async function DELETE(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    if (!id) return respond(null, "ID do animal e obrigatorio", 400);
-    const supabase = getSupabase();
-    const { error } = await supabase.from("rebanho").delete().eq("id", id);
-    if (error) {
-      console.error("[Rebanho DELETE] Erro:", error);
-      return respond(null, error.message, 500);
-    }
-    return respond({ id }, "Animal removido", 200);
-  } catch (err: any) {
-    console.error("[Rebanho DELETE] Excecao:", err);
-    return respond(null, err?.message || "Erro ao remover", 500);
+    const rows = (data || []).map((item) => {
+      let sexoNormalizado = item.sexo || '—';
+      if (sexoNormalizado === 'M') sexoNormalizado = 'Macho';
+      else if (sexoNormalizado === 'F') sexoNormalizado = 'Fêmea';
+
+      return {
+        animal_id: item.id,
+        animal_brinco: item.brinco || '—',
+        raca: item.raca || '—',
+        sexo: sexoNormalizado,
+        peso: item.peso_atual ?? item.peso_entrada ?? null,
+        status_biologico: 'Ativo',
+        movimentacao_local: item.piquete_atual || item.lote || '—',
+      };
+    });
+
+    return NextResponse.json({
+      ok: true,
+      message: 'Operacao concluida',
+      data: rows,
+      rows,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('Erro inesperado ao listar rebanho:', err);
+    return NextResponse.json(
+      { ok: false, error: 'Erro interno ao listar rebanho' },
+      { status: 500 }
+    );
   }
 }
