@@ -14,8 +14,13 @@ from .motors.learning import LearningMotor
 logger = logging.getLogger(__name__)
 
 class OmegaRuntime:
-    def __init__(self, center: OmegaCenter):
+    def __init__(
+        self,
+        center: OmegaCenter,
+        axis=None,
+    ):
         self.center = center
+        self.axis = axis
         self.worklist = []
 
     def register_default_motors(self):
@@ -49,6 +54,17 @@ class OmegaRuntime:
             except Exception:
                 logger.exception("Erro executando %s", motor_name)
             after = self.center.state_signature()
+
+            if self.axis:
+                self.axis.observe_motor(
+                    sequence=self.axis.cursor.sequence,
+                    module=motor_name,
+                    before=before,
+                    after=after,
+                    changed=(before != after),
+                    error=None,
+                )
+
             if before == after:
                 iteration += 1
                 continue
