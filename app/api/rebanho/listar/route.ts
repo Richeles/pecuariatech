@@ -21,17 +21,20 @@ export async function GET() {
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     const { data, error } = await supabase
-      .from("animals")
+      .from("animais")
       .select(
         `
         id,
         brinco,
-        nome,
+        lote,
         sexo,
-        categoria,
-        peso,
-        lote_id,
-        status
+        raca,
+        peso_entrada,
+        peso_atual,
+        gmd,
+        data_vacina,
+        piquete_atual,
+        criado_em
         `
       )
       .order("criado_em", { ascending: false });

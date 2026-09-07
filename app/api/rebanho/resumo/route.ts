@@ -12,7 +12,7 @@ export async function GET() {
     );
 
     const { data, error } = await supabase
-      .from("animals")
+      .from("animais")
       .select("id", { count: "exact" });
 
     if (error) {
