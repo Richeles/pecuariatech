@@ -281,7 +281,7 @@ export default function UploadPlanilha({ tipo, onSuccess, onError }: Props) {
         plano: finalPlano,
       });
 
-      const res = await fetch("/api/importar/arquivo", {
+      const res = await fetch("/api/upload-arquivo", {
         method: "POST",
         body: formData,
       });

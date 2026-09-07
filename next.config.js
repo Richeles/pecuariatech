@@ -3,14 +3,17 @@ const nextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
 
   // 🔁 Proxy para o Motor π (Python) no Render
-  async rewrites() {
+  /*
+   MARCO 7F — REWRITE LEGADO DESATIVADO
+   O fluxo oficial usa /api/upload-arquivo.
+async rewrites() {
     return [
       {
         source: "/api/importar/arquivo",
         destination: "https://pecuariatech-motor-pi.onrender.com/api/importar/arquivo",
       },
     ];
-  },
+  },*/
 };
 
 module.exports = nextConfig;
