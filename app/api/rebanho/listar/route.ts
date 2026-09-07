@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 // =====================================================
 // GET /api/rebanho/listar
@@ -7,18 +8,35 @@ import { createClient } from "@supabase/supabase-js";
 // =====================================================
 export async function GET() {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const cookieStore = await cookies();
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error("Supabase ENV ausente");
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            cookieStore.set(name, value, options);
+          },
+          remove(name: string, options: any) {
+            cookieStore.set(name, "", { ...options, maxAge: 0 });
+          },
+        },
+      }
+    );
+
+    const { data: { user }, error: userError } =
+      await supabase.auth.getUser();
+
+    if (userError || !user) {
       return NextResponse.json(
-        { error: "Configuração do Supabase ausente" },
-        { status: 500 }
+        { error: "Usuário não autenticado" },
+        { status: 401 }
       );
     }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     const { data, error } = await supabase
       .from("animais")
@@ -37,6 +55,7 @@ export async function GET() {
         criado_em
         `
       )
+      .eq("user_id", user.id)
       .order("criado_em", { ascending: false });
 
     if (error) {
