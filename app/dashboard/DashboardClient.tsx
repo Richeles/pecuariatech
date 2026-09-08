@@ -29,10 +29,10 @@ import Link from "next/link";
 import ExportPDF from "./components/ExportPDF";
 
 export default function DashboardClient() {
-  const userId = "96a1a441-c0f6-43b2-9cb7-4fadc17fd261";
+
 
   return (
-    <DashboardProvider userId={userId}>
+    <DashboardProvider>
       <DashboardContent />
     </DashboardProvider>
   );

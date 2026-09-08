@@ -1,5 +1,4 @@
-// app/dashboard/DashboardContext.tsx
-"use client";
+﻿"use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
 import { useDashboardBootstrap } from "./hooks/useDashboardBootstrap";
@@ -31,33 +30,45 @@ type DashboardContextValue = {
   loading: boolean;
   error: Error | null;
   refetch: () => void;
-  dashboardRefreshKey: number;          // ← NOVO
-  triggerDashboardRefresh: () => void;  // ← NOVO
+  dashboardRefreshKey: number;
+  triggerDashboardRefresh: () => void;
 };
 
-const DashboardContext = createContext<DashboardContextValue | null>(null);
+const DashboardContext =
+  createContext<DashboardContextValue | null>(null);
 
 export function useDashboard() {
   const ctx = useContext(DashboardContext);
-  if (!ctx) throw new Error("useDashboard must be used within DashboardProvider");
+
+  if (!ctx) {
+    throw new Error(
+      "useDashboard must be used within DashboardProvider"
+    );
+  }
+
   return ctx;
 }
 
-export function DashboardProvider({ children, userId }: { children: ReactNode; userId: string }) {
-  const { data, loading, error } = useDashboardBootstrap(userId);
+export function DashboardProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const { data, loading, error } = useDashboardBootstrap();
 
-  // Estado e função para forçar refresh de todos os dashboards
-  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
-  const triggerDashboardRefresh = () => setDashboardRefreshKey(prev => prev + 1);
+  const [dashboardRefreshKey, setDashboardRefreshKey] =
+    useState(0);
 
-  // 🔒 NUNCA repassa o erro para a UI – apenas loading e data
+  const triggerDashboardRefresh = () =>
+    setDashboardRefreshKey((prev) => prev + 1);
+
   const contextValue: DashboardContextValue = {
     data,
     loading,
-    error: null, // suprime erros – a UI vê apenas loading
-    refetch: () => {}, // implementar depois se necessário
-    dashboardRefreshKey,          // ← NOVO
-    triggerDashboardRefresh,      // ← NOVO
+    error: error ? new Error(error) : null,
+    refetch: () => {},
+    dashboardRefreshKey,
+    triggerDashboardRefresh,
   };
 
   return (
@@ -66,4 +77,5 @@ export function DashboardProvider({ children, userId }: { children: ReactNode; u
     </DashboardContext.Provider>
   );
 }
+
 export default DashboardProvider;

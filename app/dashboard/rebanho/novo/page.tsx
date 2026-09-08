@@ -13,7 +13,6 @@ export default function NovoAnimal() {
   const [form, setForm] = useState({
     nome: "",
     peso_inicial: "",
-    user_id: "96a1a441-c0f6-43b2-9cb7-4fadc17fd261",
     data_entrada: new Date().toISOString().split("T")[0],
     lote: "",
     brinco_id: "",
@@ -102,5 +101,4 @@ export default function NovoAnimal() {
     </div>
   );
 }
-
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -40,7 +40,6 @@ export default function CadastroAnimal() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          user_id: "96a1a441-c0f6-43b2-9cb7-4fadc17fd261",
         }),
       });
       if (res.ok) {
@@ -68,13 +67,13 @@ export default function CadastroAnimal() {
     <div className="rounded-2xl border border-[#34D399]/20 bg-[#1A3F2A]/60 backdrop-blur-sm p-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          <span className="text-[#34D399]">🐄</span> Cadastrar Animal
+          <span className="text-[#34D399]">ðŸ„</span> Cadastrar Animal
         </h2>
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 rounded-xl bg-[#34D399] text-[#0F2A1A] font-bold hover:bg-[#10B981] transition shadow-lg shadow-[#34D399]/30"
         >
-          {showForm ? "✕ Fechar" : "+ Novo Animal"}
+          {showForm ? "âœ• Fechar" : "+ Novo Animal"}
         </button>
       </div>
 
@@ -98,7 +97,7 @@ export default function CadastroAnimal() {
             />
             <input
               type="text"
-              placeholder="Raça"
+              placeholder="RaÃ§a"
               className="bg-[#0F2A1A]/70 border border-[#34D399]/20 rounded-xl p-3 text-white placeholder-[#A7F3D0]/40 focus:ring-2 focus:ring-[#34D399]/60 focus:outline-none"
               value={form.raca}
               onChange={(e) => setForm({ ...form, raca: e.target.value })}
@@ -109,7 +108,7 @@ export default function CadastroAnimal() {
               onChange={(e) => setForm({ ...form, sexo: e.target.value as "M" | "F" })}
             >
               <option value="M">Macho</option>
-              <option value="F">Fêmea</option>
+              <option value="F">FÃªmea</option>
             </select>
             <input
               type="number"
@@ -140,7 +139,7 @@ export default function CadastroAnimal() {
             />
           </div>
           <textarea
-            placeholder="Observações"
+            placeholder="ObservaÃ§Ãµes"
             className="w-full bg-[#0F2A1A]/70 border border-[#34D399]/20 rounded-xl p-3 text-white placeholder-[#A7F3D0]/40 focus:ring-2 focus:ring-[#34D399]/60 focus:outline-none resize-none"
             rows={2}
             value={form.observacoes}
