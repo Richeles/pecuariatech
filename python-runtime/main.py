@@ -138,6 +138,10 @@ app = FastAPI(
     version="4.2 Ultra Cognitive Enterprise"
 )
 
+# ESR - router observacional financeiro
+from api.esr import router as esr_router
+app.include_router(esr_router)
+
 # =========================================================
 # UNIVERSAL IMPORTER – MULTI-TIPO (FINANCEIRO, REBANHO, PASTAGEM, ENGORDA)
 # =========================================================

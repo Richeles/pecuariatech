@@ -19,57 +19,21 @@ export const dynamic = "force-dynamic";
    PLANOS
 ===================================================== */
 
-const PLANOS: Record<
-  string,
-  {
-    titulo: string;
-    precos: {
-      mensal: number;
-      trimestral: number;
-      anual: number;
-    };
-  }
-> = {
-  basico: {
-    titulo: "Plano Básico",
-    precos: {
-      mensal: 149.9,
-      trimestral: 404.9,
-      anual: 1439.9,
-    },
-  },
-  profissional: {
-    titulo: "Plano Profissional",
-    precos: {
-      mensal: 247.9,
-      trimestral: 669.9,
-      anual: 2379.9,
-    },
-  },
-  ultra: {
-    titulo: "Plano Ultra",
-    precos: {
-      mensal: 452.9,
-      trimestral: 1222.9,
-      anual: 4349.9,
-    },
-  },
-  empresarial: {
-    titulo: "Plano Empresarial",
-    precos: {
-      mensal: 627.9,
-      trimestral: 1694.9,
-      anual: 6029.9,
-    },
-  },
-  premium_dominus: {
-    titulo: "Premium Dominus 360°",
-    precos: {
-      mensal: 789.9,
-      trimestral: 2132.9,
-      anual: 7582.9,
-    },
-  },
+const PLANOS = {
+  basico: { titulo: "Plano B?sico" },
+  profissional: { titulo: "Plano Profissional" },
+  ultra: { titulo: "Plano Ultra" },
+  empresarial: { titulo: "Plano Empresarial" },
+  premium_dominus: { titulo: "Premium Dominus 360?" },
+} as const;
+
+const PLANO_ALIAS: Record<string, keyof typeof PLANOS> = {
+  basico: "basico",
+  profissional: "profissional",
+  ultra: "ultra",
+  empresarial: "empresarial",
+  dominus: "premium_dominus",
+  premium_dominus: "premium_dominus",
 };
 
 /* =====================================================
@@ -94,30 +58,47 @@ function safeOrigin(req: NextRequest) {
    PYTHON PRICING
 ===================================================== */
 
-async function getDynamicPrice(
+async function getPriceFromDatabase(
   plano: string,
-  periodo: string,
-  fallback: number
+  periodo: "mensal" | "trimestral" | "anual"
 ) {
-  try {
-    const PYTHON_API = process.env.PYTHON_API_URL;
-    if (!PYTHON_API) {
-      return fallback;
-    }
-    const response = await fetch(`${PYTHON_API}/pricing`, {
-      method: "GET",
-      cache: "no-store",
-    });
-    if (!response.ok) {
-      return fallback;
-    }
-    const pricing = await response.json();
-    const value = pricing?.[plano]?.[periodo];
-    const preco = n(value);
-    return preco > 0 ? preco : fallback;
-  } catch {
-    return fallback;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("supabase_env_missing");
   }
+
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/planos_precos?select=preco_mensal,preco_trimestral,preco_anual,ativo&plano_codigo=eq.${encodeURIComponent(plano)}&ativo=eq.true`,
+    {
+      method: "GET",
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`planos_precos_http_${response.status}`);
+  }
+
+  const rows = await response.json();
+  const row = Array.isArray(rows) ? rows[0] : null;
+
+  if (!row) {
+    throw new Error("plan_not_found");
+  }
+
+  const preco = n(row[`preco_${periodo}`]);
+
+  if (preco <= 0) {
+    throw new Error("invalid_plan_price");
+  }
+
+  return preco;
 }
 
 /* =====================================================
@@ -185,9 +166,17 @@ export async function POST(req: NextRequest) {
     ========================================== */
 
     const body = await req.json();
-    const { plano, periodo } = body;
+    const planoRecebido = String(body?.plano || "").toLowerCase();
+    const periodo = String(body?.periodo || "");
 
-    console.log("[CHECKOUT]", { plano, periodo, email });
+    const plano = PLANO_ALIAS[planoRecebido];
+
+    console.log("[CHECKOUT]", {
+      planoRecebido,
+      plano,
+      periodo,
+      email,
+    });
 
     /* ==========================================
        VALIDATION
@@ -195,31 +184,26 @@ export async function POST(req: NextRequest) {
 
     if (!plano || !PLANOS[plano]) {
       return NextResponse.json(
-        { ok: false, error: "Plano inválido" },
+        { ok: false, error: "Plano inv?lido" },
         { status: 400 }
       );
     }
 
     if (!["mensal", "trimestral", "anual"].includes(periodo)) {
       return NextResponse.json(
-        { ok: false, error: "Período inválido" },
+        { ok: false, error: "Per?odo inv?lido" },
         { status: 400 }
       );
     }
 
     /* ==========================================
-       PREÇO
+       PRE?O ? FONTE ?NICA: Supabase
     ========================================== */
 
-    const fallbackPrice = PLANOS[plano].precos[periodo as "mensal" | "trimestral" | "anual"];
-    const preco = await getDynamicPrice(plano, periodo, fallbackPrice);
-
-    if (!preco || isNaN(preco)) {
-      return NextResponse.json(
-        { ok: false, error: "Preço inválido" },
-        { status: 500 }
-      );
-    }
+    const preco = await getPriceFromDatabase(
+      plano,
+      periodo as "mensal" | "trimestral" | "anual"
+    );
 
     /* ==========================================
        ORIGIN

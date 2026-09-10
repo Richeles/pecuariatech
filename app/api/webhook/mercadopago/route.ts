@@ -96,6 +96,69 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // =====================================================
+    // ESR ? OBSERVA??O P?S-PERSIST?NCIA
+    // N?o participa da autoriza??o, pre?o ou ativa??o.
+    // Falha do ESR n?o invalida o pagamento j? processado.
+    // =====================================================
+    if (status === "approved") {
+      try {
+        const pythonBaseUrl =
+          process.env.PYTHON_API_URL ||
+          process.env.PYTHON_RUNTIME_URL?.replace(
+            /\/api\/importar\/arquivo\/?$/,
+            ""
+          );
+
+        const esrToken = process.env.ESR_INTERNAL_TOKEN;
+
+        if (pythonBaseUrl && esrToken) {
+          const esrResponse = await fetch(
+            `${pythonBaseUrl}/api/esr/evento-financeiro`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-ESR-Internal-Token": esrToken,
+              },
+              body: JSON.stringify({
+                user_id,
+                evento: "PAYMENT_APPROVED",
+                payload: {
+                  source: "mercadopago",
+                  payment_id: String(paymentId),
+                  status,
+                  plano,
+                  periodo,
+                  valor: valorPago,
+                  moeda,
+                  external_reference: externalRef,
+                },
+              }),
+              cache: "no-store",
+              signal: AbortSignal.timeout(1500),
+            }
+          );
+
+          if (!esrResponse.ok) {
+            console.warn(
+              "[ESR] Observa??o rejeitada pelo Runtime:",
+              esrResponse.status
+            );
+          }
+        } else {
+          console.warn(
+            "[ESR] Configura??o ausente; pagamento preservado."
+          );
+        }
+      } catch (esrError) {
+        console.warn(
+          "[ESR] Falha observacional ? pagamento preservado:",
+          esrError
+        );
+      }
+    }
+
     console.log(`✅ Webhook processado em ${Date.now() - startTime}ms`);
     return NextResponse.json({ ok: true });
   } catch (error: any) {
