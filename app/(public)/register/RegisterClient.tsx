@@ -12,6 +12,7 @@ export default function RegisterClient() {
 
   const [pais, setPais] = useState("");
   const [tipoDocumento, setTipoDocumento] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,16 +33,23 @@ export default function RegisterClient() {
     try {
       const form = new FormData(e.currentTarget);
 
-      const nome = form.get("nome") as string;
-      const email = form.get("email") as string;
-      const senha = form.get("senha") as string;
+      const nome = String(form.get("nome") ?? "").trim();
+      const email = String(form.get("email") ?? "")
+        .trim()
+        .toLowerCase();
+      const senha = String(form.get("senha") ?? "");
+
+      if (!nome || !email || !senha) {
+        setError("Preencha nome, e-mail e senha.");
+        setLoading(false);
+        return;
+      }
 
       /* ==========================================
          SIGNUP
       ========================================== */
 
       const {
-        data: signUpData,
         error: signUpError,
       } = await supabase.auth.signUp({
         email,
@@ -55,121 +63,103 @@ export default function RegisterClient() {
       }
 
       /* ==========================================
-         DADOS LOCAIS DO ONBOARDING
+         DADOS DE ONBOARDING
       ========================================== */
 
-      localStorage.setItem("pecuaria_nome", nome);
-      localStorage.setItem("pecuaria_pais", pais);
+      localStorage.setItem(
+        "pecuaria_nome",
+        nome
+      );
+
+      localStorage.setItem(
+        "pecuaria_pais",
+        pais
+      );
+
       localStorage.setItem(
         "pecuaria_tipo_documento",
         tipoDocumento
       );
 
       const plano =
-        localStorage.getItem("checkout_plano");
+        localStorage.getItem(
+          "checkout_plano"
+        );
 
       const periodo =
-        localStorage.getItem("checkout_periodo");
+        localStorage.getItem(
+          "checkout_periodo"
+        );
 
       const locale =
-        localStorage.getItem("checkout_locale") || "pt";
+        localStorage.getItem(
+          "checkout_locale"
+        ) || "pt";
 
       /* ==========================================
-         CONTINUIDADE COMERCIAL
-         PLANO ? CADASTRO ? CHECKOUT
+         PRIMEIRA COMPRA
+         PLANO ? CADASTRO ? SESS?O ? CHECKOUT
       ========================================== */
 
       if (plano && periodo) {
-        /*
-         * O Checkout Runtime exige sess?o SSR.
-         * signUp() cria a conta no Supabase, mas essa
-         * sess?o do browser n?o necessariamente cria o
-         * cookie SSR utilizado pela API de checkout.
-         *
-         * Portanto, estabelecemos a sess?o SSR por meio
-         * da rota can?nica de autentica??o, sem exibir
-         * uma segunda tela de login ao usu?rio.
-         */
+        const loginResponse =
+          await fetch(
+            "/api/auth/login",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify({
+                email,
+                password: senha,
+              }),
+            }
+          );
 
-        let sessaoBrowser =
-          signUpData?.session;
-
-        if (!sessaoBrowser) {
-          const {
-            data: loginData,
-            error: loginError,
-          } = await supabase.auth.signInWithPassword({
-            email,
-            password: senha,
-          });
-
-          if (loginError || !loginData?.session) {
-            setError(
-              loginError?.message ||
-                "Conta criada, mas n?o foi poss?vel preparar a sess?o do checkout."
-            );
-            setLoading(false);
-            return;
-          }
-
-          sessaoBrowser = loginData.session;
-        }
-
-        const loginResponse = await fetch(
-          "/api/auth/login",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              email,
-              password: senha,
-            }),
-          }
-        );
+        const loginBody =
+          await loginResponse
+            .json()
+            .catch(() => null);
 
         if (!loginResponse.ok) {
-          const loginBody =
-            await loginResponse
-              .json()
-              .catch(() => null);
-
           setError(
             loginBody?.error ||
-              "Conta criada, mas n?o foi poss?vel preparar a sess?o segura do checkout."
+              "A conta foi criada, mas a sess?o segura n?o p?de ser estabelecida para o checkout."
           );
 
           setLoading(false);
           return;
         }
 
-        /*
-         * A sess?o SSR agora est? estabelecida.
-         * O checkout poder? consultar getUser() pelo cookie.
-         */
-        router.push(
+        const checkoutUrl =
           `/${locale}/checkout?plano=${encodeURIComponent(
             plano
           )}&periodo=${encodeURIComponent(
             periodo
-          )}`
-        );
+          )}`;
 
+        router.push(checkoutUrl);
         return;
       }
 
       /* ==========================================
-         FLUXO PADR?O SEM PLANO
+         CADASTRO SEM COMPRA
       ========================================== */
 
-      router.push("/login?confirm=true");
+      router.push(
+        `/${locale}/login?confirm=true`
+      );
     } catch (err) {
-      console.error(err);
+      console.error(
+        "[REGISTER_RUNTIME]",
+        err
+      );
 
       setError(
-        "Erro interno ao criar conta. Tente novamente."
+        "Erro interno ao criar a conta. Tente novamente."
       );
     } finally {
       setLoading(false);
@@ -177,7 +167,7 @@ export default function RegisterClient() {
   }
 
   /* =====================================================
-     UI PREMIUM
+     UI
   ===================================================== */
 
   return (
@@ -275,7 +265,7 @@ export default function RegisterClient() {
           name="email"
           type="email"
           required
-          placeholder="Email"
+          placeholder="E-mail"
           className="
             w-full
             rounded-xl
@@ -291,31 +281,70 @@ export default function RegisterClient() {
           "
         />
 
-        <input
-          name="senha"
-          type="password"
-          required
-          placeholder="Senha"
-          className="
-            w-full
-            rounded-xl
-            border
-            border-emerald-200
-            bg-white
-            p-3
-            outline-none
-            transition
-            focus:border-emerald-500
-            focus:ring-2
-            focus:ring-emerald-400/40
-          "
-        />
+        <div className="relative">
+          <input
+            name="senha"
+            type={
+              mostrarSenha
+                ? "text"
+                : "password"
+            }
+            required
+            minLength={6}
+            placeholder="Senha"
+            autoComplete="new-password"
+            className="
+              w-full
+              rounded-xl
+              border
+              border-emerald-200
+              bg-white
+              p-3
+              pr-24
+              outline-none
+              transition
+              focus:border-emerald-500
+              focus:ring-2
+              focus:ring-emerald-400/40
+            "
+          />
+
+          <button
+            type="button"
+            onClick={() =>
+              setMostrarSenha(
+                (valor) => !valor
+              )
+            }
+            className="
+              absolute
+              right-3
+              top-1/2
+              -translate-y-1/2
+              text-xs
+              font-bold
+              text-emerald-700
+              hover:text-emerald-900
+            "
+            aria-label={
+              mostrarSenha
+                ? "Ocultar senha"
+                : "Mostrar senha"
+            }
+          >
+            {mostrarSenha
+              ? "Ocultar"
+              : "Mostrar"}
+          </button>
+        </div>
 
         <select
           required
           value={pais}
           onChange={(e) =>
-            setPais(e.target.value)
+            setPais(
+              e.target.value
+            )
           }
           className="
             w-full
@@ -386,7 +415,7 @@ export default function RegisterClient() {
           "
         >
           <option value="">
-            Sistema Produtivo
+            Sistema produtivo
           </option>
 
           <option value="corte">
@@ -443,7 +472,9 @@ export default function RegisterClient() {
           required
           value={tipoDocumento}
           onChange={(e) =>
-            setTipoDocumento(e.target.value)
+            setTipoDocumento(
+              e.target.value
+            )
           }
           className="
             w-full
@@ -460,7 +491,7 @@ export default function RegisterClient() {
           "
         >
           <option value="">
-            Tipo de Documento
+            Tipo de documento
           </option>
 
           <option value="cpf">
@@ -512,9 +543,14 @@ export default function RegisterClient() {
         {error && (
           <div
             className="
+              rounded-xl
+              border
+              border-red-200
+              bg-red-50
+              p-3
               text-center
               text-sm
-              text-red-600
+              text-red-700
             "
           >
             {error}
@@ -537,6 +573,7 @@ export default function RegisterClient() {
             transition
             hover:scale-[1.02]
             hover:shadow-2xl
+            disabled:cursor-not-allowed
             disabled:opacity-60
           "
         >
