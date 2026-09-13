@@ -235,9 +235,22 @@ export default function PlanosClient() {
         ? "es"
         : "pt";
 
-    router.push(
-      `/${locale}/checkout?plano=${plano}&periodo=${periodo}`
+    localStorage.setItem(
+      "checkout_plano",
+      plano
     );
+
+    localStorage.setItem(
+      "checkout_periodo",
+      periodo
+    );
+
+    localStorage.setItem(
+      "checkout_locale",
+      locale
+    );
+
+    router.push("/cadastro");
   }
 
   return (

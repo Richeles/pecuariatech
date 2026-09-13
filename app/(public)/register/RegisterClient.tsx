@@ -8,152 +8,170 @@ import { createClient } from "@/app/lib/supabase-browser";
 const supabase = createClient();
 
 export default function RegisterClient() {
-
   const router = useRouter();
 
-  const [pais, setPais] =
-    useState("");
-
-  const [tipoDocumento, setTipoDocumento] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [error, setError] =
-    useState<string | null>(null);
+  const [pais, setPais] = useState("");
+  const [tipoDocumento, setTipoDocumento] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /* =====================================================
-     REGISTER — EQUAÇÃO Y + REGRA Z
+     REGISTER ? EQUA??O Y + REGRA Z
   ===================================================== */
 
   async function handleRegister(
     e: React.FormEvent<HTMLFormElement>
   ) {
-
     e.preventDefault();
 
     if (loading) return;
 
     setLoading(true);
-
     setError(null);
 
     try {
+      const form = new FormData(e.currentTarget);
 
-      const form =
-        new FormData(
-          e.currentTarget
-        );
-
-      const nome =
-        form.get("nome") as string;
-
-      const email =
-        form.get("email") as string;
-
-      const senha =
-        form.get("senha") as string;
+      const nome = form.get("nome") as string;
+      const email = form.get("email") as string;
+      const senha = form.get("senha") as string;
 
       /* ==========================================
-         SIGNUP LIMPO
-         (ISOLANDO ERRO SUPABASE/TRIGGER)
+         SIGNUP
       ========================================== */
 
       const {
-        error,
-      } =
-        await supabase.auth.signUp({
+        data: signUpData,
+        error: signUpError,
+      } = await supabase.auth.signUp({
+        email,
+        password: senha,
+      });
 
-          email,
-
-          password: senha,
-        });
-
-      /* ==========================================
-         ERROR
-      ========================================== */
-
-      if (error) {
-
-        setError(
-          error.message
-        );
-
+      if (signUpError) {
+        setError(signUpError.message);
         setLoading(false);
-
         return;
       }
 
       /* ==========================================
-         SALVA DADOS LOCALMENTE
+         DADOS LOCAIS DO ONBOARDING
       ========================================== */
 
-      localStorage.setItem(
-        "pecuaria_nome",
-        nome
-      );
-
-      localStorage.setItem(
-        "pecuaria_pais",
-        pais
-      );
-
+      localStorage.setItem("pecuaria_nome", nome);
+      localStorage.setItem("pecuaria_pais", pais);
       localStorage.setItem(
         "pecuaria_tipo_documento",
         tipoDocumento
       );
 
-      /* ==========================================
-         ONBOARDING PREMIUM
-      ========================================== */
-
       const plano =
-        localStorage.getItem(
-          "checkout_plano"
-        );
+        localStorage.getItem("checkout_plano");
 
       const periodo =
-        localStorage.getItem(
-          "checkout_periodo"
-        );
+        localStorage.getItem("checkout_periodo");
+
+      const locale =
+        localStorage.getItem("checkout_locale") || "pt";
 
       /* ==========================================
-         CONTINUIDADE COGNITIVA
-         🔥 ALTERAÇÃO ÚNICA NESTE ARQUIVO
+         CONTINUIDADE COMERCIAL
+         PLANO ? CADASTRO ? CHECKOUT
       ========================================== */
 
-      if (
-        plano &&
-        periodo
-      ) {
+      if (plano && periodo) {
+        /*
+         * O Checkout Runtime exige sess?o SSR.
+         * signUp() cria a conta no Supabase, mas essa
+         * sess?o do browser n?o necessariamente cria o
+         * cookie SSR utilizado pela API de checkout.
+         *
+         * Portanto, estabelecemos a sess?o SSR por meio
+         * da rota can?nica de autentica??o, sem exibir
+         * uma segunda tela de login ao usu?rio.
+         */
 
-        // ALTERADO: adicionado /pt/ no next
+        let sessaoBrowser =
+          signUpData?.session;
+
+        if (!sessaoBrowser) {
+          const {
+            data: loginData,
+            error: loginError,
+          } = await supabase.auth.signInWithPassword({
+            email,
+            password: senha,
+          });
+
+          if (loginError || !loginData?.session) {
+            setError(
+              loginError?.message ||
+                "Conta criada, mas n?o foi poss?vel preparar a sess?o do checkout."
+            );
+            setLoading(false);
+            return;
+          }
+
+          sessaoBrowser = loginData.session;
+        }
+
+        const loginResponse = await fetch(
+          "/api/auth/login",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              email,
+              password: senha,
+            }),
+          }
+        );
+
+        if (!loginResponse.ok) {
+          const loginBody =
+            await loginResponse
+              .json()
+              .catch(() => null);
+
+          setError(
+            loginBody?.error ||
+              "Conta criada, mas n?o foi poss?vel preparar a sess?o segura do checkout."
+          );
+
+          setLoading(false);
+          return;
+        }
+
+        /*
+         * A sess?o SSR agora est? estabelecida.
+         * O checkout poder? consultar getUser() pelo cookie.
+         */
         router.push(
-          `/login?next=/pt/checkout?plano=${plano}&periodo=${periodo}`
+          `/${locale}/checkout?plano=${encodeURIComponent(
+            plano
+          )}&periodo=${encodeURIComponent(
+            periodo
+          )}`
         );
 
         return;
       }
 
       /* ==========================================
-         DEFAULT
+         FLUXO PADR?O SEM PLANO
       ========================================== */
 
-      router.push(
-        "/login?confirm=true"
-      );
-
+      router.push("/login?confirm=true");
     } catch (err) {
-
       console.error(err);
 
       setError(
         "Erro interno ao criar conta. Tente novamente."
       );
-
     } finally {
-
       setLoading(false);
     }
   }
@@ -163,7 +181,6 @@ export default function RegisterClient() {
   ===================================================== */
 
   return (
-
     <div
       className="
         w-full
@@ -177,18 +194,12 @@ export default function RegisterClient() {
         backdrop-blur-xl
       "
     >
-
-      {/* =====================================
-          HEADER
-      ===================================== */}
-
       <div
         className="
           mb-8
           text-center
         "
       >
-
         <div
           className="
             inline-flex
@@ -231,22 +242,16 @@ export default function RegisterClient() {
           "
         >
           Infraestrutura operacional,
-          inteligência financeira
-          e governança pecuária
-          em uma única plataforma.
+          intelig?ncia financeira
+          e governan?a pecu?ria
+          em uma ?nica plataforma.
         </p>
-
       </div>
-
-      {/* =====================================
-          FORM
-      ===================================== */}
 
       <form
         onSubmit={handleRegister}
         className="space-y-5"
       >
-
         <input
           name="nome"
           required
@@ -310,9 +315,7 @@ export default function RegisterClient() {
           required
           value={pais}
           onChange={(e) =>
-            setPais(
-              e.target.value
-            )
+            setPais(e.target.value)
           }
           className="
             w-full
@@ -328,9 +331,8 @@ export default function RegisterClient() {
             focus:ring-emerald-400/40
           "
         >
-
           <option value="">
-            Selecione o País
+            Selecione o Pa?s
           </option>
 
           <option value="BR">
@@ -346,11 +348,11 @@ export default function RegisterClient() {
           </option>
 
           <option value="MX">
-            México
+            M?xico
           </option>
 
           <option value="CO">
-            Colômbia
+            Col?mbia
           </option>
 
           <option value="UY">
@@ -364,7 +366,6 @@ export default function RegisterClient() {
           <option value="PY">
             Paraguai
           </option>
-
         </select>
 
         <select
@@ -384,7 +385,6 @@ export default function RegisterClient() {
             focus:ring-emerald-400/40
           "
         >
-
           <option value="">
             Sistema Produtivo
           </option>
@@ -400,7 +400,6 @@ export default function RegisterClient() {
           <option value="misto">
             Misto
           </option>
-
         </select>
 
         <select
@@ -419,13 +418,12 @@ export default function RegisterClient() {
             focus:ring-emerald-400/40
           "
         >
-
           <option value="">
-            Função (opcional)
+            Fun??o (opcional)
           </option>
 
           <option value="proprietario">
-            Proprietário
+            Propriet?rio
           </option>
 
           <option value="gerente">
@@ -437,18 +435,15 @@ export default function RegisterClient() {
           </option>
 
           <option value="veterinario">
-            Veterinário
+            Veterin?rio
           </option>
-
         </select>
 
         <select
           required
           value={tipoDocumento}
           onChange={(e) =>
-            setTipoDocumento(
-              e.target.value
-            )
+            setTipoDocumento(e.target.value)
           }
           className="
             w-full
@@ -464,7 +459,6 @@ export default function RegisterClient() {
             focus:ring-emerald-400/40
           "
         >
-
           <option value="">
             Tipo de Documento
           </option>
@@ -476,7 +470,6 @@ export default function RegisterClient() {
           <option value="cnpj">
             CNPJ
           </option>
-
         </select>
 
         <input
@@ -517,7 +510,6 @@ export default function RegisterClient() {
         />
 
         {error && (
-
           <div
             className="
               text-center
@@ -548,15 +540,11 @@ export default function RegisterClient() {
             disabled:opacity-60
           "
         >
-
           {loading
             ? "Criando conta..."
             : "Criar Conta"}
-
         </button>
-
       </form>
-
     </div>
   );
 }
