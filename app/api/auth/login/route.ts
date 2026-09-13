@@ -1,7 +1,7 @@
 // =========================================================
 // PecuariaTech Ultra
-// Login SSR CANÔNICO
-// Equação Y + Regra Z + Triângulo 360
+// Login SSR CAN?NICO
+// Equa??o Y + Regra Z + Tri?ngulo 360
 // =========================================================
 
 import {
@@ -13,18 +13,14 @@ import {
   createServerClient,
 } from "@supabase/ssr";
 
-import * as Sentry
-from "@sentry/nextjs";
+import * as Sentry from "@sentry/nextjs";
 
 // =========================================================
 // NEXT RUNTIME
 // =========================================================
 
-export const runtime =
-  "nodejs";
-
-export const dynamic =
-  "force-dynamic";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 // =========================================================
 // LOGIN SSR
@@ -33,9 +29,7 @@ export const dynamic =
 export async function POST(
   req: NextRequest
 ) {
-
   try {
-
     // =====================================================
     // BODY
     // =====================================================
@@ -61,16 +55,11 @@ export async function POST(
     // VALIDATION
     // =====================================================
 
-    if (
-      !email ||
-      !password
-    ) {
-
+    if (!email || !password) {
       return NextResponse.json(
         {
           ok: false,
-          error:
-            "missing_credentials",
+          error: "missing_credentials",
         },
         {
           status: 400,
@@ -90,13 +79,9 @@ export async function POST(
       process.env
         .NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (
-      !supabaseUrl ||
-      !supabaseAnon
-    ) {
-
+    if (!supabaseUrl || !supabaseAnon) {
       console.error(
-        "🚨 LOGIN SSR: missing env"
+        "[LOGIN_SSR] missing env"
       );
 
       Sentry.captureMessage(
@@ -107,8 +92,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          error:
-            "missing_env",
+          error: "missing_env",
         },
         {
           status: 500,
@@ -139,42 +123,30 @@ export async function POST(
         supabaseUrl,
         supabaseAnon,
         {
-
           cookies: {
-
             getAll() {
-
               return req.cookies.getAll();
             },
 
             setAll(
               cookiesToSet
             ) {
-
               cookiesToSet.forEach(
                 ({
                   name,
                   value,
                   options,
                 }) => {
-
                   response.cookies.set(
                     name,
                     value,
                     {
-
                       ...options,
-
                       httpOnly: true,
-
-                      sameSite:
-                        "lax",
-
+                      sameSite: "lax",
                       secure:
-                        process.env
-                          .NODE_ENV ===
+                        process.env.NODE_ENV ===
                         "production",
-
                       path: "/",
                     }
                   );
@@ -190,23 +162,13 @@ export async function POST(
     // =====================================================
 
     Sentry.addBreadcrumb({
-
       category: "auth",
-
-      message:
-        "Tentativa login SSR",
-
+      message: "Tentativa login SSR",
       level: "info",
-
       data: {
-
         email,
-
-        route:
-          "/api/auth/login",
-
-        runtime:
-          "SSR",
+        route: "/api/auth/login",
+        runtime: "SSR",
       },
     });
 
@@ -218,63 +180,39 @@ export async function POST(
       data,
       error,
     } =
-      await supabase.auth
-        .signInWithPassword({
-
-          email,
-          password,
-        });
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
     console.log(
-      "🔥 PASSOU SIGNIN"
+      "[LOGIN_SSR] PASSOU SIGNIN"
     );
 
     // =====================================================
     // LOGIN ERROR
     // =====================================================
 
-    if (
-      error ||
-      !data?.session
-    ) {
-
+    if (error || !data?.session) {
       console.error(
-        "❌ LOGIN SSR ERROR:",
+        "[LOGIN_SSR] ERROR:",
         error
       );
-
-      // ===============================================
-      // SENTRY
-      // ===============================================
 
       Sentry.captureException(
         error,
         {
-
           tags: {
-
-            layer:
-              "SUPABASE_AUTH",
-
-            runtime:
-              "SSR",
-
-            route:
-              "/api/auth/login",
+            layer: "SUPABASE_AUTH",
+            runtime: "SSR",
+            route: "/api/auth/login",
           },
 
           extra: {
-
             email,
-
-            error_code:
-              error?.code,
-
-            error_status:
-              error?.status,
-
-            auth_layer:
-              "signInWithPassword",
+            error_code: error?.code,
+            error_status: error?.status,
+            auth_layer: "signInWithPassword",
           },
         }
       );
@@ -282,7 +220,6 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-
           error:
             error?.message ??
             "invalid_login",
@@ -301,38 +238,27 @@ export async function POST(
       data: userData,
       error: userError,
     } =
-      await supabase.auth
-        .getUser();
+      await supabase.auth.getUser();
 
     console.log(
-      "🔥 PASSOU GETUSER"
+      "[LOGIN_SSR] PASSOU GETUSER"
     );
 
-    if (
-      userError ||
-      !userData?.user
-    ) {
-
+    if (userError || !userData?.user) {
       console.error(
-        "🚨 USER SSR ERROR:",
+        "[LOGIN_SSR] USER ERROR:",
         userError
       );
 
       Sentry.captureException(
         userError,
         {
-
           tags: {
-
-            layer:
-              "SUPABASE_GET_USER",
-
-            runtime:
-              "SSR",
+            layer: "SUPABASE_GET_USER",
+            runtime: "SSR",
           },
 
           extra: {
-
             email,
           },
         }
@@ -341,8 +267,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          error:
-            "session_not_persisted",
+          error: "session_not_persisted",
         },
         {
           status: 500,
@@ -355,19 +280,19 @@ export async function POST(
     // =====================================================
 
     console.log(
-      "🟢 LOGIN SSR OK:",
+      "[LOGIN_SSR] OK:",
       userData.user.email
     );
 
     console.log(
-      "🍪 SSR COOKIE:",
+      "[LOGIN_SSR] COOKIE:",
       response.cookies
         .getAll()
         .length > 0
     );
 
     console.log(
-      "🔥 RETORNANDO RESPONSE"
+      "[LOGIN_SSR] RETORNANDO RESPONSE"
     );
 
     // =====================================================
@@ -377,20 +302,14 @@ export async function POST(
     Sentry.captureMessage(
       "LOGIN SSR SUCCESS",
       {
-
         level: "info",
 
         tags: {
-
-          layer:
-            "AUTH_SUCCESS",
-
-          runtime:
-            "SSR",
+          layer: "AUTH_SUCCESS",
+          runtime: "SSR",
         },
 
         extra: {
-
           email,
         },
       }
@@ -402,24 +321,18 @@ export async function POST(
 
     return response;
 
-  } catch (e: any) {
-
+  } catch (e: unknown) {
     console.error(
-      "💥 LOGIN SSR EXCEPTION:",
+      "[LOGIN_SSR] EXCEPTION:",
       e
     );
 
     Sentry.captureException(
       e,
       {
-
         tags: {
-
-          layer:
-            "LOGIN_EXCEPTION",
-
-          runtime:
-            "SSR",
+          layer: "LOGIN_EXCEPTION",
+          runtime: "SSR",
         },
       }
     );
@@ -427,8 +340,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        error:
-          "login_exception",
+        error: "login_exception",
       },
       {
         status: 500,

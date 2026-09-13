@@ -17,7 +17,7 @@ export default function RegisterClient() {
   const [error, setError] = useState<string | null>(null);
 
   /* =====================================================
-     REGISTER ? EQUA??O Y + REGRA Z
+     REGISTER - EQUA\u00c7\u00c3O Y + REGRA Z
   ===================================================== */
 
   async function handleRegister(
@@ -38,6 +38,7 @@ export default function RegisterClient() {
         .trim()
         .toLowerCase();
       const senha = String(form.get("senha") ?? "");
+      const funcao = String(form.get("funcao") ?? "").trim();
 
       if (!nome || !email || !senha) {
         setError("Preencha nome, e-mail e senha.");
@@ -54,6 +55,14 @@ export default function RegisterClient() {
       } = await supabase.auth.signUp({
         email,
         password: senha,
+        options: {
+          data: {
+            pecuaria_nome: nome,
+            pecuaria_pais: pais,
+            pecuaria_tipo_documento: tipoDocumento,
+            funcao,
+          },
+        },
       });
 
       if (signUpError) {
@@ -127,7 +136,7 @@ export default function RegisterClient() {
         if (!loginResponse.ok) {
           setError(
             loginBody?.error ||
-              "A conta foi criada, mas a sess?o segura n?o p?de ser estabelecida para o checkout."
+              "A conta foi criada, mas a sessão segura não pôde ser estabelecida para o checkout."
           );
 
           setLoading(false);
@@ -232,9 +241,9 @@ export default function RegisterClient() {
           "
         >
           Infraestrutura operacional,
-          intelig?ncia financeira
-          e governan?a pecu?ria
-          em uma ?nica plataforma.
+          inteligência financeira
+          e governança pecuária
+          em uma única plataforma.
         </p>
       </div>
 
@@ -361,7 +370,7 @@ export default function RegisterClient() {
           "
         >
           <option value="">
-            Selecione o Pa?s
+            Selecione o País
           </option>
 
           <option value="BR">
@@ -377,11 +386,11 @@ export default function RegisterClient() {
           </option>
 
           <option value="MX">
-            M?xico
+            México
           </option>
 
           <option value="CO">
-            Col?mbia
+            Colômbia
           </option>
 
           <option value="UY">
@@ -448,23 +457,31 @@ export default function RegisterClient() {
           "
         >
           <option value="">
-            Fun??o (opcional)
+            Perfil na propriedade (opcional)
           </option>
 
           <option value="proprietario">
-            Propriet?rio
+            Produtor / Proprietário
           </option>
 
-          <option value="gerente">
-            Gerente
+          <option value="gestor">
+            Gestor da Fazenda
           </option>
 
-          <option value="consultor">
-            Consultor
+          <option value="tecnico">
+            Técnico / Consultor
           </option>
 
-          <option value="veterinario">
-            Veterin?rio
+          <option value="colaborador">
+            Colaborador Operacional
+          </option>
+
+          <option value="administrativo">
+            Administrativo / Financeiro
+          </option>
+
+          <option value="parceiro">
+            Parceiro / Prestador
           </option>
         </select>
 

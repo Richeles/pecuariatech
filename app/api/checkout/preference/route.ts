@@ -1,7 +1,7 @@
 // app/api/checkout/preference/route.ts
-// PecuariaTech — Checkout Runtime Premium
-// Equação Y + Regra Z + Runtime SaaS Seguro
-// 🔥 CORRIGIDO: Valida usuário via cookie SSR (não confia no cliente)
+// PecuariaTech - Checkout Runtime Premium
+// Equa??o Y + Regra Z + Runtime SaaS Seguro
+// Valida??o do usu?rio via cookie SSR
 
 import {
   NextRequest,
@@ -9,8 +9,13 @@ import {
 } from "next/server";
 
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
-import MercadoPagoConfig, { Preference } from "mercadopago";
+import {
+  createServerClient,
+} from "@supabase/ssr";
+
+import MercadoPagoConfig, {
+  Preference,
+} from "mercadopago";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,14 +25,31 @@ export const dynamic = "force-dynamic";
 ===================================================== */
 
 const PLANOS = {
-  basico: { titulo: "Plano B?sico" },
-  profissional: { titulo: "Plano Profissional" },
-  ultra: { titulo: "Plano Ultra" },
-  empresarial: { titulo: "Plano Empresarial" },
-  premium_dominus: { titulo: "Premium Dominus 360?" },
+  basico: {
+    titulo: "Plano B?sico",
+  },
+
+  profissional: {
+    titulo: "Plano Profissional",
+  },
+
+  ultra: {
+    titulo: "Plano Ultra",
+  },
+
+  empresarial: {
+    titulo: "Plano Empresarial",
+  },
+
+  premium_dominus: {
+    titulo: "Premium Dominus 360?",
+  },
 } as const;
 
-const PLANO_ALIAS: Record<string, keyof typeof PLANOS> = {
+const PLANO_ALIAS: Record<
+  string,
+  keyof typeof PLANOS
+> = {
   basico: "basico",
   profissional: "profissional",
   ultra: "ultra",
@@ -40,62 +62,132 @@ const PLANO_ALIAS: Record<string, keyof typeof PLANOS> = {
    HELPERS
 ===================================================== */
 
-function n(v: any): number {
-  const x = Number(v);
-  return Number.isFinite(x) ? x : 0;
+function n(value: unknown): number {
+  const numberValue = Number(value);
+
+  return Number.isFinite(numberValue)
+    ? numberValue
+    : 0;
 }
 
-function safeOrigin(req: NextRequest) {
-  return (
+function safeOrigin(
+  req: NextRequest
+) {
+  const configured =
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     req.headers.get("origin") ||
-    "https://www.pecuariatech.com"
-  );
+    "https://www.pecuariatech.com";
+
+  const fallback =
+    "https://www.pecuariatech.com";
+
+  try {
+    const url = new URL(configured);
+
+    if (
+      process.env.NODE_ENV ===
+        "production" &&
+      url.protocol !== "https:"
+    ) {
+      return fallback;
+    }
+
+    url.pathname =
+      url.pathname.replace(
+        /\/+$/,
+        ""
+      );
+
+    return (
+      url.origin +
+      (url.pathname || "")
+    );
+  } catch {
+    return fallback;
+  }
 }
 
 /* =====================================================
-   PYTHON PRICING
+   PRE?O OFICIAL
+   Y = planos_precos
 ===================================================== */
 
 async function getPriceFromDatabase(
   plano: string,
-  periodo: "mensal" | "trimestral" | "anual"
+  periodo:
+    | "mensal"
+    | "trimestral"
+    | "anual"
 ) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl =
+    process.env
+      .NEXT_PUBLIC_SUPABASE_URL;
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("supabase_env_missing");
+  const serviceRoleKey =
+    process.env
+      .SUPABASE_SERVICE_ROLE_KEY;
+
+  if (
+    !supabaseUrl ||
+    !serviceRoleKey
+  ) {
+    throw new Error(
+      "supabase_env_missing"
+    );
   }
 
-  const response = await fetch(
-    `${supabaseUrl}/rest/v1/planos_precos?select=preco_mensal,preco_trimestral,preco_anual,ativo&plano_codigo=eq.${encodeURIComponent(plano)}&ativo=eq.true`,
-    {
-      method: "GET",
-      headers: {
-        apikey: serviceRoleKey,
-        Authorization: `Bearer ${serviceRoleKey}`,
-      },
-      cache: "no-store",
-    }
-  );
+  const response =
+    await fetch(
+      `${supabaseUrl}/rest/v1/planos_precos?select=preco_mensal,preco_trimestral,preco_anual,ativo&plano_codigo=eq.${encodeURIComponent(
+        plano
+      )}&ativo=eq.true`,
+      {
+        method: "GET",
+
+        headers: {
+          apikey:
+            serviceRoleKey,
+
+          Authorization:
+            `Bearer ${serviceRoleKey}`,
+        },
+
+        cache: "no-store",
+      }
+    );
 
   if (!response.ok) {
-    throw new Error(`planos_precos_http_${response.status}`);
+    throw new Error(
+      `planos_precos_http_${response.status}`
+    );
   }
 
-  const rows = await response.json();
-  const row = Array.isArray(rows) ? rows[0] : null;
+  const rows =
+    await response.json();
+
+  const row =
+    Array.isArray(rows)
+      ? rows[0]
+      : null;
 
   if (!row) {
-    throw new Error("plan_not_found");
+    throw new Error(
+      "plan_not_found"
+    );
   }
 
-  const preco = n(row[`preco_${periodo}`]);
+  const preco =
+    n(
+      row[
+        `preco_${periodo}`
+      ]
+    );
 
   if (preco <= 0) {
-    throw new Error("invalid_plan_price");
+    throw new Error(
+      "invalid_plan_price"
+    );
   }
 
   return preco;
@@ -105,59 +197,121 @@ async function getPriceFromDatabase(
    POST
 ===================================================== */
 
-export async function POST(req: NextRequest) {
+export async function POST(
+  req: NextRequest
+) {
   try {
     /* ==========================================
-       🔥 VALIDAÇÃO SSR (Equação Y)
-       O usuário é obtido do COOKIE, não do cliente!
+       AUTENTICA??O SSR
     ========================================== */
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseUrl =
+      process.env
+        .NEXT_PUBLIC_SUPABASE_URL;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error("[CHECKOUT] Missing Supabase env");
-      return NextResponse.json(
-        { ok: false, error: "missing_env" },
-        { status: 500 }
+    const supabaseAnonKey =
+      process.env
+        .NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (
+      !supabaseUrl ||
+      !supabaseAnonKey
+    ) {
+      console.error(
+        "[CHECKOUT] Missing Supabase env"
       );
-    }
 
-    const cookieStore = await cookies();
-
-    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "missing_env",
         },
-        setAll() {},
-      },
-    });
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error("[CHECKOUT] User not authenticated:", userError);
-      return NextResponse.json(
-        { ok: false, error: "unauthorized", message: "Usuário não autenticado" },
-        { status: 401 }
+        {
+          status: 500,
+        }
       );
     }
 
-    const user_id = user.id;
-    const email = user.email;
+    const cookieStore =
+      await cookies();
 
-    console.log("[CHECKOUT] Usuário autenticado:", { user_id, email });
+    const supabase =
+      createServerClient(
+        supabaseUrl,
+        supabaseAnonKey,
+        {
+          cookies: {
+            getAll() {
+              return cookieStore.getAll();
+            },
+
+            setAll() {},
+          },
+        }
+      );
+
+    const {
+      data: {
+        user,
+      },
+      error: userError,
+    } =
+      await supabase.auth.getUser();
+
+    if (
+      userError ||
+      !user
+    ) {
+      console.error(
+        "[CHECKOUT] User not authenticated:",
+        userError
+      );
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "unauthorized",
+          message:
+            "Usu?rio n?o autenticado",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    const user_id =
+      user.id;
+
+    const email =
+      user.email;
+
+    console.log(
+      "[CHECKOUT] Usu?rio autenticado:",
+      {
+        user_id,
+        email,
+      }
+    );
 
     /* ==========================================
-       ENV
+       MERCADO PAGO
     ========================================== */
 
-    const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    const MP_TOKEN =
+      process.env
+        .MERCADOPAGO_ACCESS_TOKEN;
+
     if (!MP_TOKEN) {
       return NextResponse.json(
-        { ok: false, error: "MERCADOPAGO_ACCESS_TOKEN ausente" },
-        { status: 500 }
+        {
+          ok: false,
+          error:
+            "MERCADOPAGO_ACCESS_TOKEN ausente",
+        },
+        {
+          status: 500,
+        }
       );
     }
 
@@ -165,118 +319,231 @@ export async function POST(req: NextRequest) {
        BODY
     ========================================== */
 
-    const body = await req.json();
-    const planoRecebido = String(body?.plano || "").toLowerCase();
-    const periodo = String(body?.periodo || "");
+    const body =
+      await req.json();
 
-    const plano = PLANO_ALIAS[planoRecebido];
+    const planoRecebido =
+      String(
+        body?.plano || ""
+      ).toLowerCase();
 
-    console.log("[CHECKOUT]", {
-      planoRecebido,
-      plano,
-      periodo,
-      email,
-    });
-
-    /* ==========================================
-       VALIDATION
-    ========================================== */
-
-    if (!plano || !PLANOS[plano]) {
-      return NextResponse.json(
-        { ok: false, error: "Plano inv?lido" },
-        { status: 400 }
+    const periodo =
+      String(
+        body?.periodo || ""
       );
-    }
 
-    if (!["mensal", "trimestral", "anual"].includes(periodo)) {
-      return NextResponse.json(
-        { ok: false, error: "Per?odo inv?lido" },
-        { status: 400 }
-      );
-    }
+    const plano =
+      PLANO_ALIAS[
+        planoRecebido
+      ];
 
-    /* ==========================================
-       PRE?O ? FONTE ?NICA: Supabase
-    ========================================== */
-
-    const preco = await getPriceFromDatabase(
-      plano,
-      periodo as "mensal" | "trimestral" | "anual"
+    console.log(
+      "[CHECKOUT]",
+      {
+        planoRecebido,
+        plano,
+        periodo,
+        email,
+      }
     );
+
+    /* ==========================================
+       VALIDA??O
+    ========================================== */
+
+    if (
+      !plano ||
+      !PLANOS[plano]
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Plano inv?lido",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    if (
+      ![
+        "mensal",
+        "trimestral",
+        "anual",
+      ].includes(periodo)
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Per?odo inv?lido",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /* ==========================================
+       PRE?O - FONTE ?NICA
+    ========================================== */
+
+    const preco =
+      await getPriceFromDatabase(
+        plano,
+        periodo as
+          | "mensal"
+          | "trimestral"
+          | "anual"
+      );
 
     /* ==========================================
        ORIGIN
     ========================================== */
 
-    const origin = safeOrigin(req);
+    const origin =
+      safeOrigin(req);
 
     /* ==========================================
-       URLS
+       URLS DE RETORNO
     ========================================== */
 
-    const successUrl = `${origin}/dashboard`;
-    const failureUrl = `${origin}/planos`;
-    const pendingUrl = `${origin}/planos`;
-    const webhookUrl = process.env.WEBHOOK_PUBLIC_URL || `${origin}/api/webhook/mercadopago`;
+    const successUrl =
+      new URL(
+        "/dashboard",
+        `${origin}/`
+      ).toString();
 
-    console.log("[CHECKOUT_URLS]", {
-      origin,
-      successUrl,
-      failureUrl,
-      pendingUrl,
-      webhookUrl,
-    });
+    const failureUrl =
+      new URL(
+        "/planos",
+        `${origin}/`
+      ).toString();
+
+    const pendingUrl =
+      new URL(
+        "/planos",
+        `${origin}/`
+      ).toString();
+
+    const webhookUrl =
+      process.env
+        .WEBHOOK_PUBLIC_URL ||
+      `${origin}/api/webhook/mercadopago`;
+
+    console.log(
+      "[CHECKOUT_URLS]",
+      {
+        origin,
+        successUrl,
+        failureUrl,
+        pendingUrl,
+        webhookUrl,
+      }
+    );
 
     /* ==========================================
        MERCADO PAGO
     ========================================== */
 
-    const mp = new MercadoPagoConfig({ accessToken: MP_TOKEN });
-    const preference = new Preference(mp);
+    const mp =
+      new MercadoPagoConfig({
+        accessToken: MP_TOKEN,
+      });
+
+    const preference =
+      new Preference(mp);
 
     const preferenceBody = {
       items: [
         {
-          id: `${plano}_${periodo}`,
-          title: `${PLANOS[plano].titulo} - ${periodo}`,
-          description: `Assinatura ${PLANOS[plano].titulo}`,
+          id:
+            `${plano}_${periodo}`,
+
+          title:
+            `${PLANOS[plano].titulo} - ${periodo}`,
+
+          description:
+            `Assinatura ${PLANOS[plano].titulo}`,
+
           quantity: 1,
+
           currency_id: "BRL",
-          unit_price: Number(preco),
+
+          unit_price:
+            Number(preco),
         },
       ],
-      payer: { email },
-      metadata: { user_id, plano, periodo },
-      external_reference: `${user_id}|${plano}|${periodo}`,
-      back_urls: { success: successUrl, failure: failureUrl, pending: pendingUrl },
-      notification_url: webhookUrl,
+
+      payer: {
+        email,
+      },
+
+      metadata: {
+        user_id,
+        plano,
+        periodo,
+      },
+
+      external_reference:
+        `${user_id}|${plano}|${periodo}`,
+
+      back_urls: {
+        success: successUrl,
+        failure: failureUrl,
+        pending: pendingUrl,
+      },
+
+      notification_url:
+        webhookUrl,
     };
 
-    const result = await preference.create({ body: preferenceBody });
+    const result =
+      await preference.create({
+        body: preferenceBody,
+      });
 
-    if (!result?.init_point) {
-      throw new Error("mercadopago_init_point_missing");
+    if (
+      !result?.init_point
+    ) {
+      throw new Error(
+        "mercadopago_init_point_missing"
+      );
     }
 
     return NextResponse.json({
       ok: true,
       provider: "mercadopago",
-      init_point: result.init_point,
-      sandbox_init_point: result.sandbox_init_point,
+      init_point:
+        result.init_point,
+      sandbox_init_point:
+        result.sandbox_init_point,
       plano,
       periodo,
       preco,
     });
-  } catch (err: any) {
-    console.error("[CHECKOUT_RUNTIME]", err);
+  } catch (
+    err: unknown
+  ) {
+    console.error(
+      "[CHECKOUT_RUNTIME]",
+      err
+    );
+
     return NextResponse.json(
       {
         ok: false,
-        error: "checkout_runtime_error",
-        detalhe: String(err?.message || err),
+        error:
+          "checkout_runtime_error",
+        detalhe:
+          err instanceof Error
+            ? err.message
+            : String(err),
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
