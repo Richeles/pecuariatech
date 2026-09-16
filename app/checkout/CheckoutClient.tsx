@@ -1,17 +1,38 @@
 "use client";
 
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getLangFromClient, t } from "@/app/lib/i18n";
+
+import {
+  getLangFromClient,
+  t,
+} from "@/app/lib/i18n";
 
 export default function CheckoutClient() {
   const params = useSearchParams();
+
   const lang = getLangFromClient();
   const plano = params.get("plano");
   const periodo = params.get("periodo");
-  const [erro, setErro] = useState<string | null>(null);
+
+  const [erro, setErro] =
+    useState<string | null>(null);
+
+  const checkoutIniciado =
+    useRef(false);
 
   useEffect(() => {
+    if (checkoutIniciado.current) {
+      return;
+    }
+
+    checkoutIniciado.current = true;
+
     async function iniciarCheckout() {
       if (!plano || !periodo) {
         window.location.href = "/planos";
@@ -21,24 +42,54 @@ export default function CheckoutClient() {
       try {
         setErro(null);
 
-        const response = await fetch("/api/checkout/preference", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plano, periodo }),
-          credentials: "include",
-        });
+        const response = await fetch(
+          "/api/checkout/preference",
+          {
+            method: "POST",
 
-        const data = await response.json().catch(() => null);
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-        if (!response.ok || !data?.init_point) {
-          console.error("[CHECKOUT_ERROR]", data);
+            credentials: "include",
 
-          if (response.status === 401) {
-            const encodedNext = encodeURIComponent(
-              `/checkout?plano=${encodeURIComponent(plano)}&periodo=${encodeURIComponent(periodo)}`
-            );
+            body: JSON.stringify({
+              plano,
+              periodo,
+            }),
+          }
+        );
 
-            window.location.href = `/${lang}/login?next=${encodedNext}`;
+        const data =
+          await response
+            .json()
+            .catch(() => null);
+
+        if (
+          !response.ok ||
+          !data?.init_point
+        ) {
+          console.error(
+            "[CHECKOUT_ERROR]",
+            data
+          );
+
+          if (
+            response.status === 401
+          ) {
+            const encodedNext =
+              encodeURIComponent(
+                `/checkout?plano=${encodeURIComponent(
+                  plano
+                )}&periodo=${encodeURIComponent(
+                  periodo
+                )}`
+              );
+
+            window.location.href =
+              `/${lang}/login?next=${encodedNext}`;
+
             return;
           }
 
@@ -46,17 +97,22 @@ export default function CheckoutClient() {
             data?.detalhe ||
               data?.message ||
               data?.error ||
-              "Não foi possível iniciar o checkout."
+              "N?o foi poss?vel iniciar o checkout."
           );
+
           return;
         }
 
-        window.location.href = data.init_point;
+        window.location.href =
+          data.init_point;
       } catch (err) {
-        console.error("[CHECKOUT_FATAL]", err);
+        console.error(
+          "[CHECKOUT_FATAL]",
+          err
+        );
 
         setErro(
-          "Não foi possível iniciar o checkout. Verifique sua conexão e tente novamente."
+          "N?o foi poss?vel iniciar o checkout. Verifique sua conex?o e tente novamente."
         );
       }
     }
@@ -69,7 +125,7 @@ export default function CheckoutClient() {
       <div className="min-h-screen flex items-center justify-center bg-white px-6">
         <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-6 text-center shadow-sm">
           <h1 className="text-xl font-semibold text-neutral-900">
-            Não foi possível iniciar o pagamento
+            N?o foi poss?vel iniciar o pagamento
           </h1>
 
           <p className="mt-3 text-sm text-neutral-600">
@@ -78,7 +134,9 @@ export default function CheckoutClient() {
 
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={() =>
+              window.location.reload()
+            }
             className="mt-6 rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
           >
             Tentar novamente

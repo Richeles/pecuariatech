@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 
@@ -13,10 +13,9 @@ import {
 } from "next/navigation";
 
 import LanguageSwitcher
-from "@/app/components/i18n/LanguageSwitcher";
+  from "@/app/components/i18n/LanguageSwitcher";
 
 export default function LoginClient() {
-
   const router = useRouter();
 
   const pathname = usePathname();
@@ -27,8 +26,10 @@ export default function LoginClient() {
   const nextUrl =
     searchParams.get("next");
 
-  // 🔥 LOG ADICIONADO PARA DIAGNOSTICAR A NEXT URL
-  console.log("🚨 NEXT URL RECEBIDA:", nextUrl);
+  console.log(
+    "🚨 NEXT URL RECEBIDA:",
+    nextUrl
+  );
 
   const locale =
     pathname?.split("/")[1] || "pt";
@@ -39,6 +40,9 @@ export default function LoginClient() {
   const [password, setPassword] =
     useState("");
 
+  const [mostrarSenha, setMostrarSenha] =
+    useState(false);
+
   const [loading, setLoading] =
     useState(false);
 
@@ -46,14 +50,12 @@ export default function LoginClient() {
     useState("");
 
   const texts = {
-
     pt: {
-
       subtitle:
         "Inteligência operacional pecuária",
 
       email:
-        "Email",
+        "E-mail",
 
       password:
         "Senha",
@@ -68,14 +70,22 @@ export default function LoginClient() {
         "Esqueci minha senha",
 
       invalid:
-        "Email ou senha inválidos.",
+        "E-mail ou senha inválidos.",
 
       internal:
         "Erro interno no login.",
+
+      show:
+        "Mostrar",
+
+      hide:
+        "Ocultar",
+
+      passwordPlaceholder:
+        "Digite sua senha",
     },
 
     es: {
-
       subtitle:
         "Inteligencia operacional ganadera",
 
@@ -99,6 +109,15 @@ export default function LoginClient() {
 
       internal:
         "Error interno de login.",
+
+      show:
+        "Mostrar",
+
+      hide:
+        "Ocultar",
+
+      passwordPlaceholder:
+        "Digite su contraseña",
     },
   };
 
@@ -110,7 +129,6 @@ export default function LoginClient() {
   async function handleLogin(
     e: React.FormEvent
   ) {
-
     e.preventDefault();
 
     if (loading) {
@@ -122,7 +140,6 @@ export default function LoginClient() {
     setError("");
 
     try {
-
       const response =
         await fetch(
           "/api/auth/login",
@@ -138,7 +155,6 @@ export default function LoginClient() {
               "include",
 
             body: JSON.stringify({
-
               email:
                 email
                   .trim()
@@ -153,9 +169,8 @@ export default function LoginClient() {
         await response.json();
 
       if (!response.ok) {
-
         console.error(
-          "❌ LOGIN SSR ERROR:",
+          "[LOGIN_SSR_ERROR]",
           data
         );
 
@@ -167,10 +182,8 @@ export default function LoginClient() {
       }
 
       console.log(
-        "🟢 LOGIN SSR OK"
+        "[LOGIN_SSR_OK]"
       );
-
-      // aguarda cookies SSR
 
       await new Promise(
         (resolve) =>
@@ -193,70 +206,68 @@ export default function LoginClient() {
         await statusRes.json();
 
       console.log(
-        "🧠 STATUS:",
+        "[LOGIN_STATUS]",
         status
       );
 
       /* =========================================
-         RESPEITA NEXT URL - MODIFICADO
-         🔥 LOG ADICIONADO PARA DEBUG
+         RESPEITA NEXT URL
       ========================================= */
 
       if (nextUrl) {
+        console.log(
+          "[LOGIN_NEXT_URL]",
+          nextUrl
+        );
 
-        // 🔥 LOG CRÍTICO - MOSTRA A URL QUE SERÁ USADA
-        console.log("🔍 NEXT URL =", nextUrl);
+        window.location.href =
+          nextUrl;
 
-        window.location.href = nextUrl;
+        return;
+      }
 
-      } else if (status?.ativo) {
+      /* =========================================
+         USUÁRIO COM ASSINATURA ATIVA
+      ========================================= */
 
+      if (status?.ativo) {
         router.push(
-
           locale === "es"
-
             ? "/es/dashboard"
-
             : "/pt/dashboard"
         );
-
       } else {
+        /* =======================================
+           USUÁRIO SEM ASSINATURA ATIVA
+        ======================================= */
 
         console.warn(
-          "⚠️ Usuário sem assinatura ativa"
+          "[LOGIN] Usuário sem assinatura ativa"
         );
 
         router.push(
-
           locale === "es"
-
             ? "/es/planos"
-
             : "/pt/planos"
         );
       }
 
       router.refresh();
-
     } catch (err) {
-
       console.error(
-        "💥 LOGIN ERROR:",
+        "[LOGIN_ERROR]",
         err
       );
 
       setError(
         t.internal
       );
-
     } finally {
-
       setLoading(false);
     }
   }
 
   return (
-
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black">
 
       {/* BACKGROUND PREMIUM */}
@@ -297,9 +308,7 @@ export default function LoginClient() {
           z-20
         "
       >
-
         <LanguageSwitcher />
-
       </div>
 
       {/* CARD */}
@@ -323,9 +332,7 @@ export default function LoginClient() {
           </h1>
 
           <p className="mt-4 text-neutral-600">
-
             {t.subtitle}
-
           </p>
 
         </div>
@@ -342,7 +349,6 @@ export default function LoginClient() {
           <div>
 
             <label className="mb-2 block text-sm font-semibold text-neutral-700">
-
               {t.email}
             </label>
 
@@ -371,6 +377,7 @@ export default function LoginClient() {
                   ? "tu@email.com"
                   : "seu@email.com"
               }
+              autoComplete="email"
               required
             />
 
@@ -381,45 +388,94 @@ export default function LoginClient() {
           <div>
 
             <label className="mb-2 block text-sm font-semibold text-neutral-700">
-
               {t.password}
             </label>
 
-            <input
-              type="password"
-              value={password}
-              onChange={(e) =>
-                setPassword(
-                  e.target.value
-                )
-              }
-              className="
-                w-full
-                rounded-2xl
-                border
-                border-neutral-300
-                bg-white
-                px-4
-                py-3
-                outline-none
-                transition
-                focus:border-green-700
-              "
-              placeholder="••••••••"
-              required
-            />
+            <div className="relative">
+
+              <input
+                type={
+                  mostrarSenha
+                    ? "text"
+                    : "password"
+                }
+                value={password}
+                onChange={(e) =>
+                  setPassword(
+                    e.target.value
+                  )
+                }
+                className="
+                  w-full
+                  rounded-2xl
+                  border
+                  border-neutral-300
+                  bg-white
+                  px-4
+                  py-3
+                  pr-24
+                  outline-none
+                  transition
+                  focus:border-green-700
+                "
+                placeholder={
+                  t.passwordPlaceholder
+                }
+                autoComplete="current-password"
+                required
+              />
+
+              <button
+                type="button"
+                onClick={() =>
+                  setMostrarSenha(
+                    (valor) =>
+                      !valor
+                  )
+                }
+                className="
+                  absolute
+                  right-3
+                  top-1/2
+                  -translate-y-1/2
+                  rounded-lg
+                  px-2
+                  py-1
+                  text-sm
+                  font-semibold
+                  text-green-700
+                  transition
+                  hover:bg-green-50
+                  hover:text-green-800
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-green-600/30
+                "
+                aria-label={
+                  mostrarSenha
+                    ? t.hide +
+                      " " +
+                      t.password.toLowerCase()
+                    : t.show +
+                      " " +
+                      t.password.toLowerCase()
+                }
+              >
+                {mostrarSenha
+                  ? t.hide
+                  : t.show}
+              </button>
+
+            </div>
 
           </div>
 
           {/* ERROR */}
 
           {error && (
-
             <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-
               {error}
             </div>
-
           )}
 
           {/* BUTTON */}
@@ -427,13 +483,23 @@ export default function LoginClient() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-green-800 px-4 py-3 font-black text-white transition hover:bg-green-900 disabled:opacity-50"
+            className="
+              w-full
+              rounded-2xl
+              bg-green-800
+              px-4
+              py-3
+              font-black
+              text-white
+              transition
+              hover:bg-green-900
+              disabled:cursor-not-allowed
+              disabled:opacity-50
+            "
           >
-
             {loading
               ? t.entering
               : t.enter}
-
           </button>
 
           {/* RESET */}
@@ -455,7 +521,6 @@ export default function LoginClient() {
                 hover:underline
               "
             >
-
               {t.forgot}
             </Link>
 

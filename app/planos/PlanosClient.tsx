@@ -229,28 +229,21 @@ export default function PlanosClient() {
   function assinar(
     plano: string
   ) {
-
     const locale =
       pathname.startsWith("/es")
         ? "es"
         : "pt";
 
-    localStorage.setItem(
-      "checkout_plano",
-      plano
-    );
+    const cadastroUrl =
+      `/cadastro?plano=${encodeURIComponent(
+        plano
+      )}&periodo=${encodeURIComponent(
+        periodo
+      )}&locale=${encodeURIComponent(
+        locale
+      )}`;
 
-    localStorage.setItem(
-      "checkout_periodo",
-      periodo
-    );
-
-    localStorage.setItem(
-      "checkout_locale",
-      locale
-    );
-
-    router.push("/cadastro");
+    router.push(cadastroUrl);
   }
 
   return (

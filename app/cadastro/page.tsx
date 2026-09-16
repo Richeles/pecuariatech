@@ -1,11 +1,11 @@
-// app/cadastro/page.tsx
+﻿import { Suspense } from "react";
 
 import RegisterClient from "@/app/(public)/register/RegisterClient";
 
+// app/cadastro/page.tsx
+
 export default function CadastroPage() {
-
   return (
-
     <main
       className="
         relative
@@ -16,7 +16,6 @@ export default function CadastroPage() {
         overflow-hidden
       "
     >
-
       {/* BACKGROUND */}
 
       <div
@@ -57,11 +56,37 @@ export default function CadastroPage() {
           p-6
         "
       >
-
-        <RegisterClient />
-
+        <Suspense
+          fallback={
+            <div
+              className="
+                w-full
+                max-w-xl
+                rounded-3xl
+                border
+                border-emerald-200
+                bg-emerald-50/95
+                p-10
+                text-center
+                shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)]
+                backdrop-blur-xl
+              "
+            >
+              <div
+                className="
+                  text-sm
+                  font-semibold
+                  text-emerald-800
+                "
+              >
+                Carregando cadastro...
+              </div>
+            </div>
+          }
+        >
+          <RegisterClient />
+        </Suspense>
       </div>
-
     </main>
   );
 }

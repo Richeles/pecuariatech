@@ -1,9 +1,52 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
-export default function HomePage() {
+import LanguageSwitcher from "@/app/components/i18n/LanguageSwitcher";
+
+type Lang = "pt" | "es";
+
+interface HomePageProps {
+  lang?: Lang;
+}
+
+const TEXTS = {
+  pt: {
+    badge: "Runtime Cognitivo Online",
+
+    subtitle:
+      "Plataforma operacional cognitiva para gestão financeira, rebanho, pastagem, engorda e inteligência pecuária.",
+
+    entrar: "Entrar",
+
+    planos: "Ver Planos",
+
+    cadastro: "Criar Conta",
+  },
+
+  es: {
+    badge: "Runtime Cognitivo Online",
+
+    subtitle:
+      "Plataforma operativa cognitiva para gestión financiera, ganado, pastoreo, engorde e inteligencia ganadera.",
+
+    entrar: "Ingresar",
+
+    planos: "Ver Planes",
+
+    cadastro: "Crear Cuenta",
+  },
+} as const;
+
+export default function HomePage({
+  lang = "pt",
+}: HomePageProps) {
+  const safeLang: Lang =
+    lang === "es"
+      ? "es"
+      : "pt";
+
+  const t = TEXTS[safeLang];
 
   return (
-
     <main
       className="
         relative
@@ -15,7 +58,6 @@ export default function HomePage() {
         bg-black
       "
     >
-
       {/* BACKGROUND */}
 
       <div
@@ -55,6 +97,19 @@ export default function HomePage() {
         "
       />
 
+      {/* LANGUAGE */}
+
+      <div
+        className="
+          absolute
+          right-6
+          top-6
+          z-50
+        "
+      >
+        <LanguageSwitcher />
+      </div>
+
       {/* CONTENT */}
 
       <div
@@ -66,7 +121,6 @@ export default function HomePage() {
           text-center
         "
       >
-
         {/* BADGE */}
 
         <div
@@ -88,19 +142,17 @@ export default function HomePage() {
             backdrop-blur-sm
           "
         >
-
           <div
             className="
               h-2
               w-2
+              animate-pulse
               rounded-full
               bg-green-400
-              animate-pulse
             "
           />
 
-          Runtime Cognitivo Online
-
+          {t.badge}
         </div>
 
         {/* TITLE */}
@@ -131,10 +183,7 @@ export default function HomePage() {
             xl:text-2xl
           "
         >
-          Plataforma operacional cognitiva
-          para gestão financeira,
-          rebanho, pastagem,
-          engorda e inteligência pecuária.
+          {t.subtitle}
         </p>
 
         {/* BUTTONS */}
@@ -149,11 +198,14 @@ export default function HomePage() {
             md:justify-center
           "
         >
-
           {/* LOGIN */}
 
           <Link
-            href="/pt/login"
+            href={
+              safeLang === "es"
+                ? "/es/login"
+                : "/pt/login"
+            }
             prefetch={false}
             className="
               rounded-2xl
@@ -170,13 +222,17 @@ export default function HomePage() {
               hover:shadow-[0_0_35px_rgba(34,197,94,0.45)]
             "
           >
-            Entrar
+            {t.entrar}
           </Link>
 
           {/* PLANOS */}
 
           <Link
-            href="/pt/planos"
+            href={
+              safeLang === "es"
+                ? "/es/planos"
+                : "/pt/planos"
+            }
             prefetch={false}
             className="
               rounded-2xl
@@ -195,7 +251,7 @@ export default function HomePage() {
               hover:bg-white/10
             "
           >
-            Ver Planos
+            {t.planos}
           </Link>
 
           {/* CADASTRO */}
@@ -221,13 +277,10 @@ export default function HomePage() {
               hover:shadow-[0_0_30px_rgba(34,197,94,0.25)]
             "
           >
-            Criar Conta
+            {t.cadastro}
           </Link>
-
         </div>
-
       </div>
-
     </main>
   );
 }

@@ -1,7 +1,9 @@
-// app/api/checkout/preference/route.ts
-// PecuariaTech - Checkout Runtime Premium
-// Equa??o Y + Regra Z + Runtime SaaS Seguro
-// Valida??o do usu?rio via cookie SSR
+﻿/* =====================================================
+   app/api/checkout/preference/route.ts
+   PecuariaTech - Checkout Runtime Premium
+   Equação Y + Regra Z + Runtime SaaS Seguro
+   Validação do usuário via cookie SSR
+===================================================== */
 
 import {
   NextRequest,
@@ -9,6 +11,7 @@ import {
 } from "next/server";
 
 import { cookies } from "next/headers";
+
 import {
   createServerClient,
 } from "@supabase/ssr";
@@ -26,7 +29,7 @@ export const dynamic = "force-dynamic";
 
 const PLANOS = {
   basico: {
-    titulo: "Plano B?sico",
+    titulo: "Plano Básico",
   },
 
   profissional: {
@@ -42,7 +45,7 @@ const PLANOS = {
   },
 
   premium_dominus: {
-    titulo: "Premium Dominus 360?",
+    titulo: "Premium Dominus 360°",
   },
 } as const;
 
@@ -72,7 +75,7 @@ function n(value: unknown): number {
 
 function safeOrigin(
   req: NextRequest
-) {
+): string {
   const configured =
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
@@ -109,7 +112,7 @@ function safeOrigin(
 }
 
 /* =====================================================
-   PRE?O OFICIAL
+   PREÇO OFICIAL
    Y = planos_precos
 ===================================================== */
 
@@ -119,7 +122,7 @@ async function getPriceFromDatabase(
     | "mensal"
     | "trimestral"
     | "anual"
-) {
+): Promise<number> {
   const supabaseUrl =
     process.env
       .NEXT_PUBLIC_SUPABASE_URL;
@@ -202,7 +205,7 @@ export async function POST(
 ) {
   try {
     /* ==========================================
-       AUTENTICA??O SSR
+       AUTENTICAÇÃO SSR
     ========================================== */
 
     const supabaseUrl =
@@ -263,7 +266,7 @@ export async function POST(
       !user
     ) {
       console.error(
-        "[CHECKOUT] User not authenticated:",
+        "[CHECKOUT] Usuário não autenticado:",
         userError
       );
 
@@ -272,7 +275,7 @@ export async function POST(
           ok: false,
           error: "unauthorized",
           message:
-            "Usu?rio n?o autenticado",
+            "Usuário não autenticado",
         },
         {
           status: 401,
@@ -287,7 +290,7 @@ export async function POST(
       user.email;
 
     console.log(
-      "[CHECKOUT] Usu?rio autenticado:",
+      "[CHECKOUT] Usuário autenticado:",
       {
         user_id,
         email,
@@ -348,7 +351,7 @@ export async function POST(
     );
 
     /* ==========================================
-       VALIDA??O
+       VALIDAÇÃO
     ========================================== */
 
     if (
@@ -358,7 +361,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          error: "Plano inv?lido",
+          error: "Plano inválido",
         },
         {
           status: 400,
@@ -377,7 +380,7 @@ export async function POST(
         {
           ok: false,
           error:
-            "Per?odo inv?lido",
+            "Período inválido",
         },
         {
           status: 400,
@@ -386,7 +389,8 @@ export async function POST(
     }
 
     /* ==========================================
-       PRE?O - FONTE ?NICA
+       PREÇO - FONTE ÚNICA
+       Y = planos_precos
     ========================================== */
 
     const preco =

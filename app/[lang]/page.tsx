@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import HomePage from "@/app/page";
 
 export default async function Page({
   params,
@@ -7,5 +7,14 @@ export default async function Page({
 }) {
   const { lang } = await params;
 
-  redirect(`/${lang}/planos`);
+  const safeLang =
+    lang === "es"
+      ? "es"
+      : "pt";
+
+  return (
+    <HomePage
+      lang={safeLang}
+    />
+  );
 }

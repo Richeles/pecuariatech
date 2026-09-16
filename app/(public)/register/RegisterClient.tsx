@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 
 import { createClient } from "@/app/lib/supabase-browser";
 
@@ -9,6 +12,7 @@ const supabase = createClient();
 
 export default function RegisterClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [pais, setPais] = useState("");
   const [tipoDocumento, setTipoDocumento] = useState("");
@@ -17,7 +21,7 @@ export default function RegisterClient() {
   const [error, setError] = useState<string | null>(null);
 
   /* =====================================================
-     REGISTER - EQUA\u00c7\u00c3O Y + REGRA Z
+     REGISTER - EQUAÇÃO Y + REGRA Z
   ===================================================== */
 
   async function handleRegister(
@@ -33,18 +37,51 @@ export default function RegisterClient() {
     try {
       const form = new FormData(e.currentTarget);
 
-      const nome = String(form.get("nome") ?? "").trim();
-      const email = String(form.get("email") ?? "")
+      const nome = String(
+        form.get("nome") ?? ""
+      ).trim();
+
+      const email = String(
+        form.get("email") ?? ""
+      )
         .trim()
         .toLowerCase();
-      const senha = String(form.get("senha") ?? "");
-      const funcao = String(form.get("funcao") ?? "").trim();
+
+      const senha = String(
+        form.get("senha") ?? ""
+      );
+
+      const funcao = String(
+        form.get("funcao") ?? ""
+      ).trim();
 
       if (!nome || !email || !senha) {
-        setError("Preencha nome, e-mail e senha.");
+        setError(
+          "Preencha nome, e-mail e senha."
+        );
         setLoading(false);
         return;
       }
+
+      /* ==========================================
+         INTENÇÃO COMERCIAL
+         Origem: Planos
+         X → Cadastro
+      ========================================== */
+
+      const plano =
+        searchParams.get("plano");
+
+      const periodo =
+        searchParams.get("periodo");
+
+      const localeParam =
+        searchParams.get("locale");
+
+      const locale =
+        localeParam === "es"
+          ? "es"
+          : "pt";
 
       /* ==========================================
          SIGNUP
@@ -59,20 +96,24 @@ export default function RegisterClient() {
           data: {
             pecuaria_nome: nome,
             pecuaria_pais: pais,
-            pecuaria_tipo_documento: tipoDocumento,
+            pecuaria_tipo_documento:
+              tipoDocumento,
             funcao,
           },
         },
       });
 
       if (signUpError) {
-        setError(signUpError.message);
+        setError(
+          signUpError.message
+        );
         setLoading(false);
         return;
       }
 
       /* ==========================================
          DADOS DE ONBOARDING
+         Persistência auxiliar local
       ========================================== */
 
       localStorage.setItem(
@@ -90,24 +131,9 @@ export default function RegisterClient() {
         tipoDocumento
       );
 
-      const plano =
-        localStorage.getItem(
-          "checkout_plano"
-        );
-
-      const periodo =
-        localStorage.getItem(
-          "checkout_periodo"
-        );
-
-      const locale =
-        localStorage.getItem(
-          "checkout_locale"
-        ) || "pt";
-
       /* ==========================================
          PRIMEIRA COMPRA
-         PLANO ? CADASTRO ? SESS?O ? CHECKOUT
+         PLANOS → CADASTRO → SESSÃO → CHECKOUT
       ========================================== */
 
       if (plano && periodo) {
