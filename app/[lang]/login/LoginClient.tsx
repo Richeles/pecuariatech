@@ -509,8 +509,8 @@ export default function LoginClient() {
             <Link
               href={
                 locale === "es"
-                  ? "/es/reset-password"
-                  : "/pt/reset-password"
+                  ? "/reset-password"
+                  : "/reset-password"
               }
               className="
                 text-sm
@@ -533,3 +533,4 @@ export default function LoginClient() {
     </div>
   );
 }
+
