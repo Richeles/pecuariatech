@@ -6,8 +6,6 @@ import {
   usePathname,
 } from "next/navigation";
 
-import { useAuth } from "@/app/lib/AuthContext";
-
 import LanguageSwitcher
 from "@/app/components/i18n/LanguageSwitcher";
 
@@ -186,9 +184,6 @@ export default function PlanosClient() {
   const router =
     useRouter();
 
-  const { user, loading } =
-    useAuth();
-
   const pathname =
     usePathname();
 
@@ -228,7 +223,7 @@ export default function PlanosClient() {
   }
 
   /* =========================================================
-     FUNÇÃO ASSINAR
+     FUNÇÃO ASSINAR CORRIGIDA (com locale)
   ========================================================= */
 
   function assinar(
@@ -239,28 +234,16 @@ export default function PlanosClient() {
         ? "es"
         : "pt";
 
-    const checkoutUrl =
-      `/checkout?plano=${encodeURIComponent(
+    const cadastroUrl =
+      `/cadastro?plano=${encodeURIComponent(
         plano
       )}&periodo=${encodeURIComponent(
         periodo
+      )}&locale=${encodeURIComponent(
+        locale
       )}`;
 
-    const loginUrl =
-      `/${locale}/login?next=${encodeURIComponent(
-        checkoutUrl
-      )}`;
-
-    if (loading) {
-      return;
-    }
-
-    if (user) {
-      router.push(checkoutUrl);
-      return;
-    }
-
-    router.push(loginUrl);
+    router.push(cadastroUrl);
   }
 
   return (
@@ -634,7 +617,7 @@ export default function PlanosClient() {
                           mt-1
                           font-black
                           text-emerald-400
-                      "
+                        "
                       >
                         ✓
                       </div>
