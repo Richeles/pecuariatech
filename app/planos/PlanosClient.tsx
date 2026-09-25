@@ -9,6 +9,8 @@ import {
 import LanguageSwitcher
 from "@/app/components/i18n/LanguageSwitcher";
 
+import { useAuth } from "@/app/lib/AuthContext";
+
 /* =========================================================
    TYPES
 ========================================================= */
@@ -187,6 +189,11 @@ export default function PlanosClient() {
   const pathname =
     usePathname();
 
+  const {
+    user,
+    loading,
+  } = useAuth();
+
   const lang: Lang =
     pathname.startsWith("/es")
       ? "es"
@@ -223,27 +230,47 @@ export default function PlanosClient() {
   }
 
   /* =========================================================
-     FUNÇÃO ASSINAR CORRIGIDA (com locale)
+     FUNÇÃO ASSINAR
+
+     ESR — EIXO X / NAVEGAÇÃO
+
+     AUTENTICADO
+       → CHECKOUT
+
+     NÃO AUTENTICADO
+       → CADASTRO
   ========================================================= */
 
   function assinar(
     plano: string
   ) {
+
+    if (loading) {
+      return;
+    }
+
     const locale =
       pathname.startsWith("/es")
         ? "es"
         : "pt";
 
-    const cadastroUrl =
-      `/cadastro?plano=${encodeURIComponent(
-        plano
-      )}&periodo=${encodeURIComponent(
-        periodo
-      )}&locale=${encodeURIComponent(
-        locale
-      )}`;
+    const query =
+      `plano=${encodeURIComponent(plano)}` +
+      `&periodo=${encodeURIComponent(periodo)}` +
+      `&locale=${encodeURIComponent(locale)}`;
 
-    router.push(cadastroUrl);
+    if (user) {
+
+      router.push(
+        `/checkout?${query}`
+      );
+
+      return;
+    }
+
+    router.push(
+      `/cadastro?${query}`
+    );
   }
 
   return (
