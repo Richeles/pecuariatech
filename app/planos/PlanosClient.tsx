@@ -9,7 +9,7 @@ import {
 import LanguageSwitcher
 from "@/app/components/i18n/LanguageSwitcher";
 
-import { useAuth } from "@/app/lib/AuthContext";
+import { createBrowserClient } from "@supabase/ssr";
 
 /* =========================================================
    TYPES
@@ -189,10 +189,6 @@ export default function PlanosClient() {
   const pathname =
     usePathname();
 
-  const {
-    user,
-    loading,
-  } = useAuth();
 
   const lang: Lang =
     pathname.startsWith("/es")
@@ -241,13 +237,9 @@ export default function PlanosClient() {
        → CADASTRO
   ========================================================= */
 
-  function assinar(
+  async function assinar(
     plano: string
   ) {
-
-    if (loading) {
-      return;
-    }
 
     const locale =
       pathname.startsWith("/es")
@@ -259,7 +251,45 @@ export default function PlanosClient() {
       `&periodo=${encodeURIComponent(periodo)}` +
       `&locale=${encodeURIComponent(locale)}`;
 
-    if (user) {
+    const supabase =
+      createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+    const {
+      data: {
+        user: usuarioAtual,
+      },
+      error,
+    } =
+      await supabase.auth.getUser();
+
+    if (error) {
+
+      console.error(
+        "[PLANOS] Erro ao verificar sessao:",
+        error
+      );
+
+      return;
+    }
+
+    if (usuarioAtual) {
+
+      console.log(
+        "[PLANOS] Usuario autenticado confirmado.",
+        usuarioAtual.id
+      );
+
+      console.log(
+        "[PLANOS] Navegando para checkout:",
+        {
+          plano,
+          periodo,
+          locale,
+        }
+      );
 
       router.push(
         `/checkout?${query}`
@@ -267,6 +297,10 @@ export default function PlanosClient() {
 
       return;
     }
+
+    console.log(
+      "[PLANOS] Usuario nao autenticado. Indo para cadastro."
+    );
 
     router.push(
       `/cadastro?${query}`
