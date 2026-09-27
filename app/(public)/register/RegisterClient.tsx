@@ -181,12 +181,44 @@ export default function RegisterClient() {
       }
 
       /* ==========================================
-         CADASTRO SEM COMPRA
+         PRIMEIRA COMPRA
+         CADASTRO → PLANOS → ESCOLHER PLANO
       ========================================== */
 
-      router.push(
-        `/${locale}/login?confirm=true`
-      );
+      const loginResponse =
+        await fetch(
+          "/api/auth/login",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              email,
+              password: senha,
+            }),
+          }
+        );
+
+      const loginBody =
+        await loginResponse
+          .json()
+          .catch(() => null);
+
+      if (!loginResponse.ok) {
+        setError(
+          loginBody?.error ||
+            "A conta foi criada, mas a sessão segura não pôde ser estabelecida."
+        );
+
+        setLoading(false);
+        return;
+      }
+
+      router.push(`/${locale}/planos`);
+      return;
     } catch (err) {
       console.error(
         "[REGISTER_RUNTIME]",
