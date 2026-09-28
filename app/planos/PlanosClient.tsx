@@ -259,11 +259,11 @@ export default function PlanosClient() {
 
     const {
       data: {
-        user: usuarioAtual,
+        session,
       },
       error,
     } =
-      await supabase.auth.getUser();
+      await supabase.auth.getSession();
 
     if (error) {
 
@@ -275,11 +275,11 @@ export default function PlanosClient() {
       return;
     }
 
-    if (usuarioAtual) {
+    if (session?.user) {
 
       console.log(
-        "[PLANOS] Usuario autenticado confirmado.",
-        usuarioAtual.id
+        "[PLANOS] Sessao autenticada confirmada.",
+        session.user.id
       );
 
       console.log(
@@ -299,7 +299,7 @@ export default function PlanosClient() {
     }
 
     console.log(
-      "[PLANOS] Usuario nao autenticado. Indo para cadastro."
+      "[PLANOS] Nenhuma sessao encontrada. Indo para cadastro."
     );
 
     router.push(
