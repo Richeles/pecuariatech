@@ -9,7 +9,7 @@ import {
 import LanguageSwitcher
 from "@/app/components/i18n/LanguageSwitcher";
 
-import { createBrowserClient } from "@supabase/ssr";
+import { supabase } from "@/app/lib/supabase-browser";
 
 /* =========================================================
    TYPES
@@ -250,14 +250,7 @@ export default function PlanosClient() {
       `plano=${encodeURIComponent(plano)}` +
       `&periodo=${encodeURIComponent(periodo)}` +
       `&locale=${encodeURIComponent(locale)}`;
-
-    const supabase =
-      createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-
-    const {
+const {
       data: {
         session,
       },

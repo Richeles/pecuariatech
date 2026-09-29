@@ -1,8 +1,13 @@
-// app/lib/AuthContext.tsx
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { createClient } from "@/app/lib/supabase-browser";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
+import { supabase } from "@/app/lib/supabase-browser";
 
 type User = {
   id: string;
@@ -14,44 +19,112 @@ type AuthContextType = {
   loading: boolean;
 };
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
-});
+const AuthContext =
+  createContext<AuthContextType>({
+    user: null,
+    loading: true,
+  });
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [user, setUser] =
+    useState<User | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth
-      .getUser()
-      .then(({ data }) => {
-        if (data?.user) {
+let mounted = true;
+
+    async function carregarUsuario() {
+      try {
+        const {
+          data,
+          error,
+        } = await supabase.auth.getUser();
+
+        if (!mounted) {
+          return;
+        }
+
+        if (error || !data?.user) {
+          setUser(null);
+        } else {
           setUser({
             id: data.user.id,
-            email: data.user.email || undefined,
+            email:
+              data.user.email ||
+              undefined,
           });
         }
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
+      } catch {
+        if (mounted) {
+          setUser(null);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    carregarUsuario();
+
+    const {
+      data: authListener,
+    } =
+      supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          if (!mounted) {
+            return;
+          }
+
+          if (session?.user) {
+            setUser({
+              id: session.user.id,
+              email:
+                session.user.email ||
+                undefined,
+            });
+          } else {
+            setUser(null);
+          }
+
+          setLoading(false);
+        }
+      );
+
+    return () => {
+      mounted = false;
+
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context =
+    useContext(AuthContext);
+
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error(
+      "useAuth must be used within an AuthProvider"
+    );
   }
+
   return context;
 }

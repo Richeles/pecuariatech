@@ -6,10 +6,7 @@ import {
   useSearchParams,
 } from "next/navigation";
 
-import { createClient } from "@/app/lib/supabase-browser";
-
-const supabase = createClient();
-
+import { supabase } from "@/app/lib/supabase-browser";
 export default function RegisterClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
