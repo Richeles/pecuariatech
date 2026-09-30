@@ -1,4 +1,4 @@
-﻿/* =====================================================
+/* =====================================================
    app/api/checkout/preference/route.ts
    PecuariaTech - Checkout Runtime Premium
    Equação Y + Regra Z + Runtime SaaS Seguro
@@ -301,9 +301,30 @@ export async function POST(
        MERCADO PAGO
     ========================================== */
 
+    const ambiente =
+      process.env.VERCEL_ENV ??
+      "development";
+
+    const isProducao =
+      ambiente === "production";
+
     const MP_TOKEN =
-      process.env
-        .MERCADOPAGO_ACCESS_TOKEN;
+      isProducao
+        ? process.env.MERCADOPAGO_ACCESS_TOKEN
+        : process.env.MERCADOPAGO_ACCESS_TOKEN_TESTE;
+
+    console.log(
+      "[ESR_MP_OUTPUT]",
+      {
+        ambiente,
+        origem_credencial:
+          isProducao
+            ? "MERCADOPAGO_ACCESS_TOKEN"
+            : "MERCADOPAGO_ACCESS_TOKEN_TESTE",
+        token_configurado:
+          Boolean(MP_TOKEN),
+      }
+    );
 
     if (!MP_TOKEN) {
       return NextResponse.json(

@@ -97,7 +97,7 @@ export default function CheckoutClient() {
             data?.detalhe ||
               data?.message ||
               data?.error ||
-              "N?o foi poss?vel iniciar o checkout."
+              "Não foi possível iniciar o checkout."
           );
 
           return;
@@ -112,7 +112,7 @@ export default function CheckoutClient() {
         );
 
         setErro(
-          "N?o foi poss?vel iniciar o checkout. Verifique sua conex?o e tente novamente."
+          "Não foi possível iniciar o checkout. Verifique sua conexão e tente novamente."
         );
       }
     }
@@ -125,7 +125,7 @@ export default function CheckoutClient() {
       <div className="min-h-screen flex items-center justify-center bg-white px-6">
         <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-6 text-center shadow-sm">
           <h1 className="text-xl font-semibold text-neutral-900">
-            N?o foi poss?vel iniciar o pagamento
+            Não foi possível iniciar o pagamento
           </h1>
 
           <p className="mt-3 text-sm text-neutral-600">
