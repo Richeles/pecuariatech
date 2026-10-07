@@ -46,6 +46,36 @@ function calcularRenovacao(periodo: string) {
 }
 
 export async function POST(req: NextRequest) {
+  const ambiente = process.env.VERCEL_ENV ?? "development";
+  const isProducao = ambiente === "production";
+
+  const MP_TOKEN = isProducao
+    ? process.env.MERCADOPAGO_ACCESS_TOKEN
+    : process.env.MERCADOPAGO_ACCESS_TOKEN_TESTE;
+
+  console.log("[ESR_MP_OUTPUT]", {
+    ambiente,
+    origem_credencial: isProducao
+      ? "MERCADOPAGO_ACCESS_TOKEN"
+      : "MERCADOPAGO_ACCESS_TOKEN_TESTE",
+    token_configurado: Boolean(MP_TOKEN),
+  });
+
+  if (!MP_TOKEN) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "mercadopago_access_token_nao_resolvido",
+      },
+      { status: 500 }
+    );
+  }
+
+  const mp = new MercadoPagoConfig({
+    accessToken: MP_TOKEN,
+  });
+
+  const paymentClient = new Payment(mp);
   const startTime = Date.now();
   try {
     const body = await req.json();
