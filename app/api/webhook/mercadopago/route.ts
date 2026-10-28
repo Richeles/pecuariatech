@@ -1,5 +1,3 @@
-﻿// app/api/webhook/mercadopago/route.ts
-// Versão segura: preços do banco, sem upsert (usa select/insert)
 
 import { NextRequest, NextResponse } from "next/server";
 import MercadoPagoConfig, { Payment } from "mercadopago";
@@ -8,42 +6,154 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+/*
+ * PECUARIATECH — MPVEC
+ * ESR SIMBIÓTICA + TRIÂNGULO ESPELHADO 360°
+ *
+ * X = interface e entrada comercial
+ * Y = verdade de dados e persistência financeira
+ * Z = identidade, autorização e governança
+ * π = processamento operacional
+ * Ω = correlação e coerência
+ *
+ * Ciclo ESR:
+ * ANTECIPAR → OBSERVAR → ADAPTAR → ESPELHAR → CONVERGIR
+ *
+ * Este webhook:
+ * - valida o pagamento junto do Mercado Pago;
+ * - consulta o preço oficial em Y;
+ * - regista o evento financeiro;
+ * - persiste a assinatura após aprovação;
+ * - notifica o Runtime ESR sem lhe delegar a autoridade financeira.
+ *
+ * Não inicializar clientes externos no carregamento do módulo.
+ */
 
-const mp = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN! });
-const paymentClient = new Payment(mp);
+// ======================================================
+// Y — CLIENTE SUPABASE
+// ======================================================
 
-async function getPrecosFromDatabase(plano: string) {
-  const { data } = await supabase
+function criarClienteSupabase() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("supabase_config_missing");
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+
+// ======================================================
+// Y — PREÇOS OFICIAIS
+// ======================================================
+
+type PrecosOficiaisRow = {
+  preco_mensal: number | string | null;
+  preco_trimestral: number | string | null;
+  preco_anual: number | string | null;
+};
+
+type PrecosOficiais = {
+  mensal: number;
+  trimestral: number;
+  anual: number;
+};
+
+async function getPrecosFromDatabase(
+  supabase: ReturnType<typeof criarClienteSupabase>,
+  plano: string
+): Promise<PrecosOficiais | null> {
+  const { data, error } = await supabase
     .from("planos_precos")
     .select("preco_mensal, preco_trimestral, preco_anual")
     .eq("plano_codigo", plano)
     .maybeSingle();
-  if (!data) return null;
-  return { mensal: data.preco_mensal, trimestral: data.preco_trimestral, anual: data.preco_anual };
+
+  if (error) {
+    throw error;
+  }
+
+  const row = data as unknown as PrecosOficiaisRow | null;
+
+  if (!row) {
+    return null;
+  }
+
+  const mensal = Number(row.preco_mensal);
+  const trimestral = Number(row.preco_trimestral);
+  const anual = Number(row.preco_anual);
+
+  if (
+    !Number.isFinite(mensal) ||
+    !Number.isFinite(trimestral) ||
+    !Number.isFinite(anual)
+  ) {
+    throw new Error("invalid_plan_price_configuration");
+  }
+
+  return { mensal, trimestral, anual };
 }
 
-function parseExternalReference(ref: string | null) {
-  if (!ref) return null;
+// ======================================================
+// Ω — CORRELAÇÃO DA REFERÊNCIA COMERCIAL
+// ======================================================
+
+function parseExternalReference(ref: string | null | undefined) {
+  if (!ref) {
+    return null;
+  }
+
   const [user_id, plano, periodo] = ref.split("|");
-  if (!user_id || !plano || !periodo) return null;
-  return { user_id, plano, periodo };
+
+  if (!user_id || !plano || !periodo) {
+    return null;
+  }
+
+  return {
+    user_id,
+    plano,
+    periodo,
+  };
 }
+
+// ======================================================
+// Y — VALIDAÇÃO FINANCEIRA
+// ======================================================
 
 function isValidValue(esperado: number, recebido: number) {
-  return Math.abs(recebido - esperado) < 0.1;
+  return (
+    Number.isFinite(esperado) &&
+    Number.isFinite(recebido) &&
+    Math.abs(recebido - esperado) < 0.1
+  );
 }
 
 function calcularRenovacao(periodo: string) {
   const renovacao = new Date();
-  if (periodo === "mensal") renovacao.setMonth(renovacao.getMonth() + 1);
-  if (periodo === "trimestral") renovacao.setMonth(renovacao.getMonth() + 3);
-  if (periodo === "anual") renovacao.setFullYear(renovacao.getFullYear() + 1);
+
+  if (periodo === "mensal") {
+    renovacao.setMonth(renovacao.getMonth() + 1);
+  } else if (periodo === "trimestral") {
+    renovacao.setMonth(renovacao.getMonth() + 3);
+  } else if (periodo === "anual") {
+    renovacao.setFullYear(renovacao.getFullYear() + 1);
+  } else {
+    throw new Error("invalid_period");
+  }
+
   return renovacao.toISOString();
 }
+
+// ======================================================
+// MPVEC — ENTRADA DO WEBHOOK
+// ======================================================
 
 export async function POST(req: NextRequest) {
   const ambiente = process.env.VERCEL_ENV ?? "development";
@@ -77,60 +187,296 @@ export async function POST(req: NextRequest) {
 
   const paymentClient = new Payment(mp);
   const startTime = Date.now();
+
+  const ambiente = process.env.VERCEL_ENV ?? "development";
+  const isProducao = ambiente === "production";
+
+  const MP_TOKEN = isProducao
+    ? process.env.MERCADOPAGO_ACCESS_TOKEN
+    : process.env.MERCADOPAGO_ACCESS_TOKEN_TESTE;
+
+  console.log("[ESR_MP_OUTPUT]", {
+    ambiente,
+    origem_credencial: isProducao
+      ? "MERCADOPAGO_ACCESS_TOKEN"
+      : "MERCADOPAGO_ACCESS_TOKEN_TESTE",
+    token_configurado: Boolean(MP_TOKEN),
+  });
+
+  if (!MP_TOKEN) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "mercadopago_access_token_nao_resolvido",
+      },
+      { status: 500 }
+    );
+  }
+
   try {
+    const supabase = criarClienteSupabase();
+
+    const mp = new MercadoPagoConfig({
+      accessToken: MP_TOKEN,
+    });
+
+    const paymentClient = new Payment(mp);
+
     const body = await req.json();
+
     const paymentId = body?.data?.id;
     const eventType = body?.type;
-    console.log("🔥 WEBHOOK CHAMADO", { paymentId, eventType });
-    if (!paymentId || eventType !== "payment") return NextResponse.json({ ok: true, ignored: true });
 
-    const payment = await paymentClient.get({ id: paymentId });
-    if (!payment) return NextResponse.json({ ok: false, error: "payment_not_found" }, { status: 404 });
+    console.log("[MPVEC][OBSERVAR] Webhook recebido", {
+      paymentId,
+      eventType,
+    });
+
+    if (!paymentId || eventType !== "payment") {
+      return NextResponse.json({
+        ok: true,
+        ignored: true,
+      });
+    }
+
+    // π — Consultar o pagamento na origem financeira.
+    const payment = await paymentClient.get({
+      id: paymentId,
+    });
+
+    if (!payment) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "payment_not_found",
+        },
+        { status: 404 }
+      );
+    }
 
     const status = payment.status;
-    const externalRef = payment.external_reference;
+    const externalRef = payment.external_reference ?? null;
     const valorPago = Number(payment.transaction_amount);
     const moeda = payment.currency_id ?? "BRL";
 
+    // Ω — Correlacionar o pagamento com a referência comercial.
     const parsed = parseExternalReference(externalRef);
-    if (!parsed) return NextResponse.json({ ok: false, error: "invalid_external_reference" }, { status: 400 });
+
+    if (!parsed) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "invalid_external_reference",
+        },
+        { status: 400 }
+      );
+    }
+
     const { user_id, plano, periodo } = parsed;
 
-    const precos = await getPrecosFromDatabase(plano);
-    if (!precos) return NextResponse.json({ ok: false, error: "plan_not_found" }, { status: 400 });
-    const precoEsperado = precos[periodo as keyof typeof precos];
-    if (!precoEsperado) return NextResponse.json({ ok: false, error: "invalid_period" }, { status: 400 });
-    if (!isValidValue(precoEsperado, valorPago)) {
-      return NextResponse.json({ ok: false, error: "valor_mismatch", esperado: precoEsperado, recebido: valorPago }, { status: 400 });
+    // Y — Preço oficial e integridade comercial.
+    const precos = await getPrecosFromDatabase(supabase, plano);
+
+    if (!precos) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "plan_not_found",
+        },
+        { status: 400 }
+      );
     }
-    if (moeda !== "BRL") return NextResponse.json({ ok: false, error: "currency_mismatch", moeda }, { status: 400 });
 
-    // Idempotência: verifica se log já existe
-    const { data: existingLog } = await supabase.from("financeiro_logs").select("id").eq("payment_id", paymentId).maybeSingle();
-    if (existingLog) return NextResponse.json({ ok: true, idempotent: true });
+    if (
+      periodo !== "mensal" &&
+      periodo !== "trimestral" &&
+      periodo !== "anual"
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "invalid_period",
+        },
+        { status: 400 }
+      );
+    }
 
-    // Insere log financeiro
-    await supabase.from("financeiro_logs").insert({
-      payment_id: paymentId, user_id, plano, periodo, valor: valorPago, moeda,
-      origem: "mercadopago", evento: status, external_reference: externalRef, criado_em: new Date().toISOString(),
-    });
+    const precoEsperado = precos[periodo];
 
-    if (status === "approved") {
-      const renovacao_em = calcularRenovacao(periodo);
-      const assinaturaData = { status: "ativa", plano, nivel: plano, valor: valorPago, metodo_pagamento: "mercadopago", renovacao_em, expires_at: renovacao_em, updated_at: new Date().toISOString() };
-      const { data: existingAssinatura } = await supabase.from("assinaturas").select("id").eq("user_id", user_id).maybeSingle();
-      if (existingAssinatura) {
-        await supabase.from("assinaturas").update(assinaturaData).eq("id", existingAssinatura.id);
-      } else {
-        await supabase.from("assinaturas").insert({ user_id, ...assinaturaData, criado_em: new Date().toISOString() });
+    if (
+      !Number.isFinite(precoEsperado) ||
+      precoEsperado <= 0
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "invalid_configured_price",
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!isValidValue(precoEsperado, valorPago)) {
+      console.warn("[MPVEC][Y] Divergência de valor", {
+        paymentId: String(paymentId),
+        plano,
+        periodo,
+      });
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "valor_mismatch",
+          esperado: precoEsperado,
+          recebido: valorPago,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (moeda !== "BRL") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "currency_mismatch",
+          moeda,
+        },
+        { status: 400 }
+      );
+    }
+
+// ======================================================
+// Y — REGISTO FINANCEIRO E IDEMPOTÊNCIA
+// ======================================================
+
+    const paymentIdString = String(paymentId);
+
+    const {
+      data: existingLog,
+      error: existingLogError,
+    } = await supabase
+      .from("financeiro_logs")
+      .select("id, evento, validado")
+      .eq("payment_id", paymentIdString)
+      .maybeSingle();
+
+    if (existingLogError) {
+      throw existingLogError;
+    }
+
+    if (existingLog) {
+      const { error: logUpdateError } = await supabase
+        .from("financeiro_logs")
+        .update({
+          evento: status,
+          validado: status === "approved",
+        })
+        .eq("id", existingLog.id);
+
+      if (logUpdateError) {
+        throw logUpdateError;
+      }
+
+      if (status !== "approved") {
+        return NextResponse.json({
+          ok: true,
+          ignored: true,
+          status,
+          idempotent: true,
+        });
+      }
+    } else {
+      const { error: logError } = await supabase
+        .from("financeiro_logs")
+        .insert({
+          payment_id: paymentIdString,
+          user_id,
+          plano,
+          periodo,
+          valor: valorPago,
+          moeda,
+          origem: "mercadopago",
+          evento: status,
+          external_reference: externalRef,
+          criado_em: new Date().toISOString(),
+          validado: status === "approved",
+        });
+
+      if (logError) {
+        throw logError;
+      }
+
+      if (status !== "approved") {
+        return NextResponse.json({
+          ok: true,
+          ignored: true,
+          status,
+        });
       }
     }
 
-    // =====================================================
-    // ESR ? OBSERVA??O P?S-PERSIST?NCIA
-    // N?o participa da autoriza??o, pre?o ou ativa??o.
-    // Falha do ESR n?o invalida o pagamento j? processado.
-    // =====================================================
+// ======================================================
+// Y — PERSISTÊNCIA DA ASSINATURA
+// ======================================================
+
+    if (status === "approved") {
+      const agora = new Date();
+
+      const dataInicio = agora.toISOString().slice(0, 10);
+      const dataFim = calcularRenovacao(periodo).slice(0, 10);
+
+      const assinaturaData = {
+        status: "ativo",
+        plano,
+        valor_pago: valorPago,
+        data_inicio: dataInicio,
+        data_fim: dataFim,
+        atualizado_em: agora.toISOString(),
+      };
+
+      const {
+        data: existingAssinatura,
+        error: existingAssinaturaError,
+      } = await supabase
+        .from("assinaturas")
+        .select("id")
+        .eq("user_id", user_id)
+        .order("atualizado_em", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingAssinaturaError) {
+        throw existingAssinaturaError;
+      }
+
+      if (existingAssinatura) {
+        const { error: assinaturaUpdateError } = await supabase
+          .from("assinaturas")
+          .update(assinaturaData)
+          .eq("id", existingAssinatura.id);
+
+        if (assinaturaUpdateError) {
+          throw assinaturaUpdateError;
+        }
+      } else {
+        const { error: assinaturaInsertError } = await supabase
+          .from("assinaturas")
+          .insert({
+            user_id,
+            ...assinaturaData,
+            criado_em: agora.toISOString(),
+          });
+
+        if (assinaturaInsertError) {
+          throw assinaturaInsertError;
+        }
+      }
+    }
+
+// ======================================================
+// ESR — OBSERVAÇÃO PÓS-PERSISTÊNCIA
+// ======================================================
+
     if (status === "approved") {
       try {
         const pythonBaseUrl =
@@ -156,7 +502,7 @@ export async function POST(req: NextRequest) {
                 evento: "PAYMENT_APPROVED",
                 payload: {
                   source: "mercadopago",
-                  payment_id: String(paymentId),
+                  payment_id: paymentIdString,
                   status,
                   plano,
                   periodo,
@@ -172,31 +518,66 @@ export async function POST(req: NextRequest) {
 
           if (!esrResponse.ok) {
             console.warn(
-              "[ESR] Observa??o rejeitada pelo Runtime:",
+              "[ESR][OBSERVAR] Runtime rejeitou o evento:",
               esrResponse.status
             );
           }
         } else {
           console.warn(
-            "[ESR] Configura??o ausente; pagamento preservado."
+            "[ESR][OBSERVAR] Configuração ausente; persistência preservada."
           );
         }
       } catch (esrError) {
         console.warn(
-          "[ESR] Falha observacional ? pagamento preservado:",
-          esrError
+          "[ESR][OBSERVAR] Falha observacional; persistência preservada:",
+          esrError instanceof Error
+            ? esrError.message
+            : "erro desconhecido"
         );
       }
     }
 
-    console.log(`✅ Webhook processado em ${Date.now() - startTime}ms`);
-    return NextResponse.json({ ok: true });
-  } catch (error: any) {
-    console.error("Webhook error:", error);
-    return NextResponse.json({ ok: false, error: "webhook_failure" }, { status: 500 });
+    console.log("[MPVEC][CONVERGIR] Webhook processado", {
+      duracao_ms: Date.now() - startTime,
+      status,
+    });
+
+    return NextResponse.json({
+      ok: true,
+    });
+  } catch (error) {
+    console.error(
+      "[MPVEC][ERRO] Falha no webhook:",
+      error instanceof Error
+        ? error.message
+        : "erro desconhecido"
+    );
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "webhook_failure",
+      },
+      { status: 500 }
+    );
   }
 }
 
+// ======================================================
+// ENDPOINT DE DIAGNÓSTICO — SEM DADOS SENSÍVEIS
+// ======================================================
+
 export async function GET() {
-  return NextResponse.json({ ok: true, endpoint: "mercadopago_webhook", status: "alive" });
+  return NextResponse.json(
+    {
+      ok: true,
+      endpoint: "mercadopago_webhook",
+      status: "alive",
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    }
+  );
 }

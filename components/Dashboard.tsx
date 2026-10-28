@@ -21,7 +21,7 @@ export default function Dashboard() {
 
     async function loadData() {
 
-      const client = supabase()
+      const client = supabase
 
       const { data, error } = await client
         .from('financeiro')

@@ -9,6 +9,8 @@ import {
 import LanguageSwitcher
 from "@/app/components/i18n/LanguageSwitcher";
 
+import { supabase } from "@/app/lib/supabase-browser";
+
 /* =========================================================
    TYPES
 ========================================================= */
@@ -187,6 +189,7 @@ export default function PlanosClient() {
   const pathname =
     usePathname();
 
+
   const lang: Lang =
     pathname.startsWith("/es")
       ? "es"
@@ -223,27 +226,78 @@ export default function PlanosClient() {
   }
 
   /* =========================================================
-     FUNÇÃO ASSINAR CORRIGIDA (com locale)
+     FUNÇÃO ASSINAR
+
+     ESR — EIXO X / NAVEGAÇÃO
+
+     AUTENTICADO
+       → CHECKOUT
+
+     NÃO AUTENTICADO
+       → CADASTRO
   ========================================================= */
 
-  function assinar(
+  async function assinar(
     plano: string
   ) {
+
     const locale =
       pathname.startsWith("/es")
         ? "es"
         : "pt";
 
-    const cadastroUrl =
-      `/cadastro?plano=${encodeURIComponent(
-        plano
-      )}&periodo=${encodeURIComponent(
-        periodo
-      )}&locale=${encodeURIComponent(
-        locale
-      )}`;
+    const query =
+      `plano=${encodeURIComponent(plano)}` +
+      `&periodo=${encodeURIComponent(periodo)}` +
+      `&locale=${encodeURIComponent(locale)}`;
+const {
+      data: {
+        session,
+      },
+      error,
+    } =
+      await supabase.auth.getSession();
 
-    router.push(cadastroUrl);
+    if (error) {
+
+      console.error(
+        "[PLANOS] Erro ao verificar sessao:",
+        error
+      );
+
+      return;
+    }
+
+    if (session?.user) {
+
+      console.log(
+        "[PLANOS] Sessao autenticada confirmada.",
+        session.user.id
+      );
+
+      console.log(
+        "[PLANOS] Navegando para checkout:",
+        {
+          plano,
+          periodo,
+          locale,
+        }
+      );
+
+      router.push(
+        `/checkout?${query}`
+      );
+
+      return;
+    }
+
+    console.log(
+      "[PLANOS] Nenhuma sessao encontrada. Indo para cadastro."
+    );
+
+    router.push(
+      `/cadastro?${query}`
+    );
   }
 
   return (

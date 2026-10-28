@@ -6,10 +6,7 @@ import {
   useSearchParams,
 } from "next/navigation";
 
-import { createClient } from "@/app/lib/supabase-browser";
-
-const supabase = createClient();
-
+import { supabase } from "@/app/lib/supabase-browser";
 export default function RegisterClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -69,11 +66,6 @@ export default function RegisterClient() {
          X → Cadastro
       ========================================== */
 
-      const plano =
-        searchParams.get("plano");
-
-      const periodo =
-        searchParams.get("periodo");
 
       const localeParam =
         searchParams.get("locale");
@@ -130,63 +122,13 @@ export default function RegisterClient() {
         "pecuaria_tipo_documento",
         tipoDocumento
       );
-
       /* ==========================================
-         PRIMEIRA COMPRA
-         PLANOS → CADASTRO → SESSÃO → CHECKOUT
+         FLUXO CANÔNICO DA PRIMEIRA ENTRADA
+         CADASTRO → PLANOS → CHECKOUT
       ========================================== */
 
-      if (plano && periodo) {
-        const loginResponse =
-          await fetch(
-            "/api/auth/login",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-              credentials: "include",
-              body: JSON.stringify({
-                email,
-                password: senha,
-              }),
-            }
-          );
-
-        const loginBody =
-          await loginResponse
-            .json()
-            .catch(() => null);
-
-        if (!loginResponse.ok) {
-          setError(
-            loginBody?.error ||
-              "A conta foi criada, mas a sessão segura não pôde ser estabelecida para o checkout."
-          );
-
-          setLoading(false);
-          return;
-        }
-
-        const checkoutUrl =
-          `/${locale}/checkout?plano=${encodeURIComponent(
-            plano
-          )}&periodo=${encodeURIComponent(
-            periodo
-          )}`;
-
-        router.push(checkoutUrl);
-        return;
-      }
-
-      /* ==========================================
-         CADASTRO SEM COMPRA
-      ========================================== */
-
-      router.push(
-        `/${locale}/login?confirm=true`
-      );
+      router.push(`/${locale}/planos`);
+      return;
     } catch (err) {
       console.error(
         "[REGISTER_RUNTIME]",

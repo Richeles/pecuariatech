@@ -1,4 +1,4 @@
-﻿/* =====================================================
+/* =====================================================
    app/api/checkout/preference/route.ts
    PecuariaTech - Checkout Runtime Premium
    Equação Y + Regra Z + Runtime SaaS Seguro
@@ -74,43 +74,51 @@ function n(value: unknown): number {
 }
 
 function safeOrigin(
-  req: NextRequest
+  req: NextRequest,
+  ambiente: string
 ): string {
+  const fallback = "https://www.pecuariatech.com";
+
+  if (ambiente === "production") {
+    return fallback;
+  }
+
+  if (ambiente === "preview") {
+    const host = process.env.VERCEL_URL?.trim();
+
+    if (!host) {
+      throw new Error("preview_vercel_url_missing");
+    }
+
+    const url = new URL(`https://${host}`);
+
+    if (
+      url.protocol !== "https:" ||
+      !url.hostname.endsWith(".vercel.app") ||
+      url.username ||
+      url.password
+    ) {
+      throw new Error("preview_vercel_url_invalid");
+    }
+
+    return url.origin;
+  }
+
   const configured =
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     req.headers.get("origin") ||
-    "https://www.pecuariatech.com";
+    "http://localhost:3000";
 
-  const fallback =
-    "https://www.pecuariatech.com";
+  const url = new URL(configured);
 
-  try {
-    const url = new URL(configured);
-
-    if (
-      process.env.NODE_ENV ===
-        "production" &&
-      url.protocol !== "https:"
-    ) {
-      return fallback;
-    }
-
-    url.pathname =
-      url.pathname.replace(
-        /\/+$/,
-        ""
-      );
-
-    return (
-      url.origin +
-      (url.pathname || "")
-    );
-  } catch {
-    return fallback;
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error("development_origin_invalid");
   }
-}
 
+  url.pathname = url.pathname.replace(/\/+$/, "");
+  return url.origin + url.pathname;
+}
 /* =====================================================
    PREÇO OFICIAL
    Y = planos_precos
@@ -299,11 +307,70 @@ export async function POST(
 
     /* ==========================================
        MERCADO PAGO
+       ESR = REGÊNCIA DO AMBIENTE
     ========================================== */
 
+    const ambiente =
+      process.env.VERCEL_ENV ??
+      "development";
+
+    const isProducao =
+      ambiente === "production";
+
+    const isHomologacao =
+      ambiente === "preview";
+
     const MP_TOKEN =
-      process.env
-        .MERCADOPAGO_ACCESS_TOKEN;
+      isProducao
+        ? process.env.MERCADOPAGO_ACCESS_TOKEN
+        : process.env.MERCADOPAGO_ACCESS_TOKEN_TESTE;
+
+    const testPayerEmail =
+      process.env.MERCADOPAGO_TEST_PAYER_EMAIL?.trim();
+
+    let payerEmail =
+      email;
+
+    if (isHomologacao) {
+      if (!testPayerEmail) {
+        console.error(
+          "[CHECKOUT] MERCADOPAGO_TEST_PAYER_EMAIL ausente no Preview"
+        );
+
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "MERCADOPAGO_TEST_PAYER_EMAIL ausente no ambiente Preview",
+          },
+          {
+            status: 500,
+          }
+        );
+      }
+
+      payerEmail =
+        testPayerEmail;
+    }
+
+    console.log(
+      "[ESR_MP_OUTPUT]",
+      {
+        ambiente,
+        origem_credencial:
+          isProducao
+            ? "MERCADOPAGO_ACCESS_TOKEN"
+            : "MERCADOPAGO_ACCESS_TOKEN_TESTE",
+        token_configurado:
+          Boolean(MP_TOKEN),
+        origem_payer:
+          isHomologacao
+            ? "MERCADOPAGO_TEST_PAYER_EMAIL"
+            : "user.email",
+        payer_configurado:
+          Boolean(payerEmail),
+      }
+    );
 
     if (!MP_TOKEN) {
       return NextResponse.json(
@@ -407,7 +474,7 @@ export async function POST(
     ========================================== */
 
     const origin =
-      safeOrigin(req);
+      safeOrigin(req, ambiente);
 
     /* ==========================================
        URLS DE RETORNO
@@ -481,7 +548,7 @@ export async function POST(
       ],
 
       payer: {
-        email,
+        email: payerEmail,
       },
 
       metadata: {
