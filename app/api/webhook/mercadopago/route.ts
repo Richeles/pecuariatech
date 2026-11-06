@@ -1,4 +1,4 @@
-﻿// app/api/webhook/mercadopago/route.ts
+// app/api/webhook/mercadopago/route.ts
 // Versão segura: preços do banco, sem upsert (usa select/insert)
 
 import { NextRequest, NextResponse } from "next/server";
@@ -26,6 +26,19 @@ async function getPrecosFromDatabase(plano: string) {
   return { mensal: data.preco_mensal, trimestral: data.preco_trimestral, anual: data.preco_anual };
 }
 
+async function getPromocaoById(id: string) {
+  const { data, error } = await supabase
+    .from("promocoes_comerciais")
+    .select("id,desconto,planos,periodos,data_inicio,data_fim")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`promotion_lookup_failed:${error.code}`);
+  }
+
+  return data;
+}
 function parseExternalReference(ref: string | null) {
   if (!ref) return null;
   const [user_id, plano, periodo] = ref.split("|");
@@ -97,13 +110,142 @@ export async function POST(req: NextRequest) {
     const { user_id, plano, periodo } = parsed;
 
     const precos = await getPrecosFromDatabase(plano);
-    if (!precos) return NextResponse.json({ ok: false, error: "plan_not_found" }, { status: 400 });
-    const precoEsperado = precos[periodo as keyof typeof precos];
-    if (!precoEsperado) return NextResponse.json({ ok: false, error: "invalid_period" }, { status: 400 });
-    if (!isValidValue(precoEsperado, valorPago)) {
-      return NextResponse.json({ ok: false, error: "valor_mismatch", esperado: precoEsperado, recebido: valorPago }, { status: 400 });
+    if (!precos) {
+      return NextResponse.json(
+        { ok: false, error: "plan_not_found" },
+        { status: 400 }
+      );
     }
-    if (moeda !== "BRL") return NextResponse.json({ ok: false, error: "currency_mismatch", moeda }, { status: 400 });
+
+    const precoEsperado = precos[periodo as keyof typeof precos];
+
+    if (!precoEsperado || !Number.isFinite(Number(precoEsperado))) {
+      return NextResponse.json(
+        { ok: false, error: "invalid_period" },
+        { status: 400 }
+      );
+    }
+
+    const precoBaseCentavos = Math.round(Number(precoEsperado) * 100);
+    const valorPagoCentavos = Math.round(valorPago * 100);
+    const metadata = payment.metadata ?? {};
+    const promocaoId =
+      typeof metadata.promocao_id === "string"
+        ? metadata.promocao_id
+        : null;
+
+    if (precoBaseCentavos <= 0 || !Number.isFinite(valorPagoCentavos)) {
+      return NextResponse.json(
+        { ok: false, error: "invalid_payment_amount" },
+        { status: 400 }
+      );
+    }
+
+    if (promocaoId) {
+      const desconto = Number(metadata.desconto_percentual);
+      const baseInformada = Number(metadata.preco_base_centavos);
+      const finalInformado = Number(metadata.preco_final_centavos);
+      const aplicadaEm = metadata.promocao_aplicada_em;
+
+      const instanteAplicacao =
+        typeof aplicadaEm === "string"
+          ? new Date(aplicadaEm).getTime()
+          : NaN;
+
+      if (
+        !Number.isInteger(desconto) ||
+        ![5, 10, 15, 20].includes(desconto) ||
+        !Number.isFinite(instanteAplicacao) ||
+        baseInformada !== precoBaseCentavos
+      ) {
+        return NextResponse.json(
+          { ok: false, error: "invalid_promotion_metadata" },
+          { status: 400 }
+        );
+      }
+
+      const campanha = await getPromocaoById(promocaoId);
+
+      if (
+        !campanha ||
+        Number(campanha.desconto) !== desconto ||
+        !Array.isArray(campanha.planos) ||
+        !Array.isArray(campanha.periodos) ||
+        !campanha.planos.includes(plano) ||
+        !campanha.periodos.includes(periodo) ||
+        !campanha.data_inicio ||
+        !campanha.data_fim
+      ) {
+        return NextResponse.json(
+          { ok: false, error: "promotion_not_valid" },
+          { status: 400 }
+        );
+      }
+
+      const inicioCampanha = new Date(campanha.data_inicio).getTime();
+      const fimCampanha = new Date(campanha.data_fim).getTime();
+
+      if (
+        !Number.isFinite(inicioCampanha) ||
+        !Number.isFinite(fimCampanha) ||
+        instanteAplicacao < inicioCampanha ||
+        instanteAplicacao > fimCampanha
+      ) {
+        return NextResponse.json(
+          { ok: false, error: "promotion_outside_validity" },
+          { status: 400 }
+        );
+      }
+
+      if (
+        payment.date_created &&
+        instanteAplicacao > new Date(payment.date_created).getTime()
+      ) {
+        return NextResponse.json(
+          { ok: false, error: "promotion_timestamp_after_payment" },
+          { status: 400 }
+        );
+      }
+
+      const precoCalculadoCentavos = Math.round(
+        precoBaseCentavos * (100 - desconto) / 100
+      );
+
+      if (
+        finalInformado !== precoCalculadoCentavos ||
+        valorPagoCentavos !== precoCalculadoCentavos
+      ) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "promotional_value_mismatch",
+            esperado_centavos: precoCalculadoCentavos,
+            recebido_centavos: valorPagoCentavos,
+          },
+          { status: 400 }
+        );
+      }
+    } else {
+      // Compatibilidade com pagamentos antigos sem promoção.
+      if (!isValidValue(precoEsperado, valorPago)) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "valor_mismatch",
+            esperado: precoEsperado,
+            recebido: valorPago,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (moeda !== "BRL") {
+      return NextResponse.json(
+        { ok: false, error: "currency_mismatch", moeda },
+        { status: 400 }
+      );
+    }
 
     // Idempotência: verifica se log já existe
     const { data: existingLog } = await supabase.from("financeiro_logs").select("id").eq("payment_id", paymentId).maybeSingle();
