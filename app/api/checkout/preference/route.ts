@@ -1,4 +1,4 @@
-﻿/* =====================================================
+/* =====================================================
    app/api/checkout/preference/route.ts
    PecuariaTech - Checkout Runtime Premium
    Equação Y + Regra Z + Runtime SaaS Seguro
@@ -196,6 +196,90 @@ async function getPriceFromDatabase(
   return preco;
 }
 
+
+type PromocaoCheckout = {
+  id: string;
+  desconto: number;
+  validadoEm: string;
+};
+
+async function getActivePromotionFromDatabase(
+  plano: string,
+  periodo: string
+): Promise<PromocaoCheckout | null> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("supabase_env_missing");
+  }
+
+  const agora = new Date().toISOString();
+  const url = new URL(`${supabaseUrl}/rest/v1/promocoes_comerciais`);
+
+  url.searchParams.set(
+    "select",
+    "id,desconto,planos,periodos,data_inicio,data_fim"
+  );
+  url.searchParams.set("ativo", "eq.true");
+  url.searchParams.set("data_inicio", `lte.${agora}`);
+  url.searchParams.set("data_fim", `gte.${agora}`);
+  url.searchParams.set("limit", "1");
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`promotion_query_http_${response.status}`);
+  }
+
+  const rows = await response.json();
+  const campanha = Array.isArray(rows) ? rows[0] : null;
+
+  if (!campanha) return null;
+
+  const desconto = Number(campanha.desconto);
+
+  if (
+    !campanha.id ||
+    !Number.isInteger(desconto) ||
+    ![5, 10, 15, 20].includes(desconto) ||
+    !Array.isArray(campanha.planos) ||
+    !Array.isArray(campanha.periodos) ||
+    !campanha.planos.includes(plano) ||
+    !campanha.periodos.includes(periodo) ||
+    !campanha.data_inicio ||
+    !campanha.data_fim
+  ) {
+    return null;
+  }
+
+  const inicio = new Date(campanha.data_inicio).getTime();
+  const fim = new Date(campanha.data_fim).getTime();
+  const instanteValidacao = new Date();
+  const instante = instanteValidacao.getTime();
+
+  if (
+    !Number.isFinite(inicio) ||
+    !Number.isFinite(fim) ||
+    instante < inicio ||
+    instante > fim
+  ) {
+    return null;
+  }
+
+  return {
+    id: String(campanha.id),
+    desconto,
+    validadoEm: instanteValidacao.toISOString(),
+  };
+}
 /* =====================================================
    POST
 ===================================================== */
@@ -393,7 +477,7 @@ export async function POST(
        Y = planos_precos
     ========================================== */
 
-    const preco =
+    const precoBase =
       await getPriceFromDatabase(
         plano,
         periodo as
@@ -401,6 +485,22 @@ export async function POST(
           | "trimestral"
           | "anual"
       );
+
+    const promocao =
+      await getActivePromotionFromDatabase(plano, periodo);
+
+    const promocaoAplicadaEm =
+      promocao?.validadoEm ?? null;
+
+    const precoBaseCentavos = Math.round(precoBase * 100);
+
+    const precoFinalCentavos = promocao
+      ? Math.round(
+          precoBaseCentavos * (100 - promocao.desconto) / 100
+        )
+      : precoBaseCentavos;
+
+    const preco = precoFinalCentavos / 100;
 
     /* ==========================================
        ORIGIN
@@ -476,7 +576,7 @@ export async function POST(
           currency_id: "BRL",
 
           unit_price:
-            Number(preco),
+            precoFinalCentavos / 100,
         },
       ],
 
@@ -488,6 +588,11 @@ export async function POST(
         user_id,
         plano,
         periodo,
+        promocao_id: promocao?.id ?? null,
+        desconto_percentual: promocao?.desconto ?? 0,
+        promocao_aplicada_em: promocaoAplicadaEm,
+        preco_base_centavos: precoBaseCentavos,
+        preco_final_centavos: precoFinalCentavos,
       },
 
       external_reference:

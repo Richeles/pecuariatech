@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useRouter,
   usePathname,
@@ -179,6 +179,15 @@ const PLANOS = {
    COMPONENT
 ========================================================= */
 
+type PromocaoAtiva = {
+  id: string;
+  desconto: number;
+  planos: string[];
+  periodos: Periodo[];
+  data_inicio: string;
+  data_fim: string;
+};
+
 export default function PlanosClient() {
 
   const router =
@@ -194,6 +203,43 @@ export default function PlanosClient() {
 
   const [periodo, setPeriodo] =
     useState<Periodo>("mensal");
+
+  const [promocoes, setPromocoes] =
+    useState<PromocaoAtiva[]>([]);
+
+  useEffect(() => {
+    let ativo = true;
+
+    async function carregarPromocao() {
+      try {
+        const resposta = await fetch(
+          "/api/promocoes/ativas",
+          { cache: "no-store" }
+        );
+
+        if (!resposta.ok) {
+          throw new Error("Falha ao consultar promoções.");
+        }
+
+        const dados = await resposta.json();
+
+        if (ativo && Array.isArray(dados)) {
+          setPromocoes(dados as PromocaoAtiva[]);
+        }
+      } catch (erro) {
+        console.warn(
+          "[PLANOS] Promoção indisponível; mantendo preços-base.",
+          erro
+        );
+      }
+    }
+
+    carregarPromocao();
+
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   const t =
     TEXTS[lang as keyof typeof TEXTS];
@@ -440,11 +486,52 @@ export default function PlanosClient() {
               plano.mensal
             );
 
+          const planoPromocaoId =
+            plano.id === "dominus"
+              ? "premium_dominus"
+              : plano.id;
+
+          const instanteValidacao = Date.now();
+
+          const promocaoAplicavel =
+            promocoes.find((campanha) => {
+              const desconto = Number(campanha.desconto);
+
+              if (
+                !campanha.id ||
+                !Number.isInteger(desconto) ||
+                ![5, 10, 15, 20].includes(desconto) ||
+                !Array.isArray(campanha.planos) ||
+                !Array.isArray(campanha.periodos) ||
+                !campanha.planos.includes(planoPromocaoId) ||
+                !campanha.periodos.includes(periodo) ||
+                !campanha.data_inicio ||
+                !campanha.data_fim
+              ) {
+                return false;
+              }
+
+              const inicio = new Date(campanha.data_inicio).getTime();
+              const fim = new Date(campanha.data_fim).getTime();
+
+              return (
+                Number.isFinite(inicio) &&
+                Number.isFinite(fim) &&
+                instanteValidacao >= inicio &&
+                instanteValidacao <= fim
+              );
+            }) ?? null;
+
+          const precoPromocional =
+            promocaoAplicavel
+              ? preco * (1 - promocaoAplicavel.desconto / 100)
+              : preco;
+
           const inteiro =
-            preco.toFixed(2).split(".")[0];
+            precoPromocional.toFixed(2).split(".")[0];
 
           const decimal =
-            preco.toFixed(2).split(".")[1];
+            precoPromocional.toFixed(2).split(".")[1];
 
           return (
 
@@ -525,6 +612,25 @@ export default function PlanosClient() {
 
               <div className="mt-8">
 
+                {promocaoAplicavel && (
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-bold text-emerald-100/45 line-through">
+                      {preco.toLocaleString(
+                        lang === "es" ? "es-ES" : "pt-BR",
+                        { style: "currency", currency: "BRL" }
+                      )}
+                    </span>
+
+                    <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-300">
+                      {promocaoAplicavel.desconto}% OFF
+                    </span>
+
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                      {lang === "es" ? "EN PROMOCIÓN" : "EM PROMOÇÃO"}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex items-end">
 
                   <span
@@ -584,6 +690,15 @@ export default function PlanosClient() {
                     t.porAno}
 
                 </div>
+
+                {promocaoAplicavel && (
+                  <p className="mt-1 text-[10px] font-medium text-emerald-300/70">
+                    {lang === "es" ? "Válido hasta" : "Válido até"}{" "}
+                    {new Date(promocaoAplicavel.data_fim).toLocaleDateString(
+                      lang === "es" ? "es-ES" : "pt-BR"
+                    )}
+                  </p>
+                )}
 
               </div>
 
