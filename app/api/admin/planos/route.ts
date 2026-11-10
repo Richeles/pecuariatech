@@ -53,35 +53,88 @@ export async function GET() {
 
     const supabase = await createSupabaseServer();
 
-    // 3. π — CONSULTA DO CATÁLOGO EXISTENTE
+    // 3. Y + π — CONSULTA DO CATÁLOGO E DOS PREÇOS ATUAIS
 
-    const { data, error } = await supabase
+    const { data: planos, error: erroPlanos } = await supabase
       .from("planos")
-      .select("id, nome, nivel, preco, ativo")
-      .order("preco", {
-        ascending: true,
+      .select("id, codigo, nome_exibicao, nivel_ordem, ativo")
+      .order("nivel_ordem", { ascending: true });
+
+    if (erroPlanos) {
+      console.error("[ESR][ADMIN_PLANS] Falha no catálogo:", {
+        code: erroPlanos.code,
+        message: erroPlanos.message,
       });
 
-    // 4. TRATAMENTO DE ERROS
-
-    if (error) {
-      console.error(
-        "[ESR][ADMIN_PLANS] Falha na consulta:",
-        {
-          code: error.code,
-          message: error.message,
-        }
-      );
-
       return NextResponse.json(
-        { error: "plans_query_failed" },
+        { error: "plans_catalog_query_failed" },
         { status: 500 }
       );
     }
 
+    // Os preços atuais estão em planos_precos.
+    // plano_codigo possui relação única com planos.codigo.
+
+    const codigosPlanos = (planos ?? []).map(
+      (plano) => plano.codigo
+    );
+
+    const precosPorCodigo = new Map<string, number>();
+
+    if (codigosPlanos.length > 0) {
+      const { data: precos, error: erroPrecos } = await supabase
+        .from("planos_precos")
+        .select("plano_codigo, preco_atual")
+        .in("plano_codigo", codigosPlanos);
+
+      if (erroPrecos) {
+        console.error("[ESR][ADMIN_PLANS] Falha nos preços:", {
+          code: erroPrecos.code,
+          message: erroPrecos.message,
+        });
+
+        return NextResponse.json(
+          { error: "plans_pricing_query_failed" },
+          { status: 500 }
+        );
+      }
+
+      for (const item of precos ?? []) {
+        const valor = Number(item.preco_atual);
+
+        if (Number.isFinite(valor)) {
+          precosPorCodigo.set(item.plano_codigo, valor);
+        }
+      }
+    }
+
+    // Não apresentar preços fictícios quando faltar cadastro.
+    const planosSemPreco = (planos ?? []).filter(
+      (plano) => !precosPorCodigo.has(plano.codigo)
+    );
+
+    if (planosSemPreco.length > 0) {
+      console.error("[ESR][ADMIN_PLANS] Planos sem preço:", {
+        codigos: planosSemPreco.map((plano) => plano.codigo),
+      });
+
+      return NextResponse.json(
+        { error: "plans_price_missing" },
+        { status: 500 }
+      );
+    }
+
+    // Mantém o contrato esperado pela página administrativa.
+    const catalogo = (planos ?? []).map((plano) => ({
+      id: plano.id,
+      nome: plano.nome_exibicao,
+      nivel: plano.codigo,
+      preco: precosPorCodigo.get(plano.codigo)!,
+      ativo: plano.ativo,
+    }));
     // 5. Ω — RESPOSTA SEM CACHE
 
-    return NextResponse.json(data ?? [], {
+    return NextResponse.json(catalogo, {
       status: 200,
       headers: {
         "Cache-Control": "private, no-store, no-cache, max-age=0",
