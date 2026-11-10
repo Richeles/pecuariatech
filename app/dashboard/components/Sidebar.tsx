@@ -21,10 +21,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-import {
-  getModulesForPlan,
-  normalizePlan,
-} from "@/app/lib/planos";
+import { getModulesForPlan } from "@/app/lib/planos";
 
 import UpgradePlano from "./UpgradePlano";
 
@@ -105,6 +102,32 @@ const allItems = [
 // TIPOS
 // =========================================================
 
+function normalizarPlanoSidebar(plano?: string | null): string | null {
+  const normalized = String(plano ?? "").trim().toLowerCase();
+
+  switch (normalized) {
+    case "starter":
+      return "starter";
+    case "basico":
+    case "básico":
+      return "basico";
+    case "pro":
+    case "profissional":
+      return "profissional";
+    case "ultra":
+      return "ultra";
+    case "enterprise":
+    case "empresarial":
+      return "empresarial";
+    case "premium_dominus":
+    case "dominus":
+      return "dominus";
+    case "master":
+      return "master";
+    default:
+      return null;
+  }
+}
 type SidebarProps = {
   lang?: "pt" | "es";
 };
@@ -174,7 +197,7 @@ export default function Sidebar({
           return;
         }
 
-        const planoCanonico = normalizePlan(data.plano);
+        const planoCanonico = normalizarPlanoSidebar(data.plano);
 
         if (!planoCanonico) {
           console.error(
@@ -300,7 +323,7 @@ export default function Sidebar({
   // NORMALIZAÇÃO DE PLANO
   // =======================================================
 
-  const planoCanonico = normalizePlan(plano);
+  const planoCanonico = normalizarPlanoSidebar(plano);
 
   const isDominus =
     planoCanonico === "dominus";
