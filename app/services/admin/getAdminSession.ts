@@ -1,133 +1,74 @@
-// app/services/admin/getAdminSession.ts
-// PecuariaTech — Admin Runtime Service
-// Equação Y + Regra Z
+// =========================================================
+// PECUARIATECH
+// SERVIÇO DE SESSÃO ADMINISTRATIVA
+//
+// ESR + MPVEC SIMBIÓTICO
+//
+// X  = Interface administrativa
+// Y  = Supabase / Verdade dos dados
+// Z  = Identidade e autorização
+// π  = Processamento
+// Ω  = Coerência administrativa
+//
+// REGRA:
+// requireAdminMaster é a única fonte de autorização.
+// Este serviço não concede privilégios.
+// Não altera assinaturas, checkout ou webhook.
+// =========================================================
 
-import { cookies } from "next/headers";
-import { createClient } from "@supabase/supabase-js";
+import { createSupabaseServer } from "@/app/lib/supabase-server";
+import { requireAdminMaster } from "@/app/services/admin/requireAdminMaster";
 
 export type AdminSession = {
   is_admin: boolean;
-
   role?: string;
-
   email?: string;
 };
 
-function makeSupabase() {
-
-  const url =
-    process.env
-      .NEXT_PUBLIC_SUPABASE_URL;
-
-  const service =
-    process.env
-      .SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !service) {
-
-    throw new Error(
-      "missing_env_supabase"
-    );
-  }
-
-  return createClient(
-    url,
-    service,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    }
-  );
-}
-
-export async function getAdminSession():
-Promise<AdminSession> {
-
+export async function getAdminSession(): Promise<AdminSession> {
   try {
+    // Z — Validação central da identidade e autorização.
+    const authorization = await requireAdminMaster();
 
-    const cookieStore =
-      await cookies();
-
-    const token =
-      cookieStore.get(
-        "sb-access-token"
-      )?.value;
-
-    if (!token) {
-
+    if (!authorization.authorized) {
       return {
         is_admin: false,
       };
     }
 
-    const supabase =
-      makeSupabase();
+    // Identificação complementar para apresentação no painel.
+    // A consulta de e-mail não concede nem altera privilégios.
+    let email: string | undefined;
 
-    const {
-      data: authData,
-      error: authError,
-    } =
-      await supabase.auth.getUser(
-        token
+    try {
+      const supabase = await createSupabaseServer();
+
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (!error && user?.id === authorization.userId) {
+        email = user.email;
+      }
+    } catch (error) {
+      console.warn(
+        "[ESR][ADMIN_SESSION] E-mail indisponível para apresentação:",
+        error
       );
-
-    if (
-      authError ||
-      !authData?.user
-    ) {
-
-      return {
-        is_admin: false,
-      };
     }
 
-    const user =
-      authData.user;
-
-    const {
-      data: admin,
-      error,
-    } = await supabase
-      .from("admin_users")
-      .select(
-        "role,email,ativo"
-      )
-      .eq(
-        "user_id",
-        user.id
-      )
-      .eq(
-        "ativo",
-        true
-      )
-      .maybeSingle();
-
-    if (
-      error ||
-      !admin
-    ) {
-
-      return {
-        is_admin: false,
-      };
-    }
-
+    // Ω — Autorização já confirmada pela fonte central.
     return {
-
       is_admin: true,
-
-      role:
-        admin.role ??
-        "admin",
-
-      email:
-        admin.email ??
-        user.email,
+      role: "master",
+      email,
     };
-
-  } catch {
+  } catch (error) {
+    console.error(
+      "[ESR][ADMIN_SESSION] Falha na recuperação da sessão:",
+      error
+    );
 
     return {
       is_admin: false,
