@@ -79,23 +79,41 @@ export async function getStatusPlanoSSR(
       process.env.NODE_ENV !== "production" &&
       HOSTS_LOCAIS.has(incomingUrl.hostname.toLowerCase());
 
-    // Desenvolvimento local não depende de NEXT_PUBLIC_SITE_URL.
+    // Preview usa exclusivamente os domínios confiáveis da implantação Vercel.
+    // Produção mantém o domínio canônico e os domínios da própria implantação.
     let authorizedOrigin = isLocalDevelopmentHost;
 
     if (!isLocalDevelopmentHost) {
-      const configuredBaseUrl =
-        process.env.NEXT_PUBLIC_SITE_URL ||
-        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+      const vercelOrigins = [
+        process.env.VERCEL_URL
+          ? "https://" + process.env.VERCEL_URL
+          : null,
+        process.env.VERCEL_BRANCH_URL
+          ? "https://" + process.env.VERCEL_BRANCH_URL
+          : null,
+      ];
 
-      if (!configuredBaseUrl) {
-        throw new Error("NEXT_PUBLIC_SITE_URL/VERCEL_URL não configurada");
-      }
+      const allowedOrigins =
+        process.env.VERCEL_ENV === "preview"
+          ? vercelOrigins
+          : [process.env.NEXT_PUBLIC_SITE_URL, ...vercelOrigins];
 
-      const configuredUrl = new URL(configuredBaseUrl);
-      authorizedOrigin =
-        hostCanonico(incomingUrl.hostname) === hostCanonico(configuredUrl.hostname) &&
-        incomingUrl.protocol === configuredUrl.protocol &&
-        portaEfetiva(incomingUrl) === portaEfetiva(configuredUrl);
+      authorizedOrigin = allowedOrigins.some((baseUrl) => {
+        if (!baseUrl) return false;
+
+        try {
+          const configuredUrl = new URL(baseUrl);
+
+          return (
+            hostCanonico(incomingUrl.hostname) ===
+              hostCanonico(configuredUrl.hostname) &&
+            incomingUrl.protocol === configuredUrl.protocol &&
+            portaEfetiva(incomingUrl) === portaEfetiva(configuredUrl)
+          );
+        } catch {
+          return false;
+        }
+      });
     }
 
     if (!authorizedOrigin) {
