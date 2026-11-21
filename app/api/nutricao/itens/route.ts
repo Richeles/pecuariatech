@@ -1,138 +1,306 @@
-// app/api/nutricao/itens/route.ts
-// NUTRIÇÃO FASE 2 — Catálogo de itens (CRUD)
-// Next.js 16 | App Router | Equação Y
-// Segurança: Bearer token + RLS no Supabase
+import {
+  getNutricaoContext,
+  nutricaoJson,
+} from "../_lib";
 
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+const TIPOS = [
+  "MINERAL",
+  "PROTEINADO",
+  "ENERGETICO",
+  "NUCLEO",
+  "RACAO",
+  "CONCENTRADO",
+  "VOLUMOSO",
+  "FORRAGEM",
+  "GRAMINEA",
+  "OUTRO",
+];
 
-function getBearerToken(req: Request) {
-  const auth = req.headers.get("authorization") || "";
-  const match = auth.match(/^Bearer\s+(.+)$/i);
-  return match?.[1] || null;
+const UNIDADES = ["kg", "g", "t", "l", "ml", "saco", "dose"];
+
+const FIELDS =
+  "id,nome,tipo,marca,unidade_medida,custo_unitario_rs,pb_percent,ndt_percent,energia_mcal_kg,observacao,ativo,criado_em,atualizado_em";
+
+class ValidationError extends Error {}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function supabaseFromReq(req: Request) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const token = getBearerToken(req);
+function buildPayload(body: Record<string, unknown>, creating: boolean) {
+  const payload: Record<string, unknown> = {};
 
-  return createClient(url, anon, {
-    global: {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    },
-    auth: { persistSession: false },
-  });
-}
+  if (creating || body.nome !== undefined) {
+    if (typeof body.nome !== "string" || !body.nome.trim()) {
+      throw new ValidationError("Informe o nome do item.");
+    }
 
-export async function GET(req: Request) {
-  const token = getBearerToken(req);
-  if (!token) return NextResponse.json({ error: "Unauthorized: missing bearer token" }, { status: 401 });
-
-  const supabase = supabaseFromReq(req);
-
-  const { searchParams } = new URL(req.url);
-  const tipo = searchParams.get("tipo"); // suplemento | insumo | graminea
-  const ativo = searchParams.get("ativo"); // true/false
-  const q = searchParams.get("q"); // busca por nome
-
-  let query = supabase
-    .from("nutricao_itens")
-    .select("id,nome,tipo,custo_unitario,unidade,observacao,ativo,criado_em,atualizado_em")
-    .order("criado_em", { ascending: false });
-
-  if (tipo) query = query.eq("tipo", tipo);
-  if (ativo === "true") query = query.eq("ativo", true);
-  if (ativo === "false") query = query.eq("ativo", false);
-  if (q) query = query.ilike("nome", `%${q}%`);
-
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-
-  return NextResponse.json({ data });
-}
-
-export async function POST(req: Request) {
-  const token = getBearerToken(req);
-  if (!token) return NextResponse.json({ error: "Unauthorized: missing bearer token" }, { status: 401 });
-
-  const supabase = supabaseFromReq(req);
-
-  const body = await req.json().catch(() => null);
-  if (!body?.nome || !body?.tipo) {
-    return NextResponse.json({ error: "Campos obrigatórios: nome, tipo" }, { status: 400 });
+    payload.nome = body.nome.trim();
   }
 
-  const payload = {
-    nome: String(body.nome).trim(),
-    tipo: String(body.tipo).trim(),
-    custo_unitario: body.custo_unitario ?? null,
-    unidade: body.unidade ?? null,
-    observacao: body.observacao ?? null,
-    ativo: body.ativo ?? true,
+  if (creating || body.tipo !== undefined) {
+    if (typeof body.tipo !== "string") {
+      throw new ValidationError("Informe o tipo do item.");
+    }
+
+    const tipo = body.tipo.trim().toUpperCase();
+
+    if (!TIPOS.includes(tipo)) {
+      throw new ValidationError("Tipo nutricional inválido.");
+    }
+
+    payload.tipo = tipo;
+  }
+
+  if (creating && body.unidade_medida === undefined) {
+    payload.unidade_medida = "kg";
+  } else if (body.unidade_medida !== undefined) {
+    if (typeof body.unidade_medida !== "string") {
+      throw new ValidationError("Unidade de medida inválida.");
+    }
+
+    const unidade = body.unidade_medida.trim().toLowerCase();
+
+    if (!UNIDADES.includes(unidade)) {
+      throw new ValidationError("Unidade de medida não permitida.");
+    }
+
+    payload.unidade_medida = unidade;
+  }
+
+  for (const field of ["marca", "observacao"]) {
+    if (body[field] === undefined) continue;
+
+    const value = body[field];
+
+    if (value !== null && typeof value !== "string") {
+      throw new ValidationError(`Campo inválido: ${field}`);
+    }
+
+    payload[field] = value === null ? null : (value as string).trim() || null;
+  }
+
+  const numericFields: Record<string, number | null> = {
+    custo_unitario_rs: null,
+    pb_percent: 100,
+    ndt_percent: 100,
+    energia_mcal_kg: null,
   };
 
-  const { data, error } = await supabase
-    .from("nutricao_itens")
-    .insert(payload)
-    .select("*")
-    .single();
+  for (const [field, maximum] of Object.entries(numericFields)) {
+    if (body[field] === undefined) continue;
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    const value = body[field];
 
-  return NextResponse.json({ data }, { status: 201 });
+    if (value === null || value === "") {
+      payload[field] = null;
+      continue;
+    }
+
+    const number = Number(value);
+
+    if (
+      !Number.isFinite(number) ||
+      number < 0 ||
+      (maximum !== null && number > maximum)
+    ) {
+      throw new ValidationError(`Valor numérico inválido: ${field}`);
+    }
+
+    payload[field] = number;
+  }
+
+  if (creating && body.ativo === undefined) {
+    payload.ativo = true;
+  } else if (body.ativo !== undefined) {
+    if (typeof body.ativo !== "boolean") {
+      throw new ValidationError("Campo ativo deve ser booleano.");
+    }
+
+    payload.ativo = body.ativo;
+  }
+
+  return payload;
 }
 
-export async function PUT(req: Request) {
-  const token = getBearerToken(req);
-  if (!token) return NextResponse.json({ error: "Unauthorized: missing bearer token" }, { status: 401 });
-
-  const supabase = supabaseFromReq(req);
-
-  const body = await req.json().catch(() => null);
-  if (!body?.id) return NextResponse.json({ error: "Campo obrigatório: id" }, { status: 400 });
-
-  const id = String(body.id);
-
-  const patch: Record<string, any> = {};
-  if (body.nome !== undefined) patch.nome = String(body.nome).trim();
-  if (body.tipo !== undefined) patch.tipo = String(body.tipo).trim();
-  if (body.custo_unitario !== undefined) patch.custo_unitario = body.custo_unitario;
-  if (body.unidade !== undefined) patch.unidade = body.unidade;
-  if (body.observacao !== undefined) patch.observacao = body.observacao;
-  if (body.ativo !== undefined) patch.ativo = body.ativo;
-
-  const { data, error } = await supabase
-    .from("nutricao_itens")
-    .update(patch)
-    .eq("id", id)
-    .select("*")
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-
-  return NextResponse.json({ data });
+function validarId(id: string | null): id is string {
+  return Boolean(
+    id &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  );
 }
 
-export async function DELETE(req: Request) {
-  const token = getBearerToken(req);
-  if (!token) return NextResponse.json({ error: "Unauthorized: missing bearer token" }, { status: 401 });
+export async function GET(request: Request) {
+  const auth = await getNutricaoContext(request);
+  if (auth.ok === false) return auth.response;
 
-  const supabase = supabaseFromReq(req);
+  try {
+    const { userId, db } = auth.context;
+    const params = new URL(request.url).searchParams;
 
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "Query param obrigatório: id" }, { status: 400 });
+    const tipo = params.get("tipo")?.trim().toUpperCase();
+    const ativo = params.get("ativo");
+    const busca = params.get("q");
 
-  // Soft delete para rastreabilidade
-  const { data, error } = await supabase
-    .from("nutricao_itens")
-    .update({ ativo: false })
-    .eq("id", id)
-    .select("*")
-    .single();
+    if (ativo !== null && !["true", "false"].includes(ativo)) {
+      return nutricaoJson({ ok: false, error: "Filtro ativo inválido." }, 400);
+    }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    let query = db
+      .from("nutricao_itens")
+      .select(FIELDS)
+      .eq("owner_id", userId)
+      .order("criado_em", { ascending: false });
 
-  return NextResponse.json({ data });
+    if (tipo) {
+      if (!TIPOS.includes(tipo)) {
+        return nutricaoJson({ ok: false, error: "Tipo inválido." }, 400);
+      }
+      query = query.eq("tipo", tipo);
+    }
+
+    if (ativo !== null) {
+      query = query.eq("ativo", ativo === "true");
+    }
+
+    if (busca) {
+      query = query.ilike("nome", `%${busca}%`);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("[NUTRICAO][ITENS][GET]", error.code);
+      return nutricaoJson({ ok: false, error: "Falha ao consultar itens." }, 500);
+    }
+
+    return nutricaoJson({ ok: true, data: data ?? [] });
+  } catch (error) {
+    console.error("[NUTRICAO][ITENS][GET][INTERNAL]", error);
+    return nutricaoJson({ ok: false, error: "Erro interno." }, 500);
+  }
+}
+
+export async function POST(request: Request) {
+  const auth = await getNutricaoContext(request);
+  if (auth.ok === false) return auth.response;
+
+  try {
+    const body = await request.json().catch(() => null);
+
+    if (!isRecord(body)) {
+      return nutricaoJson({ ok: false, error: "Corpo inválido." }, 400);
+    }
+
+    const payload = buildPayload(body, true);
+
+    const { data, error } = await auth.context.db
+      .from("nutricao_itens")
+      .insert({
+        ...payload,
+        owner_id: auth.context.userId,
+      })
+      .select(FIELDS)
+      .single();
+
+    if (error) {
+      console.error("[NUTRICAO][ITENS][POST]", error.code);
+      return nutricaoJson({ ok: false, error: "Não foi possível cadastrar o item." }, 500);
+    }
+
+    return nutricaoJson({ ok: true, data }, 201);
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return nutricaoJson({ ok: false, error: error.message }, 400);
+    }
+
+    console.error("[NUTRICAO][ITENS][POST][INTERNAL]", error);
+    return nutricaoJson({ ok: false, error: "Erro interno." }, 500);
+  }
+}
+
+export async function PUT(request: Request) {
+  const auth = await getNutricaoContext(request);
+  if (auth.ok === false) return auth.response;
+
+  try {
+    const body = await request.json().catch(() => null);
+
+    if (!isRecord(body) || !validarId(String(body.id ?? ""))) {
+      return nutricaoJson({ ok: false, error: "Identificador inválido." }, 400);
+    }
+
+    const payload = buildPayload(body, false);
+
+    if (Object.keys(payload).length === 0) {
+      return nutricaoJson({ ok: false, error: "Nenhum campo informado." }, 400);
+    }
+
+    const { data, error } = await auth.context.db
+      .from("nutricao_itens")
+      .update({
+        ...payload,
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq("id", String(body.id))
+      .eq("owner_id", auth.context.userId)
+      .select(FIELDS)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[NUTRICAO][ITENS][PUT]", error.code);
+      return nutricaoJson({ ok: false, error: "Falha ao atualizar item." }, 500);
+    }
+
+    if (!data) {
+      return nutricaoJson({ ok: false, error: "Item não encontrado." }, 404);
+    }
+
+    return nutricaoJson({ ok: true, data });
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return nutricaoJson({ ok: false, error: error.message }, 400);
+    }
+
+    console.error("[NUTRICAO][ITENS][PUT][INTERNAL]", error);
+    return nutricaoJson({ ok: false, error: "Erro interno." }, 500);
+  }
+}
+
+export async function DELETE(request: Request) {
+  const auth = await getNutricaoContext(request);
+  if (auth.ok === false) return auth.response;
+
+  try {
+    const id = new URL(request.url).searchParams.get("id");
+
+    if (!validarId(id)) {
+      return nutricaoJson({ ok: false, error: "Identificador inválido." }, 400);
+    }
+
+    const { data, error } = await auth.context.db
+      .from("nutricao_itens")
+      .update({
+        ativo: false,
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("owner_id", auth.context.userId)
+      .select(FIELDS)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[NUTRICAO][ITENS][DELETE]", error.code);
+      return nutricaoJson({ ok: false, error: "Falha ao inativar item." }, 500);
+    }
+
+    if (!data) {
+      return nutricaoJson({ ok: false, error: "Item não encontrado." }, 404);
+    }
+
+    return nutricaoJson({ ok: true, data });
+  } catch (error) {
+    console.error("[NUTRICAO][ITENS][DELETE][INTERNAL]", error);
+    return nutricaoJson({ ok: false, error: "Erro interno." }, 500);
+  }
 }

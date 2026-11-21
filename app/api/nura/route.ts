@@ -1,84 +1,151 @@
-﻿// app/api/nura/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createSupabaseServer } from "../../lib/supabase-server";
+import { requireBenefitSSR } from "../../lib/getStatusPlanoSSR";
 
-const REQUEST_TIMEOUT_MS = 120000; // 120 segundos
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const REQUEST_TIMEOUT_MS = 120000;
 
 export async function POST(req: NextRequest) {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
   try {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) { return cookieStore.get(name)?.value; },
-          set() {},
-          remove() {},
-        },
-      }
-    );
+    // Identidade autenticada pela sessão SSR existente.
+    const supabase = await createSupabaseServer();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-
-    const { pergunta } = await req.json();
-    if (!pergunta?.trim()) {
-      return NextResponse.json({ error: "Pergunta vazia" }, { status: 400 });
-    }
-
-    const { data: assinatura } = await supabase
-      .from("assinaturas")
-      .select("plano")
-      .eq("user_id", user.id)
-      .eq("status", "ativa")
-      .maybeSingle();
-
-    const plano = assinatura?.plano ?? null;
-    const planosPermitidos = ["ultra", "empresarial", "dominus"];
-    if (!plano || !planosPermitidos.includes(plano)) {
       return NextResponse.json(
-        { error: "NURA disponível apenas para planos Ultra, Empresarial ou Dominus" },
-        { status: 403 }
+        { error: "Usuário não autenticado." },
+        { status: 401 }
       );
     }
 
+    // Única fonte de autorização comercial.
+    // MASTER, Ultra, Empresarial e Dominus seguem os benefícios
+    // concedidos pelo mecanismo central.
+    const gate = await requireBenefitSSR("engorda_ultra", req);
+
+    if (!gate.allowed) {
+      return NextResponse.json(
+        {
+          error: "Benefício de Nutrição não disponível.",
+          reason: gate.reason,
+        },
+        { status: gate.httpStatus }
+      );
+    }
+
+    const body = await req.json().catch(() => null);
+
+    if (
+      !body ||
+      typeof body !== "object" ||
+      typeof body.pergunta !== "string"
+    ) {
+      return NextResponse.json(
+        { error: "Informe uma pergunta válida." },
+        { status: 400 }
+      );
+    }
+
+    const pergunta = body.pergunta.trim();
+
+    if (!pergunta) {
+      return NextResponse.json(
+        { error: "Pergunta vazia." },
+        { status: 400 }
+      );
+    }
+
+    if (pergunta.length > 12000) {
+      return NextResponse.json(
+        { error: "Consulta muito extensa. Reduza o contexto enviado." },
+        { status: 413 }
+      );
+    }
+
+    const pythonUrl =
+      process.env.NURA_PYTHON_URL ||
+      "http://127.0.0.1:8000/nura";
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-    // 🔧 URL do backend Python (usa variável de ambiente em produção, fallback local)
-    const pythonUrl = process.env.NURA_PYTHON_URL || "http://127.0.0.1:8000/nura";
+    timeoutId = setTimeout(
+      () => controller.abort(),
+      REQUEST_TIMEOUT_MS
+    );
 
-    const response = await fetch(pythonUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        texto: pergunta,
-        fazenda_id: user.id,
-        user_id: user.id,
-        plano,
-      }),
-      signal: controller.signal,
-    });
+    let response: Response;
 
-    clearTimeout(timeoutId);
+    try {
+      response = await fetch(pythonUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          texto: pergunta,
+          fazenda_id: user.id,
+          user_id: user.id,
+        }),
+        signal: controller.signal,
+        cache: "no-store",
+      });
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Backend Python retornou ${response.status}: ${errorText}`);
-      return NextResponse.json({ error: "NURA indisponível no momento" }, { status: 500 });
+      console.error(
+        "[NURA][PYTHON] Backend indisponível. HTTP:",
+        response.status
+      );
+
+      return NextResponse.json(
+        { error: "Motor NURA indisponível no momento." },
+        { status: 502 }
+      );
     }
 
-    const data = await response.json();
-    return NextResponse.json({ resposta: data.resposta, metadata: data.metadata });
-  } catch (error: any) {
-    if (error.name === "AbortError") {
-      return NextResponse.json({ error: "A NURA demorou muito. Tente novamente." }, { status: 504 });
+    const data = await response.json().catch(() => null);
+
+    if (!data || typeof data.resposta !== "string") {
+      return NextResponse.json(
+        { error: "Resposta inválida do motor NURA." },
+        { status: 502 }
+      );
     }
-    console.error("Erro na rota /api/nura:", error);
-    return NextResponse.json({ error: "NURA indisponível" }, { status: 500 });
+
+    return NextResponse.json({
+      resposta: data.resposta,
+      metadata: data.metadata ?? null,
+    });
+  } catch (error) {
+    const aborted =
+      error instanceof Error &&
+      error.name === "AbortError";
+
+    if (aborted) {
+      return NextResponse.json(
+        { error: "A NURA demorou muito. Tente novamente." },
+        { status: 504 }
+      );
+    }
+
+    console.error("[NURA][API]", error);
+
+    return NextResponse.json(
+      { error: "Não foi possível consultar o motor NURA." },
+      { status: 500 }
+    );
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
 }
