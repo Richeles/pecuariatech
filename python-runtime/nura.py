@@ -26,7 +26,7 @@ if not GROQ_API_KEY:
     groq_client = None
 else:
     groq_client = Groq(api_key=GROQ_API_KEY)
-MODELO_GROQ = "llama-3.1-8b-instant"
+MODELO_GROQ = "openai/gpt-oss-20b"
 
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 if not SERPER_API_KEY:
