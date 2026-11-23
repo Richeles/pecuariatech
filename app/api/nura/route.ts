@@ -70,9 +70,38 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const pythonUrl =
-      process.env.NURA_PYTHON_URL ||
-      "http://127.0.0.1:8000/nura";
+    const pythonUrl = process.env.NURA_PYTHON_URL?.trim();
+    const internalToken = process.env.NURA_INTERNAL_TOKEN?.trim();
+
+    if (!pythonUrl || !internalToken) {
+      console.error("[NURA] URL ou segredo interno não configurado.");
+      return NextResponse.json(
+        { error: "Motor NURA não configurado corretamente." },
+        { status: 503 }
+      );
+    }
+
+    let pythonEndpoint: URL;
+    try {
+      pythonEndpoint = new URL(pythonUrl);
+    } catch {
+      return NextResponse.json(
+        { error: "URL do motor NURA inválida." },
+        { status: 503 }
+      );
+    }
+
+    if (
+      pythonEndpoint.pathname.replace(/\/+$/, "") !== "/nura" ||
+      pythonEndpoint.search ||
+      pythonEndpoint.hash ||
+      (process.env.NODE_ENV === "production" && pythonEndpoint.protocol !== "https:")
+    ) {
+      return NextResponse.json(
+        { error: "Configure NURA_PYTHON_URL com HTTPS e o caminho /nura." },
+        { status: 503 }
+      );
+    }
 
     const controller = new AbortController();
 
@@ -89,6 +118,7 @@ export async function POST(req: NextRequest) {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          "X-Nura-Internal-Token": internalToken,
         },
         body: JSON.stringify({
           texto: pergunta,

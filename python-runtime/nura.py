@@ -1,13 +1,14 @@
 import os
 import json
 import hashlib
+import hmac
 import re
 import uuid
 import requests
 import numpy as np
 from datetime import datetime
 from typing import Any, Optional
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from groq import Groq
@@ -168,8 +169,28 @@ class Pergunta(BaseModel):
     fazenda_id: str = "demo_fazenda"
     plano: str = "basico"
 
+def validar_acesso_interno(token_recebido: Optional[str]) -> None:
+    """Permite chamadas ao motor somente pelo gateway autenticado."""
+    token_esperado = os.getenv("NURA_INTERNAL_TOKEN", "").strip()
+
+    if not token_esperado:
+        raise HTTPException(
+            status_code=503,
+            detail="Integração interna NURA não configurada."
+        )
+
+    if not token_recebido or not hmac.compare_digest(token_recebido, token_esperado):
+        raise HTTPException(
+            status_code=401,
+            detail="Acesso interno NURA não autorizado."
+        )
+
 @app.post("/nura")
-async def nura(pergunta: Pergunta):
+async def nura(
+    pergunta: Pergunta,
+    x_nura_internal_token: Optional[str] = Header(default=None, alias="X-Nura-Internal-Token")
+):
+    validar_acesso_interno(x_nura_internal_token)
     texto_limpo = pergunta.texto.strip().lower()
     if re.match(r"^(bom dia|boa tarde|boa noite|oi|olá|ola)$", texto_limpo):
         return {"resposta": "Olá! Sou a NURA. Como posso ajudar?"}
@@ -216,7 +237,26 @@ async def nura(pergunta: Pergunta):
         completion = groq_client.chat.completions.create(
             model=MODELO_GROQ,
             messages=[
-                {"role": "system", "content": "Você é NURA, especialista em pecuária. Responda em português, de forma clara e útil. Se faltarem dados oficiais, peça ao usuário."},
+                {
+                    "role": "system",
+                    "content": (
+                        "Voce e a NURA, assistente tecnica em pecuaria. Responda em portugues brasileiro, com precisao cientifica. " +
+                        "PB significa Proteina Bruta. Em muitos contextos zootecnicos, e estimada pelo nitrogenio total multiplicado por 6,25; use o fator exigido pelo metodo ou laboratorio quando informado. " +
+                        "PB nao significa Protein Balance e nao e sinonimo de proteina verdadeira; pode incluir nitrogenio nao proteico. " +
+                        "NDT significa Nutrientes Digestiveis Totais e representa um indicador convencional do valor energetico do alimento ou da dieta. " +
+                        "Em uma formulacao usual para ruminantes: NDT = PBD + FDND + CNFD + (2,25 x EED), com todas as fracoes digestivas expressas na mesma base. " +
+                        "PBD significa proteina bruta digestivel; FDND, fibra em detergente neutro digestivel; CNFD, carboidratos nao fibrosos digestíveis; EED, extrato etereo digestivel. " +
+                        "Identifique o metodo de calculo utilizado. Equacoes, correcoes e bases de expressao podem variar conforme a metodologia e as analises disponiveis. " +
+                        "NDT nao significa Net Digestible Energy e nao e sinonimo de energia metabolizavel nem de energia liquida. " +
+                        "GMD significa Ganho Medio Diario, nunca Gasto Metabolico Diario. " +
+                        "Em pesagens comparaveis, GMD = (peso final - peso inicial) / numero de dias. Expresse normalmente em kg de peso vivo por animal por dia. " +
+                        "Nao calcule GMD sem pesos e intervalo de dias confiaveis. Considere o mesmo animal ou lote e as condicoes de pesagem. " +
+                        "Nao invente definicoes, resultados laboratoriais, composicao de alimentos, consumo, pesos ou valores nutricionais. " +
+                        "Quando faltarem analise bromatologica, materia seca, consumo, peso, categoria ou fase produtiva, informe precisamente os dados necessarios. " +
+                        "Nao apresente recomendacoes de dieta ou dosagens especificas sem dados suficientes e avaliacao profissional. " +
+                        "Se houver incerteza ou metodos diferentes, explique a limitacao em vez de inventar uma formula."
+                    )
+                },
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 /* =====================================================
    TIPOS — CONTRATO DAS APIs DE NUTRIÇÃO
@@ -795,9 +797,57 @@ export default function NutricaoDashboard() {
                 Orientação do NURA
               </h3>
 
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[#294c37]">
-                {respostaNura}
-              </p>
+              <div className="mt-4 text-sm leading-7 text-[#294c37]">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: ({ node: _node, ...props }) => (
+                      <h1 className="mb-3 mt-5 text-xl font-black text-[#173222]" {...props} />
+                    ),
+                    h2: ({ node: _node, ...props }) => (
+                      <h2 className="mb-3 mt-5 text-lg font-bold text-[#173222]" {...props} />
+                    ),
+                    h3: ({ node: _node, ...props }) => (
+                      <h3 className="mb-2 mt-4 text-base font-bold text-[#173222]" {...props} />
+                    ),
+                    p: ({ node: _node, ...props }) => (
+                      <p className="my-3 leading-7" {...props} />
+                    ),
+                    ul: ({ node: _node, ...props }) => (
+                      <ul className="my-3 list-disc space-y-2 pl-6" {...props} />
+                    ),
+                    ol: ({ node: _node, ...props }) => (
+                      <ol className="my-3 list-decimal space-y-2 pl-6" {...props} />
+                    ),
+                    li: ({ node: _node, ...props }) => (
+                      <li className="pl-1" {...props} />
+                    ),
+                    strong: ({ node: _node, ...props }) => (
+                      <strong className="font-bold text-[#173222]" {...props} />
+                    ),
+                    blockquote: ({ node: _node, ...props }) => (
+                      <blockquote className="my-4 border-l-4 border-[#34a879] bg-[#eaf5ed] px-4 py-3 italic" {...props} />
+                    ),
+                    hr: () => <hr className="my-5 border-[#dbe7de]" />,
+                    table: ({ node: _node, ...props }) => (
+                      <div className="my-4 overflow-x-auto rounded-xl border border-[#dbe7de]">
+                        <table className="w-full min-w-[520px] border-collapse text-left text-sm" {...props} />
+                      </div>
+                    ),
+                    th: ({ node: _node, ...props }) => (
+                      <th className="border-b border-[#dbe7de] bg-[#eaf5ed] px-4 py-3 font-bold text-[#173222]" {...props} />
+                    ),
+                    td: ({ node: _node, ...props }) => (
+                      <td className="border-b border-[#e5eee7] px-4 py-3 align-top" {...props} />
+                    ),
+                    a: ({ node: _node, ...props }) => (
+                      <a className="font-semibold text-[#16734b] underline" {...props} />
+                    )
+                  }}
+                >
+                  {respostaNura}
+                </ReactMarkdown>
+              </div>
 
               {metaNura && (
                 <div className="mt-5 border-t border-[#dbe7de] pt-3 text-xs text-[#718579]">
